@@ -1,0 +1,14 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="hello">Hello World, Click Me!</string>
+	<string name="app_name">Wave_Android_uitest</string>
+	<string name="activity_action">Activity</string>
+	<string name="my_life_action">My Life</string>
+	<string name="challenges_action">Challenges</string>
+	<string name="people_action">People</string>
+	<string name="actionbar_activity">Activity</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_home">Home</string>
+    <string name="navigation_drawer_open">Open</string>
+    <string name="navigation_drawer_close">Closed</string>
+</resources>

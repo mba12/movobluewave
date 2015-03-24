@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <dimen name="sm_text_size">12dip</dimen>
+    <dimen name="sm_text_label">16dip</dimen>
+    <dimen name="sm_text_value">28dip</dimen>
+    <dimen name="sm_text_month_label">24dip</dimen>
+    <dimen name="text_filter">16px</dimen>
+    <dimen name="text_name">24px</dimen>
+    <dimen name="activity_horizontal_margin">64dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+</resources>
