@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -399,6 +400,16 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
                     //test
                     Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
+                    ref2.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            System.out.println(snapshot.getValue());
+                        }
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+                            System.out.println("The read failed: " + firebaseError.getMessage());
+                        }
+                    });
                     
 
                 }
