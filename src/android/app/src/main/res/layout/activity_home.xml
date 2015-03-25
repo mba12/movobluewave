@@ -117,9 +117,15 @@
         android:numColumns="3"
         android:stretchMode="columnWidth"
         android:padding="10dip"
-        android:visibility="visible"
+        android:visibility="gone"/>
 
-        />
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/progressBar"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:visibility="visible"/>
 
     </RelativeLayout>
     </RelativeLayout>

@@ -2,16 +2,11 @@ package com.movo.wave;
 /**
  * Created by PhilG on 3/23/2015.
  */
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.net.Uri;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -23,6 +18,7 @@ import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
@@ -30,11 +26,17 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -61,6 +63,7 @@ public class Home extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         c = this.getApplicationContext();
+
         mTitle = "Movo Wave";
         //Set up date works for calendar display
         calendar = Calendar.getInstance();
@@ -68,15 +71,44 @@ public class Home extends ActionBarActivity {
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
 
-        //calendar display
+        UserData myData = UserData.getUserData(c);
         final GridView gridview = (GridView) findViewById(R.id.gridview);
-        gridview.setAdapter(new ImageAdapter(Home.this));
-        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
-               // name = getResources().getResourceEntryName(mThumbIds[position1]);
-                //do stuff here on grid click
+        final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
+
+        //this gets our user steps. We will save the data out and display it
+        Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
+        ref2.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                System.out.println(snapshot.getValue());
+                UserData myData = UserData.getUserData(c);
+                myData.setUserSnapshot(snapshot);
+                gridview.setAdapter(new GridViewCalendar(Home.this));
+                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
+                        // name = getResources().getResourceEntryName(mThumbIds[position1]);
+                        //do stuff here on grid click
+                    }
+                });
+                gridview.invalidate();
+                setUpChart();
+                pbBar.setVisibility(View.GONE);
+               if(gridview.getVisibility()==View.GONE&&chart.getVisibility()==View.GONE){
+                   gridview.setVisibility(View.VISIBLE);
+               }
+
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("The read failed: " + firebaseError.getMessage());
             }
         });
+
+
+        //calendar display
+
+
+
 
 
         chart = (LineChart) findViewById(R.id.chart);
@@ -97,14 +129,10 @@ public class Home extends ActionBarActivity {
 
 				}
 			});
-        setUpChart();
 
 
-        Firebase.setAndroidContext(this);
-        Firebase fb = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
-        fb.child("test").setValue("This is a test of how text uploads");
 
-
+        //**********************Set Up slider menu******************//
         menuOptions = new String[5];
         menuOptions[0] = "Login";
         menuOptions[1] = "Upload Data";
@@ -124,10 +152,6 @@ public class Home extends ActionBarActivity {
 
 
         Toolbar mToolbar = (Toolbar)findViewById(R.id.toolbar);
-//        setSupportActionBar(mToolbar);
-
-
-
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mDrawerToggle = new ActionBarDrawerToggle(
@@ -138,10 +162,8 @@ public class Home extends ActionBarActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setHomeButtonEnabled(true);
         mDrawerToggle.syncState();
+        //*********************************************************//
 
-
-        //We'll use this to handle passing data around the application.
-        UserData myData = UserData.getUserData();
         Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
 
@@ -150,31 +172,37 @@ public class Home extends ActionBarActivity {
 
 
     private void setUpChart(){
-        //chart.invalidate();
-        //this call will refresh the chart
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
-        ArrayList<Entry> valsComp2 = new ArrayList<Entry>();
+        ArrayList<String> xVals = new ArrayList<String>();
 
-        Entry c1e1 = new Entry(100.000f, 0); // 0 == quarter 1
-        valsComp1.add(c1e1);
-        Entry c1e2 = new Entry(50.000f, 1); // 1 == quarter 2 ...
-        valsComp1.add(c1e2);
-        // and so on ...
+        UserData myData = UserData.getUserData(c);
+        DataSnapshot snapdata = myData.getUserSnapshot();
+        DataSnapshot monthlyData = snapdata.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1));
 
-        Entry c2e1 = new Entry(120.000f, 0); // 0 == quarter 1
-        valsComp2.add(c2e1);
-        Entry c2e2 = new Entry(110.000f, 1); // 1 == quarter 2 ...
-        valsComp2.add(c2e2);
+        numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        int difference = numberOfDaysTotal - curDay;
+        numberOfDaysLeft = numberOfDaysTotal - difference;
 
-        LineDataSet setComp1 = new LineDataSet(valsComp1, "Company 1");
-        LineDataSet setComp2 = new LineDataSet(valsComp2, "Company 2");
+        for(int i=0;i<numberOfDaysLeft;i++){
+            for(DataSnapshot child : monthlyData.getChildren()){
+                float x = Float.parseFloat(child.getKey());
+                int y = Integer.parseInt(child.getValue().toString());
+                if(x == (i+1)) {
+                    Log.d(TAG, "X value is: " + x + " Y value is: " + y);
+                    Entry curEntry = new Entry(y, i);
+                    valsComp1.add(curEntry);
+                }
+
+            }
+            xVals.add((i+1)+"");
+        }
+
+
+
+        LineDataSet setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
 
         ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
         dataSets.add(setComp1);
-        dataSets.add(setComp2);
-
-        ArrayList<String> xVals = new ArrayList<String>();
-        xVals.add("1.Q"); xVals.add("2.Q"); xVals.add("3.Q"); xVals.add("4.Q");
 
         LineData data = new LineData(xVals, dataSets);
         chart.setData(data);
@@ -183,10 +211,10 @@ public class Home extends ActionBarActivity {
 
 
 
-    public class ImageAdapter extends BaseAdapter {
+    public class GridViewCalendar extends BaseAdapter {
         private Context mContext;
 
-        public ImageAdapter(Context c) {
+        public GridViewCalendar(Context c) {
             mContext = c;
         }
 
@@ -231,6 +259,9 @@ public class Home extends ActionBarActivity {
                 //System.out.println("View not null, loading postion "+position+" out of "+mThumbIds.length);
             }
 
+            UserData myData = UserData.getUserData(c);
+            DataSnapshot data = myData.getUserSnapshot();
+
             int dayToDisplay = (numberOfDaysLeft - (position));
 
 
@@ -241,12 +272,28 @@ public class Home extends ActionBarActivity {
                 day.setText(dayToDisplay+"");
             }
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
-            steps.setText("1234");
+            if(data!=null){
+                try {
+                    String what = calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay;
+                    DataSnapshot todaysData = data.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay);
+                    if(!todaysData.getValue().equals("")){
+                        steps.setText(todaysData.getValue()+"");
+                    }else{
+                        steps.setText("0");
+                    }
+                    steps.setText(todaysData.getValue()+"");
+                }catch(Exception e){
+                    steps.setText("0");
+//                    e.printStackTrace();
+                }
+            }else{
+                steps.setText("1234");
+
+            }
 
             return gridView;
         }
 
-        // references to our images
 
     }
 
@@ -268,7 +315,7 @@ public class Home extends ActionBarActivity {
                 break;
             case 1:
                 Log.d(TAG, "Upload pressed");
-                UserData myData = UserData.getUserData();
+                UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
 //                login();
                 break;

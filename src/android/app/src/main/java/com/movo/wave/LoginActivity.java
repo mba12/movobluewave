@@ -8,6 +8,7 @@ import android.annotation.TargetApi;
 
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Loader;
 import android.database.Cursor;
@@ -73,12 +74,13 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     private SignInButton mPlusSignInButton;
     private View mSignOutButtons;
     private View mLoginFormView;
+    Context c;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
+        c = this.getApplicationContext();
         // Find the Google+ sign in button.
         mPlusSignInButton = (SignInButton) findViewById(R.id.plus_sign_in_button);
         mPlusSignInButton.setVisibility(View.GONE);
@@ -346,14 +348,18 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
+    //TODO: Fix login so it isn't prebaked.
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mEmail;
         private final String mPassword;
 
         UserLoginTask(String email, String password) {
-            mEmail = email;
-            mPassword = password;
+//            mEmail = email;
+//            mPassword = password;
+
+            mEmail = "philg@sensorstar.com";
+            mPassword = "testpassword";
         }
 
         @Override
@@ -386,30 +392,31 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //                }
 //            });
 
-//            Firebase ref = new Firebase("https://<YOUR-FIREBASE>.firebaseio.com");
             ref.authWithPassword("philg@sensorstar.com", "testpassword", new Firebase.AuthResultHandler() {
                 @Override
                 public void onAuthenticated(AuthData authData) {
                     //success, save auth data
-                    UserData myData = UserData.getUserData();
+                    UserData myData = UserData.getUserData(c);
                     myData.setCurUID(authData.getUid());
                     myData.setCurToken(authData.getToken());
+                    myData.setCurEmail(mEmail);
+                    myData.setCurPW(mPassword);
 
                     System.out.println("User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
 
 
-                    //test
-                    Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
-                    ref2.addValueEventListener(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot snapshot) {
-                            System.out.println(snapshot.getValue());
-                        }
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-                            System.out.println("The read failed: " + firebaseError.getMessage());
-                        }
-                    });
+                    //this bit of code was a test to see if I could filter by UID to get data, it worked.
+//                    Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
+//                    ref2.addValueEventListener(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot snapshot) {
+//                            System.out.println(snapshot.getValue());
+//                        }
+//                        @Override
+//                        public void onCancelled(FirebaseError firebaseError) {
+//                            System.out.println("The read failed: " + firebaseError.getMessage());
+//                        }
+//                    });
                     
 
                 }
