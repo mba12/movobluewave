@@ -29,6 +29,8 @@ import android.support.v7.widget.Toolbar;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.MutableData;
+import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.YAxis;
@@ -88,6 +90,29 @@ public class Home extends ActionBarActivity {
                     public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
                         // name = getResources().getResourceEntryName(mThumbIds[position1]);
                         //do stuff here on grid click
+                        UserData myData = UserData.getUserData(c);
+//                        calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay
+//                        Log.d(TAG, "Transaction function start: "+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
+                        //This function increments steps taken today when clicking on the gridview. This will sync with server as soon as it can.
+                        Firebase ref3 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
+                        ref3.runTransaction(new Transaction.Handler() {
+                            @Override
+                            public Transaction.Result doTransaction(MutableData currentData) {
+                                if(currentData.getValue() == null) {
+                                    currentData.setValue(1);
+                                } else {
+                                    currentData.setValue((Long) currentData.getValue() + 1);
+                                }
+                                return Transaction.success(currentData); //we can also abort by calling Transaction.abort()
+                            }
+                            @Override
+                            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
+                                //This method will be called once with the results of the transaction.
+                                Log.d(TAG, "Transaction increment successful");
+                            }
+                        });
+
+
                     }
                 });
                 gridview.invalidate();
@@ -133,12 +158,13 @@ public class Home extends ActionBarActivity {
 
 
         //**********************Set Up slider menu******************//
-        menuOptions = new String[5];
+        menuOptions = new String[6];
         menuOptions[0] = "Login";
         menuOptions[1] = "Upload Data";
-        menuOptions[2] = "FAQ";
-        menuOptions[3] = "Contact Us";
-        menuOptions[4] = "Logout";
+        menuOptions[2] = "Users";
+        menuOptions[3] = "FAQ";
+        menuOptions[4] = "Contact Us";
+        menuOptions[5] = "Logout";
 
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -274,7 +300,7 @@ public class Home extends ActionBarActivity {
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
             if(data!=null){
                 try {
-                    String what = calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay;
+                    //String what = calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay;
                     DataSnapshot todaysData = data.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay);
                     if(!todaysData.getValue().equals("")){
                         steps.setText(todaysData.getValue()+"");
@@ -317,19 +343,25 @@ public class Home extends ActionBarActivity {
                 Log.d(TAG, "Upload pressed");
                 UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
+
 //                login();
                 break;
             case 2:
+                Log.d(TAG, "Users pressed");
+                users();
+
+            case 3:
                 Log.d(TAG, "FAQ pressed");
 //                logout();
                 break;
-            case 3:
+            case 4:
                 Log.d(TAG, "Contact pressed");
 //                match();
                 break;
 
-            case 4:
+            case 5:
                 Log.d(TAG, "Logout pressed");
+                logout();
                 break;
         }
     }
@@ -380,5 +412,14 @@ public class Home extends ActionBarActivity {
         Intent intent = new Intent(getApplicationContext(),
                 LoginActivity.class);
         startActivity(intent);
+    }
+    public void users(){
+        Intent intent = new Intent(getApplicationContext(),
+                UserActivity.class);
+        startActivity(intent);
+    }
+    public void logout(){
+        UserData mUD = UserData.getUserData(c);
+        mUD.storeCurrentUser();
     }
 }
