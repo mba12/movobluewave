@@ -58,8 +58,8 @@ public class UserData {
             currentPW = prefs.getString("currentPW", "Error");
 //            currentUserSnapshot = prefs.gets
             reAuthenticate(currentEmail, currentPW);
-
-            Log.d(TAG, "User info is: "+currentUID);
+            prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
+            Log.d(TAG, "User info is: " + currentUID);
         } else {
             currentUID = "Error";
             currentToken = "Error";
@@ -120,8 +120,8 @@ public class UserData {
     }
 
 
-    private boolean reAuthenticate(String email, String pw) {
-        Log.d(TAG, "Re-authenticating with user "+email+" and pass"+pw);
+    private boolean reAuthenticate(final String email, final String pw) {
+        Log.d(TAG, "Re-authenticating with user "+email+" and pass "+pw);
 
         Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
         ref.authWithPassword(email, pw, new Firebase.AuthResultHandler() {
@@ -129,8 +129,10 @@ public class UserData {
             public void onAuthenticated(AuthData authData) {
                 //success, save auth data
 //            UserData myData = UserData.getUserData();
-                currentUID = authData.getUid();
-                currentToken = authData.getToken();
+                setCurUID(authData.getUid());
+                setCurEmail(email);
+                setCurPW(pw);
+                setCurToken(authData.getToken());
 
 
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
@@ -149,28 +151,29 @@ public class UserData {
 
     public boolean storeCurrentUser(){
         String storeUID = currentUID;
-        Map<String, String> userDataString = new HashMap<String, String>();
-        userDataString.put("currentUID", currentUID);
-        userDataString.put("currentToken", currentToken);
-        userDataString.put("currentEmail", currentEmail);
-        userDataString.put("currentPW", currentPW);
+        if(!(currentUID.equals("Error"))) {
+            Map<String, String> userDataString = new HashMap<String, String>();
+            userDataString.put("currentUID", currentUID);
+            userDataString.put("currentToken", currentToken);
+            userDataString.put("currentEmail", currentEmail);
+            userDataString.put("currentPW", currentPW);
 
 
-        SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
-        SharedPreferences.Editor userDataEditor = userData.edit();
+            SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
+            SharedPreferences.Editor userDataEditor = userData.edit();
 
-        for(String s: userDataString.keySet()){
-            userDataEditor.putString(s, userDataString.get(s));
-        }
-        userDataEditor.commit();
+            for (String s : userDataString.keySet()) {
+                userDataEditor.putString(s, userDataString.get(s));
+            }
+            userDataEditor.commit();
 
-        SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
-        SharedPreferences.Editor allUsersEditor = allUsers.edit();
+            SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+            SharedPreferences.Editor allUsersEditor = allUsers.edit();
 
-        if(!(allUsers.contains(currentUID))){
-            allUsersEditor.putString(currentUID, currentEmail);
-        }
-        allUsersEditor.commit();
+            if (!(allUsers.contains(currentUID))) {
+                allUsersEditor.putString(currentUID, currentEmail);
+            }
+            allUsersEditor.commit();
 
 
 //        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
@@ -184,17 +187,47 @@ public class UserData {
 //        }
 
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
-        prefs.edit().putBoolean("userExists", false);
-        instance = null;
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+            prefs.edit().putBoolean("userExists", false);
+            instance = null;
 
 
-        loadNewUser(storeUID);
+            //loadNewUser(storeUID);
+            return true;
+        }else {
+            return false;
+        }
+    }
+
+    public boolean addCurUserTolist(){
+        Map<String, String> userDataString = new HashMap<String, String>();
+        userDataString.put("currentUID", currentUID);
+        userDataString.put("currentToken", currentToken);
+        userDataString.put("currentEmail", currentEmail);
+        userDataString.put("currentPW", currentPW);
+
+
+        SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
+        SharedPreferences.Editor userDataEditor = userData.edit();
+
+        for (String s : userDataString.keySet()) {
+            userDataEditor.putString(s, userDataString.get(s));
+        }
+        userDataEditor.commit();
+
+        SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+        SharedPreferences.Editor allUsersEditor = allUsers.edit();
+
+        if (!(allUsers.contains(currentUID))) {
+            allUsersEditor.putString(currentUID, currentEmail);
+        }
+        allUsersEditor.commit();
+
         return true;
     }
 
 
-    private boolean loadNewUser(String UID){
+    public boolean loadNewUser(String UID){
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
 
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
@@ -202,9 +235,12 @@ public class UserData {
         if(allUsers.contains(UID)) {
             SharedPreferences userData = appContext.getSharedPreferences(UID, Context.MODE_PRIVATE);
 //            SharedPreferences.Editor userDataEditor = userData.edit();
+            currentUID = userData.getString("currentUID","Error");
             currentEmail = userData.getString("currentEmail", "Error");
             currentPW = userData.getString("currentPW", "Error");
-            //reAuthenticate(currentUID, currentPW);
+            currentToken = userData.getString("currentToken","Error");
+
+            reAuthenticate(currentEmail, currentPW);
         }
 
 
@@ -213,6 +249,7 @@ public class UserData {
     }
 
     public ArrayList<String> getUserList(){
+        //this returns a list of user emails on device
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
         ArrayList<String> allUsersReturn = new ArrayList<>();
         Map<String,?> keys = allUsers.getAll();
@@ -222,6 +259,22 @@ public class UserData {
             allUsersReturn.add(entry.getValue().toString());
         }
         return allUsersReturn;
+    }
+
+    public String getUIDByEmail(String email){
+        String pw = "";
+        SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+        ArrayList<String> allUsersReturn = new ArrayList<>();
+        Map<String,?> keys = allUsers.getAll();
+        for(Map.Entry<String,?> entry : keys.entrySet()){
+            Log.d("map values",entry.getKey() + ": " +
+                    entry.getValue().toString());
+            if(entry.getValue().toString().equals(email)){
+                pw = entry.getKey();
+            }
+            allUsersReturn.add(entry.getValue().toString());
+        }
+        return pw;
     }
 
 }

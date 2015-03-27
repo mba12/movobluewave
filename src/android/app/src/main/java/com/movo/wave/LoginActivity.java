@@ -75,7 +75,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     private View mSignOutButtons;
     private View mLoginFormView;
     Context c;
-
+    String TAG = "Movo.LoginActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -348,7 +348,6 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
      * Represents an asynchronous login/registration task used to authenticate
      * the user.
      */
-    //TODO: Fix login so it isn't prebaked.
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
 
         private final String mEmail;
@@ -358,14 +357,15 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //            mEmail = email;
 //            mPassword = password;
 
-            mEmail = "philg@sensorstar.com";
-            mPassword = "testpassword";
+            mEmail = email;
+            mPassword = password;
         }
 
         @Override
         protected Boolean doInBackground(Void... params) {
 
             Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
+            UserData.getUserData(c).storeCurrentUser();
 //                //this works to create new user
 //            ref.createUser("philgtest@sensorstar.com", "testpassword", new Firebase.ValueResultHandler<Map<String, Object>>() {
 //                @Override
@@ -392,7 +392,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //                }
 //            });
 
-            ref.authWithPassword("philg@sensorstar.com", "testpassword", new Firebase.AuthResultHandler() {
+            ref.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                 @Override
                 public void onAuthenticated(AuthData authData) {
                     //success, save auth data
@@ -401,8 +401,9 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                     myData.setCurToken(authData.getToken());
                     myData.setCurEmail(mEmail);
                     myData.setCurPW(mPassword);
+                    myData.addCurUserTolist();
 
-                    System.out.println("User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
+                    Log.d(TAG,"User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
 
 
                     //this bit of code was a test to see if I could filter by UID to get data, it worked.
@@ -417,12 +418,14 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //                            System.out.println("The read failed: " + firebaseError.getMessage());
 //                        }
 //                    });
-                    
+
+                    //Home.refreshCharts();
 
                 }
                 @Override
                 public void onAuthenticationError(FirebaseError firebaseError) {
                     System.out.println("Error logging in "+firebaseError.getDetails());
+
                 }
             });
 
@@ -435,6 +438,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             showProgress(false);
 
             if (success) {
+//                Home.refreshCharts();
                 finish();
             } else {
                 mPasswordView.setError(getString(R.string.error_incorrect_password));

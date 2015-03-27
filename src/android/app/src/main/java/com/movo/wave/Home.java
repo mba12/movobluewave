@@ -53,6 +53,7 @@ public class Home extends ActionBarActivity {
     int numberOfDaysLeft;
     int numberOfDaysTotal;
     Calendar calendar;
+    GridView gridview;
     boolean toggle = true;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
@@ -74,7 +75,7 @@ public class Home extends ActionBarActivity {
         curYear = calendar.get(Calendar.YEAR);
 
         UserData myData = UserData.getUserData(c);
-        final GridView gridview = (GridView) findViewById(R.id.gridview);
+        gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         //this gets our user steps. We will save the data out and display it
@@ -82,7 +83,7 @@ public class Home extends ActionBarActivity {
         ref2.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                System.out.println(snapshot.getValue());
+                Log.d(TAG, snapshot.getValue() + "");
                 UserData myData = UserData.getUserData(c);
                 myData.setUserSnapshot(snapshot);
                 gridview.setAdapter(new GridViewCalendar(Home.this));
@@ -109,6 +110,8 @@ public class Home extends ActionBarActivity {
                             public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
                                 //This method will be called once with the results of the transaction.
                                 Log.d(TAG, "Transaction increment successful");
+                                gridview.invalidate();
+                                chart.invalidate();
                             }
                         });
 
@@ -125,7 +128,7 @@ public class Home extends ActionBarActivity {
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {
-                System.out.println("The read failed: " + firebaseError.getMessage());
+                Log.d(TAG,"The read failed: " + firebaseError.getMessage());
             }
         });
 
@@ -195,6 +198,23 @@ public class Home extends ActionBarActivity {
 
     }
 
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        calendar = Calendar.getInstance();
+        curDay = calendar.get(Calendar.DAY_OF_MONTH);
+        curMonth = calendar.get(Calendar.MONTH);
+        curYear = calendar.get(Calendar.YEAR);
+        try {
+            gridview.setAdapter(new GridViewCalendar(Home.this));
+            setUpChart();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        gridview.invalidate();
+        chart.invalidate();
+    }
 
 
     private void setUpChart(){
@@ -421,5 +441,11 @@ public class Home extends ActionBarActivity {
     public void logout(){
         UserData mUD = UserData.getUserData(c);
         mUD.storeCurrentUser();
+    }
+
+
+    public  void refreshCharts(){
+        gridview.invalidate();
+        chart.invalidate();
     }
 }
