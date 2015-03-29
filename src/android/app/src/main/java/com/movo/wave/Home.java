@@ -54,6 +54,7 @@ public class Home extends ActionBarActivity {
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
+    private WaveManager mWaveMananger;
     String[] menuOptions;
     public String TAG = "Movo Wave V2";
     @Override
@@ -67,6 +68,9 @@ public class Home extends ActionBarActivity {
         curDay = calendar.get(Calendar.DAY_OF_MONTH);
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
+
+        mWaveMananger = new WaveManager( c );
+        mWaveMananger.scan( null );
 
         //calendar display
         final GridView gridview = (GridView) findViewById(R.id.gridview);
