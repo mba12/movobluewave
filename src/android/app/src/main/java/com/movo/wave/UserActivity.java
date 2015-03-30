@@ -61,7 +61,7 @@ public class UserActivity extends ActionBarActivity {
 //                Toast.makeText(c, users.get(position)+"", Toast.LENGTH_SHORT).show();
                     String uid = UserData.getUserData(c).getUIDByEmail(users.get(position));
                     UserData.getUserData(c).loadNewUser(uid);
-
+                    finish();
             }
         });
 
@@ -166,6 +166,27 @@ public class UserActivity extends ActionBarActivity {
         public void onItemClick(AdapterView parent, View view, int position, long id) {
             selectItem(position);
         }
+    }
+
+    private void updateHomePage() {
+
+        new Thread() {
+            public void run() {
+
+
+                try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Home.refreshCharts();
+                        }
+                    });
+                }catch (Exception e){
+                    e.printStackTrace();;
+                }
+
+            }
+        }.start();
     }
 
 }

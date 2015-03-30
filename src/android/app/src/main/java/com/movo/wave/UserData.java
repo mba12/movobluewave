@@ -1,5 +1,6 @@
 package com.movo.wave;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
@@ -25,7 +26,7 @@ import java.util.Set;
  */
 
 
-public class UserData {
+public class UserData extends Activity{
     private static UserData instance;
     private String TAG = "Wave.UserData";
     boolean status = false;
@@ -35,6 +36,8 @@ public class UserData {
     private String currentEmail;
     private String currentPW;
     private DataSnapshot currentUserSnapshot;
+    private Firebase loginRef;
+    private Firebase currentUserRef;
 
 
     public static UserData getUserData(Context c) {
@@ -48,6 +51,7 @@ public class UserData {
     private UserData(Context c) {
         appContext = c;
         Firebase.setAndroidContext(appContext);
+        loginRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
         //TODO: Make this compatible with multiple users
@@ -57,15 +61,18 @@ public class UserData {
             currentEmail = prefs.getString("currentEmail", "Error");
             currentPW = prefs.getString("currentPW", "Error");
 //            currentUserSnapshot = prefs.gets
-            reAuthenticate(currentEmail, currentPW);
+//            reAuthenticate(currentEmail, currentPW);
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
             Log.d(TAG, "User info is: " + currentUID);
         } else {
-            currentUID = "Error";
-            currentToken = "Error";
-            currentEmail = "Error";
-            currentPW = "Error";
-            Log.d(TAG, "User info doesn't exist");
+            //temporary use default user
+            reAuthenticate("philg@sensorstar.com","testpassword");
+
+//            currentUID = "Error";
+//            currentToken = "Error";
+//            currentEmail = "Error";
+//            currentPW = "Error";
+//            Log.d(TAG, "User info doesn't exist");
         }
 
 
@@ -133,10 +140,10 @@ public class UserData {
                 setCurEmail(email);
                 setCurPW(pw);
                 setCurToken(authData.getToken());
-
+                currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
 
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-
+                updateHomePage();
                 status = true;
             }
 
@@ -276,5 +283,39 @@ public class UserData {
         }
         return pw;
     }
+
+    public Firebase getLoginRef(){
+        return loginRef;
+    }
+
+    public Firebase getCurrentUserRef(){
+        return currentUserRef;
+    }
+
+    public void setCurrentUserRef(Firebase ref){
+        currentUserRef = ref;
+    }
+
+    public void updateHomePage() {
+
+        new Thread() {
+            public void run() {
+
+
+                try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Home.refreshCharts();
+                        }
+                    });
+                }catch (Exception e){
+                    e.printStackTrace();;
+                }
+
+            }
+        }.start();
+    }
+
 
 }

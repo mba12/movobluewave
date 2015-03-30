@@ -4,7 +4,9 @@ package com.movo.wave;
  */
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,6 +28,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 
+import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
@@ -46,19 +49,20 @@ import java.util.Calendar;
 
 public class Home extends ActionBarActivity {
     Context c;
-    LineChart chart;
+    static LineChart chart;
     int curYear;
     int curMonth;
     int curDay;
     int numberOfDaysLeft;
     int numberOfDaysTotal;
     Calendar calendar;
-    GridView gridview;
+    static GridView gridview;
     boolean toggle = true;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
+    Firebase currentUserRef;
     String[] menuOptions;
     public String TAG = "Movo Wave V2";
     @Override
@@ -79,62 +83,38 @@ public class Home extends ActionBarActivity {
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         //this gets our user steps. We will save the data out and display it
-        Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
-        ref2.addValueEventListener(new ValueEventListener() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+        boolean userExists = prefs.getBoolean("userExists", false);
+        if(userExists) {
+            setUpCharts();
+        }else{
+            //umm.
+
+        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
+        ref.authWithPassword("philg@sensorstar.com", "testpassword", new Firebase.AuthResultHandler() {
             @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                Log.d(TAG, snapshot.getValue() + "");
-                UserData myData = UserData.getUserData(c);
-                myData.setUserSnapshot(snapshot);
-                gridview.setAdapter(new GridViewCalendar(Home.this));
-                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
-                        // name = getResources().getResourceEntryName(mThumbIds[position1]);
-                        //do stuff here on grid click
-                        UserData myData = UserData.getUserData(c);
-//                        calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay
-//                        Log.d(TAG, "Transaction function start: "+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
-                        //This function increments steps taken today when clicking on the gridview. This will sync with server as soon as it can.
-                        Firebase ref3 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
-                        ref3.runTransaction(new Transaction.Handler() {
-                            @Override
-                            public Transaction.Result doTransaction(MutableData currentData) {
-                                if(currentData.getValue() == null) {
-                                    currentData.setValue(1);
-                                } else {
-                                    currentData.setValue((Long) currentData.getValue() + 1);
-                                }
-                                return Transaction.success(currentData); //we can also abort by calling Transaction.abort()
-                            }
-                            @Override
-                            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
-                                //This method will be called once with the results of the transaction.
-                                Log.d(TAG, "Transaction increment successful");
-                                gridview.invalidate();
-                                chart.invalidate();
-                            }
-                        });
-
-
-                    }
-                });
-                gridview.invalidate();
-                setUpChart();
-                pbBar.setVisibility(View.GONE);
-               if(gridview.getVisibility()==View.GONE&&chart.getVisibility()==View.GONE){
-                   gridview.setVisibility(View.VISIBLE);
-               }
+            public void onAuthenticated(AuthData authData) {
+                //success, save auth data
+            UserData myData = UserData.getUserData(c);
+                myData.setCurUID(authData.getUid());
+                myData.setCurEmail("philg@sensorstar.com");
+                myData.setCurPW("testpassword");
+                myData.setCurToken(authData.getToken());
+                currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
+                myData.setCurrentUserRef(currentUserRef);
+                myData.addCurUserTolist();
+                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+                setUpCharts();
 
             }
+
             @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.d(TAG,"The read failed: " + firebaseError.getMessage());
+            public void onAuthenticationError(FirebaseError firebaseError) {
+                Log.d(TAG, "Error logging in " + firebaseError.getDetails());
+
             }
         });
-
-
-        //calendar display
-
+        }
 
 
 
@@ -306,6 +286,7 @@ public class Home extends ActionBarActivity {
             }
 
             UserData myData = UserData.getUserData(c);
+//            Firebase fb = myData.getCurrentUserRef()
             DataSnapshot data = myData.getUserSnapshot();
 
             int dayToDisplay = (numberOfDaysLeft - (position));
@@ -443,9 +424,73 @@ public class Home extends ActionBarActivity {
         mUD.storeCurrentUser();
     }
 
+    public void setUpCharts(){
+        UserData myData = UserData.getUserData(c);
+        gridview= (GridView) findViewById(R.id.gridview);
+        final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
+        currentUserRef = myData.getCurrentUserRef();
+        currentUserRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Log.d(TAG, snapshot.getValue() + "");
+                UserData myData = UserData.getUserData(c);
+                myData.setUserSnapshot(snapshot);
+                gridview.setAdapter(new GridViewCalendar(Home.this));
+                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
+                        // name = getResources().getResourceEntryName(mThumbIds[position1]);
+                        //do stuff here on grid click
+                        UserData myData = UserData.getUserData(c);
+//                        calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay
+//                        Log.d(TAG, "Transaction function start: "+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
+                        //This function increments steps taken today when clicking on the gridview. This will sync with server as soon as it can.
+                        Firebase ref3 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/" + calendar.get(Calendar.YEAR) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + curDay);
+                        ref3.runTransaction(new Transaction.Handler() {
+                            @Override
+                            public Transaction.Result doTransaction(MutableData currentData) {
+                                if (currentData.getValue() == null) {
+                                    currentData.setValue(1);
+                                } else {
+                                    currentData.setValue((Long) currentData.getValue() + 1);
+                                }
+                                return Transaction.success(currentData); //we can also abort by calling Transaction.abort()
+                            }
 
-    public  void refreshCharts(){
+                            @Override
+                            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
+                                //This method will be called once with the results of the transaction.
+                                Log.d(TAG, "Transaction increment successful");
+                                gridview.invalidate();
+                                chart.invalidate();
+                            }
+                        });
+
+
+                    }
+                });
+                gridview.invalidate();
+                setUpChart();
+                pbBar.setVisibility(View.GONE);
+                if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
+                    gridview.setVisibility(View.VISIBLE);
+                }
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
+            }
+        });
+    }
+
+    public static void refreshCharts(){
+//        currentUserRef
+//        gridview.deferNotifyDataSetChanged();
+//        setUpCharts();
         gridview.invalidate();
         chart.invalidate();
     }
+
+
 }

@@ -74,6 +74,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
     private SignInButton mPlusSignInButton;
     private View mSignOutButtons;
     private View mLoginFormView;
+    private Firebase loginRef;
     Context c;
     String TAG = "Movo.LoginActivity";
     @Override
@@ -84,6 +85,8 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         // Find the Google+ sign in button.
         mPlusSignInButton = (SignInButton) findViewById(R.id.plus_sign_in_button);
         mPlusSignInButton.setVisibility(View.GONE);
+
+        loginRef = UserData.getUserData(c).getLoginRef();
         //Note: can use this for G+ later on.
 //        if (supportsGooglePlayServices()) {
 //            // Set a listener to connect the user when the G+ button is clicked.
@@ -360,12 +363,12 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             mEmail = email;
             mPassword = password;
         }
-
+        //This is a little bit of a kludgey way to do this. But if login fails, it tries user create, if that succeeds, it tries login.
         @Override
         protected Boolean doInBackground(Void... params) {
 
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
             UserData.getUserData(c).storeCurrentUser();
+
 //                //this works to create new user
 //            ref.createUser("philgtest@sensorstar.com", "testpassword", new Firebase.ValueResultHandler<Map<String, Object>>() {
 //                @Override
@@ -392,7 +395,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //                }
 //            });
 
-            ref.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
+            loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                 @Override
                 public void onAuthenticated(AuthData authData) {
                     //success, save auth data
@@ -404,7 +407,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                     myData.addCurUserTolist();
 
                     Log.d(TAG,"User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
-
+                    updateHomePage();
 
                     //this bit of code was a test to see if I could filter by UID to get data, it worked.
 //                    Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
@@ -424,7 +427,40 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 }
                 @Override
                 public void onAuthenticationError(FirebaseError firebaseError) {
-                    System.out.println("Error logging in "+firebaseError.getDetails());
+                    System.out.println("Error logging in, trying user create. ");
+                    //this works to create new user
+                    loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
+                        @Override
+                        public void onSuccess(Map<String, Object> result) {
+                            System.out.println("Successfully created user account with uid: " + result.get("uid"));
+                            loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
+                                @Override
+                                public void onAuthenticated(AuthData authData) {
+                                    //success, save auth data
+                                    UserData myData = UserData.getUserData(c);
+                                    myData.setCurUID(authData.getUid());
+                                    myData.setCurToken(authData.getToken());
+                                    myData.setCurEmail(mEmail);
+                                    myData.setCurPW(mPassword);
+                                    myData.addCurUserTolist();
+
+                                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+                                    updateHomePage();
+
+                                }
+
+                                @Override
+                                public void onAuthenticationError(FirebaseError firebaseError) {
+                                    Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
+
+                                }
+                            });
+                        }
+                        @Override
+                        public void onError(FirebaseError firebaseError) {
+                            Log.d(TAG,"Error creating user: " + firebaseError.getDetails());
+                        }
+                    });
 
                 }
             });
@@ -451,6 +487,28 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             mAuthTask = null;
             showProgress(false);
         }
+    }
+
+
+    private void updateHomePage() {
+
+        new Thread() {
+            public void run() {
+
+
+                        try {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Home.refreshCharts();
+                                }
+                            });
+                        }catch (Exception e){
+                            e.printStackTrace();;
+                        }
+
+            }
+        }.start();
     }
 }
 
