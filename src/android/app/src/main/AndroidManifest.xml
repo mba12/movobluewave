@@ -22,11 +22,7 @@
         <activity
             android:name=".Home"
             android:label="@string/title_activity_home" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
         <activity
             android:name=".LoginActivity"
@@ -37,12 +33,42 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-        <activity android:name=".UserActivity"
-            android:label="User Select">
 
+        <activity
+            android:name=".UserActivity"
+            android:label="User Select" >
+        </activity>
+        <activity
+            android:name=".FirstLaunch"
+            android:label="@string/title_activity_first_launch" >
+            <intent-filter>
 
-            </activity>
+                <action android:name="android.intent.action.MAIN" />
 
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </activity>
+        <activity
+            android:name=".FirstLogin"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_first_login"
+            android:parentActivityName=".FirstLaunch"
+            android:theme="@style/FullscreenTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.movo.wave.FirstLaunch" />
+        </activity>
+        <activity
+            android:name=".FirstSignUp"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="Sign Up"
+            android:parentActivityName=".FirstLaunch"
+            android:theme="@style/FullscreenTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.movo.wave.FirstLaunch" />
+        </activity>
     </application>
 
 </manifest>

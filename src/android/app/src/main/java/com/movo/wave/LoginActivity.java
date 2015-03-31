@@ -237,50 +237,50 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
         }
     }
 
-    @Override
-    protected void onPlusClientSignIn() {
-        //Set up sign out and disconnect buttons.
-        Button signOutButton = (Button) findViewById(R.id.plus_sign_out_button);
-        signOutButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                signOut();
-            }
-        });
-        Button disconnectButton = (Button) findViewById(R.id.plus_disconnect_button);
-        disconnectButton.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                revokeAccess();
-            }
-        });
-    }
+//    @Override
+//    protected void onPlusClientSignIn() {
+//        //Set up sign out and disconnect buttons.
+//        Button signOutButton = (Button) findViewById(R.id.plus_sign_out_button);
+//        signOutButton.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                signOut();
+//            }
+//        });
+//        Button disconnectButton = (Button) findViewById(R.id.plus_disconnect_button);
+//        disconnectButton.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                revokeAccess();
+//            }
+//        });
+//    }
 
-    @Override
-    protected void onPlusClientBlockingUI(boolean show) {
-        showProgress(show);
-    }
+//    @Override
+//    protected void onPlusClientBlockingUI(boolean show) {
+//        showProgress(show);
+//    }
 
-    @Override
-    protected void updateConnectButtonState() {
-        //TODO: Update this logic to also handle the user logged in by email.
-        boolean connected = getPlusClient().isConnected();
+//    @Override
+//    protected void updateConnectButtonState() {
+//        //TODO: Update this logic to also handle the user logged in by email.
+////        boolean connected = getPlusClient().isConnected();
+//
+////        mSignOutButtons.setVisibility(connected ? View.VISIBLE : View.GONE);
+//////        mPlusSignInButton.setVisibility(connected ? View.GONE : View.VISIBLE);
+////        mEmailLoginFormView.setVisibility(connected ? View.GONE : View.VISIBLE);
+//    }
 
-        mSignOutButtons.setVisibility(connected ? View.VISIBLE : View.GONE);
-//        mPlusSignInButton.setVisibility(connected ? View.GONE : View.VISIBLE);
-        mEmailLoginFormView.setVisibility(connected ? View.GONE : View.VISIBLE);
-    }
-
-    @Override
-    protected void onPlusClientRevokeAccess() {
-        // TODO: Access to the user's G+ account has been revoked.  Per the developer terms, delete
-        // any stored user data here.
-    }
-
-    @Override
-    protected void onPlusClientSignOut() {
-
-    }
+//    @Override
+//    protected void onPlusClientRevokeAccess() {
+//        // TODO: Access to the user's G+ account has been revoked.  Per the developer terms, delete
+//        // any stored user data here.
+//    }
+//
+//    @Override
+//    protected void onPlusClientSignOut() {
+//
+//    }
 
     /**
      * Check if the device supports Google Play Services.  It's best
@@ -496,16 +496,16 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             public void run() {
 
 
-                        try {
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Home.refreshCharts();
-                                }
-                            });
-                        }catch (Exception e){
-                            e.printStackTrace();;
+                try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Home.refreshCharts();
                         }
+                    });
+                }catch (Exception e){
+                    e.printStackTrace();;
+                }
 
             }
         }.start();
