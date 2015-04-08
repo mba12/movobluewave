@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,6 +39,9 @@ import com.github.mikephil.charting.data.LineDataSet;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 
 public class Home extends ActionBarActivity {
@@ -54,7 +58,7 @@ public class Home extends ActionBarActivity {
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
-    private WaveManager mWaveMananger;
+    private WaveManager mWaveManager;
     String[] menuOptions;
     public String TAG = "Movo Wave V2";
     @Override
@@ -69,8 +73,51 @@ public class Home extends ActionBarActivity {
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
 
-        mWaveMananger = new WaveManager( c );
-        mWaveMananger.scan( null );
+        //mWaveManager = new WaveManager( c );
+        //mWaveManager.scan( null );
+        BLEAgent.open( c );
+        BLEAgent.handle( new BLEAgent.BLERequestScan( 10000 ) {
+
+            @Override
+            public boolean filter(BLEAgent.BLEDevice device) {
+                return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
+            }
+
+            @Override
+            public void onComplete(BLEAgent.BLEDevice device) {
+
+                Log.d( "CALLBACK", "found target " + device );
+                BLEAgent.handle( new BLEAgent.BLERequest( device, 30000 ) {
+                    @Override
+                    public boolean dispatch() {
+                        Log.d( "ED:09:F5:BB:E9:FF", "Oh hi!");
+                        return true;
+                    }
+
+                    @Override
+                    public Set<Pair<UUID, UUID>> listenUUIDs() {
+                        Pair<UUID, UUID> service =
+                                new Pair<UUID, UUID> (WaveManager.notifyServiceUUID,
+                                        WaveManager.notifyCharacteristicUUID );
+                        Set<Pair<UUID,UUID>> ret = new HashSet<Pair<UUID, UUID>>();
+                        ret.add( service );
+                        return ret;
+                    }
+                });
+            }
+        });
+        BLEAgent.handle( new BLEAgent.BLERequestScan( 100000 ) {
+            @Override
+            public boolean filter(BLEAgent.BLEDevice device) {
+                return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
+            }
+
+            @Override
+            public void onComplete(BLEAgent.BLEDevice device) {
+
+                Log.d( "CALLBACK2", "found target " + device );
+            }
+        });
 
         //calendar display
         final GridView gridview = (GridView) findViewById(R.id.gridview);

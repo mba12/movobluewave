@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
-import android.text.style.BulletSpan;
 import android.util.Log;
 import android.os.Handler;
 import java.util.HashMap;
@@ -40,10 +39,11 @@ public class WaveManager {
     static final char[] hexArray = "0123456789ABCDEF".toCharArray();
     private static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
+        int i = 0;
         for ( int j = 0; j < bytes.length; j++ ) {
             int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+            hexChars[ i++ ] = hexArray[v >>> 4];
+            hexChars[ i++ ] = hexArray[v & 0x0F];
         }
         return new String(hexChars);
     }
@@ -79,6 +79,8 @@ public class WaveManager {
         mCallback = new ScanCallback( this );
         mContext = context;
         mUIHandler = new Handler( mContext.getMainLooper() );
+
+        //assert( bytesToHex( hexToBytes( "890000" ) ) == "890000" );
 
         final BluetoothManager btManager =
                 (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -176,19 +178,12 @@ public class WaveManager {
         public Wave( final Context context, final BluetoothDevice device )  {
             mDevice = device;
             lastSeen = new Date();
-            Log.d( TAG, "Device Name: " + device.getName() );
+            Log.d( TAG, "Device Name: " + device.getAddress() );
             mConnectionState = BluetoothProfile.STATE_DISCONNECTED;
             mGatt = mDevice.connectGatt( context, false, this );
+            assert( mGatt.connect() );
             //Always Bluetooth LE: Log.d( TAG, "Device Type: " + device.getType() );
             //Log.d( TAG, "Device UUID: " + device.getUuids() );
-        }
-
-        /** Establish connection to gatt service
-         *
-         * @param context
-         */
-        public void connect( final Context context ) {
-            mGatt.connect();
         }
 
         /** Pretty print state description
@@ -233,10 +228,18 @@ public class WaveManager {
          */
         @Override
         public void onConnectionStateChange( final BluetoothGatt gatt, int status, int newState) {
-            trace("State", describeState(mConnectionState) + " -> " + describeState(newState));
+            trace("State", gattStrStatus( status ) + ": " + describeState(mConnectionState) + " -> " + describeState(newState));
             mConnectionState = newState;
             if (mConnectionState == BluetoothProfile.STATE_CONNECTED) {
-                mGatt.discoverServices();
+                mUIHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mGatt.discoverServices();
+                    }
+                }, 500);
+            } else if( mConnectionState == BluetoothProfile.STATE_DISCONNECTED ) {
+                Log.d( TAG, "Retrying connection to " + mDevice.getAddress() );
+                mGatt.connect();
             }
         }
 
@@ -260,19 +263,56 @@ public class WaveManager {
             }
         }
 
-        private boolean subscribe( final BluetoothGatt gatt ) {
-            notifyCharacteristic = notifyRequirement.extract( gatt );
-            writeCharacteristic = writeRequirement.extract( gatt );
-            boolean ret = notifyCharacteristic != null && writeCharacteristic != null;
-            if( ret ) {
-                gatt.setCharacteristicNotification(notifyCharacteristic, true);
-                BluetoothGattDescriptor notifyDescriptor =
-                        notifyCharacteristic.getDescriptor( notifyDescriptorUUID );
-                notifyDescriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
-                gatt.writeDescriptor( notifyDescriptor );
+        private void subscribe( final BluetoothGatt gatt ) {
+                mUIHandler.postDelayed( new Runnable() {
 
-            }
-            return ret;
+                    @Override
+                    public void run() {
+                        Log.d( TAG, "Subscribing to device" );
+                        notifyCharacteristic = notifyRequirement.extract( gatt );
+                        writeCharacteristic = writeRequirement.extract( gatt );
+                        boolean ret = notifyCharacteristic != null && writeCharacteristic != null;
+                        if( ret ) {
+                            Log.d( TAG, "WAVE! " + mDevice.getAddress() );
+                            final BluetoothGattDescriptor notifyDescriptor =
+                                    notifyCharacteristic.getDescriptor(notifyDescriptorUUID);
+                            gatt.readDescriptor(notifyDescriptor );
+
+                            mUIHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final byte[] value = notifyDescriptor.getValue();
+                                    if ( value != null ) {
+                                        Log.d(TAG, "notify descriptor state (" +
+                                                value.equals(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) +
+                                                ") Hex value: " + bytesToHex(value));
+                                    } else {
+                                        Log.d(TAG, "no value for notify descriptor!");
+                                    }
+                                    notifyDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
+                                    gatt.writeDescriptor(notifyDescriptor);
+                                    gatt.setCharacteristicNotification(notifyCharacteristic, true);
+                                    Log.d( TAG, "should be subscribed to device" );
+                                    mUIHandler.postDelayed( new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Log.d( TAG, "Async write" );
+                                            writeCharacteristic.setValue(hexToBytes("890000"));
+                                            if ( ! gatt.writeCharacteristic(writeCharacteristic) ) {
+                                                Log.e( TAG, "Failed to write characteristic!!" );
+                                            }
+                                        }
+                                    }, 2000 );
+                                }
+                            }, 2000 );
+                        } else {
+                            Log.d( TAG, "Not wave: " + mDevice.getAddress() );
+                            gatt.disconnect();
+                        }
+
+
+                    }
+            }, 5000 );
         }
 
         /** Ensure the device is a wave
@@ -282,42 +322,72 @@ public class WaveManager {
          */
         @Override
         public void onServicesDiscovered( final BluetoothGatt gatt, int status ) {
-            trace("Service", "Discovered (status " + status + ")");
-            dumpServices( gatt );
-            boolean isWave = subscribe( gatt );
-            trace("Service", "Is a wave? " + isWave );
-            if( isWave ) {
-                writeCharacteristic.setValue( hexToBytes( "890000" ) );
-                gatt.writeCharacteristic( writeCharacteristic );
-            }
+            trace("Service", "Discovered (status " + gattStrStatus( status ) + ")");
+            dumpServices(gatt);
+
+            subscribe(gatt);
+            //boolean isWave = subscribe( gatt );
+            //trace("Service", "Is a wave? " + isWave );
+            //if( isWave ) {
+
+            //}
         }
 
         @Override
         public void onCharacteristicChanged( final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-            trace("Characteristic", "Changed");
+            trace("Characteristic", "Changed: " + characteristic.getUuid().toString());
             byte[] value = characteristic.getValue();
-            trace("Characteristic", bytesToHex( value ) );
+            trace( "Characteristic", bytesToHex( value ) );
+        }
+
+        private String gattStrStatus( int status ) {
+            switch (status) {
+                case BluetoothGatt.GATT_SUCCESS:
+                    return "SUCCESS";
+                case BluetoothGatt.GATT_FAILURE:
+                    return "FAILURE";
+                default:
+                    return "Other error (" + status + ")";
+            }
         }
 
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            trace( "Characteristic", "Write" );
+            trace( "Characteristic", "Write: " + gattStrStatus( status ) + " " + characteristic.getUuid().toString() );
+            byte[] value = characteristic.getValue();
+            trace( "Characteristic", bytesToHex( value ) );
         }
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            trace( "Characteristic", "Read" );
+            trace( "Characteristic", "Read: " + gattStrStatus( status ) + " " + characteristic.getUuid().toString() );
+            byte[] value = characteristic.getValue();
+            trace("Characteristic", bytesToHex(value));
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            trace( "Descriptor", "Write: " + gattStrStatus( status ) + " " + descriptor.getUuid().toString() );
+            byte[] value = descriptor.getValue();
+            trace("Descriptor", bytesToHex(value));
+        }
+
+        @Override
+        public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            trace( "Descriptor", "Read: " + gattStrStatus( status ) + " " + descriptor.getUuid().toString() );
+            byte[] value = descriptor.getValue();
+            trace("Descriptor", bytesToHex(value));
         }
     }
 
     private void updateDevice( final BluetoothDevice device ) {
-        mUIHandler.post( new Runnable() {
+        mUIHandler.postDelayed( new Runnable() {
             @Override
             public void run() {
                 Log.d( TAG, "swapping to UI thread" );
                 WaveManager.this.updateDeviceImpl( device );
             }
-        });
+        },1500);
     }
 
     private void updateDeviceImpl( final BluetoothDevice device )  {
@@ -329,6 +399,7 @@ public class WaveManager {
             Log.d( TAG, "Adding device!" );
             instance = new Wave( mContext, device );
             mDevices.put( device, instance );
+            Log.d( TAG, "Leaving UI thread!" );
         }
     }
 
@@ -337,30 +408,41 @@ public class WaveManager {
      */
     private class ScanCallback implements BluetoothAdapter.LeScanCallback {
         private final WaveManager mWaveManager;
+        public boolean scanning;
         public ScanCallback( final WaveManager deviceManager ) {
             mWaveManager = deviceManager;
+            scanning = false;
         }
         @Override
         public void onLeScan( final BluetoothDevice device, int rssi, byte[] scanRecord ) {
-            Log.d( TAG, "Found Device! " + device.getName() );
-            mWaveManager.updateDevice( device );
+            Log.d( TAG, "Found Device! " + device.getAddress() );
+            if( device.getAddress().equals("ED:09:F5:BB:E9:FF") ) {
+                Log.d( TAG, "Device address matches ED:09:F5:BB:E9:FF");
+                mWaveManager.updateDevice(device);
+                mWaveManager.mBluetoothAdapter.stopLeScan( this );
+                scanning = false;
+            }
         }
     }
 
     public void scan( Wave.Signature signature ) {
 
-        final int timeout = 10000;
+        final int timeout = 100000;
 
-        mHandler.postDelayed( new Runnable() {
+        mUIHandler.postDelayed( new Runnable() {
             @Override
             public void run() {
-                Log.d( TAG, "Stop Device Scan!" );
-                mBluetoothAdapter.stopLeScan( mCallback );
+                if( mCallback.scanning ) {
+                    Log.d(TAG, "Stop Device Scan!");
+                    mBluetoothAdapter.stopLeScan(mCallback);
+                    mCallback.scanning = false;
+                }
             }
         }, timeout);
 
         Log.d( TAG, "Start Device Scan!" );
 
+        mCallback.scanning = true;
         mBluetoothAdapter.startLeScan( mCallback );
     }
 }
