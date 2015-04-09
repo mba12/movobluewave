@@ -138,7 +138,8 @@ public class BLEAgent {
         private boolean checkGatt( final BluetoothGatt gatt ) {
             logFailure( currentOp != null, "Expected op");
             logFailure( currentDevice != null, "Expected request");
-            logFailure( currentDevice.gatt == gatt, "Gatt objects mismatch");
+            if( currentDevice != null )
+                logFailure( currentDevice.gatt == gatt, "Gatt objects mismatch");
             return currentOp != null && currentDevice != null && currentDevice.gatt == gatt;
         }
 
@@ -146,110 +147,134 @@ public class BLEAgent {
         public void onConnectionStateChange( final BluetoothGatt gatt,
                                              final int status,
                                              final int newState) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (checkGatt(gatt)) {
                         if (currentOp.onConnectionStateChange(status, newState)) {
                             nextOp();
                         }
+                    } else {
+                        //try to lookup device
+                        Log.i( TAG, "Trying to reroute connection state to device... " );
+                        final String address = gatt.getDevice().getAddress();
+                        final BLEDevice device = deviceMap.get( address );
+
+                        if (device != null) {
+                            Log.i( TAG, address + " " +
+                                    DebugOp.describeState( device.connectionState ) + " => " +
+                                    DebugOp.describeState( newState ));
+                            device.connectionState = newState;
+                            if( device != currentDevice &&
+                                    newState != BluetoothGatt.STATE_DISCONNECTED ) {
+                                gatt.disconnect();
+                            }
+                        } else {
+                            Log.e( TAG, "Failed to look up device for " + address );
+                        }
+
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onServicesDiscovered( final BluetoothGatt gatt,
                                           final int status ) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if( checkGatt( gatt ) ) {
                         if (currentOp.onServicesDiscovered(status)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onCharacteristicRead( final BluetoothGatt gatt,
                                           final BluetoothGattCharacteristic characteristic,
                                           final int status) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (checkGatt(gatt)) {
                         if (currentOp.onCharacteristicRead(characteristic, status)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onCharacteristicWrite( final BluetoothGatt gatt,
                                            final BluetoothGattCharacteristic characteristic,
                                            final int status) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if( checkGatt( gatt ) ) {
                         if (currentOp.onCharacteristicWrite(characteristic, status)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onCharacteristicChanged(final BluetoothGatt gatt,
                                             final BluetoothGattCharacteristic characteristic) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if( checkGatt( gatt ) ) {
                         if (currentOp.onCharacteristicChanged(characteristic)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onDescriptorRead( final BluetoothGatt gatt,
                                       final BluetoothGattDescriptor descriptor,
                                       final int status) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if( checkGatt( gatt ) ) {
                         if (currentOp.onDescriptorRead(descriptor, status)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
 
         @Override
         public void onDescriptorWrite( final BluetoothGatt gatt,
                                        final BluetoothGattDescriptor descriptor,
                                        final int status) {
-            if( checkGatt( gatt ) ) {
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if( checkGatt( gatt ) ) {
                         if (currentOp.onDescriptorWrite(descriptor, status)) {
                             nextOp();
                         }
                     }
-                });
-            }
+                }
+            });
         }
     };
 
@@ -260,8 +285,8 @@ public class BLEAgent {
         public final BluetoothDevice device;
         protected final BluetoothGatt gatt;
 
-        private boolean servicesDiscovered = false;
-        private int connectionState = BluetoothGatt.STATE_DISCONNECTED;
+        protected boolean servicesDiscovered = false;
+        protected int connectionState = BluetoothGatt.STATE_DISCONNECTED;
 
         public Date lastSeen;
 
@@ -286,9 +311,13 @@ public class BLEAgent {
             // lookup service & characteristic (FIXME: null check)
             final BluetoothGattService service =
                     gatt.getService( uuidPair.first );
-            final BluetoothGattCharacteristic characteristic =
-                    service.getCharacteristic( uuidPair.second );
-            return characteristic;
+            if( service != null ) {
+                final BluetoothGattCharacteristic characteristic =
+                        service.getCharacteristic(uuidPair.second);
+                return characteristic;
+            } else {
+                return null;
+            }
         }
 
         /** Cancel listening to the given service-characteristic uuid pair
@@ -510,7 +539,7 @@ public class BLEAgent {
     abstract static class DebugOp implements AsyncOp {
         final static String TAG = "BLEAgent::DebugOp";
 
-        protected String describeState( int state ) {
+        protected static String describeState(int state) {
             String msg;
             switch ( state ) {
                 case BluetoothProfile.STATE_CONNECTED:
@@ -640,6 +669,7 @@ public class BLEAgent {
 
             final BLERequest request = requestQueue.remove();
             currentRequest = request;
+            Log.d( TAG, "BLEAgent: Preparing request: " + currentRequest );
 
             stackOp(new SetupOp() {
                 @Override
@@ -703,6 +733,7 @@ public class BLEAgent {
                     if (currentRequest == request) {
                         Log.w( TAG, "BLEAgent: Request timed out: " + request + " at " + new Date());
                         request.onFailure();
+                        currentRequest = null;
                         nextRequest();
                     }
                 }
@@ -771,8 +802,8 @@ public class BLEAgent {
                     @Override
                     public void run() {
                         Log.d(TAG, "Connecting to device " + device.device.getAddress());
-                        logFailure(device.gatt.connect(), "gatt-connect to device: " + device.device.getAddress());
                         currentDevice = device;
+                        logFailure(device.gatt.connect(), "gatt-connect to device: " + device.device.getAddress());
                     }
 
                     @Override
@@ -786,6 +817,14 @@ public class BLEAgent {
                             Log.d(TAG, "Connected to device " + device.device.getAddress());
                         }
                         return ret;
+                    }
+                });
+            } else {
+                fifoOp( new SetupOp() {
+                    @Override
+                    public void run() {
+                        currentDevice = device;
+                        nextOp();
                     }
                 });
             }

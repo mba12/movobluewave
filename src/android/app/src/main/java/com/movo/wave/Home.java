@@ -77,7 +77,17 @@ public class Home extends ActionBarActivity {
         //mWaveManager = new WaveManager( c );
         //mWaveManager.scan( null );
         BLEAgent.open( c );
-        BLEAgent.handle( new BLEAgent.BLERequestScan( 10000 ) {
+        WaveAgent.scanForWaveDevices( 60000, new WaveAgent.WaveScanCallback() {
+            @Override
+            void onCompletion() {
+                Log.i( "Found wave device", "QTY " + waveDevices.size() );
+                for( final BLEAgent.BLEDevice device : waveDevices ) {
+                    Log.i( "Found wave device", device.device.getAddress() );
+                }
+            }
+        });
+
+        /*BLEAgent.handle( new BLEAgent.BLERequestScan( 10000 ) {
 
             @Override
             public boolean filter(BLEAgent.BLEDevice device) {
@@ -91,21 +101,21 @@ public class Home extends ActionBarActivity {
 
                 BLEAgent.handle( new WaveAgent.WaveRequestSetDate( device, 60000 ) {
                     @Override
-                    void onCompletion(boolean success, byte[] value) {
+                    protected void onCompletion(boolean success, byte[] value) {
                         Log.d( TAG, "Date set finished with state " + success );
                     }
                 });
 
                 BLEAgent.handle( new WaveAgent.WaveRequestGetDate( device, 60000 ) {
                     @Override
-                    void onCompletion(boolean success, Date date) {
+                    protected void onCompletion(boolean success, Date date) {
                         if( date != null ) {
                             Log.d( TAG, "Date was " + date);
                         }
                     }
                 });
 
-                /*BLEAgent.handle( new WaveAgent.WaveRequestSetPersonalInfo(
+                BLEAgent.handle( new WaveAgent.WaveRequestSetPersonalInfo(
                         device,
                         60000,
                         WaveAgent.WaveRequestSetPersonalInfo.MALE,
@@ -119,18 +129,18 @@ public class Home extends ActionBarActivity {
                     void onCompletion(boolean success, byte[] value) {
                         Log.d( TAG, "Set personal info status " + success);
                     }
-                });*/
+                });
 
                 BLEAgent.handle( new WaveAgent.WaveRequestDataByDay( device, 60000, new Date() ){
                     @Override
-                    void onCompletion(boolean success, WaveAgent.WaveDataPoint[] data) {
+                    protected void onCompletion(boolean success, WaveAgent.WaveDataPoint[] data) {
                         for( final WaveAgent.WaveDataPoint point : data ) {
                             Log.d( TAG, "\t" + point );
                         }
                     }
                 });
 
-                /*BLEAgent.handle( new BLEAgent.BLERequest( device, 30000 ) {
+                BLEAgent.handle( new BLEAgent.BLERequest( device, 30000 ) {
                     @Override
                     public boolean dispatch( final BLEAgent agent) {
                         Log.d( "ED:09:F5:BB:E9:FF", "Oh hi!");
@@ -146,10 +156,11 @@ public class Home extends ActionBarActivity {
                         ret.add( service );
                         return ret;
                     }
-                });*/
+                });
             }
-        });
-        BLEAgent.handle( new BLEAgent.BLERequestScan( 100000 ) {
+        });*/
+
+        /*BLEAgent.handle( new BLEAgent.BLERequestScan( 100000 ) {
             @Override
             public boolean filter(BLEAgent.BLEDevice device) {
                 return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
@@ -160,7 +171,7 @@ public class Home extends ActionBarActivity {
 
                 Log.d( "CALLBACK2", "found target " + device );
             }
-        });
+        });*/
 
         //calendar display
         final GridView gridview = (GridView) findViewById(R.id.gridview);

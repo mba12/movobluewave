@@ -66,12 +66,14 @@ public class WaveAgent {
 
         static public Set<Pair<UUID,UUID>> listenUUIDs = new HashSet<>();
         static public final Pair<UUID, UUID> writeUUIDs;
+        static public final Pair<UUID, UUID> notifyUUIDs;
 
         static {
             final HashSet<Pair<UUID,UUID>> tmpUUIDs = new HashSet<>();
             tmpUUIDs.add( new Pair<>( notifyServiceUUID, notifyCharacteristicUUID ) );
             listenUUIDs = Collections.unmodifiableSet( tmpUUIDs );
             writeUUIDs = new Pair<>( writeServiceUUID, writeCharacteristicUUID );
+            notifyUUIDs = new Pair<>( notifyServiceUUID, notifyCharacteristicUUID );
         }
 
         static protected void logFailure( final boolean success, final String msg ) {
@@ -599,7 +601,7 @@ public class WaveAgent {
         public WaveDataPoint( final byte[] message, int offset, final Date date ) {
             this.mode = getMode( message[ offset ]);
             // shave off
-            int tmp = message[ offset ] << 2;
+            int tmp = message[ offset ] & 0x3F;
             tmp <<= 6;
             tmp += message[ offset + 1 ];
             this.value = tmp;
@@ -816,12 +818,97 @@ public class WaveAgent {
         }
 
         /** Callback after parsing.
-         * 
+         *
          * Note: this.lid holds the requested lid.
          *
          * @param success boolean indication of state.
          * @param steps number of steps.
          */
         protected abstract void onCompletion( boolean success, int steps );
+    }
+
+    /** Interface for receiving wave device scan results
+     *
+     * Note: We don't synchronize internally because everything happens on the main thread.
+     */
+    abstract static class WaveScanCallback {
+        final protected Set<BLEAgent.BLEDevice> waveDevices = new HashSet<>();
+        final protected Set<BLEAgent.BLEDevice> pending = new HashSet<>();
+        private int pendingCount = 0;
+
+        private void acquire() {
+            pendingCount += 1;
+        }
+
+        private void release() {
+            pendingCount -= 1;
+            if( pendingCount == 0 ){
+                onCompletion();
+            }
+        }
+
+        /** Called at scan completion
+         */
+        abstract void onCompletion();
+    }
+
+    /** Test for if a BLEDevice is a wave device. Requires service discovery
+     *
+     * Right now just looks for notify and write UUIDs.
+     *
+     * @param device communications target.
+     * @return boolean indication of wave-ness.
+     */
+    public static boolean isWave( BLEAgent.BLEDevice device ) {
+        return device.getCharacteristic( BLERequestWaveOp.writeUUIDs ) != null &&
+                device.getCharacteristic( BLERequestWaveOp.notifyUUIDs ) != null;
+    }
+
+    /** Scans for wave devices, discovering services as neccissary.
+     *
+     * @param timeout per-request timeout, can make things quite large.
+     * @param callback result target for synchronization and device registery.
+     */
+    public static void scanForWaveDevices( final int timeout, final WaveScanCallback callback ) {
+
+        callback.acquire();
+
+        BLEAgent.handle( new BLEAgent.BLERequestScan(timeout) {
+
+            @Override
+            public boolean filter(BLEAgent.BLEDevice device) {
+
+                if( device.servicesDiscovered ) {
+                    if( isWave( device ) ) {
+                        callback.waveDevices.add( device );
+                    }
+                } else if( ! callback.pending.contains( device ) ) {
+                    callback.acquire();
+                    BLEAgent.handle( new BLEAgent.BLERequest(device, timeout) {
+                        @Override
+                        public boolean dispatch(BLEAgent agent) {
+                            if( isWave( this.device ) ) {
+                                callback.waveDevices.add( device );
+                                callback.release();
+                            }
+                            return true;
+                        }
+
+                        @Override
+                        public void onFailure() {
+                            Log.w( "WaveAgent", "scanForWaveDevices(): couldn't scan device "
+                                    + device.device.getAddress() );
+                        }
+                    });
+                }
+                callback.pending.add( device );
+                return false;
+            }
+
+            @Override
+            public void onComplete(BLEAgent.BLEDevice device) {
+                callback.release();
+            }
+        });
     }
 }
