@@ -84,9 +84,15 @@ public class WaveAgent {
         final protected WaveOp op;
         final protected byte[] message;
 
+        //support for multi-part responses
         final private byte[] response = new byte[ 256 ];
         private int responseSize = 0;
 
+        /** Check for response completion, concatenate multipart-response.
+         *
+         * @param responsePart part (or possibly whole) of response body as byte array.
+         * @return indication of completion--response byte array completed for parsing.
+         */
         private boolean buildResponse( final byte[] responsePart ) {
             System.arraycopy( responsePart, 0, response, responseSize, responsePart.length );
             responseSize += responsePart.length;
@@ -271,20 +277,7 @@ public class WaveAgent {
          * @param success boolean indication of state.
          * @param response raw response byte array or null.
          */
-        abstract void onCompletion( boolean success, byte[] response );
-    }
-
-    static public byte[] waveName( final String name ) {
-        final byte[] ret = new byte[15];
-        final char[] chars = name.toCharArray();
-        final int copyLimit = Math.min(ret.length, chars.length);
-        for( int index = 0; index < copyLimit; index++ ) {
-            ret[ index ] = (byte) chars[ index ];
-        }
-        for( int index = copyLimit; index < ret.length; index++ ) {
-            ret[ index ] = (byte) '#';
-        }
-        return ret;
+        protected abstract void onCompletion( boolean success, byte[] response );
     }
 
     /** Enum for marshalling byte fields for byte array message exchanges with wave devices.
@@ -324,7 +317,7 @@ public class WaveAgent {
         BT_AUTO_DISCONNECT  ( 46, 0, 1, 0 ),
         BT_AUTO_TIMEOUT     ( 47, 0, 120, 0),
 
-        //data related
+        //sports data related
         DATA_REQUEST_DAY    ( 2, 1, 7, -1),
         DATA_REQUEST_HOUR   ( 3, 0, 23, 0 ),
         DATA_REQUEST_QTY    ( 4, 1, 3, 0 ),
@@ -332,6 +325,9 @@ public class WaveAgent {
         DATA_RESPONSE_YEAR  ( 2, 0, 99, 100 ),
         DATA_RESPONSE_MONTH ( 3, 1, 12, -1 ),
         DATA_RESPONSE_DATE  ( 4, 1, 31, 0 ),
+
+        //device data related
+        DEVICE_LID          ( 2, 0x01, 0x09, 0 );
         ;
 
         final static String TAG = "WaveAgent.MarshalByte";
@@ -424,7 +420,7 @@ public class WaveAgent {
         }
 
         @Override
-        void onCompletion(boolean success, byte[] response) {
+        protected void onCompletion(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
                 ret = new Date(
@@ -443,7 +439,7 @@ public class WaveAgent {
          * @param success boolean indication of state.
          * @param date response date or null
          */
-        abstract void onCompletion( boolean success, Date date );
+        abstract protected void onCompletion( boolean success, Date date );
     }
 
     /** Set time on device using local clock. Device time will be set in UTC.
@@ -605,7 +601,7 @@ public class WaveAgent {
             // shave off
             int tmp = message[ offset ] << 2;
             tmp <<= 6;
-            tmp += offset;
+            tmp += message[ offset + 1 ];
             this.value = tmp;
             this.date = date;
         }
@@ -622,10 +618,10 @@ public class WaveAgent {
                                               final int offset,
                                               final int qty,
                                               final Date start ) {
-            int minutes = 0;
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
             for( int index = 0 ; index < qty;  index += 1 ) {
                 final Date date = new Date( start.getTime() + index * 1000 * 60 * 2 );
+                date.setSeconds( 0 );
                 ret[ index ] = new WaveDataPoint( message, index * 2 + offset, date );
             }
 
@@ -663,7 +659,7 @@ public class WaveAgent {
         }
 
         @Override
-        void onCompletion(boolean success, byte[] response) {
+        protected void onCompletion(boolean success, byte[] response) {
             WaveDataPoint[] ret = null;
 
             if( success ) {
@@ -682,18 +678,150 @@ public class WaveAgent {
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
-                Log.d( TAG, "Data by date for " + this.date + " returned " + qty + "data points." );
+                Log.d( TAG, "Data by date for " + this.date + " returned " + qty + " data points." );
 
                 ret = WaveDataPoint.parseResponse( response, 5, qty, this.date );
-
-                for( final WaveDataPoint point : ret ) {
-                    Log.d( TAG, "\t" + point );
-                }
             }
 
             onCompletion( success, ret );
         }
 
-        abstract void onCompletion( boolean success, WaveDataPoint[] data );
+        /** completion callback for data points
+         *
+         * @param success boolean indication of state.
+         * @param data array of WaveDataPoint objects or null;
+         */
+        protected abstract void onCompletion( boolean success, WaveDataPoint[] data );
+    }
+
+    /** Request for setting device name. seems broken.
+     *
+     * FIXME: Check character set encoding.
+     */
+    abstract static class WaveRequestSetName extends BLERequestWaveOp {
+        static final int bodySize = 15;
+
+        /** Create a SET_NAME request.
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param name device name to set, maximum 15 characters.
+         */
+        public WaveRequestSetName( final BLEAgent.BLEDevice device,
+                                   final int timeout,
+                                   final String name ){
+            super( WaveOp.SET_NAME, bodySize, device, timeout );
+            final char[] chars = name.toCharArray();
+            final int copyLimit = Math.min(bodySize, chars.length);
+            logFailure( copyLimit == chars.length, "Requested name longer than 15: " + name );
+
+            for( int index = 0; index < copyLimit; index++ ) {
+                message[ index + 2 ] = (byte) chars[ index ];
+            }
+            for( int index = copyLimit; index < bodySize; index++ ) {
+                message [ index + 2 ] = (byte) '#';
+            }
+        }
+    }
+
+    /** Request clear device data
+     *
+     */
+    abstract static class WaveRequestClearData extends BLERequestWaveOp {
+
+        /** Create new request to clear data on a device
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         */
+        public WaveRequestClearData( final BLEAgent.BLEDevice device, final int timeout ) {
+            super( WaveOp.CLEAR_DATA, 0, device, timeout );
+        }
+    }
+
+    /** Request reset device
+     *
+     */
+    abstract static class WaveRequestResetDevice extends BLERequestWaveOp {
+
+        /** Create new request to reset device to factory defaults
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         */
+        public WaveRequestResetDevice( final BLEAgent.BLEDevice device, final int timeout ) {
+            super( WaveOp.RESET_TO_DEFAULTS, 0, device, timeout );
+        }
+    }
+
+    /** Create a read device data requests
+     *
+     */
+    abstract static class WaveRequestReadDeviceData extends BLERequestWaveOp {
+
+        /** Enumeration of LID range and hex values.
+         *
+         */
+        static enum LocalIdentifier {
+            MONDAY      (0x01),
+            TUESDAY     (0x02),
+            WEDNESDAY   (0x03),
+            THURSDAY    (0x04),
+            FRIDAY      (0x05),
+            SATURDAY    (0x06),
+            SUNDAY      (0x07),
+            TOTAL       (0x09),
+            BATTERY     (0x08)
+            ;
+            public final int value;
+            private  LocalIdentifier( final int value ) {
+                this.value = value;
+            }
+        }
+
+        protected final LocalIdentifier lid;
+
+        /** Create a new read device data request
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param lid Local identifier to query.
+         */
+        public WaveRequestReadDeviceData( final BLEAgent.BLEDevice device,
+                                          final int timeout,
+                                          final LocalIdentifier lid) {
+            super( WaveOp.READ_DEVICE, 1, device, timeout );
+            this.lid = lid;
+            MarshalByte.DEVICE_LID.put( message, lid.value );
+        }
+
+        @Override
+        protected void onCompletion(boolean success, byte[] response) {
+            int steps = 0;
+
+            if( lid == LocalIdentifier.BATTERY) {
+
+                Log.e(TAG, "Parsing of battery data not implemented");
+                success = false;
+            } else {
+                if (success) {
+                    steps = (int) response[2] & 0xFF;
+                    steps <<= 8;
+                    steps += (int) response[3] & 0xFF;
+                    steps <<= 8;
+                    steps += (int) response[4] & 0xFF;
+                }
+            }
+            onCompletion( success, steps );
+        }
+
+        /** Callback after parsing.
+         * 
+         * Note: this.lid holds the requested lid.
+         *
+         * @param success boolean indication of state.
+         * @param steps number of steps.
+         */
+        protected abstract void onCompletion( boolean success, int steps );
     }
 }

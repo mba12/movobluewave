@@ -124,7 +124,9 @@ public class Home extends ActionBarActivity {
                 BLEAgent.handle( new WaveAgent.WaveRequestDataByDay( device, 60000, new Date() ){
                     @Override
                     void onCompletion(boolean success, WaveAgent.WaveDataPoint[] data) {
-
+                        for( final WaveAgent.WaveDataPoint point : data ) {
+                            Log.d( TAG, "\t" + point );
+                        }
                     }
                 });
 
