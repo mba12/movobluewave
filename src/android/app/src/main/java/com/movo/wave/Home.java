@@ -59,7 +59,6 @@ public class Home extends ActionBarActivity {
     private ListView mDrawerList;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
-    private WaveManager mWaveManager;
     String[] menuOptions;
     public String TAG = "Movo Wave V2";
     @Override
