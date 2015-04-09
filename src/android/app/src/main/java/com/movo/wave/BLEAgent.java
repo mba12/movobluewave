@@ -47,7 +47,7 @@ public class BLEAgent {
      * http://stackoverflow.com/a/9855338
      */
     static final char[] hexArray = "0123456789ABCDEF".toCharArray();
-    private static String bytesToHex(byte[] bytes) {
+    public static String bytesToHex(byte[] bytes) {
         char[] hexChars = new char[bytes.length * 2];
         int i = 0;
         for (byte aByte : bytes) {
@@ -58,7 +58,7 @@ public class BLEAgent {
         return new String(hexChars);
     }
 
-    private static int hexArrayIndexOf( final char value ) {
+    public static int hexArrayIndexOf( final char value ) {
         for( int i = 0; i < hexArray.length; i++ ) {
             if( hexArray[ i ] == value ) {
                 return i;
@@ -67,7 +67,7 @@ public class BLEAgent {
         throw new Error( "Cannot hex-lookup value '" + value + "'" );
     }
 
-    private static byte[]  hexToBytes( final String hexValue ) {
+    public static byte[]  hexToBytes( final String hexValue ) {
         final char[] chars = hexValue.toCharArray();
         byte[] ret = new byte[ chars.length / 2 ];
         int src = 0;
@@ -77,6 +77,15 @@ public class BLEAgent {
         }
         return ret;
     }
+
+    public static String byteToHex( byte aByte ) {
+        int v = aByte & 0xFF;
+        return new String( new char[]{ hexArray[v >>> 4], hexArray[v & 0x0F] });
+    }
+
+
+    // singleton instance, only available via handle() to requests
+    final static private BLEAgent self = new BLEAgent();
 
     private final static String TAG = "BLEAgent";
     private static Context context;
@@ -98,9 +107,9 @@ public class BLEAgent {
                 UIHandler = new Handler(ctx.getMainLooper());
                 final BluetoothManager btManager =
                         (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-                adapter = btManager.getAdapter();
+                self.adapter = btManager.getAdapter();
 
-                if( adapter == null || !adapter.isEnabled() ) {
+                if( self.adapter == null || !self.adapter.isEnabled() ) {
                     Log.e( TAG, "Bluetooth not enabled!");
                 } else {
                     Log.d( TAG, "Initialized" );
@@ -122,8 +131,10 @@ public class BLEAgent {
     /**
      * singleton GATT callback for receiving and re-dispatching results.
      * probably dumber than proxying.
+     *
+     * Note: all responses are re-directed to UI context.
      */
-    static private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         private boolean checkGatt( final BluetoothGatt gatt ) {
             logFailure( currentOp != null, "Expected op");
             logFailure( currentDevice != null, "Expected request");
@@ -247,18 +258,18 @@ public class BLEAgent {
      */
     public static class BLEDevice {
         public final BluetoothDevice device;
-        private final BluetoothGatt gatt;
+        protected final BluetoothGatt gatt;
 
-        private boolean servicesDiscovered;
+        private boolean servicesDiscovered = false;
+        private int connectionState = BluetoothGatt.STATE_DISCONNECTED;
 
         public Date lastSeen;
 
         private BLEDevice( final BluetoothDevice device, final Date seen ) {
             this.lastSeen = seen;
             this.device = device;
-            this.gatt = device.connectGatt( context, false, gattCallback );
+            this.gatt = device.connectGatt( context, false, self.gattCallback );
             logFailure( this.gatt != null, "BLEDevice failed at connectGatt()!");
-            this.servicesDiscovered = false;
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
         }
@@ -271,6 +282,15 @@ public class BLEAgent {
         private Set<Pair<UUID,UUID>> notifyUUIDs;
         private Pair<UUID,UUID> pendingUUID;
 
+        public BluetoothGattCharacteristic getCharacteristic( final Pair<UUID,UUID> uuidPair ) {
+            // lookup service & characteristic (FIXME: null check)
+            final BluetoothGattService service =
+                    gatt.getService( uuidPair.first );
+            final BluetoothGattCharacteristic characteristic =
+                    service.getCharacteristic( uuidPair.second );
+            return characteristic;
+        }
+
         /** Cancel listening to the given service-characteristic uuid pair
          *  Only cancels device-local listening
          * @param notifyUUID service-characteristic pair for which to disable notification.
@@ -278,11 +298,9 @@ public class BLEAgent {
         private void stopListenUUID( final Pair<UUID, UUID > notifyUUID ) {
             notifyUUIDs.remove( notifyUUID );
 
-            final BluetoothGattService service =
-                    currentDevice.gatt.getService( notifyUUID.first );
-            final BluetoothGattCharacteristic characteristic =
-                    service.getCharacteristic( notifyUUID.second );
-            logFailure( currentDevice.gatt.setCharacteristicNotification( characteristic, false ),
+            final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
+
+            logFailure( gatt.setCharacteristicNotification( notifyCharacteristic, false ),
                     "Failed to disable notification for service: " + notifyUUID.first +
                             " characteristic: " + notifyUUID.second
             );
@@ -303,14 +321,10 @@ public class BLEAgent {
                                 " old characteristic: " + pendingUUID.second);
             }
 
-            // lookup service & characteristic (FIXME: null check)
-            final BluetoothGattService service =
-                    currentDevice.gatt.getService( notifyUUID.first );
-            final BluetoothGattCharacteristic characteristic =
-                    service.getCharacteristic( notifyUUID.second );
+            final BluetoothGattCharacteristic characteristic = getCharacteristic( notifyUUID );
 
             // check for notification failure
-            logFailure( currentDevice.gatt.setCharacteristicNotification( characteristic, false ),
+            logFailure( gatt.setCharacteristicNotification( characteristic, true ),
                     "Failed to disable notification for service: " + notifyUUID.first +
                             " characteristic: " + notifyUUID.second );
 
@@ -319,7 +333,10 @@ public class BLEAgent {
 
             descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
 
-            gatt.writeDescriptor( descriptor );
+            logFailure(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
+                    + notifyUUID.first + " characteristic " + notifyUUID.second);
+
+            pendingUUID = notifyUUID;
         }
 
         /** stashes the current UUID pair as active.
@@ -327,10 +344,10 @@ public class BLEAgent {
          * @param gattStatus callback return value
          */
         private void completeListenUUID( final int gattStatus ) {
-            logFailure( pendingUUID == null,
+            logFailure( pendingUUID != null,
                     "Error, complete listen to UUID with no dispatch!!!"
             );
-            if( gattStatus == 0) {
+            if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
                 notifyUUIDs.add(pendingUUID);
             } else {
                 Log.e( TAG, "Error, non-success gatt status (" + gattStatus + ") for service " +
@@ -384,7 +401,7 @@ public class BLEAgent {
          * Note, device services may not be discovered until the dispatch context.
          * look at opBuildStack and buildOps.
          */
-        abstract public boolean dispatch();
+        abstract public boolean dispatch(final BLEAgent agent);
 
         /** receive forwarded response from device, override per type.
          *
@@ -423,6 +440,7 @@ public class BLEAgent {
 
     /**
      * Close down singleton and any open devices
+     * FIXME: refresh logic
      */
     public static void close() {
         try {
@@ -447,20 +465,30 @@ public class BLEAgent {
         }
     }
 
-    private static BluetoothAdapter adapter = null;
-    private static final BluetoothAdapter.LeScanCallback scanCallback =
+    private BluetoothAdapter adapter = null;
+    private final BluetoothAdapter.LeScanCallback scanCallback =
             new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan( final BluetoothDevice device, int rssi, byte[] scanRecord ) {
             Log.d(TAG, "Found Device: " + device.getAddress());
-            BLEAgent.updateDevice(device);
+            updateDevice(device);
         }
     };
 
+    public void startScan() {
+        Log.d( TAG, "Start ble scan");
+        logFailure(adapter.startLeScan(scanCallback), " Scan start");
+    }
+
+    public void stopScan() {
+        Log.d( TAG, "stop ble scan");
+        adapter.stopLeScan( scanCallback );
+    }
+
     //new request queue!
-    private static final Queue<BLERequest> requestQueue = new ConcurrentLinkedQueue<>();
-    private static BLERequest currentRequest = null;
-    private static BLEDevice currentDevice = null;
+    private final Queue<BLERequest> requestQueue = new ConcurrentLinkedQueue<>();
+    private BLERequest currentRequest = null;
+    private BLEDevice currentDevice = null;
 
     /**
      * Interface for doing async things with a BLE device within a request context.
@@ -558,14 +586,14 @@ public class BLEAgent {
         final static String TAG = "BLEAgent::SetupOp";
     }
 
-    private static final Stack<AsyncOp> opStack = new Stack<>();
-    private static final Stack<AsyncOp> opBuildStack = new Stack<>();
-    private static AsyncOp currentOp = null;
+    private final Stack<AsyncOp> opStack = new Stack<>();
+    private final Stack<AsyncOp> opBuildStack = new Stack<>();
+    private AsyncOp currentOp = null;
 
     /**
-     * convenience for inverting stack ordering logic
+     * convenience for inverting stack ordering
      */
-    private static void buildOps() {
+    public void buildOps() {
         try {
             //noinspection InfiniteLoopStatement
             while( true ) {
@@ -575,11 +603,20 @@ public class BLEAgent {
         }
     }
 
+    public void fifoOp( final AsyncOp op ) {
+        opBuildStack.push( op );
+    }
+
+    public void stackOp( final AsyncOp op ) {
+        opStack.push( op );
+    }
+
     /** Schedules the next method on the op stack for the UI thread.
      * Should be invoked by each OP either in run() or in results of run
      * Note: OpStack is cleared by timeout
      */
-    private static boolean nextOp() {
+    private boolean nextOp() {
+        logFailure( opBuildStack.size() == 0, "Op build stack not empty before next op!");
         try {
             currentOp = opStack.pop();
             UIHandler.post(currentOp);
@@ -593,7 +630,7 @@ public class BLEAgent {
     /** internal method to execute a request.
      * stacks ops to setup this requests
      */
-    private static void nextRequest() {
+    private void nextRequest() {
         opStack.clear();
         currentOp = null;
         try {
@@ -604,17 +641,59 @@ public class BLEAgent {
             final BLERequest request = requestQueue.remove();
             currentRequest = request;
 
-            opStack.push(new SetupOp() {
+            stackOp(new SetupOp() {
                 @Override
                 public void run() {
-                    logFailure( currentRequest == request,
-                            "nextRequest(): currentRequest != request" );
-                    Log.d( TAG, "Starting request " + request + " at " + new Date() );
-                    if( request.dispatch() ) {
+                    logFailure(currentRequest == request,
+                            "nextRequest(): currentRequest != request");
+                    Log.d(TAG, "Starting request " + request + " at " + new Date());
+                    if (request.dispatch(BLEAgent.this)) {
                         nextRequest();
                     }
                 }
+
+                @Override
+                public boolean onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
+                    if( request.onReceive(characteristic, BluetoothGatt.GATT_SUCCESS )) {
+                        nextRequest();
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean onCharacteristicRead(BluetoothGattCharacteristic characteristic, int status) {
+                    if( request.onReceive(characteristic, status )) {
+                        nextRequest();
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean onCharacteristicWrite(BluetoothGattCharacteristic characteristic, int status) {
+                    if( request.onReceive(characteristic, status )) {
+                        nextRequest();
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean onDescriptorWrite(BluetoothGattDescriptor descriptor, int status) {
+                    if( request.onReceive(descriptor, status )) {
+                        nextRequest();
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean onDescriptorRead(BluetoothGattDescriptor descriptor, int status) {
+                    if( request.onReceive(descriptor, status )) {
+                        nextRequest();
+                    }
+                    return false;
+                }
             });
+
+            buildOps();
 
             setDevice(request.device);
 
@@ -650,19 +729,19 @@ public class BLEAgent {
      * Pushes AsyncOps to the opstack
      * @param device device to activate.
      */
-    private static void setDevice( final BLEDevice device ) {
+    private void setDevice( final BLEDevice device ) {
 
         //disconnect
         if( device != currentDevice && currentDevice != null ) {
-            opBuildStack.push(new SetupOp() {
+            fifoOp(new SetupOp() {
                 @Override
                 public void run() {
 
-                    Log.d( TAG, "Disconnecting from device: " +  device.device.getAddress() );
+                    Log.d(TAG, "Disconnecting from device: " + device.device.getAddress());
 
                     // disable notifications
-                    for( Pair<UUID,UUID> notifyUUID : currentDevice.notifyUUIDs ) {
-                        currentDevice.stopListenUUID( notifyUUID );
+                    for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
+                        currentDevice.stopListenUUID(notifyUUID);
                     }
 
                     currentDevice.gatt.disconnect();
@@ -670,15 +749,16 @@ public class BLEAgent {
 
                 @Override
                 public boolean onConnectionStateChange(int status, int newState) {
-                   final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
-                   if( ret ) {
-                       Log.w( TAG, "Not disconnected??!? " + describeState( newState ) );
-                       Log.w(TAG, "Retrying disconnect..." + device.device.getAddress());
-                       currentDevice.gatt.disconnect();
-                   } else {
-                       Log.d( TAG, "Disconnected from " +  device.device.getAddress());
-                   }
-                   return newState == BluetoothGatt.STATE_DISCONNECTED;
+                    final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
+                    currentDevice.connectionState = newState;
+                    if (!ret) {
+                        Log.w(TAG, "Not disconnected??!? " + describeState(newState));
+                        Log.w(TAG, "Retrying disconnect..." + device.device.getAddress());
+                        currentDevice.gatt.disconnect();
+                    } else {
+                        Log.d(TAG, "Disconnected from " + device.device.getAddress());
+                    }
+                    return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
             });
         }
@@ -686,30 +766,33 @@ public class BLEAgent {
 
         if( device != null ) {
             // connect
-            opBuildStack.push(new SetupOp() {
-                @Override
-                public void run() {
-                    Log.d( TAG, "Connecting to device " + device.device.getAddress() );
-                    logFailure(device.gatt.connect(), "gatt-connect to device: " + device.device.getAddress());
-                    currentDevice = device;
-                }
-
-                @Override
-                public boolean onConnectionStateChange(int status, int newState) {
-                    boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
-                    if( ! ret ) {
-                        Log.i( TAG, "Retrying connection. received: " + describeState( newState ) );
-                        currentDevice.gatt.connect();
-                    } else {
-                        Log.d( TAG, "Connected to device " +  device.device.getAddress());
+            if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                fifoOp(new SetupOp() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "Connecting to device " + device.device.getAddress());
+                        logFailure(device.gatt.connect(), "gatt-connect to device: " + device.device.getAddress());
+                        currentDevice = device;
                     }
-                    return ret;
-                }
-            });
+
+                    @Override
+                    public boolean onConnectionStateChange(int status, int newState) {
+                        boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
+                        device.connectionState = newState;
+                        if (!ret) {
+                            Log.i(TAG, "Retrying connection. received: " + describeState(newState));
+                            currentDevice.gatt.connect();
+                        } else {
+                            Log.d(TAG, "Connected to device " + device.device.getAddress());
+                        }
+                        return ret;
+                    }
+                });
+            }
 
             // discover devices
             if (!device.servicesDiscovered) {
-                opBuildStack.push(new SetupOp() {
+                fifoOp( new SetupOp() {
                     @Override
                     public void run() {
                         Log.d( TAG, "Discovering services for device "
@@ -723,7 +806,7 @@ public class BLEAgent {
                         if( ret ) {
                             Log.d( TAG, "Discovered services for device "
                                     + device.device.getAddress());
-
+                            device.servicesDiscovered = true;
                         } else {
                             Log.w( TAG, "Failed to discover services for device " +
                                     device.device.getAddress() + ". retrying..." );
@@ -756,7 +839,7 @@ public class BLEAgent {
             }
 
             if( removeUUIDs.size() != 0 ) {
-                opBuildStack.push(new SetupOp() {
+                fifoOp(new SetupOp() {
                     @Override
                     public void run() {
 
@@ -775,7 +858,7 @@ public class BLEAgent {
                 are).
              */
             for(final Pair<UUID, UUID> notifyUUID : insertUUIDs) {
-                opBuildStack.push( new SetupOp() {
+                fifoOp( new SetupOp() {
                     @Override
                     public void run() {
                         Log.d( TAG, "enabling listening to device " +  device.device.getAddress()
@@ -812,7 +895,7 @@ public class BLEAgent {
      *  async notifies current request of new device.
      * @param device Bluetooth device to activate.
      */
-    static private void updateDevice( final BluetoothDevice device ) {
+    private void updateDevice( final BluetoothDevice device ) {
         final Date now = new Date();
         UIHandler.post( new Runnable() {
             @Override
@@ -841,9 +924,9 @@ public class BLEAgent {
         UIHandler.post( new Runnable() {
             @Override
             public void run() {
-                requestQueue.add(request);
-                if( currentRequest == null ) {
-                    nextRequest();
+                self.requestQueue.add(request);
+                if( self.currentRequest == null ) {
+                    self.nextRequest();
                 }
             }
         });
@@ -854,28 +937,20 @@ public class BLEAgent {
             super( null, timeout );
         }
 
-        protected void startScan() {
-            Log.d( TAG, "Start ble scan");
-            BLEAgent.adapter.startLeScan( BLEAgent.scanCallback );
-        }
 
-        protected void stopScan() {
-            Log.d( TAG, "stop ble scan");
-            BLEAgent.adapter.stopLeScan( BLEAgent.scanCallback );
-        }
 
 
         @Override
-        public boolean dispatch() {
+        public boolean dispatch( BLEAgent agent ) {
             //redirect current BLE map into handler.
-            for( BLEDevice device : BLEAgent.deviceMap.values() ) {
+            for( BLEDevice device : agent.deviceMap.values() ) {
                 if( filter( device ) ) {
                     Log.d(TAG, "Exiting with pre-existing device: " + device.device.getAddress());
                     onComplete(device);
                     return true;
                 }
             }
-            startScan();
+            agent.startScan();
             return false;
         }
 
@@ -883,7 +958,8 @@ public class BLEAgent {
         public boolean onReceive(final BLEDevice device) {
             final boolean ret = filter( device );
             if( ret ) {
-                stopScan();
+                //FIXME: reference cheating
+                self.stopScan();
                 /*
                   TODO: evaluate posting completion on a separate thread to allow next request to
                   execute sooner.
@@ -897,7 +973,8 @@ public class BLEAgent {
         public void onFailure() {
             Log.d( TAG, "BLE Scan abort.");
             onComplete( null );
-            stopScan();
+            //FIXME: reference cheating
+            self.stopScan();
         }
 
         /** Override to receive device or null

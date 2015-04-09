@@ -39,6 +39,7 @@ import com.github.mikephil.charting.data.LineDataSet;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -86,10 +87,50 @@ public class Home extends ActionBarActivity {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
 
-                Log.d( "CALLBACK", "found target " + device );
-                BLEAgent.handle( new BLEAgent.BLERequest( device, 30000 ) {
+                Log.d( "CALLBACK", "found target " + device + " name " + device.device.getName() );
+
+                BLEAgent.handle( new WaveAgent.WaveRequestSetDate( device, 60000 ) {
                     @Override
-                    public boolean dispatch() {
+                    void onCompletion(boolean success, byte[] value) {
+                        Log.d( TAG, "Date set finished with state " + success );
+                    }
+                });
+
+                BLEAgent.handle( new WaveAgent.WaveRequestGetDate( device, 60000 ) {
+                    @Override
+                    void onCompletion(boolean success, Date date) {
+                        if( date != null ) {
+                            Log.d( TAG, "Date was " + date);
+                        }
+                    }
+                });
+
+                /*BLEAgent.handle( new WaveAgent.WaveRequestSetPersonalInfo(
+                        device,
+                        60000,
+                        WaveAgent.WaveRequestSetPersonalInfo.MALE,
+                        150,
+                        80,
+                        100,
+                        150,
+                        WaveAgent.WaveRequestSetPersonalInfo.sleepTime( 23, 00 ),
+                        WaveAgent.WaveRequestSetPersonalInfo.sleepTime( 7, 00 ) ) {
+                    @Override
+                    void onCompletion(boolean success, byte[] value) {
+                        Log.d( TAG, "Set personal info status " + success);
+                    }
+                });*/
+
+                BLEAgent.handle( new WaveAgent.WaveRequestDataByDay( device, 60000, new Date() ){
+                    @Override
+                    void onCompletion(boolean success, WaveAgent.WaveDataPoint[] data) {
+
+                    }
+                });
+
+                /*BLEAgent.handle( new BLEAgent.BLERequest( device, 30000 ) {
+                    @Override
+                    public boolean dispatch( final BLEAgent agent) {
                         Log.d( "ED:09:F5:BB:E9:FF", "Oh hi!");
                         return true;
                     }
@@ -103,7 +144,7 @@ public class Home extends ActionBarActivity {
                         ret.add( service );
                         return ret;
                     }
-                });
+                });*/
             }
         });
         BLEAgent.handle( new BLEAgent.BLERequestScan( 100000 ) {
