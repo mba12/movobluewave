@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A103A3D1AD4106400DC952D /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */; };
+		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CD1AD173900055C771 /* AppDelegate.swift */; };
 		4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */; };
 		4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D21AD173900055C771 /* ViewController.swift */; };
@@ -16,14 +18,6 @@
 		4AEEA9E71AD173900055C771 /* WaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9E61AD173900055C771 /* WaveTests.swift */; };
 		4AEEA9F11AD1751E0055C771 /* WaveDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */; };
 		4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */; };
-		4AEEA9FC1AD17F0F0055C771 /* FirstTime_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F41AD17F0F0055C771 /* FirstTime_iPhone.storyboard */; };
-		4AEEA9FD1AD17F0F0055C771 /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F51AD17F0F0055C771 /* MainStoryboard_iPhone.storyboard */; };
-		4AEEA9FE1AD17F0F0055C771 /* MyProfile_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F61AD17F0F0055C771 /* MyProfile_iPhone.storyboard */; };
-		4AEEA9FF1AD17F0F0055C771 /* OtherScreens_Challenge_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F71AD17F0F0055C771 /* OtherScreens_Challenge_iPhone.storyboard */; };
-		4AEEAA001AD17F0F0055C771 /* OtherScreens_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F81AD17F0F0055C771 /* OtherScreens_iPhone.storyboard */; };
-		4AEEAA011AD17F0F0055C771 /* SplashLogin_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F91AD17F0F0055C771 /* SplashLogin_iPhone.storyboard */; };
-		4AEEAA021AD17F0F0055C771 /* SyncScreen_iPhone_backup.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9FA1AD17F0F0055C771 /* SyncScreen_iPhone_backup.storyboard */; };
-		4AEEAA031AD17F0F0055C771 /* SyncScreen_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9FB1AD17F0F0055C771 /* SyncScreen_iPhone.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -37,6 +31,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4A103A3C1AD4106400DC952D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4AEEA9C81AD173900055C771 /* Wave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9CC1AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9CD1AD173900055C771 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -50,14 +46,6 @@
 		4AEEA9E61AD173900055C771 /* WaveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveTests.swift; sourceTree = "<group>"; };
 		4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveDataModel.swift; sourceTree = "<group>"; };
 		4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarViewController.swift; sourceTree = "<group>"; };
-		4AEEA9F41AD17F0F0055C771 /* FirstTime_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = FirstTime_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/FirstTime_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9F51AD17F0F0055C771 /* MainStoryboard_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = MainStoryboard_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9F61AD17F0F0055C771 /* MyProfile_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = MyProfile_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/MyProfile_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9F71AD17F0F0055C771 /* OtherScreens_Challenge_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = OtherScreens_Challenge_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/OtherScreens_Challenge_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9F81AD17F0F0055C771 /* OtherScreens_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = OtherScreens_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/OtherScreens_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9F91AD17F0F0055C771 /* SplashLogin_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashLogin_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/SplashLogin_iPhone.storyboard; sourceTree = "<group>"; };
-		4AEEA9FA1AD17F0F0055C771 /* SyncScreen_iPhone_backup.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SyncScreen_iPhone_backup.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/SyncScreen_iPhone_backup.storyboard; sourceTree = "<group>"; };
-		4AEEA9FB1AD17F0F0055C771 /* SyncScreen_iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SyncScreen_iPhone.storyboard; path = ../../../../../levMovoR2/Wave.iOS/Storyboard/SyncScreen_iPhone.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -99,17 +87,11 @@
 		4AEEA9CA1AD173900055C771 /* Wave */ = {
 			isa = PBXGroup;
 			children = (
-				4AEEA9F41AD17F0F0055C771 /* FirstTime_iPhone.storyboard */,
-				4AEEA9F51AD17F0F0055C771 /* MainStoryboard_iPhone.storyboard */,
-				4AEEA9F61AD17F0F0055C771 /* MyProfile_iPhone.storyboard */,
-				4AEEA9F71AD17F0F0055C771 /* OtherScreens_Challenge_iPhone.storyboard */,
-				4AEEA9F81AD17F0F0055C771 /* OtherScreens_iPhone.storyboard */,
-				4AEEA9F91AD17F0F0055C771 /* SplashLogin_iPhone.storyboard */,
-				4AEEA9FA1AD17F0F0055C771 /* SyncScreen_iPhone_backup.storyboard */,
-				4AEEA9FB1AD17F0F0055C771 /* SyncScreen_iPhone.storyboard */,
 				4AEEA9CD1AD173900055C771 /* AppDelegate.swift */,
+				4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */,
 				4AEEA9D21AD173900055C771 /* ViewController.swift */,
 				4AEEA9D41AD173900055C771 /* Main.storyboard */,
+				4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */,
 				4AEEA9D71AD173900055C771 /* Images.xcassets */,
 				4AEEA9D91AD173900055C771 /* LaunchScreen.xib */,
 				4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */,
@@ -225,17 +207,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4AEEA9FD1AD17F0F0055C771 /* MainStoryboard_iPhone.storyboard in Resources */,
-				4AEEAA031AD17F0F0055C771 /* SyncScreen_iPhone.storyboard in Resources */,
 				4AEEA9D61AD173900055C771 /* Main.storyboard in Resources */,
 				4AEEA9DB1AD173900055C771 /* LaunchScreen.xib in Resources */,
+				4A103A3D1AD4106400DC952D /* MainStoryboard_iPhone.storyboard in Resources */,
 				4AEEA9D81AD173900055C771 /* Images.xcassets in Resources */,
-				4AEEAA021AD17F0F0055C771 /* SyncScreen_iPhone_backup.storyboard in Resources */,
-				4AEEAA001AD17F0F0055C771 /* OtherScreens_iPhone.storyboard in Resources */,
-				4AEEAA011AD17F0F0055C771 /* SplashLogin_iPhone.storyboard in Resources */,
-				4AEEA9FC1AD17F0F0055C771 /* FirstTime_iPhone.storyboard in Resources */,
-				4AEEA9FF1AD17F0F0055C771 /* OtherScreens_Challenge_iPhone.storyboard in Resources */,
-				4AEEA9FE1AD17F0F0055C771 /* MyProfile_iPhone.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,6 +228,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
 				4AEEA9F11AD1751E0055C771 /* WaveDataModel.swift in Sources */,
 				4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */,
 				4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */,
@@ -280,6 +256,14 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4A103A3C1AD4106400DC952D /* Base */,
+			);
+			name = MainStoryboard_iPhone.storyboard;
+			sourceTree = "<group>";
+		};
 		4AEEA9D41AD173900055C771 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -385,6 +369,7 @@
 				INFOPLIST_FILE = Wave/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -395,6 +380,7 @@
 				INFOPLIST_FILE = Wave/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -451,6 +437,7 @@
 				4AEEA9EC1AD173900055C771 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		4AEEA9ED1AD173900055C771 /* Build configuration list for PBXNativeTarget "WaveTests" */ = {
 			isa = XCConfigurationList;
@@ -459,6 +446,7 @@
 				4AEEA9EF1AD173900055C771 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
