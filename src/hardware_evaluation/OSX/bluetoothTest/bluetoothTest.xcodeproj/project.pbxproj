@@ -12,6 +12,7 @@
 		020425A71AC1E91A00272B95 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 020425A61AC1E91A00272B95 /* Images.xcassets */; };
 		020425AA1AC1E91A00272B95 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 020425A81AC1E91A00272B95 /* Main.storyboard */; };
 		020425B61AC1E91A00272B95 /* bluetoothTestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 020425B51AC1E91A00272B95 /* bluetoothTestTests.swift */; };
+		02EF55581AD2D36C00440C41 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,6 +35,7 @@
 		020425AF1AC1E91A00272B95 /* bluetoothTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bluetoothTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		020425B41AC1E91A00272B95 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		020425B51AC1E91A00272B95 /* bluetoothTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bluetoothTestTests.swift; sourceTree = "<group>"; };
+		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = waveControlAndSync.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +79,7 @@
 			children = (
 				020425A21AC1E91A00272B95 /* AppDelegate.swift */,
 				020425A41AC1E91A00272B95 /* ViewController.swift */,
+				02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */,
 				020425A61AC1E91A00272B95 /* Images.xcassets */,
 				020425A81AC1E91A00272B95 /* Main.storyboard */,
 				020425A01AC1E91A00272B95 /* Supporting Files */,
@@ -209,6 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				020425A51AC1E91A00272B95 /* ViewController.swift in Sources */,
+				02EF55581AD2D36C00440C41 /* waveControlAndSync.swift in Sources */,
 				020425A31AC1E91A00272B95 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -397,6 +401,7 @@
 				020425BB1AC1E91A00272B95 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		020425BC1AC1E91A00272B95 /* Build configuration list for PBXNativeTarget "bluetoothTestTests" */ = {
 			isa = XCConfigurationList;
@@ -405,6 +410,7 @@
 				020425BE1AC1E91A00272B95 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
