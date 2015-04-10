@@ -29,15 +29,22 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Semaphore;
 import java.util.HashSet;
 
-/** A singleton for dealing with android BLE limitations
+//Created by Alexander Haase on 4/1/2015.
+
+/** A singleton for dealing with android BLE limitations.
  *
- * Good reading on BLE & android:
+ * Represents BLE interactions as atomic requests and operation streams. For reliability, BLEAgent
+ * executes one request at a time. Inside requests, radio operations are linearized as AsyncOp
+ * objects. In the future, it may be possible to instantiate one BLEAgent per device, but this works
+ * reliably for now.
+ *
+ * Good reading on BLE with respect to android:
  * http://toastdroid.com/2014/09/22/android-bluetooth-low-energy-tutorial/
  * http://stackoverflow.com/questions/17910322/android-ble-api-gatt-notification-not-received
  * http://stackoverflow.com/questions/21278993/android-ble-how-to-read-multiple-characteristics
  * http://stackoverflow.com/questions/26342631/problems-with-android-bluetooth-le-notifications
  *
- * Created by Alexander Haase on 4/1/2015.
+ * @author Alexander Haase
  */
 public class BLEAgent {
 
@@ -429,6 +436,9 @@ public class BLEAgent {
         /** Send data using the current BLEAgent handles.
          * Note, device services may not be discovered until the dispatch context.
          * look at opBuildStack and buildOps.
+         *
+         * @param agent BLEAgent instance currently executing this request.
+         * @return indication of it the request has been completed.
          */
         abstract public boolean dispatch(final BLEAgent agent);
 
@@ -971,14 +981,21 @@ public class BLEAgent {
         });
     }
 
+    /** Extends basic request object to scan for devices.
+     *
+     * Subclasses should implement filter() and onComplete() to find devices.
+     */
     abstract static public class BLERequestScan extends BLERequest {
         public BLERequestScan( int timeout ) {
             super( null, timeout );
         }
 
 
-
-
+        /** Implements scan-start logic and looping filter over cached devices.
+         *
+         * @param agent BLEAgent instance currently executing this request.
+         * @return boolean indication of request completion (termination).
+         */
         @Override
         public boolean dispatch( BLEAgent agent ) {
             //redirect current BLE map into handler.
@@ -993,6 +1010,11 @@ public class BLEAgent {
             return false;
         }
 
+        /** Redirects device discovery to filter, and handles completion if indicated by filter.
+         *
+         * @param device discovered BLEDevice object.
+         * @return  boolean indication of request completion (termination).
+         */
         @Override
         public boolean onReceive(final BLEDevice device) {
             final boolean ret = filter( device );
@@ -1008,6 +1030,9 @@ public class BLEAgent {
             return ret;
         }
 
+        /** Stops scan on request timeout and calls completion
+         *
+         */
         @Override
         public void onFailure() {
             Log.d( TAG, "BLE Scan abort.");
@@ -1016,7 +1041,8 @@ public class BLEAgent {
             self.stopScan();
         }
 
-        /** Override to receive device or null
+        /** Scan termination callback.
+         * Override to receive device or null
          *
          * @param device specified BLEDevice or null for failed scan
          */

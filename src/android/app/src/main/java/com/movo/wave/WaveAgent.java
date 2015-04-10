@@ -13,8 +13,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Created by Alexander Haase on 4/8/2015.
+//Created by Alexander Haase on 4/8/2015.
+/** Implements Wave-specific BLERequests and device detection.
+ *
+ * Builds upon BLEAgent API to interact reliably with BLE Devices. Requests are representative of
+ * wave protocol spec. Discovering devices is handled by scanForWaveDevices until firmware updates
+ * allow for more direct inspection.
+ *
+ * @author Alexander Haase
  */
 public class WaveAgent {
 
@@ -47,7 +53,10 @@ public class WaveAgent {
     }
 
 
-    /** Writes an op, receives notify.
+    /** Abstract base class for interacting with wave device using WaveOp and byte[] buffers.
+     *
+     * Concisely, the class implements the pattern: Writes an op, receives notify.
+     *
      * Recommended strategy to prevent code bloat: subclass for each op, and add appropriate
      * abstract onComplete(...) methods for return data types, using byte[] onComplete as a parser.
      */
@@ -291,7 +300,7 @@ public class WaveAgent {
      * max: upper (inclusive) bounds for byte value.
      * offset: int offset to apply to byte value (additive on parse, subtractive on put).
      */
-    enum MarshalByte {
+    public static enum MarshalByte {
 
         //General message stuff
         OP                  (0, -128, 127, 0),
@@ -513,8 +522,8 @@ public class WaveAgent {
          * @param weight_kg weight measurement(cm).
          * @param stride_cm stride measurement(cm).
          * @param running_stride_cm running stride measurement(cm).
-         * @param sleepBegin hour&minute Date object.
-         * @param sleepEnd hour&minute Date object.
+         * @param sleepBegin hour and minute Date object.
+         * @param sleepEnd hour and minute Date object.
          */
         public WaveRequestSetPersonalInfo( final BLEAgent.BLEDevice device,
                                            final int timeout,
@@ -549,7 +558,7 @@ public class WaveAgent {
     /** Data point representation. Encapsulates mode, value, and parsing.
      *
      */
-    static class WaveDataPoint {
+    static public class WaveDataPoint {
         enum Mode {
             DAILY,
             SPORTS,
@@ -643,7 +652,7 @@ public class WaveAgent {
     /** Request for data by day of the week
      *
      */
-    abstract static class WaveRequestDataByDay extends BLERequestWaveOp {
+    abstract static public class WaveRequestDataByDay extends BLERequestWaveOp {
 
         final static String TAG = "WaveRequestDataByDate";
 
@@ -700,7 +709,7 @@ public class WaveAgent {
      *
      * FIXME: Check character set encoding.
      */
-    abstract static class WaveRequestSetName extends BLERequestWaveOp {
+    abstract static public class WaveRequestSetName extends BLERequestWaveOp {
         static final int bodySize = 15;
 
         /** Create a SET_NAME request.
@@ -729,7 +738,7 @@ public class WaveAgent {
     /** Request clear device data
      *
      */
-    abstract static class WaveRequestClearData extends BLERequestWaveOp {
+    abstract static public class WaveRequestClearData extends BLERequestWaveOp {
 
         /** Create new request to clear data on a device
          *
@@ -744,7 +753,7 @@ public class WaveAgent {
     /** Request reset device
      *
      */
-    abstract static class WaveRequestResetDevice extends BLERequestWaveOp {
+    abstract static public class WaveRequestResetDevice extends BLERequestWaveOp {
 
         /** Create new request to reset device to factory defaults
          *
@@ -759,12 +768,12 @@ public class WaveAgent {
     /** Create a read device data requests
      *
      */
-    abstract static class WaveRequestReadDeviceData extends BLERequestWaveOp {
+    abstract static public class WaveRequestReadDeviceData extends BLERequestWaveOp {
 
         /** Enumeration of LID range and hex values.
          *
          */
-        static enum LocalIdentifier {
+        static public enum LocalIdentifier {
             MONDAY      (0x01),
             TUESDAY     (0x02),
             WEDNESDAY   (0x03),
@@ -831,7 +840,7 @@ public class WaveAgent {
      *
      * Note: We don't synchronize internally because everything happens on the main thread.
      */
-    abstract static class WaveScanCallback {
+    abstract static public class WaveScanCallback {
         final protected Set<BLEAgent.BLEDevice> waveDevices = new HashSet<>();
         final protected Set<BLEAgent.BLEDevice> pending = new HashSet<>();
         private int pendingCount = 0;
@@ -864,10 +873,10 @@ public class WaveAgent {
                 device.getCharacteristic( BLERequestWaveOp.notifyUUIDs ) != null;
     }
 
-    /** Scans for wave devices, discovering services as neccissary.
+    /** Scans for wave devices, discovering services as necessary.
      *
      * @param timeout per-request timeout, can make things quite large.
-     * @param callback result target for synchronization and device registery.
+     * @param callback result target for synchronization and device registry.
      */
     public static void scanForWaveDevices( final int timeout, final WaveScanCallback callback ) {
 
