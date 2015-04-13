@@ -4,7 +4,9 @@ package com.movo.wave;
  */
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -102,54 +104,54 @@ public class Home extends ActionBarActivity {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
 
-                Log.d( "CALLBACK", "found target " + device + " name " + device.device.getName() );
-
-                /*
-                    After we have a device, we can do about any WaveRequest....
-
-                    ....just subclass the onComplete method.
-                */
-
-                BLEAgent.handle( new WaveRequest.SetDate( device, 60000 ) {
-                    @Override
-                    protected void onCompletion(boolean success, byte[] value) {
-                        Log.d( TAG, "Date set finished with state " + success );
-                    }
-                });
-
-                BLEAgent.handle( new WaveRequest.GetDate( device, 60000 ) {
-                    @Override
-                    protected void onCompletion(boolean success, Date date) {
-                        if( date != null ) {
-                            Log.d( TAG, "Date was " + date);
-                        }
-                    }
-                });
-
-                BLEAgent.handle( new WaveRequest.SetPersonalInfo(
-                        device,
-                        60000,
-                        WaveRequest.SetPersonalInfo.MALE,
-                        150,
-                        80,
-                        100,
-                        150,
-                        WaveRequest.SetPersonalInfo.sleepTime( 23, 00 ),
-                        WaveRequest.SetPersonalInfo.sleepTime( 7, 00 ) ) {
-                    @Override
-                    protected void onCompletion(boolean success, byte[] value) {
-                        Log.d( TAG, "Set personal info status " + success);
-                    }
-                });
-
-                BLEAgent.handle( new WaveRequest.DataByDay( device, 60000, new Date() ){
-                    @Override
-                    protected void onCompletion(boolean success, WaveRequest.WaveDataPoint[] data) {
-                        for( final WaveRequest.WaveDataPoint point : data ) {
-                            Log.d( TAG, "\t" + point );
-                        }
-                    }
-                });
+//                Log.d( "CALLBACK", "found target " + device + " name " + device.device.getName() );
+//
+//                /*
+//                    After we have a device, we can do about any WaveRequest....
+//
+//                    ....just subclass the onComplete method.
+//                */
+//
+//                BLEAgent.handle( new WaveRequest.SetDate( device, 60000 ) {
+//                    @Override
+//                    protected void onCompletion(boolean success, byte[] value) {
+//                        Log.d( TAG, "Date set finished with state " + success );
+//                    }
+//                });
+//
+//                BLEAgent.handle( new WaveRequest.GetDate( device, 60000 ) {
+//                    @Override
+//                    protected void onCompletion(boolean success, Date date) {
+//                        if( date != null ) {
+//                            Log.d( TAG, "Date was " + date);
+//                        }
+//                    }
+//                });
+//
+//                BLEAgent.handle( new WaveRequest.SetPersonalInfo(
+//                        device,
+//                        60000,
+//                        WaveRequest.SetPersonalInfo.MALE,
+//                        150,
+//                        80,
+//                        100,
+//                        150,
+//                        WaveRequest.SetPersonalInfo.sleepTime( 23, 00 ),
+//                        WaveRequest.SetPersonalInfo.sleepTime( 7, 00 ) ) {
+//                    @Override
+//                    protected void onCompletion(boolean success, byte[] value) {
+//                        Log.d( TAG, "Set personal info status " + success);
+//                    }
+//                });
+//
+//                BLEAgent.handle( new WaveRequest.DataByDay( device, 60000, new Date() ){
+//                    @Override
+//                    protected void onCompletion(boolean success, WaveRequest.WaveDataPoint[] data) {
+//                        for( final WaveRequest.WaveDataPoint point : data ) {
+//                            Log.d( TAG, "\t" + point );
+//                        }
+//                    }
+//                });
 
             }
         });
