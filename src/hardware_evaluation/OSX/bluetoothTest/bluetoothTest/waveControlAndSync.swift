@@ -39,6 +39,16 @@ import CoreBluetooth
  *      connected device will be interrogated.
  */
 
+
+/* Operational notes
+ *  iOS doesn't clobber commands in transmission, however, the device will interrupt itself in return transmission
+ *  in practice, what this means is that a new command during a multi-part message in progress will interrupt the multi-part message
+ *   -> what this means is that we should maintain, per-device, a queue of message requests and not issue new messages until either the 
+ *   -> message in progress has completed or has timed out
+ *   -> After which, we can move onto the next message in the queue.
+ *
+ */
+
 protocol waveControlAndSyncDelegate {
     //callback receiving the UUID of a successfully connected device
     func connectedWaveDevice(id: NSString)
@@ -62,6 +72,88 @@ protocol waveControlAndSyncDelegate {
     
 }
 
+class waveOperation : NSOperation {
+
+    //we will set the output data to the paramter passed in
+    let outputData: NSMutableData
+    let commandData: NSData
+    let writePeripheral: CBPeripheral
+    let writeCharacteristic: CBCharacteristic
+    let timeout: Double
+    var timer: NSTimer?
+    init (writePeripheral: CBPeripheral, writeCharacteristic: CBCharacteristic, commandData: NSData, timeout: Double) {
+        self.outputData = NSMutableData()
+        self.commandData = commandData
+        self.writePeripheral = writePeripheral
+        self.writeCharacteristic = writeCharacteristic
+        self.timeout = timeout
+    }
+    override func main() {
+        //check for cancel at start up
+        
+        if self.cancelled {
+            return
+        }
+        //send command
+        writePeripheral.writeValue(commandData, forCharacteristic: writeCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+
+        timer = NSTimer.scheduledTimerWithTimeInterval( timeout/1000.0, target: self, selector: Selector("cancelTask"), userInfo: nil, repeats: false)
+        NSRunLoop.currentRunLoop().addTimer(timer!, forMode: NSDefaultRunLoopMode)
+
+        //we will need to interally check for timeout
+        var lastlength = 0
+        while (!complete()) {
+            if (self.cancelled) {
+                return
+            }
+            NSThread.sleepForTimeInterval(0.01)
+            if (outputData.length > lastlength) {
+                lastlength = outputData.length
+                timer?.invalidate()
+                timer = NSTimer.scheduledTimerWithTimeInterval( timeout/1000.0, target: self, selector: Selector("cancelTask"), userInfo: nil, repeats: false)
+                NSRunLoop.currentRunLoop().addTimer(timer!, forMode: NSDefaultRunLoopMode)
+            }
+        }
+        println("Completed Operation")
+        timer?.invalidate()
+        
+    }
+    
+    func cancelTask() {
+        println("Canceled Task")
+        cancel()
+    }
+    
+    func complete() -> Bool {
+        
+        //This is a very crude detector for completion for the moment
+        if (outputData.length == 20) {
+            var array = [UInt8](count: outputData.length, repeatedValue: 0)
+            outputData.getBytes(&array, length: outputData.length)
+            if (array[0] != 0x24) {
+                return true
+            }
+            
+        } else if (outputData.length == 200) {
+            var array = [UInt8](count: outputData.length, repeatedValue: 0)
+            outputData.getBytes(&array, length: outputData.length)
+            if (array[0] == 0x24) {
+                return true
+            }
+            
+        }
+        return false
+    }
+    
+    func insertData(newData: NSData) {
+        //this will insert data, check for completion and reset the timeout timer
+        outputData.appendData(newData)
+        
+    }
+    
+    
+}
+
 
 class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
@@ -71,7 +163,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //timeout in ms for a command response segment to be received
     //(for multipart commands this is the time from one packet 
     //to the next packet in sequence)
-    var commandTimeout:Int!
+    var commandTimeout:Double!
     
     //dictionary of peripherals either connecting or connected
     //peripherals are removed from this list at disconnection or 
@@ -90,14 +182,26 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //dictionary of serial numbers for connected peripherals
     var connectedSerials:NSMutableDictionary!
     
-    var scanning:Bool!
+    //for simplicities sake, for now we will only allow a single command queue to exist
+    var operationQueue:NSOperationQueue!
     
-    init(delegate: waveControlAndSyncDelegate, timeout: Int = 500) {
+    var outputBuffer:NSMutableData!
+    
+    var scanning:Bool!
+
+    init(delegate: waveControlAndSyncDelegate, timeout: Double = 3000) {
         super.init()
         wavePeripherals = NSMutableDictionary()
         writeCharacteristics = NSMutableDictionary()
         notifyCharacteristics = NSMutableDictionary()
         connectingPeripherals = NSMutableDictionary()
+        outputBuffer = NSMutableData()
+        operationQueue = {
+            var queue = NSOperationQueue()
+            queue.name = "Command Queue"
+            queue.maxConcurrentOperationCount = 1
+            return queue
+        }()
         centralManager = CBCentralManager(delegate: self, queue: dispatch_get_main_queue())
         callbackDelegate = delegate
         scanning = false
@@ -192,7 +296,15 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         writeCharacteristic = writeCharacteristics.valueForKey(myId) as CBCharacteristic?
         writePeripheral = wavePeripherals.valueForKey(myId) as CBPeripheral?
         if ( writeCharacteristic != nil && writePeripheral != nil) {
-                (writePeripheral as CBPeripheral!).writeValue(command, forCharacteristic: writeCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+                //(writePeripheral as CBPeripheral!).writeValue(command, forCharacteristic: writeCharacteristic, type: CBCharacteristicWriteType.WithResponse)
+                let command = waveOperation(writePeripheral: writePeripheral!, writeCharacteristic: writeCharacteristic!, commandData: command, timeout: commandTimeout)
+                command.completionBlock = {
+                    if (command.cancelled) {
+                        return
+                    }
+                    self.callbackDelegate.receivedMessage(command.outputData, id: command.writePeripheral.identifier.UUIDString)
+                }
+                operationQueue.addOperation(command)
             return true
         } else {
             return false
@@ -345,7 +457,10 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                     var array = [UInt8](count: count, repeatedValue: 0)
                     data.getBytes(&array, length: count)
                     println(array.map{ String($0, radix: 16, uppercase: false)})
-                    callbackDelegate.receivedMessage(data, id: peripheral.identifier.UUIDString)
+                    //callbackDelegate.receivedMessage(data, id: peripheral.identifier.UUIDString)
+                    if (operationQueue.operationCount > 0) {
+                        (operationQueue.operations[0] as waveOperation).insertData(data)
+                    }
                     //                    println(array)
                 } else {
                     println( characteristic.value() )
