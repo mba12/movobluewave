@@ -85,11 +85,13 @@ public class Home extends ActionBarActivity {
         // Look for all wave devices.....
         WaveAgent.scanForWaveDevices(60000, new WaveAgent.WaveScanCallback() {
             @Override
-            void onCompletion() {
-                Log.i("Found wave device", "QTY " + waveDevices.size());
-                for (final BLEAgent.BLEDevice device : waveDevices) {
-                    Log.i("Found wave device", device.device.getAddress());
-                }
+            void notify(BLEAgent.BLEDevice device) {
+                Log.i("WaveTest", "Found wave device" + device.device.getAddress() );
+            }
+
+            @Override
+            void onComplete() {
+                Log.i("WaveTest", "Done scanning for waves");
             }
         });
 
@@ -114,14 +116,14 @@ public class Home extends ActionBarActivity {
 
                 BLEAgent.handle( new WaveRequest.SetDate( device, 60000 ) {
                     @Override
-                    protected void onCompletion(boolean success, byte[] value) {
+                    protected void onComplete(boolean success, byte[] value) {
                         Log.d( TAG, "Date set finished with state " + success );
                     }
                 });
 
                 BLEAgent.handle( new WaveRequest.GetDate( device, 60000 ) {
                     @Override
-                    protected void onCompletion(boolean success, Date date) {
+                    protected void onComplete(boolean success, Date date) {
                         if( date != null ) {
                             Log.d( TAG, "Date was " + date);
                         }
@@ -139,14 +141,14 @@ public class Home extends ActionBarActivity {
                         WaveRequest.SetPersonalInfo.sleepTime( 23, 00 ),
                         WaveRequest.SetPersonalInfo.sleepTime( 7, 00 ) ) {
                     @Override
-                    protected void onCompletion(boolean success, byte[] value) {
+                    protected void onComplete(boolean success, byte[] value) {
                         Log.d( TAG, "Set personal info status " + success);
                     }
                 });
 
                 BLEAgent.handle( new WaveRequest.DataByDay( device, 60000, new Date() ){
                     @Override
-                    protected void onCompletion(boolean success, WaveRequest.WaveDataPoint[] data) {
+                    protected void onComplete(boolean success, WaveRequest.WaveDataPoint[] data) {
                         for( final WaveRequest.WaveDataPoint point : data ) {
                             Log.d( TAG, "\t" + point );
                         }

@@ -40,7 +40,10 @@ public class WaveRequest {
         RESET_TO_DEFAULTS   ( (byte)0x87, (byte)0x27, (byte)0x07 ),
         CLEAR_DATA          ( (byte)0x88, (byte)0x28, (byte)0x09 ),
         SET_TIME            ( (byte)0xC2, (byte)0x22, (byte)0x02 ),
-        GET_TIME            ( (byte)0x89, (byte)0x29, (byte)0x09 );
+        GET_TIME            ( (byte)0x89, (byte)0x29, (byte)0x09 ),
+        READ_VERSION        ( (byte)0x90, (byte)0x30, (byte)0x0A ),
+        READ_SERIAL         ( (byte)0x91, (byte)0x31, (byte)0x0B ),
+        ;
 
 
         public final byte CODE;     //* Send op code
@@ -57,7 +60,7 @@ public class WaveRequest {
 
     /** Abstract base class for interacting with wave device using WaveOp and byte[] buffers.
      *
-     * Concisely, the class implements the pattern: Writes an op, receives notify.
+     * Concisely, the class implements the pattern: Write an op, receive notify.
      *
      * Recommended strategy to prevent code bloat: subclass for each op, and add appropriate
      * abstract onComplete(...) methods for return data types, using byte[] onComplete as a parser.
@@ -226,7 +229,7 @@ public class WaveRequest {
 
                 if( ret ) {
                     Log.e( TAG, "FAILED: write to wave device: " + device.device.getAddress() );
-                    onCompletion( false, null );
+                    onComplete( false, null );
                 }
                 return ret;
 
@@ -270,7 +273,7 @@ public class WaveRequest {
                     success = false;
                 }
 
-                onCompletion( success, response );
+                onComplete( success, response );
 
                 return true;
 
@@ -290,7 +293,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param response raw response byte array or null.
          */
-        protected abstract void onCompletion( boolean success, byte[] response );
+        protected abstract void onComplete( boolean success, byte[] response );
     }
 
     /** Enum for marshalling byte fields for byte array message exchanges with wave devices.
@@ -433,7 +436,7 @@ public class WaveRequest {
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
                 ret = new Date(
@@ -444,7 +447,7 @@ public class WaveRequest {
                         MarshalByte.MINUTE.parse(response),
                         MarshalByte.SECOND.parse(response) );
             }
-            onCompletion( success, ret );
+            onComplete( success, ret );
         }
 
         /** Completion callback for operation
@@ -452,7 +455,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param date response date or null
          */
-        abstract protected void onCompletion( boolean success, Date date );
+        abstract protected void onComplete( boolean success, Date date );
     }
 
     /** Set time on device using local clock. Device time will be set in UTC.
@@ -672,7 +675,7 @@ public class WaveRequest {
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             WaveDataPoint[] ret = null;
 
             if( success ) {
@@ -696,7 +699,7 @@ public class WaveRequest {
                 ret = WaveDataPoint.parseResponse( response, 5, qty, this.date );
             }
 
-            onCompletion( success, ret );
+            onComplete( success, ret );
         }
 
         /** completion callback for data points
@@ -704,7 +707,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param data array of WaveDataPoint objects or null;
          */
-        protected abstract void onCompletion( boolean success, WaveDataPoint[] data );
+        protected abstract void onComplete( boolean success, WaveDataPoint[] data );
     }
 
     /** Request for setting device name. seems broken.
@@ -809,7 +812,7 @@ public class WaveRequest {
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             int steps = 0;
 
             if( lid == LocalIdentifier.BATTERY) {
@@ -825,7 +828,7 @@ public class WaveRequest {
                     steps += (int) response[4] & 0xFF;
                 }
             }
-            onCompletion( success, steps );
+            onComplete( success, steps );
         }
 
         /** Callback after parsing.
@@ -835,6 +838,82 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param steps number of steps.
          */
-        protected abstract void onCompletion( boolean success, int steps );
+        protected abstract void onComplete( boolean success, int steps );
+    }
+
+    /** Create read device serial requests
+     *
+     */
+    abstract public static class ReadSerial extends BLERequestWaveOp {
+
+        /** Create a new request to read a device's serial number.
+         *
+         * @param device    communications target.
+         * @param timeout   relative time after operation begins before request is abandoned.
+         */
+        public ReadSerial( final BLEAgent.BLEDevice device, final int timeout ) {
+            super(WaveOp.READ_SERIAL, 0, device, timeout);
+        }
+
+        /** Parse response into hex string.
+         *
+         * @param success boolean indication of state.
+         * @param response raw response byte array or null.
+         */
+        @Override
+        protected void onComplete(boolean success, byte[] response) {
+            final String serial;
+            if( success ) {
+                serial = BLEAgent.bytesToHex( response, 2, response.length -1 );
+            } else {
+                serial = null;
+            }
+            onComplete( success, serial );
+        }
+
+        /** Callback for serial number.
+         *
+         * @param success boolean indication of state.
+         * @param serial hex string serial number or null.
+         */
+        abstract protected void onComplete(boolean success, String serial);
+    }
+
+    /** Create read device version requests
+     *
+     */
+    abstract public static class ReadVersion extends BLERequestWaveOp {
+
+        /** Create a new request to read a device's version number.
+         *
+         * @param device    communications target.
+         * @param timeout   relative time after operation begins before request is abandoned.
+         */
+        public ReadVersion( final BLEAgent.BLEDevice device, final int timeout ) {
+            super(WaveOp.READ_VERSION, 0, device, timeout);
+        }
+
+        /** Parse response into hex string.
+         *
+         * @param success boolean indication of state.
+         * @param response raw response byte array or null.
+         */
+        @Override
+        protected void onComplete(boolean success, byte[] response) {
+            final String version;
+            if( success ) {
+                version = BLEAgent.bytesToHex( response, 2, response.length -1 );
+            } else {
+                version = null;
+            }
+            onComplete( success, version );
+        }
+
+        /** Callback for version number.
+         *
+         * @param success boolean indication of state.
+         * @param version hex string version number or null.
+         */
+        abstract protected void onComplete(boolean success, String version);
     }
 }

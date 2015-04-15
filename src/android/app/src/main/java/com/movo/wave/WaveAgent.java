@@ -4,6 +4,7 @@ package com.movo.wave;
 
 import android.util.Log;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,8 +22,7 @@ public class WaveAgent {
      * Note: We don't synchronize internally because everything happens on the main thread.
      */
     abstract static public class WaveScanCallback {
-        final protected Set<BLEAgent.BLEDevice> waveDevices = new HashSet<>();
-        final protected Set<BLEAgent.BLEDevice> pending = new HashSet<>();
+        final private Set<BLEAgent.BLEDevice> seen = new HashSet<>();
         private int pendingCount = 0;
 
         private void acquire() {
@@ -32,13 +32,15 @@ public class WaveAgent {
         private void release() {
             pendingCount -= 1;
             if( pendingCount == 0 ){
-                onCompletion();
+                onComplete();
             }
         }
 
+        abstract void notify( BLEAgent.BLEDevice device );
+
         /** Called at scan completion
          */
-        abstract void onCompletion();
+        abstract void onComplete();
     }
 
     /** Test for if a BLEDevice is a wave device. Requires service discovery
@@ -69,15 +71,15 @@ public class WaveAgent {
 
                 if( device.servicesDiscovered ) {
                     if( isWave( device ) ) {
-                        callback.waveDevices.add( device );
+                        callback.notify(device);
                     }
-                } else if( ! callback.pending.contains( device ) ) {
+                } else if( ! callback.seen.contains( device ) ) {
                     callback.acquire();
                     BLEAgent.handle( new BLEAgent.BLERequest(device, timeout) {
                         @Override
                         public boolean dispatch(BLEAgent agent) {
                             if( isWave( this.device ) ) {
-                                callback.waveDevices.add( device );
+                                callback.notify( device );
                                 callback.release();
                             }
                             return true;
@@ -90,7 +92,7 @@ public class WaveAgent {
                         }
                     });
                 }
-                callback.pending.add( device );
+                callback.seen.add(device);
                 return false;
             }
 
@@ -100,4 +102,48 @@ public class WaveAgent {
             }
         });
     }
+
+
+
+
+    public static <V> Set<V> asSet( final V value ) {
+        final Set<V> ret = new HashSet<>();
+        ret.add( value );
+        return ret;
+    }
+
+    /*
+    protected static class DataSync {
+        public interface WaveSyncCallback {
+            public void notify( SyncDevice sync, SyncDevice.SyncState state );
+
+            public void complete( WaveRequest.WaveDataPoint[] data );
+        }
+        public BLEAgent.BLEDevice device;
+        public Date deviceDate;
+        public WaveSyncCallback callback;
+
+        enum SyncState {
+            SCANNING,
+            VERSION,
+            VERSION_CHECK,
+        }
+
+        DataSync( BLEAgent.BLEDevice device ) {
+            this.device = device;
+            onDevice();
+        }
+
+        private void onDevice() {
+            final BLEAgent.BLERequest dateRequest = new WaveRequest.GetDate() {
+                @Override
+                protected void onComplete(boolean success, Date date) {
+                    deviceDate = date;
+                    if( success ) {
+                        callback.notify( this, Wa);
+                    }
+                }
+            })
+        }
+    }*/
 }
