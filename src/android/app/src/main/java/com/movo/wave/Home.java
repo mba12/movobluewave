@@ -46,6 +46,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 
 public class Home extends ActionBarActivity {
@@ -84,92 +85,66 @@ public class Home extends ActionBarActivity {
 
         // Look for all wave devices.....
         WaveAgent.scanForWaveDevices(60000, new WaveAgent.WaveScanCallback() {
+            {
+                final String TAG = "WaveTest";
+            }
+
             @Override
             void notify(BLEAgent.BLEDevice device) {
-                Log.i("WaveTest", "Found wave device" + device.device.getAddress() );
+                Log.i(TAG, "Found wave device: " + device.device.getAddress() );
+                new WaveAgent.DataSync( device, new WaveAgent.DataSync.Callback(){
+                    @Override
+                    public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean STATUS) {
+
+                    }
+
+                    @Override
+                    public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
+
+                    }
+                });
+
+
             }
 
             @Override
             void onComplete() {
-                Log.i("WaveTest", "Done scanning for waves");
+                Log.i(TAG, "Done scanning for waves");
             }
         });
 
         // Or we can scan for a specific device directly....
-        BLEAgent.handle( new BLEAgent.BLERequestScan( 10000 ) {
-
-            @Override
-            public boolean filter(BLEAgent.BLEDevice device) {
-                return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
-            }
-
+        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, "ED:09:F5:BB:E9:FF" ) {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
 
-                Log.d( "CALLBACK", "found target " + device + " name " + device.device.getName() );
+                if (device == null) {
+                    Log.d(TAG, "Failed to find device: " + address);
+                    return;
+                }
+
+                Log.d("CALLBACK", "found target " + device + " name " + device.device.getName());
 
                 /*
                     After we have a device, we can do about any WaveRequest....
 
                     ....just subclass the onComplete method.
                 */
-
-                BLEAgent.handle( new WaveRequest.SetDate( device, 60000 ) {
+                new WaveAgent.DataSync( device, new WaveAgent.DataSync.Callback(){
                     @Override
-                    protected void onComplete(boolean success, byte[] value) {
-                        Log.d( TAG, "Date set finished with state " + success );
+                    public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean STATUS) {
+
+                    }
+
+                    @Override
+                    public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
+
                     }
                 });
-
-                BLEAgent.handle( new WaveRequest.GetDate( device, 60000 ) {
-                    @Override
-                    protected void onComplete(boolean success, Date date) {
-                        if( date != null ) {
-                            Log.d( TAG, "Date was " + date);
-                        }
-                    }
-                });
-
-                BLEAgent.handle( new WaveRequest.SetPersonalInfo(
-                        device,
-                        60000,
-                        WaveRequest.SetPersonalInfo.MALE,
-                        150,
-                        80,
-                        100,
-                        150,
-                        WaveRequest.SetPersonalInfo.sleepTime( 23, 00 ),
-                        WaveRequest.SetPersonalInfo.sleepTime( 7, 00 ) ) {
-                    @Override
-                    protected void onComplete(boolean success, byte[] value) {
-                        Log.d( TAG, "Set personal info status " + success);
-                    }
-                });
-
-                BLEAgent.handle( new WaveRequest.DataByDay( device, 60000, new Date() ){
-                    @Override
-                    protected void onComplete(boolean success, WaveRequest.WaveDataPoint[] data) {
-                        for( final WaveRequest.WaveDataPoint point : data ) {
-                            Log.d( TAG, "\t" + point );
-                        }
-                    }
-                });
-
             }
-        });
+        };
 
-        /*BLEAgent.handle( new BLEAgent.BLERequestScan( 100000 ) {
-            @Override
-            public boolean filter(BLEAgent.BLEDevice device) {
-                return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
-            }
-
-            @Override
-            public void onComplete(BLEAgent.BLEDevice device) {
-
-                Log.d( "CALLBACK2", "found target " + device );
-            }
-        });*/
+        //BLEAgent.handle( scanExample );
 
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);

@@ -2,10 +2,15 @@ package com.movo.wave;
 
 //Created by Alexander Haase on 4/10/2015.
 
+import android.speech.tts.SynthesisCallback;
 import android.util.Log;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 /** High-level Wave interaction class
@@ -16,6 +21,20 @@ import java.util.Set;
 public class WaveAgent {
 
     final static String TAG = "WaveAgent";
+
+    public static class WaveDevice {
+        final public BLEAgent.BLEDevice ble;
+        final public String version;
+        final public String serial;
+
+        private WaveDevice( BLEAgent.BLEDevice device, String version, String serial ) {
+            this.ble = device;
+            this.version = version;
+            this.serial = serial;
+        }
+    }
+
+    private final static HashMap<BLEAgent.BLEDevice, WaveDevice> deviceMap = new HashMap<>();
 
     /** Interface for receiving wave device scan results
      *
@@ -103,47 +122,185 @@ public class WaveAgent {
         });
     }
 
-
-
-
-    public static <V> Set<V> asSet( final V value ) {
-        final Set<V> ret = new HashSet<>();
-        ret.add( value );
-        return ret;
-    }
-
-    /*
+    /** Data sync representation object
+     *
+     */
     protected static class DataSync {
-        public interface WaveSyncCallback {
-            public void notify( SyncDevice sync, SyncDevice.SyncState state );
 
-            public void complete( WaveRequest.WaveDataPoint[] data );
+        final static String TAG = "WaveAgent::DataSync";
+
+        /** Callback for state notifications
+         *
+         */
+        public static interface Callback {
+            /** Notify state change
+             *
+             * @param sync sync object.
+             * @param state sync state.
+             * @param status sync status.
+             */
+            public void notify( DataSync sync, SyncState state, boolean status );
+
+            /** Completion callback
+             *
+             * @param sync sync object.
+             * @param data data set or null.
+             */
+            public void complete( DataSync sync, List<WaveRequest.WaveDataPoint> data );
         }
+
         public BLEAgent.BLEDevice device;
+        final public int timeout = 2000;
         public Date deviceDate;
-        public WaveSyncCallback callback;
+        private int dataSuccess = 0;
+        private int dataFailure = 0;
+        final public Callback callback;
+        final private List<WaveRequest.WaveDataPoint> data = new LinkedList<>();
+        private SyncState state = SyncState.DISCOVERY;
 
-        enum SyncState {
-            SCANNING,
+        /** Enumeration of sync state
+         *
+         */
+        public static enum SyncState {
+            INIT,
+            DISCOVERY,
             VERSION,
-            VERSION_CHECK,
-        }
-
-        DataSync( BLEAgent.BLEDevice device ) {
-            this.device = device;
-            onDevice();
-        }
-
-        private void onDevice() {
-            final BLEAgent.BLERequest dateRequest = new WaveRequest.GetDate() {
+            GET_DATE,
+            REQUEST_DATA,
+            SET_DATE,
+            COMPLETE {
                 @Override
-                protected void onComplete(boolean success, Date date) {
-                    deviceDate = date;
-                    if( success ) {
-                        callback.notify( this, Wa);
-                    }
+                public SyncState next() {
+                    return null;
                 }
-            })
+            };
+
+            public SyncState next() {
+                return values()[ordinal() + 1];
+            }
         }
-    }*/
+
+        /** Sync constructor for known device.
+         *
+         * @param device communications target.
+         * @param callback notification callback.
+         */
+        public DataSync( BLEAgent.BLEDevice device, Callback callback ) {
+            this.device = device;
+            this.callback = callback;
+            nextState( true );
+        }
+
+        /** central state machine logic.
+         *
+         * @param success indication of current state success.
+         */
+        private void nextState( boolean success ) {
+            callback.notify( this, state, success );
+
+            Log.v( TAG, this.toString() + "\tState was: " + state );
+            state = state.next();
+            Log.v( TAG, this.toString() + "\tState now: " + state );
+
+            if( success ) {
+                switch (state) {
+                    case VERSION:
+                        /*BLEAgent.handle(new WaveRequest.ReadVersion(device, 1000) {
+                            @Override
+                            protected void onComplete(boolean success, final String version) {
+                                nextState( success );
+                            }
+                        });
+                        break;*/
+                        nextState( true );
+                        break;
+                    case GET_DATE:
+                        BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
+                            @Override
+                            protected void onComplete(boolean success, Date date) {
+                                deviceDate = date;
+                                nextState( success );
+                            }
+                        });
+                        break;
+                    case REQUEST_DATA:
+                        dispatchData();
+                        break;
+                    case SET_DATE:
+                        BLEAgent.handle( new WaveRequest.SetDate( device, 1000 ) {
+                            @Override
+                            protected void onComplete(boolean success, byte[] response) {
+                                nextState( success );
+                            }
+                        });
+                        break;
+                    case COMPLETE:
+                        callback.complete( this, data );
+                        break;
+                    default:
+                        Log.e( TAG, "Unexpected state: " + state);
+                        break;
+                }
+            } else {
+                callback.complete( this, null );
+            }
+        }
+
+        /** Convenience wrapper for dispatching data requests
+         *
+         */
+        private void dispatchData() {
+            for( int day = 0; day < 7; day++ ) {
+                for( int hour = 0; hour < 24; hour += 3 ) {
+                    BLEAgent.handle(new WaveRequest.DataByDay(device, timeout, day, hour) {
+                        @Override
+                        protected void onComplete(boolean success,
+                                                  WaveRequest.WaveDataPoint[] data) {
+                            receiveData( data, day, hour );
+                        }
+                    });
+                }
+            }
+        }
+
+        /** Wrapper/barrier for receiving and inspecting requests
+         *
+         * @param response array of WaveDataPoints or null for failure.
+         * @param day of week for request.
+         * @param hour of day for request.
+         */
+        private void receiveData( final WaveRequest.WaveDataPoint[] response,
+                                  final int day,
+                                  final int hour ) {
+            if( data != null) {
+                dataSuccess += 1;
+                //int reservedCount = 0;
+
+                for (WaveRequest.WaveDataPoint point : response) {
+                    //Log.d( TAG, point.toString() );
+                    if( point.mode != WaveRequest.WaveDataPoint.Mode.RESERVED
+                            && point.value != 0) {
+                        Log.i( TAG, point.toString() );
+                    }
+                    data.add(point);
+                }
+                                /*if( reservedCount != data.length && reservedCount != 0 ) {
+                                    Log.i( TAG, "DUMP START: " + day + " " + hour
+                                            + " (" + reservedCount + "/" + data.length + ")" );
+                                    for (WaveRequest.WaveDataPoint point : data) {
+                                        Log.i( TAG, point.toString() );
+                                    }
+                                    Log.i( TAG, "DUMP END: " + day + " " + hour
+                                            + " (" + reservedCount + "/" + data.length + ")" );
+                                }*/
+            } else {
+                dataFailure += 1;
+                Log.w(TAG, "FAILED data: " + day + " " + hour );
+            }
+
+            if( dataSuccess + dataFailure == 7 * 24 / 3 ) {
+                nextState( true );
+            }
+        }
+    }
 }
