@@ -146,30 +146,33 @@ public class Home extends ActionBarActivity {
 
             @Override
             void notify(BLEAgent.BLEDevice device) {
-                Log.i(TAG, "Found wave device: " + device.device.getAddress() );
-                new WaveAgent.DataSync( device, new WaveAgent.DataSync.Callback(){
+                Log.i(TAG, "Found wave device: " + device.device.getAddress());
+                new WaveAgent.DataSync(device, new WaveAgent.DataSync.Callback() {
                     @Override
-                    public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean STATUS) {
+                    public void notify( final WaveAgent.DataSync sync,
+                                        final WaveAgent.DataSync.SyncState state,
+                                        final boolean status) {
 
                     }
 
                     @Override
-                    public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
+                    public void complete( final WaveAgent.DataSync sync,
+                                          final List<WaveRequest.WaveDataPoint> data) {
 
                     }
                 });
-
-
             }
 
             @Override
-            public boolean filter(BLEAgent.BLEDevice device) {
-                //return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
-                return device.device.getAddress().equals( "C2:4C:53:BB:CD:FC" );
+            void onComplete() {
+
             }
+        });
 
         // Or we can scan for a specific device directly....
-        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, "ED:09:F5:BB:E9:FF" ) {
+        //final String serial = "C2:4C:53:BB:CD:FC";
+        final String serial = "ED:09:F5:BB:E9:FF";
+        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, serial ) {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
 
@@ -187,13 +190,16 @@ public class Home extends ActionBarActivity {
                 */
                 new WaveAgent.DataSync( device, new WaveAgent.DataSync.Callback(){
                     @Override
-                    public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean STATUS) {
+                    public void notify( final WaveAgent.DataSync sync,
+                                        final WaveAgent.DataSync.SyncState state,
+                                        final boolean status) {
 
                     }
 
                     @Override
-                    public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
-//
+                    public void complete( final WaveAgent.DataSync sync,
+                                          final List<WaveRequest.WaveDataPoint> data) {
+
                     }
                 });
             }
