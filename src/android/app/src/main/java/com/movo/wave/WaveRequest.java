@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 import android.util.Pair;
 
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -40,7 +41,10 @@ public class WaveRequest {
         RESET_TO_DEFAULTS   ( (byte)0x87, (byte)0x27, (byte)0x07 ),
         CLEAR_DATA          ( (byte)0x88, (byte)0x28, (byte)0x09 ),
         SET_TIME            ( (byte)0xC2, (byte)0x22, (byte)0x02 ),
-        GET_TIME            ( (byte)0x89, (byte)0x29, (byte)0x09 );
+        GET_TIME            ( (byte)0x89, (byte)0x29, (byte)0x09 ),
+        READ_VERSION        ( (byte)0x90, (byte)0x30, (byte)0x0A ),
+        READ_SERIAL         ( (byte)0x91, (byte)0x31, (byte)0x0B ),
+        ;
 
 
         public final byte CODE;     //* Send op code
@@ -57,7 +61,7 @@ public class WaveRequest {
 
     /** Abstract base class for interacting with wave device using WaveOp and byte[] buffers.
      *
-     * Concisely, the class implements the pattern: Writes an op, receives notify.
+     * Concisely, the class implements the pattern: Write an op, receive notify.
      *
      * Recommended strategy to prevent code bloat: subclass for each op, and add appropriate
      * abstract onComplete(...) methods for return data types, using byte[] onComplete as a parser.
@@ -107,6 +111,10 @@ public class WaveRequest {
          * @return indication of completion--response byte array completed for parsing.
          */
         private boolean buildResponse( final byte[] responsePart ) {
+            if( responseSize == 0 && MarshalByte.OP.parse( responsePart ) == 0x00 ) {
+                Log.w( TAG, "Skipping bad preamble" );
+                return false;
+            }
             System.arraycopy( responsePart, 0, response, responseSize, responsePart.length );
             responseSize += responsePart.length;
             return responseSize >= MarshalByte.SIZE.parse( response );
@@ -226,7 +234,7 @@ public class WaveRequest {
 
                 if( ret ) {
                     Log.e( TAG, "FAILED: write to wave device: " + device.device.getAddress() );
-                    onCompletion( false, null );
+                    onComplete(false, null);
                 }
                 return ret;
 
@@ -251,10 +259,6 @@ public class WaveRequest {
                         + BLEAgent.byteToHex(checksum) + " expected "
                         + BLEAgent.byteToHex(check));
 
-                if( ! success ) {
-                    Log.d( TAG, "Checksum offset = " +( check - checksum ));
-                }
-
                 final byte responseCode = (byte) MarshalByte.OP.parse( response );
 
                 if( responseCode == op.FAILURE ) {
@@ -270,7 +274,7 @@ public class WaveRequest {
                     success = false;
                 }
 
-                onCompletion( success, response );
+                onComplete(success, response);
 
                 return true;
 
@@ -290,7 +294,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param response raw response byte array or null.
          */
-        protected abstract void onCompletion( boolean success, byte[] response );
+        protected abstract void onComplete( boolean success, byte[] response );
     }
 
     /** Enum for marshalling byte fields for byte array message exchanges with wave devices.
@@ -309,7 +313,7 @@ public class WaveRequest {
         SIZE                (1, 0, 200, 0),
 
         // date related
-        YEAR                (2, 0, 99, 100),
+        YEAR                (2, 0, 99, 2000 ),
         MONTH               (3, 1, 12, -1 ),
         DATE                ( 4, 1, 31, 0 ),
         HOUR                ( 5, 0, 23, 0 ),
@@ -319,23 +323,23 @@ public class WaveRequest {
 
         //personal info related
         GENDER              ( 35, 0, 1, 0 ),
-        HEIGHT_CM           ( 36, 0, 250, 0),
-        WEIGHT_KG           ( 37, 0, 200, 0),
-        STRIDE_CM           ( 38, 0, 150, 0),
-        RUNNING_STRIDE_CM   ( 39, 0, 200, 0),
+        HEIGHT_CM           ( 36, 0, 250, 0 ),
+        WEIGHT_KG           ( 37, 0, 200, 0 ),
+        STRIDE_CM           ( 38, 0, 150, 0 ),
+        RUNNING_STRIDE_CM   ( 39, 0, 200, 0 ),
         SLEEP_BEGIN_HOUR    ( 40, 0, 23, 0 ),
         SLEEP_BEGIN_MINUTE  ( 41, 0, 59, 0),
         SLEEP_END_HOUR      ( 42, 0, 23, 0 ),
         SLEEP_END_MINUTE    ( 43, 0, 59, 0),
         BT_AUTO_DISCONNECT  ( 46, 0, 1, 0 ),
-        BT_AUTO_TIMEOUT     ( 47, 0, 120, 0),
+        BT_AUTO_TIMEOUT     ( 47, 0, 120, 0 ),
 
         //sports data related
-        DATA_REQUEST_DAY    ( 2, 1, 7, -1),
+        DATA_REQUEST_DAY    ( 2, 1, 7, -1 ),
         DATA_REQUEST_HOUR   ( 3, 0, 23, 0 ),
         DATA_REQUEST_QTY    ( 4, 1, 3, 0 ),
 
-        DATA_RESPONSE_YEAR  ( 2, 0, 99, 100 ),
+        DATA_RESPONSE_YEAR  ( 2, 0, 99, 2000 ),
         DATA_RESPONSE_MONTH ( 3, 1, 12, -1 ),
         DATA_RESPONSE_DATE  ( 4, 1, 31, 0 ),
 
@@ -433,18 +437,19 @@ public class WaveRequest {
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
-                ret = new Date(
-                        MarshalByte.YEAR.parse(response),
-                        MarshalByte.MONTH.parse(response),
-                        MarshalByte.DATE.parse(response),
-                        MarshalByte.HOUR.parse(response),
-                        MarshalByte.MINUTE.parse(response),
-                        MarshalByte.SECOND.parse(response) );
+                final Calendar cal = Calendar.getInstance();
+                cal.set( Calendar.YEAR, MarshalByte.YEAR.parse(response) );
+                cal.set( Calendar.MONTH, MarshalByte.MONTH.parse(response) );
+                cal.set( Calendar.DATE, MarshalByte.DATE.parse(response) );
+                cal.set( Calendar.HOUR_OF_DAY, MarshalByte.HOUR.parse(response) );
+                cal.set( Calendar.MINUTE, MarshalByte.MINUTE.parse(response) );
+                cal.set( Calendar.SECOND, MarshalByte.SECOND.parse(response) );
+                ret = cal.getTime();
             }
-            onCompletion( success, ret );
+            onComplete(success, ret);
         }
 
         /** Completion callback for operation
@@ -452,7 +457,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param date response date or null
          */
-        abstract protected void onCompletion( boolean success, Date date );
+        abstract protected void onComplete( boolean success, Date date );
     }
 
     /** Set time on device using local clock. Device time will be set in UTC.
@@ -478,14 +483,15 @@ public class WaveRequest {
          */
         @Override
         public boolean dispatch(BLEAgent agent) {
-            final Date date = new Date();
-            MarshalByte.YEAR.put( message, date.getYear() );
-            MarshalByte.MONTH.put( message, date.getMonth() );
-            MarshalByte.DATE.put( message, date.getDate() );
-            MarshalByte.HOUR.put( message, date.getHours() );
-            MarshalByte.MINUTE.put( message, date.getMinutes() );
-            MarshalByte.SECOND.put( message, date.getSeconds() );
-            MarshalByte.DAY.put( message, date.getDay() );
+            final Calendar cal = Calendar.getInstance();
+            cal.setTime( new Date() );
+            MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
+            MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
+            MarshalByte.DATE.put( message, cal.get( Calendar.DATE ) );
+            MarshalByte.HOUR.put( message, cal.get( Calendar.HOUR_OF_DAY ) );
+            MarshalByte.MINUTE.put( message, cal.get( Calendar.MINUTE ) );
+            MarshalByte.SECOND.put( message, cal.get( Calendar.SECOND ) );
+            MarshalByte.DAY.put( message, cal.get( Calendar.DAY_OF_WEEK ) );
             return super.dispatch(agent);
         }
 
@@ -560,7 +566,7 @@ public class WaveRequest {
     /** Data point representation. Encapsulates mode, value, and parsing.
      *
      */
-    static public class WaveDataPoint {
+    static public class WaveDataPoint implements Comparable<WaveDataPoint> {
         enum Mode {
             DAILY,
             SPORTS,
@@ -598,7 +604,7 @@ public class WaveRequest {
                 case (0x02):
                     return Mode.SPORTS;
                 default:
-                    Log.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
+                    //Log.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
                     return Mode.RESERVED;
             }
         }
@@ -614,7 +620,7 @@ public class WaveRequest {
             // shave off
             int tmp = message[ offset ] & 0x3F;
             tmp <<= 6;
-            tmp += message[ offset + 1 ];
+            tmp += 0xFF & (int) message[ offset + 1 ];
             this.value = tmp;
             this.date = date;
         }
@@ -633,9 +639,44 @@ public class WaveRequest {
                                               final Date start ) {
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
             for( int index = 0 ; index < qty;  index += 1 ) {
-                final Date date = new Date( start.getTime() + index * 1000 * 60 * 2 );
+                final Date date = new Date( start.getTime() - index * 1000 * 60 * 2 );
                 date.setSeconds( 0 );
                 ret[ index ] = new WaveDataPoint( message, index * 2 + offset, date );
+            }
+
+            return ret;
+        }
+
+        /** Bulk parser for extracting points from a message.
+         *
+         * @param message raw message byte array.
+         * @param offset index to first byte data point.
+         * @param qty number of data points to parse (unchecked).
+         * @param year of first data point.
+         * @param month of first data point.
+         * @param date of first data point.
+         * @param hour of first data point.
+         * @return array of parsed WaveDataPoint objects.
+         */
+        public static WaveDataPoint[] parseResponse( final byte[] message,
+                                                     final int offset,
+                                                     final int qty,
+                                                     final int year,
+                                                     final int month,
+                                                     final int date,
+                                                     final int hour ) {
+            final WaveDataPoint[] ret = new WaveDataPoint[qty];
+            final Calendar cal = Calendar.getInstance();
+            cal.set( Calendar.YEAR, year );
+            cal.set( Calendar.MONTH, month );
+            cal.set( Calendar.DATE, date );
+            cal.set( Calendar.HOUR_OF_DAY, hour );
+            cal.set( Calendar.MINUTE, 0 );
+            cal.set( Calendar.SECOND, 0 );
+
+            for( int index = 0 ; index < qty;  index += 1 ) {
+                ret[ index ] = new WaveDataPoint( message, index * 2 + offset, cal.getTime() );
+                cal.add( Calendar.MINUTE, 2 );
             }
 
             return ret;
@@ -649,6 +690,14 @@ public class WaveRequest {
         public String toString() {
             return mode.toString() + " " + value + " " + date;
         }
+
+        /** Data comparison for sort by date.
+         * @param other Data point for comparison
+         * @return compareTo integer
+         */
+        public int compareTo( final WaveDataPoint other ) {
+            return this.date.compareTo(other.date);
+        }
     }
 
     /** Request for data by day of the week
@@ -659,20 +708,43 @@ public class WaveRequest {
         final static String TAG = "WaveRequest::DataByDate";
 
         protected final Date date;
+        final int hour;
+        final int day;
 
         public DataByDay( final BLEAgent.BLEDevice device,
                                      final int timeout,
                                      final Date date ){
             super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+
             this.date = date;
-            MarshalByte.DATA_REQUEST_DAY.put( message, date.getDay());
-            MarshalByte.DATA_REQUEST_HOUR.put( message, date.getHours());
+            hour = date.getHours();
+            day = date.getDay();
+
+            MarshalByte.DATA_REQUEST_DAY.put( message, day );
+            MarshalByte.DATA_REQUEST_HOUR.put( message, hour );
+            MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
+            //TODO: Check date within the last 7 days.
+        }
+
+        public DataByDay( final BLEAgent.BLEDevice device,
+                          final int timeout,
+                          final int day,
+                          final int hour){
+            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+            final Calendar cal = Calendar.getInstance();
+
+            this.date = null;
+            this.day = day;
+            this.hour = hour;
+
+            MarshalByte.DATA_REQUEST_DAY.put( message, day);
+            MarshalByte.DATA_REQUEST_HOUR.put( message, hour);
             MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
             //TODO: Check date within the last 7 days.
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             WaveDataPoint[] ret = null;
 
             if( success ) {
@@ -680,23 +752,33 @@ public class WaveRequest {
                 final int month = MarshalByte.DATA_RESPONSE_MONTH.parse( response );
                 final int date = MarshalByte.DATA_RESPONSE_DATE.parse( response );
 
-                Log.d( TAG, "Response date stamp: " + (1900 + year) + " " + month + " " + date );
+                final Date responseDate;
 
-                logFailure( year == this.date.getYear(), "Year mismatch "
-                        + year + " " + this.date.getYear());
-                logFailure( month == this.date.getMonth(), "Month mismatch "
-                        + month + " " + this.date.getMonth());
-                logFailure( date == this.date.getDate(), "Date mismatch "
-                        + date + " " + this.date.getDate());
+                Log.d( TAG, "Response date stamp: " + year + "-" + month + "-" + date +
+                        "(" + day + ") " + hour + ":00:00" );
+                if( this.date != null ) {
+                    responseDate = this.date;
+                    logFailure(year == this.date.getYear(), "Year mismatch "
+                            + year + " " + this.date.getYear());
+                    logFailure(month == this.date.getMonth(), "Month mismatch "
+                            + month + " " + this.date.getMonth());
+                    logFailure(date == this.date.getDate(), "Date mismatch "
+                            + date + " " + this.date.getDate());
+                } else {
+                    responseDate = new Date( year, month, date, hour, 0, 0 );
+                }
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
-                Log.d( TAG, "Data by date for " + this.date + " returned " + qty + " data points." );
+                Log.d( TAG, "Data by date for " + responseDate + " returned " + qty +
+                        " data points. (day: " + day + ", hour: " + hour + ")." );
 
-                ret = WaveDataPoint.parseResponse( response, 5, qty, this.date );
+                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date, hour );
+            } else {
+                Log.d( TAG, "Failed to get data (day: " + day + ", hour: " + hour + ")." );
             }
 
-            onCompletion( success, ret );
+            onComplete( success, ret );
         }
 
         /** completion callback for data points
@@ -704,7 +786,7 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param data array of WaveDataPoint objects or null;
          */
-        protected abstract void onCompletion( boolean success, WaveDataPoint[] data );
+        protected abstract void onComplete( boolean success, WaveDataPoint[] data );
     }
 
     /** Request for setting device name. seems broken.
@@ -809,7 +891,7 @@ public class WaveRequest {
         }
 
         @Override
-        protected void onCompletion(boolean success, byte[] response) {
+        protected void onComplete(boolean success, byte[] response) {
             int steps = 0;
 
             if( lid == LocalIdentifier.BATTERY) {
@@ -825,7 +907,7 @@ public class WaveRequest {
                     steps += (int) response[4] & 0xFF;
                 }
             }
-            onCompletion( success, steps );
+            onComplete( success, steps );
         }
 
         /** Callback after parsing.
@@ -835,6 +917,82 @@ public class WaveRequest {
          * @param success boolean indication of state.
          * @param steps number of steps.
          */
-        protected abstract void onCompletion( boolean success, int steps );
+        protected abstract void onComplete( boolean success, int steps );
+    }
+
+    /** Create read device serial requests
+     *
+     */
+    abstract public static class ReadSerial extends BLERequestWaveOp {
+
+        /** Create a new request to read a device's serial number.
+         *
+         * @param device    communications target.
+         * @param timeout   relative time after operation begins before request is abandoned.
+         */
+        public ReadSerial( final BLEAgent.BLEDevice device, final int timeout ) {
+            super(WaveOp.READ_SERIAL, 0, device, timeout);
+        }
+
+        /** Parse response into hex string.
+         *
+         * @param success boolean indication of state.
+         * @param response raw response byte array or null.
+         */
+        @Override
+        protected void onComplete(boolean success, byte[] response) {
+            final String serial;
+            if( success ) {
+                serial = BLEAgent.bytesToHex( response, 2, response.length -1 );
+            } else {
+                serial = null;
+            }
+            onComplete( success, serial );
+        }
+
+        /** Callback for serial number.
+         *
+         * @param success boolean indication of state.
+         * @param serial hex string serial number or null.
+         */
+        abstract protected void onComplete(boolean success, String serial);
+    }
+
+    /** Create read device version requests
+     *
+     */
+    abstract public static class ReadVersion extends BLERequestWaveOp {
+
+        /** Create a new request to read a device's version number.
+         *
+         * @param device    communications target.
+         * @param timeout   relative time after operation begins before request is abandoned.
+         */
+        public ReadVersion( final BLEAgent.BLEDevice device, final int timeout ) {
+            super(WaveOp.READ_VERSION, 0, device, timeout);
+        }
+
+        /** Parse response into hex string.
+         *
+         * @param success boolean indication of state.
+         * @param response raw response byte array or null.
+         */
+        @Override
+        protected void onComplete(boolean success, byte[] response) {
+            final String version;
+            if( success ) {
+                version = BLEAgent.bytesToHex( response, 2, response.length -1 );
+            } else {
+                version = null;
+            }
+            onComplete( success, version );
+        }
+
+        /** Callback for version number.
+         *
+         * @param success boolean indication of state.
+         * @param version hex string version number or null.
+         */
+        abstract protected void onComplete(boolean success, String version);
     }
 }

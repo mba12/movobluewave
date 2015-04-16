@@ -65,6 +65,19 @@ public class BLEAgent {
         return new String(hexChars);
     }
 
+    public static String bytesToHex(byte[] bytes, final int begin, final int end) {
+        final int length = end - begin;
+        char[] hexChars = new char[length * 2];
+        int i = 0;
+        for ( int index = begin; index < end; index += 1 ) {
+            final byte aByte = bytes[ index ];
+            int v = aByte & 0xFF;
+            hexChars[i++] = hexArray[v >>> 4];
+            hexChars[i++] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
     public static int hexArrayIndexOf( final char value ) {
         for( int i = 0; i < hexArray.length; i++ ) {
             if( hexArray[ i ] == value ) {
@@ -1054,5 +1067,22 @@ public class BLEAgent {
          * @return end scan ( triggering onComplete() with this device ).
          */
         abstract public boolean filter( final BLEDevice device );
+    }
+
+    /** Convenience class to scan for a device by address.
+     *
+     */
+    static abstract class BLERequestScanForAddress extends BLERequestScan {
+        final protected String address;
+
+        public BLERequestScanForAddress( final int timeout, final String address ) {
+            super( timeout );
+            this.address = address;
+        }
+
+        @Override
+        public boolean filter(BLEDevice device) {
+            return address.equals( device.device.getAddress() );
+        }
     }
 }
