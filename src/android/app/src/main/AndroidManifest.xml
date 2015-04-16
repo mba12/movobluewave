@@ -29,6 +29,12 @@
         <activity
             android:name=".Home"
             android:label="@string/title_activity_home" >
+            <intent-filter>
+
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
 
         </activity>
         <activity
@@ -48,12 +54,7 @@
         <activity
             android:name=".FirstLaunch"
             android:label="@string/title_activity_first_launch" >
-            <intent-filter>
 
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
         </activity>
         <activity

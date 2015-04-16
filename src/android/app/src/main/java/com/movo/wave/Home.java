@@ -2,9 +2,12 @@ package com.movo.wave;
 /**
  * Created by PhilG on 3/23/2015.
  */
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
@@ -36,16 +39,12 @@ import com.firebase.client.MutableData;
 import com.firebase.client.Transaction;
 import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 
 
 public class Home extends ActionBarActivity {
@@ -66,6 +65,9 @@ public class Home extends ActionBarActivity {
     Firebase currentUserRef;
     String[] menuOptions;
     public String TAG = "Movo Wave V2";
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +80,58 @@ public class Home extends ActionBarActivity {
         curDay = calendar.get(Calendar.DAY_OF_MONTH);
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
+
+
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(Database.StepEntry._ID, 0);
+        values.put(Database.StepEntry.STEPS, 5);
+        values.put(Database.StepEntry.START, 0);
+        values.put(Database.StepEntry.END,2);
+        values.put(Database.StepEntry.IS_PUSHED, false);
+        values.put(Database.StepEntry.SYNC_ID, 123);
+
+
+        long newRowId;
+        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                null,
+                values);
+        Log.d(TAG, "Inserted into database");
+
+
+        SQLiteDatabase db2 = mDbHelper.getReadableDatabase();
+
+// Define a projection that specifies which columns from the database
+// you will actually use after this query.
+        String[] projection = {
+                Database.StepEntry._ID,
+                Database.StepEntry.SYNC_ID,
+                Database.StepEntry.IS_PUSHED
+        };
+
+// How you want the results sorted in the resulting Cursor
+        String sortOrder =
+                Database.StepEntry._ID + " DESC";
+
+        Cursor cur = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                projection,                               // The columns to return
+                null,                                // The columns for the WHERE clause
+                null,                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                sortOrder                                 // The sort order
+        );
+
+        cur.moveToFirst();
+        long itemId = cur.getLong(
+                cur.getColumnIndexOrThrow(Database.StepEntry._ID)
+
+        );
+        Log.d(TAG, cur.toString());
+
 
         // Setup BLE context
         BLEAgent.open( c );
@@ -98,7 +152,8 @@ public class Home extends ActionBarActivity {
 
             @Override
             public boolean filter(BLEAgent.BLEDevice device) {
-                return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
+                //return device.device.getAddress().equals( "ED:09:F5:BB:E9:FF" );
+                return device.device.getAddress().equals( "C2:4C:53:BB:CD:FC" );
             }
 
             @Override
@@ -152,7 +207,7 @@ public class Home extends ActionBarActivity {
 //                        }
 //                    }
 //                });
-
+//
             }
         });
 
@@ -582,6 +637,9 @@ public class Home extends ActionBarActivity {
         gridview.invalidate();
         chart.invalidate();
     }
+
+
+
 
 
 }

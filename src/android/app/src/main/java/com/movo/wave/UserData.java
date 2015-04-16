@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
+import android.provider.BaseColumns;
 import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.util.Log;
@@ -20,6 +21,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 
 /**
  * Created by PhilG on 3/24/2015.
@@ -66,7 +68,7 @@ public class UserData extends Activity{
             Log.d(TAG, "User info is: " + currentUID);
         } else {
             //temporary use default user
-            reAuthenticate("philg@sensorstar.com","testpassword");
+//            reAuthenticate("philg@sensorstar.com","testpassword");
 
 //            currentUID = "Error";
 //            currentToken = "Error";
@@ -74,6 +76,9 @@ public class UserData extends Activity{
 //            currentPW = "Error";
 //            Log.d(TAG, "User info doesn't exist");
         }
+
+
+
 
 
     }
@@ -316,6 +321,8 @@ public class UserData extends Activity{
             }
         }.start();
     }
+
+
 
 
 }
