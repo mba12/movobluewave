@@ -467,7 +467,7 @@ public class Home extends ActionBarActivity {
                 UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
-//                login();
+                upload();
                 break;
             case 2:
                 Log.d(TAG, "Users pressed");
@@ -614,7 +614,10 @@ public class Home extends ActionBarActivity {
         chart.invalidate();
     }
 
+    public static void upload(){
 
+        
+    }
 
 
 
