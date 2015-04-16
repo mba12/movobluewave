@@ -163,7 +163,7 @@ public class WaveAgent {
         }
 
         public BLEAgent.BLEDevice device = null;
-        final public int timeout = 5000;
+        final public int timeout = 10000;
         public Date deviceDate;
         private int dataSuccess = 0;
         private int dataFailure = 0;
@@ -279,11 +279,13 @@ public class WaveAgent {
         private void nextState( boolean success ) {
             callback.notify( this, state, success );
 
-            Log.v( TAG, this.toString() + "\tState was: " + state );
-            state = state.next();
-            Log.v( TAG, this.toString() + "\tState now: " + state );
+            Log.v( TAG, this.toString() + "\tState was: " + state + " (" + success + ")" );
 
             if( success ) {
+
+                state = state.next();
+                Log.v( TAG, this.toString() + "\tState now: " + state );
+
                 switch (state) {
                     case VERSION:
                         /*BLEAgent.handle(new WaveRequest.ReadVersion(device, 1000) {
@@ -355,25 +357,23 @@ public class WaveAgent {
                                   final int hour ) {
             if( response != null) {
                 dataSuccess += 1;
-                //int reservedCount = 0;
+                boolean dump = false;
 
                 for (WaveRequest.WaveDataPoint point : response) {
                     //Log.d( TAG, point.toString() );
                     if( point.mode != WaveRequest.WaveDataPoint.Mode.RESERVED
                             && point.value != 0) {
-                        Log.i( TAG, point.toString() );
+                        dump = true;
                     }
                     data.add(point);
                 }
-                                /*if( reservedCount != data.length && reservedCount != 0 ) {
-                                    Log.i( TAG, "DUMP START: " + day + " " + hour
-                                            + " (" + reservedCount + "/" + data.length + ")" );
-                                    for (WaveRequest.WaveDataPoint point : data) {
-                                        Log.i( TAG, point.toString() );
-                                    }
-                                    Log.i( TAG, "DUMP END: " + day + " " + hour
-                                            + " (" + reservedCount + "/" + data.length + ")" );
-                                }*/
+                if( dump ) {
+                    Log.i( TAG, "DUMP START: " + day + " " + hour );
+                    for (WaveRequest.WaveDataPoint point : data) {
+                        Log.i( TAG, "DUMP" + point );
+                    }
+                    Log.i( TAG, "DUMP END: " + day + " " + hour );
+                }
             } else {
                 dataFailure += 1;
                 Log.w(TAG, "FAILED data: " + day + " " + hour );
