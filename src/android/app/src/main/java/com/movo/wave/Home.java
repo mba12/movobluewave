@@ -172,13 +172,12 @@ public class Home extends ActionBarActivity {
         });*/
 
         // Or we can scan for a specific device directly....
-        //final String serial = "C2:4C:53:BB:CD:FC";
-        final String serial = "ED:09:F5:BB:E9:FF";
-        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, serial, syncCallback );
-
+        //final String address = "C2:4C:53:BB:CD:FC";
+        final String address = "ED:09:F5:BB:E9:FF";
+        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
         final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
 
-        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, serial ) {
+        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, address ) {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
 
