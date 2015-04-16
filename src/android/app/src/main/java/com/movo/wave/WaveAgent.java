@@ -55,7 +55,7 @@ public class WaveAgent {
             }
         }
 
-        abstract void notify( BLEAgent.BLEDevice device );
+        abstract void notify( WaveDevice device );
 
         /** Called at scan completion
          */
@@ -89,25 +89,38 @@ public class WaveAgent {
             public boolean filter(BLEAgent.BLEDevice device) {
 
                 if( device.servicesDiscovered ) {
-                    if( isWave( device ) ) {
-                        callback.notify(device);
+                    final WaveDevice wave = deviceMap.get( device );
+                    if( wave != null ) {
+                        callback.notify( wave );
                     }
+
                 } else if( ! callback.seen.contains( device ) ) {
                     callback.acquire();
-                    BLEAgent.handle( new BLEAgent.BLERequest(device, timeout) {
+                    BLEAgent.handle( new WaveRequest.ReadSerial(device, timeout) {
                         @Override
                         public boolean dispatch(BLEAgent agent) {
                             if( isWave( this.device ) ) {
-                                callback.notify( device );
-                                callback.release();
+                                return super.dispatch( agent );
+                            } else {
+                                return true;
                             }
-                            return true;
                         }
 
                         @Override
-                        public void onFailure() {
-                            Log.w( TAG, "scanForWaveDevices(): couldn't scan device "
-                                    + device.device.getAddress());
+                        protected void onComplete(boolean success, String serial) {
+
+                            if( ! success ) {
+                                //FIXME: stub for debug
+                                serial = "UNKNOWN";
+                                Log.w( TAG, "scanForWaveDevices(): couldn't scan device "
+                                        + device.device.getAddress());
+                            }
+
+                            final WaveDevice wave = new WaveDevice( device, "UNKNOWN", serial);
+                            deviceMap.put(device, wave);
+                            callback.notify(wave);
+
+                            callback.release();
                         }
                     });
                 }
@@ -149,7 +162,7 @@ public class WaveAgent {
             public void complete( DataSync sync, List<WaveRequest.WaveDataPoint> data );
         }
 
-        public BLEAgent.BLEDevice device;
+        public BLEAgent.BLEDevice device = null;
         final public int timeout = 5000;
         public Date deviceDate;
         private int dataSuccess = 0;
@@ -162,7 +175,6 @@ public class WaveAgent {
          *
          */
         public static enum SyncState {
-            INIT,
             DISCOVERY,
             VERSION,
             GET_DATE,
@@ -180,12 +192,81 @@ public class WaveAgent {
             }
         }
 
+        /** Private constructor to facilitate device discovery...
+         *
+         * @param callback notification callback.
+         */
+        private DataSync( final Callback callback ) {
+            this.callback = callback;
+        }
+
+        /** Constructor for finding device by address
+         *
+         * Since double string overload is a no-no
+         *
+         * @param timeout discovery timeout in seconds.
+         * @param address BLE address of device.
+         * @param callback notification callback.
+         * @return DataSync object for operation.
+         */
+        public static DataSync byAddress( final int timeout,
+                                          final String address,
+                                          final Callback callback ) {
+            final DataSync ret = new DataSync( callback );
+
+            BLEAgent.handle( new BLEAgent.BLERequestScanForAddress( timeout, address ) {
+                @Override
+                public void onComplete(BLEAgent.BLEDevice device) {
+                    ret.device = device;
+                    ret.nextState( device != null );
+                }
+            });
+
+            return ret;
+        }
+
+        /** Constructor for finding device by serial
+         *
+         * Since double string overload is a no-no.
+         *
+         * NOTE: may be very slow......
+         *
+         * @param timeout discovery timeout in seconds.
+         * @param serial wave serial of device.
+         * @param callback notification callback.
+         * @return DataSync object for operation.
+         */
+        public static DataSync bySerial(final int timeout,
+                                        final String serial,
+                                        final Callback callback ) {
+            final DataSync ret = new DataSync( callback );
+
+            WaveAgent.scanForWaveDevices( timeout, new WaveScanCallback() {
+                @Override
+                void notify(WaveDevice device) {
+                    if( device.serial.equals( serial ) ) {
+                        ret.device = device.ble;
+                        ret.nextState( true );
+                    }
+                }
+
+                @Override
+                void onComplete() {
+                    if( ret.device == null ) {
+                        ret.nextState( false );
+                    }
+                }
+            });
+
+            return ret;
+        }
+
         /** Sync constructor for known device.
          *
          * @param device communications target.
          * @param callback notification callback.
          */
-        public DataSync( BLEAgent.BLEDevice device, Callback callback ) {
+        public DataSync( final BLEAgent.BLEDevice device, final Callback callback ) {
             this.device = device;
             this.callback = callback;
             nextState( true );
@@ -272,7 +353,7 @@ public class WaveAgent {
         private void receiveData( final WaveRequest.WaveDataPoint[] response,
                                   final int day,
                                   final int hour ) {
-            if( data != null) {
+            if( response != null) {
                 dataSuccess += 1;
                 //int reservedCount = 0;
 

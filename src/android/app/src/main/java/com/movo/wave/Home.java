@@ -138,29 +138,31 @@ public class Home extends ActionBarActivity {
         // Setup BLE context
         BLEAgent.open( c );
 
+        final WaveAgent.DataSync.Callback syncCallback = new WaveAgent.DataSync.Callback() {
+            @Override
+            public void notify( final WaveAgent.DataSync sync,
+            final WaveAgent.DataSync.SyncState state,
+            final boolean status) {
+
+            }
+
+            @Override
+            public void complete( final WaveAgent.DataSync sync,
+            final List<WaveRequest.WaveDataPoint> data) {
+
+            }
+        };
+
         // Look for all wave devices.....
-        /*WaveAgent.scanForWaveDevices(60000, new WaveAgent.WaveScanCallback() {
+        /*WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
 
             @Override
-            void notify(BLEAgent.BLEDevice device) {
-                Log.i(TAG, "Found wave device: " + device.device.getAddress());
-                new WaveAgent.DataSync(device, new WaveAgent.DataSync.Callback() {
-                    @Override
-                    public void notify( final WaveAgent.DataSync sync,
-                                        final WaveAgent.DataSync.SyncState state,
-                                        final boolean status) {
-
-                    }
-
-                    @Override
-                    public void complete( final WaveAgent.DataSync sync,
-                                          final List<WaveRequest.WaveDataPoint> data) {
-
-                    }
-                });
+            void notify(WaveAgent.WaveDevice wave) {
+                Log.i(TAG, "Found wave device: " + wave.ble.device.getAddress());
+                new WaveAgent.DataSync(wave.ble, syncCallback);
             }
 
             @Override
@@ -172,6 +174,10 @@ public class Home extends ActionBarActivity {
         // Or we can scan for a specific device directly....
         //final String serial = "C2:4C:53:BB:CD:FC";
         final String serial = "ED:09:F5:BB:E9:FF";
+        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, serial, syncCallback );
+
+        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
+
         final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, serial ) {
             @Override
             public void onComplete(BLEAgent.BLEDevice device) {
@@ -188,24 +194,11 @@ public class Home extends ActionBarActivity {
 
                     ....just subclass the onComplete method.
                 */
-                new WaveAgent.DataSync( device, new WaveAgent.DataSync.Callback(){
-                    @Override
-                    public void notify( final WaveAgent.DataSync sync,
-                                        final WaveAgent.DataSync.SyncState state,
-                                        final boolean status) {
-
-                    }
-
-                    @Override
-                    public void complete( final WaveAgent.DataSync sync,
-                                          final List<WaveRequest.WaveDataPoint> data) {
-
-                    }
-                });
+                new WaveAgent.DataSync( device, syncCallback);
             }
         };
 
-        BLEAgent.handle( scanExample );
+        //BLEAgent.handle( scanExample );
 
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);

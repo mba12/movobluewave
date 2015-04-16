@@ -284,6 +284,14 @@ public class WaveRequest {
             }
         }
 
+        /** Map timeout behavior to onComplete()
+         *
+         */
+        @Override
+        public void onFailure() {
+            onComplete( false, null );
+        }
+
         @Override
         public Set<Pair<UUID, UUID>> listenUUIDs() {
             return listenUUIDs;
