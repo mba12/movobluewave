@@ -139,7 +139,7 @@ public class Home extends ActionBarActivity {
         BLEAgent.open( c );
 
         // Look for all wave devices.....
-        WaveAgent.scanForWaveDevices(60000, new WaveAgent.WaveScanCallback() {
+        /*WaveAgent.scanForWaveDevices(60000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
@@ -167,7 +167,7 @@ public class Home extends ActionBarActivity {
             void onComplete() {
 
             }
-        });
+        });*/
 
         // Or we can scan for a specific device directly....
         //final String serial = "C2:4C:53:BB:CD:FC";
@@ -205,7 +205,7 @@ public class Home extends ActionBarActivity {
             }
         };
 
-        //BLEAgent.handle( scanExample );
+        BLEAgent.handle( scanExample );
 
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);

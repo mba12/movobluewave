@@ -150,7 +150,7 @@ public class WaveAgent {
         }
 
         public BLEAgent.BLEDevice device;
-        final public int timeout = 2000;
+        final public int timeout = 5000;
         public Date deviceDate;
         private int dataSuccess = 0;
         private int dataFailure = 0;
