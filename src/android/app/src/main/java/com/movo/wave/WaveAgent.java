@@ -361,16 +361,16 @@ public class WaveAgent {
 
                 for (WaveRequest.WaveDataPoint point : response) {
                     //Log.d( TAG, point.toString() );
-                    if( point.mode != WaveRequest.WaveDataPoint.Mode.RESERVED
-                            && point.value != 0) {
-                        dump = true;
+                    if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
+                        //dump = true;
+                        Log.i( TAG, "DUMP: " + point );
                     }
                     data.add(point);
                 }
                 if( dump ) {
                     Log.i( TAG, "DUMP START: " + day + " " + hour );
                     for (WaveRequest.WaveDataPoint point : data) {
-                        Log.i( TAG, "DUMP" + point );
+                        Log.i( TAG, "DUMP: " + point );
                     }
                     Log.i( TAG, "DUMP END: " + day + " " + hour );
                 }

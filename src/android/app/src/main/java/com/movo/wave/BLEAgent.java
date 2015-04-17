@@ -188,7 +188,8 @@ public class BLEAgent {
                             device.connectionState = newState;
                             if( device != currentDevice &&
                                     newState != BluetoothGatt.STATE_DISCONNECTED ) {
-                                gatt.disconnect();
+                                Log.i( TAG, "Disconnecting from errant device: " + address );
+                                //gatt.disconnect();
                             }
                         } else {
                             Log.e( TAG, "Failed to look up device for " + address );
@@ -786,12 +787,12 @@ public class BLEAgent {
     private void setDevice( final BLEDevice device ) {
 
         //disconnect
-        if( device != currentDevice && currentDevice != null ) {
+        if( device != currentDevice && currentDevice != null && device != null ) {
             fifoOp(new SetupOp() {
                 @Override
                 public void run() {
 
-                    Log.d(TAG, "Disconnecting from device: " + device.device.getAddress());
+                    Log.d(TAG, "Disconnecting from device: " + currentDevice.device.getAddress());
 
                     // disable notifications
                     for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
@@ -807,10 +808,10 @@ public class BLEAgent {
                     currentDevice.connectionState = newState;
                     if (!ret) {
                         Log.w(TAG, "Not disconnected??!? " + describeState(newState));
-                        Log.w(TAG, "Retrying disconnect..." + device.device.getAddress());
+                        Log.w(TAG, "Retrying disconnect..." + currentDevice.device.getAddress());
                         currentDevice.gatt.disconnect();
                     } else {
-                        Log.d(TAG, "Disconnected from " + device.device.getAddress());
+                        Log.d(TAG, "Disconnected from " + currentDevice.device.getAddress());
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
@@ -971,7 +972,7 @@ public class BLEAgent {
                     deviceMap.put( address, dev );
                 }
                 logFailure( currentRequest != null, "No active request!!!");
-                if( currentRequest.onReceive( dev ) ) {
+                if( currentRequest != null && currentRequest.onReceive( dev ) ) {
                     nextRequest();
                 }
             }

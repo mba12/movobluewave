@@ -45,6 +45,8 @@ import com.github.mikephil.charting.data.LineDataSet;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -66,7 +68,7 @@ public class Home extends ActionBarActivity {
     private CharSequence mTitle;
     Firebase currentUserRef;
     String[] menuOptions;
-    public String TAG = "Movo Wave V2";
+    public static String TAG = "Movo Wave V2";
 
 
 
@@ -75,6 +77,9 @@ public class Home extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         c = this.getApplicationContext();
+
+        // Setup BLE context
+        BLEAgent.open( c );
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
@@ -135,8 +140,7 @@ public class Home extends ActionBarActivity {
         Log.d(TAG, cur.toString());
 
 
-        // Setup BLE context
-        BLEAgent.open( c );
+
 
 
 
@@ -562,13 +566,24 @@ public class Home extends ActionBarActivity {
             public void notify( final WaveAgent.DataSync sync,
                                 final WaveAgent.DataSync.SyncState state,
                                 final boolean status) {
-
+                Log.d(TAG, "Upload notify");
             }
 
             @Override
             public void complete( final WaveAgent.DataSync sync,
                                   final List<WaveRequest.WaveDataPoint> data) {
 
+                if( data != null ) {
+                    Collections.sort(data);
+
+                    for( WaveRequest.WaveDataPoint point : data ) {
+                        Log.v( TAG, "The point: " + point );
+                    }
+                } else {
+                    Log.w(TAG, "OH noes!");
+                }
+
+                Log.d(TAG, "Upload data complete");
             }
         };
 
@@ -591,10 +606,10 @@ public class Home extends ActionBarActivity {
         });*/
 
         // Or we can scan for a specific device directly....
-        //final String address = "C2:4C:53:BB:CD:FC";
-        final String address = "ED:09:F5:BB:E9:FF";
-        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
-        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
+        final String address = "C2:4C:53:BB:CD:FC";
+//        final String address = "ED:09:F5:BB:E9:FF";
+        final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+//        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
 
         final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, address ) {
             @Override
