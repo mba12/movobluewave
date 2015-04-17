@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.UUID;
 
 //Created by Alexander Haase on 4/8/2015.
@@ -58,6 +59,13 @@ public class WaveRequest {
         }
     }
 
+    /** Creates a new utc calendar object
+     *
+     * @return utc calendar
+     */
+    static public Calendar utcCal() {
+        return Calendar.getInstance( TimeZone.getTimeZone("UTC") );
+    }
 
     /** Abstract base class for interacting with wave device using WaveOp and byte[] buffers.
      *
@@ -448,7 +456,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
-                final Calendar cal = Calendar.getInstance();
+                final Calendar cal = utcCal();
                 cal.set( Calendar.YEAR, MarshalByte.YEAR.parse(response) );
                 cal.set( Calendar.MONTH, MarshalByte.MONTH.parse(response) );
                 cal.set( Calendar.DATE, MarshalByte.DATE.parse(response) );
@@ -491,7 +499,7 @@ public class WaveRequest {
          */
         @Override
         public boolean dispatch(BLEAgent agent) {
-            final Calendar cal = Calendar.getInstance();
+            final Calendar cal = utcCal();
             cal.setTime( new Date() );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
@@ -674,7 +682,7 @@ public class WaveRequest {
                                                      final int date,
                                                      final int hour ) {
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
-            final Calendar cal = Calendar.getInstance();
+            final Calendar cal = utcCal();
             cal.set( Calendar.YEAR, year );
             cal.set( Calendar.MONTH, month );
             cal.set( Calendar.DATE, date );
@@ -739,7 +747,6 @@ public class WaveRequest {
                           final int day,
                           final int hour){
             super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
-            final Calendar cal = Calendar.getInstance();
 
             this.date = null;
             this.day = day;

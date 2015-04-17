@@ -164,7 +164,8 @@ public class WaveAgent {
 
         public BLEAgent.BLEDevice device = null;
         final public int timeout = 10000;
-        public Date deviceDate;
+        public Date deviceDate = null;
+        public Date localDate = null;
         private int dataSuccess = 0;
         private int dataFailure = 0;
         final public Callback callback;
@@ -302,6 +303,7 @@ public class WaveAgent {
                             @Override
                             protected void onComplete(boolean success, Date date) {
                                 deviceDate = date;
+                                localDate = new Date();
                                 nextState( success );
                             }
                         });
@@ -360,10 +362,16 @@ public class WaveAgent {
                 boolean dump = false;
 
                 for (WaveRequest.WaveDataPoint point : response) {
-                    //Log.d( TAG, point.toString() );
+
+
                     if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
-                        //dump = true;
-                        Log.i( TAG, "DUMP: " + point );
+                        //skip reserved values.
+                        Log.v(TAG, "Dropping point(mode): " + point );
+                        continue;
+                    } else if( point.date.compareTo( deviceDate ) > 0 ) {
+                        //skip future data.
+                        Log.v(TAG, "Dropping point(date): " + point );
+                        continue;
                     }
                     data.add(point);
                 }
