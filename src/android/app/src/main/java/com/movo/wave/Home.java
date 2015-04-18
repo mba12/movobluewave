@@ -585,6 +585,11 @@ public class Home extends ActionBarActivity {
 
                 Log.d(TAG, "Upload data complete");
             }
+
+            @Override
+            public void notify(float progress) {
+                Log.d(TAG, "Progress % " + progress * 100 );
+            }
         };
 
         // Look for all wave devices.....

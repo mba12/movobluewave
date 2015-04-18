@@ -154,6 +154,8 @@ public class WaveAgent {
              */
             public void notify( DataSync sync, SyncState state, boolean status );
 
+            public void notify( float progress );
+
             /** Completion callback
              *
              * @param sync sync object.
@@ -171,6 +173,19 @@ public class WaveAgent {
         final public Callback callback;
         final private List<WaveRequest.WaveDataPoint> data = new LinkedList<>();
         private SyncState state = SyncState.DISCOVERY;
+        private float requestProgress = 0;
+
+        /**
+         * Discovery: 1 (maybe)
+         * Data: 8 requests/day * 7 days
+         * Get and set date: 2
+         * Serial and version: 2
+         */
+        private static float PROGRESS_STEP = 1.0f / (24 * 7 / 3 + 5 );
+
+        private void progress() {
+            callback.notify( requestProgress += PROGRESS_STEP );
+        }
 
         /** Enumeration of sync state
          *
@@ -278,6 +293,7 @@ public class WaveAgent {
          * @param success indication of current state success.
          */
         private void nextState( boolean success ) {
+            progress();
             callback.notify( this, state, success );
 
             Log.v( TAG, this.toString() + "\tState was: " + state + " (" + success + ")" );
@@ -332,7 +348,7 @@ public class WaveAgent {
         }
 
         /** Convenience wrapper for dispatching data requests
-         *
+         * TODO: refactor to one-at-a-time to release radio sooner on failure.
          */
         private void dispatchData() {
             for( int day = 0; day < 7; day++ ) {
@@ -357,6 +373,7 @@ public class WaveAgent {
         private void receiveData( final WaveRequest.WaveDataPoint[] response,
                                   final int day,
                                   final int hour ) {
+            progress();
             if( response != null) {
                 dataSuccess += 1;
                 boolean dump = false;
