@@ -94,7 +94,14 @@ public class WaveAgent {
                         callback.notify( wave );
                     }
 
-                } else if( ! callback.seen.contains( device ) ) {
+                } else if( ! callback.seen.contains( device )
+                        && device.device.getName().equals( "Wave" ) ) {
+
+                    /*
+                     AH 2015-04-19: Connect to prevent devices from getting board before we can
+                     inspect them.
+                     */
+                    device.gatt.connect();
                     callback.acquire();
                     BLEAgent.handle( new WaveRequest.ReadSerial(device, timeout) {
                         @Override
@@ -110,15 +117,15 @@ public class WaveAgent {
                         protected void onComplete(boolean success, String serial) {
 
                             if( ! success ) {
-                                //FIXME: stub for debug
-                                serial = "UNKNOWN";
-                                Log.w( TAG, "scanForWaveDevices(): couldn't scan device "
+                                Log.w( WaveAgent.TAG, "scanForWaveDevices(): couldn't scan device "
                                         + device.device.getAddress());
+                            } else {
+                                final WaveDevice wave = new WaveDevice(device, "UNKNOWN", serial);
+                                Log.d(WaveAgent.TAG, "Pairing device '" + device.device.getAddress() +
+                                        "' to serial '" + serial + "'");
+                                deviceMap.put(device, wave);
+                                callback.notify(wave);
                             }
-
-                            final WaveDevice wave = new WaveDevice( device, "UNKNOWN", serial);
-                            deviceMap.put(device, wave);
-                            callback.notify(wave);
 
                             callback.release();
                         }
@@ -312,14 +319,18 @@ public class WaveAgent {
 
                 switch (state) {
                     case VERSION:
-                        /*BLEAgent.handle(new WaveRequest.ReadVersion(device, 1000) {
+                        Log.d( TAG, "DeviceName: '" + device.device.getName() +
+                                "' DeviceAddress: " + device.device.getAddress() );
+                        BLEAgent.handle(new WaveRequest.ReadVersion(device, timeout) {
                             @Override
                             protected void onComplete(boolean success, final String version) {
+                                if( version != null && ! version.equals("4E4F2E31") ) {
+                                    Log.e(DataSync.TAG, "Unrecognized device version: '" + version
+                                            + "' address: " + device.device.getAddress());
+                                }
                                 nextState( success );
                             }
                         });
-                        break;*/
-                        nextState( true );
                         break;
                     case GET_DATE:
                         BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
@@ -327,7 +338,9 @@ public class WaveAgent {
                             protected void onComplete(boolean success, Date date) {
                                 deviceDate = date;
                                 localDate = new Date();
-                                nextState( success );
+                                Log.i( DataSync.TAG, "Device Time: " + WaveRequest.UTC.isoFormat( deviceDate ) );
+                                Log.i( DataSync.TAG, "Local Time: " + WaveRequest.UTC.isoFormat( localDate ) );
+                                nextState(success);
                             }
                         });
                         break;
@@ -335,7 +348,7 @@ public class WaveAgent {
                         dispatchData();
                         break;
                     case SET_DATE:
-                        BLEAgent.handle( new WaveRequest.SetDate( device, 1000 ) {
+                        BLEAgent.handle( new WaveRequest.SetDate( device, timeout ) {
                             @Override
                             protected void onComplete(boolean success, byte[] response) {
                                 nextState( success );

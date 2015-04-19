@@ -566,7 +566,7 @@ public class Home extends ActionBarActivity {
             public void notify( final WaveAgent.DataSync sync,
                                 final WaveAgent.DataSync.SyncState state,
                                 final boolean status) {
-                Log.d(TAG, "Upload notify");
+                Log.d(TAG, "Upload notify: " + state + " (" + status + ")" );
             }
 
             @Override
@@ -576,24 +576,25 @@ public class Home extends ActionBarActivity {
                 if( data != null ) {
                     Collections.sort(data);
 
-                    for( WaveRequest.WaveDataPoint point : data ) {
+                    /*for( WaveRequest.WaveDataPoint point : data ) {
                         Log.v( TAG, "The point: " + point );
-                    }
+                    }*/
+                    Log.i( TAG, "Sync complete! " +  sync );
                 } else {
-                    Log.w(TAG, "OH noes!");
+                    Log.w(TAG, "OH noes! " + sync );
                 }
 
                 Log.d(TAG, "Upload data complete");
             }
 
             @Override
-            public void notify(float progress) {
+            public void notify( WaveAgent.DataSync sync, float progress) {
                 Log.d(TAG, "Progress % " + progress * 100 );
             }
         };
 
         // Look for all wave devices.....
-        /*WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
+        WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
@@ -608,35 +609,14 @@ public class Home extends ActionBarActivity {
             void onComplete() {
 
             }
-        });*/
+        });
 
         // Or we can scan for a specific device directly....
-        final String address = "C2:4C:53:BB:CD:FC";
-//        final String address = "ED:09:F5:BB:E9:FF";
-        final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
-//        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
-
-        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, address ) {
-            @Override
-            public void onComplete(BLEAgent.BLEDevice device) {
-
-                if (device == null) {
-                    Log.d(TAG, "Failed to find device: " + address);
-                    return;
-                }
-
-                Log.d("CALLBACK", "found target " + device + " name " + device.device.getName());
-
-                /*
-                    After we have a device, we can do about any WaveRequest....
-
-                    ....just subclass the onComplete method.
-                */
-                new WaveAgent.DataSync( device, syncCallback);
-            }
-        };
-
-        //BLEAgent.handle( scanExample );
+        //final String address = "C2:4C:53:BB:CD:FC";
+        //final String address = "ED:09:F5:BB:E9:FF";
+        final String address = "EB:3B:2D:61:17:44";
+        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+        //final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
         
     }
 
