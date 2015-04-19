@@ -565,7 +565,7 @@ public class Home extends ActionBarActivity {
             public void notify( final WaveAgent.DataSync sync,
                                 final WaveAgent.DataSync.SyncState state,
                                 final boolean status) {
-                Log.d(TAG, "Upload notify");
+                Log.d(TAG, "Upload notify: " + state + " (" + status + ")" );
             }
 
             @Override
@@ -579,34 +579,32 @@ public class Home extends ActionBarActivity {
                 if( data != null ) {
                     Collections.sort(data);
 
-
-                    for( WaveRequest.WaveDataPoint point : data ) {
-                        Log.v( TAG, "The point: " + point );
+                        for( final WaveRequest.WaveDataPoint point : data ) {
+                            Log.v(TAG, "The point: " + point);
 //
-                        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
-                        long endLong = point.date.getTime();
-                        endLong = endLong + TWO_MINUTES_IN_MILLIS;
-                        Date endDate = new Date(endLong);
+                            long TWO_MINUTES_IN_MILLIS = 120000;//millisecs
+                            long endLong = point.date.getTime();
+                            endLong = endLong + TWO_MINUTES_IN_MILLIS;
+                            Date endDate = new Date(endLong);
 
-                        ContentValues values = new ContentValues();
+                            ContentValues values = new ContentValues();
 //                        values.put(Database.StepEntry._ID, UUID.randomUUID().toString());
-                        values.put(Database.StepEntry.STEPS, point.value);
-                        values.put(Database.StepEntry.START, point.date.getTime());
-                        values.put(Database.StepEntry.END,endDate.getTime());
-                        values.put(Database.StepEntry.IS_PUSHED, 0);
-                        values.put(Database.StepEntry.SYNC_ID, syncUniqueID);
+                            values.put(Database.StepEntry.STEPS, point.value);
+                            values.put(Database.StepEntry.START, point.date.getTime());
+                            values.put(Database.StepEntry.END, endDate.getTime());
+                            values.put(Database.StepEntry.IS_PUSHED, 0);
+                            values.put(Database.StepEntry.SYNC_ID, syncUniqueID);
 
 
-                        long newRowId;
-                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                null,
-                                values);
+                            long newRowId;
+                            newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                                    null,
+                                    values);
 
-                        Log.d(TAG, "Inserted into database: new row "+newRowId);
+                            Log.d(TAG, "Inserted into database: new row " + newRowId);
 
+                        }
 
-
-                    }
                     Date stop = new Date();
 
                     ContentValues syncValues = new ContentValues();
@@ -644,7 +642,7 @@ public class Home extends ActionBarActivity {
                     );
                     Log.d("TAG", "Found sync id "+syncUniqueID+": "+cur.getColumnIndexOrThrow(Database.SyncEntry.GUID));
                 } else {
-                    Log.w(TAG, "OH noes!");
+                    Log.w(TAG, "OH noes! " + sync);
                 }
 
 
@@ -664,7 +662,7 @@ public class Home extends ActionBarActivity {
             }
 
             @Override
-            public void notify(float progress) {
+            public void notify( WaveAgent.DataSync sync, float progress) {
                 int intProgress = (int)(progress *100);
                 syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
@@ -672,7 +670,7 @@ public class Home extends ActionBarActivity {
         };
 
         // Look for all wave devices.....
-        /*WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
+        WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
@@ -687,41 +685,28 @@ public class Home extends ActionBarActivity {
             void onComplete() {
 
             }
-        });*/
+        });
 
         // Or we can scan for a specific device directly....
-        final String address = "C2:4C:53:BB:CD:FC";
-//        final String address = "ED:09:F5:BB:E9:FF";
-        final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
-//        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
-
-        final BLEAgent.BLERequest scanExample = new BLEAgent.BLERequestScanForAddress( 10000, address ) {
-            @Override
-            public void onComplete(BLEAgent.BLEDevice device) {
-
-                if (device == null) {
-                    Log.d(TAG, "Failed to find device: " + address);
-                    return;
-                }
-
-                Log.d("CALLBACK", "found target " + device + " name " + device.device.getName());
-
-                /*
-                    After we have a device, we can do about any WaveRequest....
-
-                    ....just subclass the onComplete method.
-                */
-                new WaveAgent.DataSync( device, syncCallback);
-            }
-        };
-
-        //BLEAgent.handle( scanExample );
+        //final String address = "C2:4C:53:BB:CD:FC";
+        //final String address = "ED:09:F5:BB:E9:FF";
+        final String address = "EB:3B:2D:61:17:44";
+        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+        //final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
         
     }
 
     public void testMeSql(){
-        Date testDate = new Date();
-        testDate.setTime( testDate.getTime() % 1000*60*60);
+        final Calendar cal = WaveRequest.UTC.newCal();
+        cal.set( Calendar.YEAR, 2015);
+        cal.set( Calendar.MONTH, Calendar.APRIL );
+        cal.set( Calendar.DATE, 19 );
+        cal.set( Calendar.HOUR_OF_DAY, 0 );
+        cal.set( Calendar.MINUTE, 0 );
+        cal.set( Calendar.SECOND, 0 );
+        cal.set( Calendar.MILLISECOND, 0 );
+        final Date testDate = cal.getTime();
+
         Log.d( TAG, "Test data point time stamp: " +  testDate.getTime() );
 
 
@@ -767,16 +752,16 @@ public class Home extends ActionBarActivity {
     private boolean insertPoints( final SQLiteDatabase db,
                                   Collection<WaveRequest.WaveDataPoint> points ) {
         //http://www.vogella.com/tutorials/AndroidSQLite/article.html
-        db.beginTransaction();
+        //db.beginTransaction();
         boolean ret = false;
         try {
             for(WaveRequest.WaveDataPoint point : points ) {
                 insertPoint(db, point);
             }
-            db.setTransactionSuccessful();
+            //db.setTransactionSuccessful();
             ret = true;
         } finally {
-            db.endTransaction();
+            //db.endTransaction();
         }
         return ret;
     }

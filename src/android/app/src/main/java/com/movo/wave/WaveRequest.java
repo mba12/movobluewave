@@ -29,6 +29,35 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
+    static class UTC {
+        final private static DateFormat dateFormat;
+        final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
+        static {
+            dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US );
+            dateFormat.setTimeZone( timeZone );
+        }
+
+        /** iso-8601 date formatter.
+         *
+         * @param date to format
+         * @return ISO 8601 formatted string
+         */
+        public static String isoFormat( final Date date ) {
+            return dateFormat.format( date );
+        }
+
+        /** Creates a new utc calendar object
+         *
+         * @return utc calendar
+         */
+        static public Calendar newCal() {
+            return Calendar.getInstance( timeZone );
+        }
+
+        //prevent object creation
+        private UTC() {}
+    }
+
     final static String TAG = "WaveRequest";
 
     /** Enum describing wave operation byte codes
@@ -62,13 +91,7 @@ public class WaveRequest {
         }
     }
 
-    /** Creates a new utc calendar object
-     *
-     * @return utc calendar
-     */
-    static public Calendar utcCal() {
-        return Calendar.getInstance( TimeZone.getTimeZone("UTC") );
-    }
+
 
     /** Abstract base class for interacting with wave device using WaveOp and byte[] buffers.
      *
@@ -459,7 +482,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
-                final Calendar cal = utcCal();
+                final Calendar cal = UTC.newCal();
                 cal.set( Calendar.YEAR, MarshalByte.YEAR.parse(response) );
                 cal.set( Calendar.MONTH, MarshalByte.MONTH.parse(response) );
                 cal.set( Calendar.DATE, MarshalByte.DATE.parse(response) );
@@ -502,8 +525,10 @@ public class WaveRequest {
          */
         @Override
         public boolean dispatch(BLEAgent agent) {
-            final Calendar cal = utcCal();
-            cal.setTime( new Date() );
+            final Calendar cal = UTC.newCal();
+            final Date now = new Date();
+            Log.d( TAG, "Setting time as " + UTC.isoFormat( now ) + " (" + now + ")" );
+            cal.setTime( now );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
             MarshalByte.DATE.put( message, cal.get( Calendar.DATE ) );
@@ -685,7 +710,7 @@ public class WaveRequest {
                                                      final int date,
                                                      final int hour ) {
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
-            final Calendar cal = utcCal();
+            final Calendar cal = UTC.newCal();
             cal.set( Calendar.YEAR, year );
             cal.set( Calendar.MONTH, month );
             cal.set( Calendar.DATE, date );
@@ -702,20 +727,13 @@ public class WaveRequest {
             return ret;
         }
 
-        final private static DateFormat dateFormat;
-
-        static {
-            dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'z'z", Locale.US );
-            dateFormat.setTimeZone( TimeZone.getTimeZone( "UTC") );
-        }
-
         /** not sure this is correct
          *
          * @return "mode value date" string.
          */
         @Override
         public String toString() {
-            return mode.toString() + " " + value + " " + dateFormat.format( date );
+            return mode.toString() + " " + value + " " + UTC.isoFormat( date );
         }
 
         /** Data comparison for sort by date.
@@ -969,7 +987,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             final String serial;
             if( success ) {
-                serial = BLEAgent.bytesToHex( response, 2, response.length -1 );
+                serial = BLEAgent.bytesToHex( response, 2, MarshalByte.SIZE.parse( response ) );
             } else {
                 serial = null;
             }
@@ -1007,7 +1025,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             final String version;
             if( success ) {
-                version = BLEAgent.bytesToHex( response, 2, response.length -1 );
+                version = BLEAgent.bytesToHex( response, 2, MarshalByte.SIZE.parse( response ) );
             } else {
                 version = null;
             }

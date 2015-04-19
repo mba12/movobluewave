@@ -65,8 +65,8 @@ public class BLEAgent {
         return new String(hexChars);
     }
 
-    public static String bytesToHex(byte[] bytes, final int begin, final int end) {
-        final int length = end - begin;
+    public static String bytesToHex(byte[] bytes, final int begin, final int length) {
+        final int end = length + begin;
         char[] hexChars = new char[length * 2];
         int i = 0;
         for ( int index = begin; index < end; index += 1 ) {
