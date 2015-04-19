@@ -401,8 +401,8 @@ public class Home extends ActionBarActivity {
                 UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
-//                upload();
-                testMeSql();
+                upload();
+//                testMeSql();
                 break;
             case 2:
                 Log.d(TAG, "Users pressed");
@@ -577,9 +577,12 @@ public class Home extends ActionBarActivity {
 
 
                 if( data != null ) {
-                    Collections.sort(data);
 
-                        for( final WaveRequest.WaveDataPoint point : data ) {
+                    final int result = insertPoints( db, syncUniqueID, data );
+
+                    Log.d( TAG, "Database insertion status: " + result );
+
+                       /* for( final WaveRequest.WaveDataPoint point : data ) {
                             Log.v(TAG, "The point: " + point);
 //
                             long TWO_MINUTES_IN_MILLIS = 120000;//millisecs
@@ -603,7 +606,7 @@ public class Home extends ActionBarActivity {
 
                             Log.d(TAG, "Inserted into database: new row " + newRowId);
 
-                        }
+                        }*/
 
                     Date stop = new Date();
 
@@ -651,14 +654,6 @@ public class Home extends ActionBarActivity {
                 syncProgressBar.setProgress(0);
                 syncProgressBar.setVisibility(View.GONE);
                 syncText.setVisibility(View.GONE);
-
-
-
-
-
-
-
-
             }
 
             @Override
@@ -670,7 +665,7 @@ public class Home extends ActionBarActivity {
         };
 
         // Look for all wave devices.....
-        WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
+        /*WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
@@ -685,13 +680,13 @@ public class Home extends ActionBarActivity {
             void onComplete() {
 
             }
-        });
-
+        });*/
+//14488
         // Or we can scan for a specific device directly....
-        //final String address = "C2:4C:53:BB:CD:FC";
-        //final String address = "ED:09:F5:BB:E9:FF";
-        final String address = "EB:3B:2D:61:17:44";
-        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+        final String address = "C2:4C:53:BB:CD:FC"; //phil new
+        //final String address = "ED:09:F5:BB:E9:FF"; //alex brick
+        //final String address = "EB:3B:2D:61:17:44"; //alex new
+        final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
         //final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
         
     }
@@ -721,14 +716,16 @@ public class Home extends ActionBarActivity {
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-        final boolean result = insertPoints( db, points );
+        final int result = insertPoints( db, "1234", points );
 
         Log.d( TAG, "Point insertion test: " + result );
 
         db.close();
     }
 
-    private void insertPoint( final SQLiteDatabase db, final WaveRequest.WaveDataPoint point ) {
+    private static boolean insertPoint( final SQLiteDatabase db,
+                                     final String guid,
+                                     final WaveRequest.WaveDataPoint point ) {
         long TWO_MINUTES_IN_MILLIS=120000;//millisecs
         long endLong = point.date.getTime();
         endLong = endLong + TWO_MINUTES_IN_MILLIS;
@@ -739,31 +736,42 @@ public class Home extends ActionBarActivity {
         values.put(Database.StepEntry.START, point.date.getTime());
         values.put(Database.StepEntry.END,endLong);
         values.put(Database.StepEntry.IS_PUSHED, 0);
-        values.put(Database.StepEntry.SYNC_ID, 123);
+        values.put(Database.StepEntry.SYNC_ID, guid);
 
         long newRowId;
         newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                 null,
                 values);
 
-        Log.d(TAG, "Inserted into database: new row "+newRowId );
-    }
 
-    private boolean insertPoints( final SQLiteDatabase db,
-                                  Collection<WaveRequest.WaveDataPoint> points ) {
-        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
-        //db.beginTransaction();
-        boolean ret = false;
-        try {
-            for(WaveRequest.WaveDataPoint point : points ) {
-                insertPoint(db, point);
-            }
-            //db.setTransactionSuccessful();
-            ret = true;
-        } finally {
-            //db.endTransaction();
+        final boolean ret = newRowId >= 0;
+        if( ret ) {
+            Log.d(TAG, "Inserted into database: new row "+newRowId );
+            Log.d( TAG, "Inserted data: " + point );
         }
         return ret;
+    }
+
+
+    private static int insertPoints( final SQLiteDatabase db,
+                                         final String guid,
+                                         Collection<WaveRequest.WaveDataPoint> points ) {
+        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
+        db.beginTransaction();
+        boolean success = false;
+        int ret = 0;
+        try {
+            for (WaveRequest.WaveDataPoint point : points) {
+                if (insertPoint(db, guid, point)) {
+                    ret += 1;
+                }
+            }
+            db.setTransactionSuccessful();
+            success = true;
+        } finally {
+            db.endTransaction();
+        }
+        return success ? ret : -1;
     }
 
 
