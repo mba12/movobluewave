@@ -662,7 +662,11 @@ public class Home extends ActionBarActivity {
             }
 
             @Override
+<<<<<<< HEAD
+            public void notify( WaveAgent.DataSync sync, float progress) {
+=======
             public void notify( final WaveAgent.DataSync sync, float progress) {
+>>>>>>> 0dce42d67b46e2056211197728ac45f8daa077f8
                 int intProgress = (int)(progress *100);
                 syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
