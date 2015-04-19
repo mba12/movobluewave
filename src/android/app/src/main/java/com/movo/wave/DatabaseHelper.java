@@ -13,25 +13,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     //**********************************DBOPS**************************************//
     public String TAG = "DBHelper";
     private static final String TEXT_TYPE = " TEXT";
+    private static final String INTEGER_TYPE = " INTEGER";
+//    private static final String STEP_TYPE = " INTEGER";
+    private static final String BLOB_TYPE = " BLOB";
+
     private static final String COMMA_SEP = ",";
+
+    //Create table with unique step key being the Date of the step count taken
     private static final String SQL_CREATE_ENTRIES_STEPS =
             "CREATE TABLE " + Database.StepEntry.STEPS_TABLE_NAME + " (" +
-                    Database.StepEntry._ID + " INTEGER PRIMARY KEY," +
-                    Database.StepEntry.SYNC_ID + TEXT_TYPE + COMMA_SEP +
-                    Database.StepEntry.START + TEXT_TYPE + COMMA_SEP +
-                    Database.StepEntry.END + TEXT_TYPE + COMMA_SEP +
-                    Database.StepEntry.STEPS + TEXT_TYPE + COMMA_SEP +
-                    Database.StepEntry.IS_PUSHED + TEXT_TYPE +
+                    Database.StepEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    Database.StepEntry.SYNC_ID + BLOB_TYPE + COMMA_SEP +
+                    Database.StepEntry.START + INTEGER_TYPE + COMMA_SEP +
+                    Database.StepEntry.END + INTEGER_TYPE + COMMA_SEP +
+                    Database.StepEntry.STEPS + INTEGER_TYPE + COMMA_SEP +
+                    Database.StepEntry.IS_PUSHED + INTEGER_TYPE + COMMA_SEP +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+" ) ON CONFLICT IGNORE" +
                     " )";
+    //Create table with unique key being the sync GUID
     private static final String SQL_CREATE_ENTRIES_SYNC =
             "CREATE TABLE " + Database.SyncEntry.SYNC_TABLE_NAME + " (" +
-                    Database.SyncEntry._ID + " INTEGER PRIMARY KEY," +
-                    Database.SyncEntry.ID + TEXT_TYPE + COMMA_SEP +
-                    Database.SyncEntry.SYNC_START + TEXT_TYPE + COMMA_SEP +
-                    Database.SyncEntry.SYNC_END + TEXT_TYPE + COMMA_SEP +
+                    Database.SyncEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    //Database.SyncEntry.ID + TEXT_TYPE + COMMA_SEP +
+                    Database.SyncEntry.SYNC_START + INTEGER_TYPE + COMMA_SEP +
+                    Database.SyncEntry.SYNC_END + INTEGER_TYPE + COMMA_SEP +
                     Database.SyncEntry.USER + TEXT_TYPE + COMMA_SEP +
-                    Database.SyncEntry.STATUS + TEXT_TYPE + COMMA_SEP +
-                    Database.SyncEntry.GUID + TEXT_TYPE +
+                    Database.SyncEntry.STATUS + INTEGER_TYPE + COMMA_SEP +
+                    Database.SyncEntry.GUID + BLOB_TYPE +COMMA_SEP +
+                    " UNIQUE ( "+Database.SyncEntry.GUID+" ) ON CONFLICT REPLACE" +
                     " )";
 
     private static final String SQL_DELETE_ENTRIES =
@@ -49,6 +58,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_ENTRIES_STEPS);
+        Log.v(TAG, "SQL Steps creation string: "+SQL_CREATE_ENTRIES_STEPS);
         Log.d(TAG, "Creating steps table");
         db.execSQL(SQL_CREATE_ENTRIES_SYNC);
         Log.d(TAG, "Creating sync table");

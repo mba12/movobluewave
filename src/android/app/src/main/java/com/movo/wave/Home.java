@@ -48,11 +48,13 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 
 public class Home extends ActionBarActivity {
-    Context c;
+    static Context c;
     static LineChart chart;
     int curYear;
     int curMonth;
@@ -64,6 +66,8 @@ public class Home extends ActionBarActivity {
     boolean toggle = true;
     private DrawerLayout mDrawerLayout;
     private ListView mDrawerList;
+    private static ProgressBar syncProgressBar;
+    private static TextView syncText;
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mTitle;
     Firebase currentUserRef;
@@ -93,22 +97,7 @@ public class Home extends ActionBarActivity {
 
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(Database.StepEntry._ID, 0);
-        values.put(Database.StepEntry.STEPS, 5);
-        values.put(Database.StepEntry.START, 0);
-        values.put(Database.StepEntry.END,2);
-        values.put(Database.StepEntry.IS_PUSHED, false);
-        values.put(Database.StepEntry.SYNC_ID, 123);
 
-
-        long newRowId;
-        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                null,
-                values);
-        Log.d(TAG, "Inserted into database");
-
-
-        SQLiteDatabase db2 = mDbHelper.getReadableDatabase();
 
 // Define a projection that specifies which columns from the database
 // you will actually use after this query.
@@ -133,10 +122,10 @@ public class Home extends ActionBarActivity {
         );
 
         cur.moveToFirst();
-        long itemId = cur.getLong(
-                cur.getColumnIndexOrThrow(Database.StepEntry._ID)
-
-        );
+//        long itemId = cur.getLong(
+//                cur.getColumnIndexOrThrow(Database.StepEntry._ID)
+//
+//        );
         Log.d(TAG, cur.toString());
 
 
@@ -147,7 +136,8 @@ public class Home extends ActionBarActivity {
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
-
+        syncProgressBar = (ProgressBar) findViewById(R.id.syncProgressBar);
+        syncText = (TextView) findViewById(R.id.syncingText);
         //this gets our user steps. We will save the data out and display it
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
@@ -411,7 +401,8 @@ public class Home extends ActionBarActivity {
                 UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
-                upload();
+//                upload();
+                testMeSql();
                 break;
             case 2:
                 Log.d(TAG, "Users pressed");
@@ -561,6 +552,14 @@ public class Home extends ActionBarActivity {
     public static void upload(){
         /* NOTE: Just a copy-paste. Relogic later....
          */
+        syncProgressBar.setProgress(0);
+        syncProgressBar.setVisibility(View.VISIBLE);
+        syncText.setVisibility(View.VISIBLE);
+
+        final String  syncUniqueID = UUID.randomUUID().toString();
+        final Date start = new Date();
+        final String startSyncDate = start.toString();
+
         final WaveAgent.DataSync.Callback syncCallback = new WaveAgent.DataSync.Callback() {
             @Override
             public void notify( final WaveAgent.DataSync sync,
@@ -572,22 +571,102 @@ public class Home extends ActionBarActivity {
             @Override
             public void complete( final WaveAgent.DataSync sync,
                                   final List<WaveRequest.WaveDataPoint> data) {
+                DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+
 
                 if( data != null ) {
                     Collections.sort(data);
 
+
                     for( WaveRequest.WaveDataPoint point : data ) {
                         Log.v( TAG, "The point: " + point );
+//
+                        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
+                        long endLong = point.date.getTime();
+                        endLong = endLong + TWO_MINUTES_IN_MILLIS;
+                        Date endDate = new Date(endLong);
+
+                        ContentValues values = new ContentValues();
+//                        values.put(Database.StepEntry._ID, UUID.randomUUID().toString());
+                        values.put(Database.StepEntry.STEPS, point.value);
+                        values.put(Database.StepEntry.START, point.date.getTime());
+                        values.put(Database.StepEntry.END,endDate.getTime());
+                        values.put(Database.StepEntry.IS_PUSHED, 0);
+                        values.put(Database.StepEntry.SYNC_ID, syncUniqueID);
+
+
+                        long newRowId;
+                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                                null,
+                                values);
+
+                        Log.d(TAG, "Inserted into database: new row "+newRowId);
+
+
+
                     }
+                    Date stop = new Date();
+
+                    ContentValues syncValues = new ContentValues();
+                    syncValues.put(Database.SyncEntry.GUID, syncUniqueID);
+                    syncValues.put(Database.SyncEntry.SYNC_START, start.getTime());
+                    syncValues.put(Database.SyncEntry.SYNC_END, stop.getTime());
+                    syncValues.put(Database.SyncEntry.USER,UserData.getUserData(c).getCurUID());
+                    syncValues.put(Database.SyncEntry.STATUS, 0);
+                    long newRowId;
+                    newRowId = db.insert(Database.SyncEntry.SYNC_TABLE_NAME,
+                            null,
+                            syncValues);
+                    Log.d(TAG, "Sync database add:\n"+syncValues.toString());
+
+//                    FirebaseCalls fbc = new FirebaseCalls(c);
+//                    fbc.uploadSync(syncUniqueID);
+
+                    String selection =  Database.SyncEntry.GUID + "=?";
+                    ContentValues valuesRead = new ContentValues();
+                    Cursor cur = db.query(
+                            Database.SyncEntry.SYNC_TABLE_NAME,  // The table to query
+                            new String[] { Database.SyncEntry.GUID, Database.SyncEntry.SYNC_START },                               // The columns to return
+                            selection,                                // The columns for the WHERE clause
+                            new String[] { syncUniqueID },                            // The values for the WHERE clause
+                            null,                                     // don't group the rows
+                            null,                                     // don't filter by row groups
+                            null                                 // The sort order
+                    );
+
+                    cur.moveToFirst();
+                    cur.getString(1); //start
+                    long itemId = cur.getLong(
+                            cur.getColumnIndexOrThrow(Database.SyncEntry.GUID)
+
+                    );
+                    Log.d("TAG", "Found sync id "+syncUniqueID+": "+cur.getColumnIndexOrThrow(Database.SyncEntry.GUID));
                 } else {
                     Log.w(TAG, "OH noes!");
                 }
 
+
+
                 Log.d(TAG, "Upload data complete");
+                syncProgressBar.setProgress(0);
+                syncProgressBar.setVisibility(View.GONE);
+                syncText.setVisibility(View.GONE);
+
+
+
+
+
+
+
+
             }
 
             @Override
             public void notify(float progress) {
+                int intProgress = (int)(progress *100);
+                syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
             }
         };
@@ -640,6 +719,67 @@ public class Home extends ActionBarActivity {
         
     }
 
+    public void testMeSql(){
+        Date testDate = new Date();
+        testDate.setTime( testDate.getTime() % 1000*60*60);
+        Log.d( TAG, "Test data point time stamp: " +  testDate.getTime() );
+
+
+
+        List<WaveRequest.WaveDataPoint> points = new LinkedList<>();
+        for ( int i = 0; i < 2 ; i ++ ) {
+            points.add( new WaveRequest.WaveDataPoint(WaveRequest.WaveDataPoint.Mode.DAILY,
+                    5 + i,
+                    testDate) );
+        }
+
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        final boolean result = insertPoints( db, points );
+
+        Log.d( TAG, "Point insertion test: " + result );
+
+        db.close();
+    }
+
+    private void insertPoint( final SQLiteDatabase db, final WaveRequest.WaveDataPoint point ) {
+        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
+        long endLong = point.date.getTime();
+        endLong = endLong + TWO_MINUTES_IN_MILLIS;
+
+        ContentValues values = new ContentValues();
+//                        values.put(Database.StepEntry._ID, UUID.randomUUID().toString());
+        values.put(Database.StepEntry.STEPS, point.value);
+        values.put(Database.StepEntry.START, point.date.getTime());
+        values.put(Database.StepEntry.END,endLong);
+        values.put(Database.StepEntry.IS_PUSHED, 0);
+        values.put(Database.StepEntry.SYNC_ID, 123);
+
+        long newRowId;
+        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                null,
+                values);
+
+        Log.d(TAG, "Inserted into database: new row "+newRowId );
+    }
+
+    private boolean insertPoints( final SQLiteDatabase db,
+                                  Collection<WaveRequest.WaveDataPoint> points ) {
+        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
+        db.beginTransaction();
+        boolean ret = false;
+        try {
+            for(WaveRequest.WaveDataPoint point : points ) {
+                insertPoint(db, point);
+            }
+            db.setTransactionSuccessful();
+            ret = true;
+        } finally {
+            db.endTransaction();
+        }
+        return ret;
+    }
 
 
 }
