@@ -143,7 +143,8 @@ public class WaveAgent {
         final static String TAG = "WaveAgent::DataSync";
 
         /** Callback for state notifications
-         *
+         * Can be used for multiple sync sessions. Each sync session will present it's object as
+         * part of the notification callback.
          */
         public static interface Callback {
             /** Notify state change
@@ -154,9 +155,14 @@ public class WaveAgent {
              */
             public void notify( DataSync sync, SyncState state, boolean status );
 
-            public void notify( float progress );
+            /** Notify progress
+             *
+             * @param sync sync object.
+             * @param progress percent as decimal.
+             */
+            public void notify( DataSync sync, float progress );
 
-            /** Completion callback
+            /** Completion callback. No new notifications after this callback.
              *
              * @param sync sync object.
              * @param data data set or null.
@@ -175,6 +181,7 @@ public class WaveAgent {
         private SyncState state = SyncState.DISCOVERY;
         private float requestProgress = 0;
 
+
         /**
          * Discovery: 1 (maybe)
          * Data: 8 requests/day * 7 days
@@ -184,7 +191,7 @@ public class WaveAgent {
         private static float PROGRESS_STEP = 1.0f / (24 * 7 / 3 + 5 );
 
         private void progress() {
-            callback.notify( requestProgress += PROGRESS_STEP );
+            callback.notify( this, requestProgress += PROGRESS_STEP );
         }
 
         /** Enumeration of sync state
