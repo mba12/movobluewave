@@ -5,12 +5,15 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 import android.util.Pair;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -689,6 +692,7 @@ public class WaveRequest {
             cal.set( Calendar.HOUR_OF_DAY, hour );
             cal.set( Calendar.MINUTE, 0 );
             cal.set( Calendar.SECOND, 0 );
+            cal.set( Calendar.MILLISECOND, 0 );
 
             for( int index = 0 ; index < qty;  index += 1 ) {
                 ret[ index ] = new WaveDataPoint( message, index * 2 + offset, cal.getTime() );
@@ -698,13 +702,20 @@ public class WaveRequest {
             return ret;
         }
 
+        final private static DateFormat dateFormat;
+
+        static {
+            dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'z'z", Locale.US );
+            dateFormat.setTimeZone( TimeZone.getTimeZone( "UTC") );
+        }
+
         /** not sure this is correct
          *
          * @return "mode value date" string.
          */
         @Override
         public String toString() {
-            return mode.toString() + " " + value + " " + date;
+            return mode.toString() + " " + value + " " + dateFormat.format( date );
         }
 
         /** Data comparison for sort by date.
