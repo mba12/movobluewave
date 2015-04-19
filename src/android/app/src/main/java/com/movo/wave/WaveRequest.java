@@ -29,6 +29,9 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
+    /** Utility namespace for using UTC time
+     * All wave devices are dealt with in UTC.
+     */
     static class UTC {
         final private static DateFormat dateFormat;
         final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );

@@ -752,16 +752,16 @@ public class Home extends ActionBarActivity {
     private boolean insertPoints( final SQLiteDatabase db,
                                   Collection<WaveRequest.WaveDataPoint> points ) {
         //http://www.vogella.com/tutorials/AndroidSQLite/article.html
-        //db.beginTransaction();
+        db.beginTransaction();
         boolean ret = false;
         try {
             for(WaveRequest.WaveDataPoint point : points ) {
                 insertPoint(db, point);
             }
-            //db.setTransactionSuccessful();
+            db.setTransactionSuccessful();
             ret = true;
         } finally {
-            //db.endTransaction();
+            db.endTransaction();
         }
         return ret;
     }
