@@ -930,7 +930,7 @@ public class Home extends ActionBarActivity {
                 if (insertPoint(db, guid, userID, point, deviceAddress)) {
                     ret += 1;
                 }
-            }
+            db.setTransactionSuccessful();
             db.setTransactionSuccessful();
             success = true;
         } finally {

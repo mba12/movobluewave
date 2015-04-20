@@ -669,11 +669,11 @@
             <objects>
                 <viewController id="XfG-lQ-9wD" customClass="ViewController" customModule="bluetoothTest" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="m2S-Jp-Qdl">
-                        <rect key="frame" x="0.0" y="0.0" width="480" height="270"/>
+                        <rect key="frame" x="0.0" y="0.0" width="480" height="302"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="FXa-sW-ZBs">
-                                <rect key="frame" x="20" y="77" width="106" height="23"/>
+                                <rect key="frame" x="20" y="109" width="106" height="23"/>
                                 <buttonCell key="cell" type="smallSquare" title="Send Get Time" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="0Pj-Vg-0rh">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -683,7 +683,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pZE-BY-6dU">
-                                <rect key="frame" x="20" y="48" width="106" height="23"/>
+                                <rect key="frame" x="20" y="80" width="106" height="23"/>
                                 <buttonCell key="cell" type="smallSquare" title="Send Get Steps" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="dEr-TB-K18">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -693,7 +693,7 @@
                                 </connections>
                             </button>
                             <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iKJ-zm-nmA">
-                                <rect key="frame" x="20" y="19" width="106" height="23"/>
+                                <rect key="frame" x="20" y="51" width="106" height="23"/>
                                 <buttonCell key="cell" type="smallSquare" title="Send Get Chart" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1BY-ZR-YeV">
                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                     <font key="font" metaFont="system"/>
@@ -703,7 +703,7 @@
                                 </connections>
                             </button>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OeV-wW-uEi">
-                                <rect key="frame" x="18" y="184" width="201" height="17"/>
+                                <rect key="frame" x="18" y="216" width="201" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="No Write Characteristic" id="ekz-57-ufB">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -711,7 +711,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dys-hH-rjz">
-                                <rect key="frame" x="18" y="107" width="444" height="69"/>
+                                <rect key="frame" x="18" y="139" width="444" height="69"/>
                                 <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="eFe-cs-Hxc">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -719,19 +719,30 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ysd-pR-yP9">
-                                <rect key="frame" x="18" y="209" width="203" height="17"/>
+                                <rect key="frame" x="18" y="241" width="444" height="17"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Not Connected" id="IrQ-Iv-vbn">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
+                            <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nND-gB-TLF">
+                                <rect key="frame" x="20" y="22" width="106" height="23"/>
+                                <buttonCell key="cell" type="smallSquare" title="Send Get Serial" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="uCT-3X-xMz">
+                                    <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="getSerialClick:" target="XfG-lQ-9wD" id="Mv2-yh-m1Q"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="connectedLabel" destination="Ysd-pR-yP9" id="6KE-iL-prj"/>
                         <outlet property="outputData" destination="dys-hH-rjz" id="ATO-qQ-vhF"/>
                         <outlet property="sendGetChart" destination="iKJ-zm-nmA" id="LDd-jc-WrV"/>
+                        <outlet property="sendGetSerial" destination="nND-gB-TLF" id="8jT-Dv-jxX"/>
                         <outlet property="sendGetSteps" destination="pZE-BY-6dU" id="4eX-ix-XH0"/>
                         <outlet property="sendWriteButton" destination="FXa-sW-ZBs" id="DEO-Vk-TYb"/>
                         <outlet property="writeCharacteristicLabel" destination="OeV-wW-uEi" id="nvF-FT-WrL"/>
@@ -739,7 +750,7 @@
                 </viewController>
                 <customObject id="rPt-NT-nkU" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="75" y="655"/>
+            <point key="canvasLocation" x="75" y="671"/>
         </scene>
     </scenes>
 </document>

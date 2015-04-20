@@ -29,6 +29,9 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
+    /** Utility namespace for using UTC time
+     * All wave devices are dealt with in UTC.
+     */
     static class UTC {
         final private static DateFormat dateFormat;
         final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
@@ -37,13 +40,22 @@ public class WaveRequest {
             dateFormat.setTimeZone( timeZone );
         }
 
-        /** iso-8601 date formatter.
+        /** ISO-8601 date formatter.
          *
          * @param date to format
          * @return ISO 8601 formatted string
          */
         public static String isoFormat( final Date date ) {
             return dateFormat.format( date );
+        }
+
+        /** ISO-8601 date formatter.
+         *
+         * @param timestamp to format (long, epoch milliseconds)
+         * @return ISO 8601 formatted string
+         */
+        public static String isoFormat( final long timestamp ) {
+            return dateFormat.format( new Date( timestamp ) );
         }
 
         /** Creates a new utc calendar object

@@ -1,59 +1,54 @@
 //
 //  ViewController.swift
-//  bluetoothTest
+//  bluetoothiOSTest
 //
-//  Created by Rudy Yukich on 3/24/15.
+//  Created by Rudy Yukich on 4/20/15.
+//  Copyright (c) 2015 Sensorstar - Movo. All rights reserved.
 //
 
-import Cocoa
+import UIKit
 import CoreBluetooth
 
-class ViewController: NSViewController,  waveControlAndSyncDelegate {
+class ViewController: UIViewController, waveControlAndSyncDelegate {
+    
+    required init(coder aDecoder:NSCoder) {
+        super.init(coder: aDecoder)
+        waveController = waveControlAndSync(delegate: self)
+        
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        // Do any additional setup after loading the view, typically from a nib.
+        
+        
+        waveController.requestConnection()
     }
 
-    override var representedObject: AnyObject? {
-        didSet {
-        // Update the view, if already loaded.
-        }
-
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
     }
-
-
-    override func viewDidDisappear() {
-        //close peripheral and exit
-        waveController.disconnectWaveDevices()
-        exit(0)
-    }
-    
     
     let waveController:waveControlAndSync!
     var deviceId:NSString!
     
-    required init?(coder aDecoder:NSCoder) {
-        super.init(coder: aDecoder)
-        waveController = waveControlAndSync(delegate: self)
-        waveController.requestConnection()
-    }
+    
     
     func connectedWaveDevice(id: NSString) {
-        connectedLabel.stringValue = id
+        peripheralText.text = id
         waveController.cancelScan()
         deviceId = id
     }
     
     func connectedWaveDeviceSerial(id: NSString, serial: NSString) {
         //do nothing yet
-
+        
         
     }
     
     func disconnectedWaveDevice(id: NSString) {
-        connectedLabel.stringValue = ""
+        peripheralText.text = ""
     }
     
     func requestComplete(error: NSError!) {
@@ -65,8 +60,8 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
         var count = data.length
         var array = [UInt8](count: count, repeatedValue: 0)
         data.getBytes(&array, length: count)
-        outputData.stringValue = " ".join(array.map{ String($0, radix: 16, uppercase: false)})
-
+        dataText.text = " ".join(array.map{ String($0, radix: 16, uppercase: false)})
+        
     }
     
     func bluetoothManagerStateChange(state: CBCentralManagerState) {
@@ -75,32 +70,27 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
             waveController.requestConnection()
         }
     }
-  
-    @IBOutlet weak var sendWriteButton: NSButton!
-    @IBAction func handleClick(sender: AnyObject) {
-        waveController.getTime(id: deviceId)
-        
-    }
-    @IBOutlet weak var sendGetSteps: NSButton!
     
+
+    @IBOutlet weak var getTimeButton: UIButton!
+    @IBOutlet weak var getStepsButton: UIButton!
+    @IBOutlet weak var getChartButton: UIButton!
+    @IBOutlet weak var getSerialButton: UIButton!
+    @IBOutlet weak var dataText: UITextField!
+    @IBOutlet weak var characteristicText: UITextField!
+    @IBOutlet weak var peripheralText: UITextField!
+    @IBAction func getTimeClick(sender: AnyObject) {
+        waveController.getTime(id: deviceId)
+    }
     @IBAction func getStepsClick(sender: AnyObject) {
         waveController.getSteps(id: deviceId)
     }
-    
-    @IBOutlet weak var sendGetChart: NSButton!
     @IBAction func getChartClick(sender: AnyObject) {
         waveController.getChart(id: deviceId)
     }
-    
-    @IBOutlet weak var sendGetSerial: NSButton!
     @IBAction func getSerialClick(sender: AnyObject) {
         waveController.getSerial(id: deviceId)
     }
-    @IBOutlet weak var connectedLabel: NSTextField!
-    
-    @IBOutlet weak var writeCharacteristicLabel: NSTextField!
-    
-    @IBOutlet weak var outputData: NSTextField!
-}
 
+}
 
