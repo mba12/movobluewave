@@ -331,7 +331,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         peripheral.delegate = self
         if ((peripheral.name != nil)) {println(peripheral.name)}
         
-        if ((peripheral.name != nil) && (peripheral.name == "Wave") && (connectingPeripherals.valueForKey(peripheral.identifier.UUIDString) == nil)) {
+        if ((peripheral.name != nil) && ((peripheral.name == "808A") || (peripheral.name == "Wave")) && (connectingPeripherals.valueForKey(peripheral.identifier.UUIDString) == nil)) {
             //found a match, attempt to connect
             connectingPeripherals.setObject(peripheral, forKey: peripheral.identifier.UUIDString)
             centralManager.connectPeripheral(peripheral, options: nil)
@@ -451,7 +451,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
             switch characteristic.UUID.UUIDString{
             case "FFE4":
                 println(characteristic.UUID)
-                var data = characteristic.value()
+                var data = characteristic.value
                 if (data != nil) {
                     var count = data.length
                     var array = [UInt8](count: count, repeatedValue: 0)
@@ -463,12 +463,12 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                     }
                     //                    println(array)
                 } else {
-                    println( characteristic.value() )
+                    println( characteristic.value )
                 }
                 
             default:
                 println(characteristic.UUID)
-                println(NSString(data: characteristic.value(), encoding: NSUTF8StringEncoding));
+                println(NSString(data: characteristic.value, encoding: NSUTF8StringEncoding));
                 //                println(characteristic.value())
             }
         }
@@ -478,7 +478,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //confirmation that command completed
     func peripheral(peripheral: CBPeripheral!, didWriteValueForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
         println(characteristic.UUID)
-        println(characteristic.value())
+        println(characteristic.value)
         println("Command complete")
         callbackDelegate.requestComplete(error)
         
@@ -488,14 +488,14 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     func peripheral(peripheral: CBPeripheral!, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
         println("Received Update Notification")
         println(characteristic.UUID)
-        var data = characteristic.value()
+        var data = characteristic.value
         if (data != nil) {
             var count = data.length
             var array = [UInt8](count: count, repeatedValue: 0)
             data.getBytes(&array, length: count)
             println(array.map{ String($0, radix: 16, uppercase: false)})
         } else {
-            println( characteristic.value() )
+            println( characteristic.value )
         }
     }
     
