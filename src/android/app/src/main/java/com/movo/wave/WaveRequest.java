@@ -40,13 +40,22 @@ public class WaveRequest {
             dateFormat.setTimeZone( timeZone );
         }
 
-        /** iso-8601 date formatter.
+        /** ISO-8601 date formatter.
          *
          * @param date to format
          * @return ISO 8601 formatted string
          */
         public static String isoFormat( final Date date ) {
             return dateFormat.format( date );
+        }
+
+        /** ISO-8601 date formatter.
+         *
+         * @param timestamp to format (long, epoch milliseconds)
+         * @return ISO 8601 formatted string
+         */
+        public static String isoFormat( final long timestamp ) {
+            return dateFormat.format( new Date( timestamp ) );
         }
 
         /** Creates a new utc calendar object
