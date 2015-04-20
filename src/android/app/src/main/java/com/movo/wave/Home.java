@@ -658,7 +658,7 @@ public class Home extends ActionBarActivity {
 
 
                     Map<String,Object > syncData = new HashMap<String, Object>();
-                    syncData.put(Database.SyncEntry.GUID, cur.getString(0));
+//                    syncData.put(Database.SyncEntry.GUID, cur.getString(0));
                     syncData.put(Database.SyncEntry.SYNC_START, cur.getString(1));
                     syncData.put(Database.SyncEntry.SYNC_END, cur.getString(2));
                     syncData.put(Database.SyncEntry.USER, cur.getString(3));
@@ -675,7 +675,8 @@ public class Home extends ActionBarActivity {
                                     Database.StepEntry.START, //int
                                     Database.StepEntry.END, //int
                                     Database.StepEntry.USER, //string
-                                    Database.StepEntry.STEPS }, //bool                          // The columns to return
+                                    Database.StepEntry.STEPS, //int
+                                    Database.StepEntry.DEVICEID }, //blob                          // The columns to return
                             selectionSteps,                                // The columns for the WHERE clause
                             new String[] { syncUniqueID },                            // The values for the WHERE clause
                             null,                                     // don't group the rows
@@ -724,15 +725,17 @@ public class Home extends ActionBarActivity {
                             Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate);
                             refStep2.setValue(minuteMap);
 
-
+                            String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                            String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
                             oldDate = date;
                             minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
                             Map<String,String > stepData = new HashMap<String, String>();
                             stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                            stepData.put(Database.StepEntry.START, curSteps.getString(1));
-                            stepData.put(Database.StepEntry.END, curSteps.getString(2));
-                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
                             stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
                             if(Integer.parseInt(curSteps.getString(4))!=0) {
                                 minuteMap.put(dayMinute, stepData);
@@ -741,12 +744,15 @@ public class Home extends ActionBarActivity {
 
                         }else{
                             oldDate = date;
+                            String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                            String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
                             Map<String,String > stepData = new HashMap<String, String>();
                             stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                            stepData.put(Database.StepEntry.START, curSteps.getString(1));
-                            stepData.put(Database.StepEntry.END, curSteps.getString(2));
-                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
                             stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
                             if(Integer.parseInt(curSteps.getString(4))!=0) {
                                 minuteMap.put(dayMinute, stepData);
@@ -770,6 +776,10 @@ public class Home extends ActionBarActivity {
                     curSteps.moveToLast();
                     long stepTime = Long.parseLong(curSteps.getString(2));
                     Date curDate = new Date(stepTime);
+
+                    String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                    String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
+
 
                     cal.set( Calendar.YEAR, 2015);
                     cal.set( Calendar.MONTH, curDate.getMonth());
@@ -811,6 +821,7 @@ public class Home extends ActionBarActivity {
 //            myData.getCurUID()
             @Override
             public void notify( final WaveAgent.DataSync sync, float progress) {
+                sync.device.device.getAddress()
                 int intProgress = (int)(progress *100);
                 syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
@@ -818,7 +829,7 @@ public class Home extends ActionBarActivity {
         };
 
         // Look for all wave devices.....
-        /*WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
+        WaveAgent.scanForWaveDevices(10000, new WaveAgent.WaveScanCallback() {
             {
                 final String TAG = "WaveTest";
             }
@@ -833,14 +844,14 @@ public class Home extends ActionBarActivity {
             void onComplete() {
 
             }
-        });*/
+        });
 
         // Or we can scan for a specific device directly....
         final String address = "C2:4C:53:BB:CD:FC"; //phil new
         //final String address = "ED:09:F5:BB:E9:FF"; //alex brick
         //final String address = "EB:3B:2D:61:17:44"; //alex new
-        final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
-        //final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
+       // final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+//        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
         
     }
 
@@ -930,7 +941,8 @@ public class Home extends ActionBarActivity {
                 if (insertPoint(db, guid, userID, point, deviceAddress)) {
                     ret += 1;
                 }
-            db.setTransactionSuccessful();
+            }
+//            db.setTransactionSuccessful();
             db.setTransactionSuccessful();
             success = true;
         } finally {

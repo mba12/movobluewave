@@ -95,7 +95,7 @@ public class WaveAgent {
                     }
 
                 } else if( ! callback.seen.contains( device )
-                        && device.device.getName().equals( "Wave" ) ) {
+                        && "Wave".equals( device.device.getName() ) ) {
 
                     /*
                      AH 2015-04-19: Connect to prevent devices from getting board before we can
