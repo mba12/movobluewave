@@ -18,8 +18,11 @@ public final class Database {
         public static final String SYNC_ID = "syncid";
         public static final String START = "starttime";
         public static final String END = "endtime";
+        public static final String USER = "user";
         public static final String STEPS = "count";
         public static final String IS_PUSHED = "ispushed";
+        public static final String DEVICEID = "deviceid";
+        public static final String WORKOUT_TYPE = "workouttype";
 
     }
 

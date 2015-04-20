@@ -27,8 +27,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.StepEntry.START + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.END + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.STEPS + INTEGER_TYPE + COMMA_SEP +
+                    Database.StepEntry.USER + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.IS_PUSHED + INTEGER_TYPE + COMMA_SEP +
-                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+" ) ON CONFLICT IGNORE" +
+                    Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
+                    Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT IGNORE" +
                     " )";
     //Create table with unique key being the sync GUID
     private static final String SQL_CREATE_ENTRIES_SYNC =
@@ -40,6 +43,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.SyncEntry.USER + TEXT_TYPE + COMMA_SEP +
                     Database.SyncEntry.STATUS + INTEGER_TYPE + COMMA_SEP +
                     Database.SyncEntry.GUID + BLOB_TYPE +COMMA_SEP +
+                    Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
                     " UNIQUE ( "+Database.SyncEntry.GUID+" ) ON CONFLICT REPLACE" +
                     " )";
 
