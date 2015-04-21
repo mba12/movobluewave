@@ -23,6 +23,7 @@ public final class Database {
         public static final String IS_PUSHED = "ispushed";
         public static final String DEVICEID = "deviceid";
         public static final String WORKOUT_TYPE = "workouttype";
+        public static final String GUID = "guid";
 
     }
 
