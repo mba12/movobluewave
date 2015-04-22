@@ -491,7 +491,6 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 
 
     private void updateHomePage() {
-
         new Thread() {
             public void run() {
 
@@ -500,7 +499,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Home.refreshCharts();
+                            Home.setUpChartsExternalCall(c);
                         }
                     });
                 }catch (Exception e){

@@ -178,7 +178,7 @@ public class UserActivity extends ActionBarActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Home.refreshCharts();
+                            Home.setUpChartsExternalCall(c);
                         }
                     });
                 }catch (Exception e){

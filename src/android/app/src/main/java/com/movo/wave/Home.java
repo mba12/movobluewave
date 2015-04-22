@@ -144,42 +144,10 @@ public class Home extends ActionBarActivity {
         //this gets our user steps. We will save the data out and display it
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
-
-        if(userExists) {
-            setUpCharts();
-        }else{
-
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
-            ref.authWithPassword("philg@sensorstar.com", "testpassword", new Firebase.AuthResultHandler() {
-                @Override
-                public void onAuthenticated(AuthData authData) {
-                    //success, save auth data
-                    UserData myData = UserData.getUserData(c);
-                    myData.setCurUID(authData.getUid());
-                    myData.setCurEmail("philg@sensorstar.com");
-                    myData.setCurPW("testpassword");
-                    myData.setCurToken(authData.getToken());
-                    currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
-                    myData.setCurrentUserRef(currentUserRef);
-                    myData.addCurUserTolist();
-                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                    setUpCharts();
-
-                }
-
-                @Override
-                public void onAuthenticationError(FirebaseError firebaseError) {
-                    Log.d(TAG, "Error logging in " + firebaseError.getDetails());
-
-                }
-            });
-        }
-
-
-
-
+        UserData myUserData = UserData.getUserData(c);
+        ArrayList<String> users = new ArrayList<String>();
+        users = myUserData.getUserList();
         chart = (LineChart) findViewById(R.id.chart);
-
         ImageView chartToggle = (ImageView) findViewById(R.id.chartButton);
 //        chartToggle.setOnClickListener();
         chartToggle.setOnClickListener(new View.OnClickListener() {
@@ -196,6 +164,72 @@ public class Home extends ActionBarActivity {
 
             }
         });
+        if(!users.isEmpty()) {
+            if(userExists==true) {
+                setUpCharts(c);
+            }else{
+                String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
+                UserData.getUserData(c).loadNewUser(uid);
+                setUpCharts(c);
+            }
+        }else{
+
+            Intent intent = new Intent(getApplicationContext(),
+                    FirstLaunch.class);
+            startActivity(intent);
+
+
+
+//            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
+//            ref.authWithPassword("philg@sensorstar.com", "nZyQjn2cvQHNbfYz", new Firebase.AuthResultHandler() {
+//                @Override
+//                public void onAuthenticated(AuthData authData) {
+//                    //success, save auth data
+//                    UserData myData = UserData.getUserData(c);
+//                    myData.setCurUID(authData.getUid());
+//                    myData.setCurEmail("philg@sensorstar.com");
+//                    myData.setCurPW("nZyQjn2cvQHNbfYz");
+//                    myData.setCurToken(authData.getToken());
+//                    currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
+//                    myData.setCurrentUserRef(currentUserRef);
+//                    myData.addCurUserTolist();
+//                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+//                    setUpCharts();
+//
+//                }
+//
+//                @Override
+//                public void onAuthenticationError(FirebaseError firebaseError) {
+//                    UserData myData = UserData.getUserData(c);
+//                    Log.d(TAG, "Error logging in \n Username:"+myData.getCurUID()+" " + firebaseError.getDetails());
+//
+//                }
+//            });
+        }
+
+        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                TextView tv = (TextView) v.findViewById(R.id.wholeDate);
+                tv.getText();
+                Intent intent = new Intent(getApplicationContext(),
+                        DailyActivity.class);
+                Bundle extras = new Bundle();
+//                extras.putString(*/
+                intent.putExtra("date",tv.getText().toString());
+                startActivity(intent);
+                // DO something
+
+            }
+        });
+
+
+
+
+
+
+
 
 
 
@@ -395,6 +429,8 @@ public class Home extends ActionBarActivity {
 
 
             TextView day = (TextView) gridView.findViewById(R.id.day);
+
+
             if(dayToDisplay == curDay){
                 day.setText("Today");
             }else {
@@ -402,6 +438,11 @@ public class Home extends ActionBarActivity {
             }
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
 
+            TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
+            Calendar today = Calendar.getInstance();
+            today.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
+            String wholeDate = today.getTimeInMillis()+"";
+            date.setText(wholeDate);
             //Grab today's data//
             Calendar monthCal = Calendar.getInstance();
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
@@ -558,41 +599,16 @@ public class Home extends ActionBarActivity {
         mUD.storeCurrentUser();
     }
 
-    public void setUpCharts(){
-        UserData myData = UserData.getUserData(c);
+    public static void setUpChartsExternalCall(Context c){
+        Home h = new Home();
+//        h.setUpCharts(c);
+    }
+
+    public void setUpCharts(Context c){
+//        UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
-//        currentUserRef = myData.getCurrentUserRef();
-//        currentUserRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot snapshot) {
-//                Log.d(TAG, snapshot.getValue() + "");
-//                UserData myData = UserData.getUserData(c);
-//                myData.setUserSnapshot(snapshot);
-//                gridview.setAdapter(new GridViewCalendar(Home.this));
-//                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//                    public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
-//                        //grid view click, start daily view
-//
-//
-//
-//
-//                    }
-//                });
-//                gridview.invalidate();
-//                setUpChart();
-//                pbBar.setVisibility(View.GONE);
-//                if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
-//                    gridview.setVisibility(View.VISIBLE);
-//                }
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(FirebaseError firebaseError) {
-//                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-//            }
-//        });
+
         gridview.invalidate();
                 setUpChart();
                 pbBar.setVisibility(View.GONE);
@@ -602,10 +618,10 @@ public class Home extends ActionBarActivity {
 
     }
 
-    public static void refreshCharts(){
+    public void refreshCharts(){
 //        currentUserRef
 //        gridview.deferNotifyDataSetChanged();
-//        setUpCharts();
+        setUpCharts(c);
         gridview.invalidate();
         chart.invalidate();
     }
@@ -736,7 +752,7 @@ public class Home extends ActionBarActivity {
                     int oldDate =-1;
                     String username = "";
                     while (curSteps.isAfterLast() == false) {
-
+                        if(Integer.parseInt(curSteps.getString(4))!=0) {
                         username = curSteps.getString(3);
 
 
@@ -753,25 +769,26 @@ public class Home extends ActionBarActivity {
                         String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
 
                         if((date!=curDate.getDate()) &&(date!=-1)){
-                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate));//.child(curSteps.getString(5) to modify child node
-                            refStep2.setValue(minuteMap);
-
-
                             String startTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
                             String endTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                             oldDate = date;
+                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
+                            refStep2.setValue(minuteMap);
+
+
+
                             minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
                             Map<String,String > stepData = new HashMap<String, String>();
-                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+//                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
                             stepData.put(Database.StepEntry.START, startTime);
                             stepData.put(Database.StepEntry.END, endTime);
 //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
                             stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
                             stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
-                            if(Integer.parseInt(curSteps.getString(4))!=0) {
-                                minuteMap.put(curSteps.getString(6), stepData);
-                            }
+
+                                minuteMap.put(startTime, stepData);
+
                             date = curDate.getDate();
 
                         }else{
@@ -787,10 +804,11 @@ public class Home extends ActionBarActivity {
                             stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
                             if(Integer.parseInt(curSteps.getString(4))!=0) {
-                                minuteMap.put(curSteps.getString(6), stepData);
+                                minuteMap.put(startTime, stepData);
                             }
 
                             date = curDate.getDate();
+                        }
                         }
 
 
@@ -805,37 +823,43 @@ public class Home extends ActionBarActivity {
                         curSteps.moveToNext();
 
                     }
-                    curSteps.moveToLast();
-                    long stepTime = Long.parseLong(curSteps.getString(2));
-                    Date curDate = new Date(stepTime);
+                    try {
+                        curSteps.moveToLast();
+                        long stepTime = Long.parseLong(curSteps.getString(2));
+                        Date curDate = new Date(stepTime);
 
-                    String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
-                    String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
-
-
-                    cal.set( Calendar.YEAR, 2015);
-                    cal.set( Calendar.MONTH, curDate.getMonth());
-                    cal.set( Calendar.DATE, curDate.getDate() );
-                    cal.set( Calendar.HOUR_OF_DAY, curDate.getHours() );
-                    cal.set( Calendar.MINUTE, curDate.getMinutes() );
-                    cal.set( Calendar.SECOND, 0 );
-                    cal.set( Calendar.MILLISECOND, 0 );
-                    String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
+                        String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                        String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
 
 
-                    Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate);
-                    refStep2.setValue(minuteMap);
+                        cal.set(Calendar.YEAR, 2015);
+                        cal.set(Calendar.MONTH, curDate.getMonth());
+                        cal.set(Calendar.DATE, curDate.getDate());
+                        cal.set(Calendar.HOUR_OF_DAY, curDate.getHours());
+                        cal.set(Calendar.MINUTE, curDate.getMinutes());
+                        cal.set(Calendar.SECOND, 0);
+                        cal.set(Calendar.MILLISECOND, 0);
+                        String dayMinute = (curDate.getMinutes() + (curDate.getHours() * 60)) + "";
+
+
+                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                        refStep2.setValue(minuteMap);
 //                    refStep.setValue(list);
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        Log.d(TAG, "No new entries to upload");
+                    }
                     curSteps.close();
 
-
+//                    Home.setUpCharts(c);
 //                    Log.d("TAG", "Found sync id "+syncUniqueID+": "+cur.getString(0));//0 is sync, 1 is Timestamp
                 } else {
                     Log.w(TAG, "OH noes! " + sync);
                 }
 
 
-
+//                setUpCharts(c);
+                gridview.invalidate();
                 Log.d(TAG, "Upload data complete");
                 syncProgressBar.setProgress(0);
                 syncProgressBar.setVisibility(View.GONE);
@@ -884,6 +908,7 @@ public class Home extends ActionBarActivity {
                                         final String userID,
                                         final WaveRequest.WaveDataPoint point,
                                         final String deviceAddress) {
+
         long TWO_MINUTES_IN_MILLIS=120000;//millisecs
         long endLong = point.date.getTime();
         endLong = endLong + TWO_MINUTES_IN_MILLIS;
@@ -901,7 +926,7 @@ public class Home extends ActionBarActivity {
         //TODO: add workout type
 
         long newRowId;
-        if(point.value!=0) {
+
             newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                     null,
                     values);
@@ -913,10 +938,7 @@ public class Home extends ActionBarActivity {
                 Log.d(TAG, "Inserted data: " + point);
             }
             return ret;
-        }else{
-            Log.d(TAG, "Not inserting object, steps are 0");
-            return true;
-        }
+
     }
 
 
@@ -933,8 +955,12 @@ public class Home extends ActionBarActivity {
         int ret = 0;
         try {
             for (WaveRequest.WaveDataPoint point : points) {
+                if(point.value!=0) {
                 if (insertPoint(db, guid, userID, point, deviceAddress)) {
                     ret += 1;
+                }
+                }else{
+                    Log.d(TAG, "Not inserting object, steps are 0");
                 }
             }
 //            db.setTransactionSuccessful();

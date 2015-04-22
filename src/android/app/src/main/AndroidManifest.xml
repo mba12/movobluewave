@@ -51,6 +51,11 @@
             android:name=".UserActivity"
             android:label="User Select" >
         </activity>
+
+        <activity
+            android:name=".DailyActivity"
+            android:label="Daily Activity" >
+        </activity>
         <activity
             android:name=".FirstLaunch"
             android:label="@string/title_activity_first_launch" >

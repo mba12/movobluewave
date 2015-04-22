@@ -35,6 +35,14 @@
                 android:layout_centerVertical="true"
                 android:scaleType="fitXY"
                 android:background="@drawable/datebgwide"/>
+            <TextView
+                android:id="@+id/wholeDate"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:text=""
+                android:visibility="gone"
+               />
+
 
         </RelativeLayout>
 
