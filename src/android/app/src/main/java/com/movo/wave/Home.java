@@ -821,7 +821,6 @@ public class Home extends ActionBarActivity {
 //            myData.getCurUID()
             @Override
             public void notify( final WaveAgent.DataSync sync, float progress) {
-                sync.device.device.getAddress()
                 int intProgress = (int)(progress *100);
                 syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
