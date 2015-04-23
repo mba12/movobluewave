@@ -706,7 +706,7 @@ public class WaveRequest {
             this.mode = getMode( message[ offset ]);
             // shave off
             int tmp = message[ offset ] & 0x3F;
-            tmp <<= 6;
+            tmp <<= 8;
             tmp += 0xFF & (int) message[ offset + 1 ];
             this.value = tmp;
             this.date = date;
