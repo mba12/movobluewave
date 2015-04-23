@@ -380,7 +380,31 @@ public class WaveRequest {
         HOUR                ( 5, 0, 23, 0 ),
         MINUTE              ( 6, 0, 59, 0 ),
         SECOND              ( 7, 0, 59, 0 ),
-        DAY                 ( 8, 1, 7, -1 ),
+        DAY                 ( 8, 1, 7, 0 ) {
+            /** Specialize parsing for Monday=1, Sunday=7
+             *
+             * @param buffer raw message byte array.
+             * @param offset index offset within buffer.
+             * @return index s.t. Sunday=0, Saturday=6
+             */
+            @Override
+            public int parse(byte[] buffer, int offset) {
+                // Values 0-6 already match, just mod
+                return super.parse(buffer, offset) % 7;
+            }
+
+            /** Specialize parsing for Monday=1, Sunday=7
+             *  Converts value from Sunday=0, Saturday=6
+             * @param buffer raw message byte array.
+             * @param value integer to be marshaled to byte value.
+             * @param offset index offset within buffer.
+             */
+            @Override
+            public void put(byte[] buffer, int value, int offset) {
+                // Values 0-6 already match, replace 0 with 7.
+                super.put(buffer, value == 0 ? 7 : value, offset);
+            }
+        },
 
         //personal info related
         GENDER              ( 35, 0, 1, 0 ),
@@ -682,7 +706,7 @@ public class WaveRequest {
             this.mode = getMode( message[ offset ]);
             // shave off
             int tmp = message[ offset ] & 0x3F;
-            tmp <<= 6;
+            tmp <<= 8;
             tmp += 0xFF & (int) message[ offset + 1 ];
             this.value = tmp;
             this.date = date;

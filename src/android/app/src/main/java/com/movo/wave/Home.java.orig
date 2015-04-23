@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
@@ -48,8 +49,10 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -99,39 +102,6 @@ public class Home extends ActionBarActivity {
         ContentValues values = new ContentValues();
 
 
-// Define a projection that specifies which columns from the database
-// you will actually use after this query.
-        String[] projection = {
-                Database.StepEntry._ID,
-                Database.StepEntry.SYNC_ID,
-                Database.StepEntry.IS_PUSHED
-        };
-
-// How you want the results sorted in the resulting Cursor
-        String sortOrder =
-                Database.StepEntry._ID + " DESC";
-
-        Cursor cur = db.query(
-                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                sortOrder                                 // The sort order
-        );
-
-        cur.moveToFirst();
-//        long itemId = cur.getLong(
-//                cur.getColumnIndexOrThrow(Database.StepEntry._ID)
-//
-//        );
-        Log.d(TAG, cur.toString());
-
-
-
-
-
 
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);
@@ -141,58 +111,61 @@ public class Home extends ActionBarActivity {
         //this gets our user steps. We will save the data out and display it
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
-        if(userExists) {
-            setUpCharts();
-        }else{
-            //umm.
-
-        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
-        ref.authWithPassword("philg@sensorstar.com", "testpassword", new Firebase.AuthResultHandler() {
-            @Override
-            public void onAuthenticated(AuthData authData) {
-                //success, save auth data
-            UserData myData = UserData.getUserData(c);
-                myData.setCurUID(authData.getUid());
-                myData.setCurEmail("philg@sensorstar.com");
-                myData.setCurPW("testpassword");
-                myData.setCurToken(authData.getToken());
-                currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
-                myData.setCurrentUserRef(currentUserRef);
-                myData.addCurUserTolist();
-                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                setUpCharts();
-
-            }
-
-            @Override
-            public void onAuthenticationError(FirebaseError firebaseError) {
-                Log.d(TAG, "Error logging in " + firebaseError.getDetails());
-
-            }
-        });
-        }
-
-
-
-
+        UserData myUserData = UserData.getUserData(c);
+        ArrayList<String> users = new ArrayList<String>();
+        users = myUserData.getUserList();
         chart = (LineChart) findViewById(R.id.chart);
-
         ImageView chartToggle = (ImageView) findViewById(R.id.chartButton);
 //        chartToggle.setOnClickListener();
         chartToggle.setOnClickListener(new View.OnClickListener() {
-				public void onClick(View v) {
-                    if(toggle){
-                        gridview.setVisibility(View.INVISIBLE);
-                        chart.setVisibility(View.VISIBLE);
-                        toggle = false;
-                    }else{
-                        gridview.setVisibility(View.VISIBLE);
-                        chart.setVisibility(View.INVISIBLE);
-                        toggle = true;
-                    }
+            public void onClick(View v) {
+                if(toggle){
+                    gridview.setVisibility(View.INVISIBLE);
+                    chart.setVisibility(View.VISIBLE);
+                    toggle = false;
+                }else{
+                    gridview.setVisibility(View.VISIBLE);
+                    chart.setVisibility(View.INVISIBLE);
+                    toggle = true;
+                }
 
-				}
-			});
+            }
+        });
+        if(!users.isEmpty()) {
+            if(userExists==true) {
+                setUpCharts(c);
+            }else{
+                String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
+                UserData.getUserData(c).loadNewUser(uid);
+                setUpCharts(c);
+            }
+        }else{
+
+            Intent intent = new Intent(getApplicationContext(),
+                    FirstLaunch.class);
+            startActivity(intent);
+
+
+
+        }
+
+        gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View v,
+                                    int position, long id) {
+                TextView tv = (TextView) v.findViewById(R.id.wholeDate);
+                tv.getText();
+                Intent intent = new Intent(getApplicationContext(),
+                        DailyActivity.class);
+                Bundle extras = new Bundle();
+//                extras.putString(*/
+                intent.putExtra("date",tv.getText().toString());
+                startActivity(intent);
+                // DO something
+
+            }
+        });
+
 
 
 
@@ -231,7 +204,7 @@ public class Home extends ActionBarActivity {
 
         Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
-
+//        upload();
     }
 
 
@@ -257,25 +230,45 @@ public class Home extends ActionBarActivity {
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
         ArrayList<String> xVals = new ArrayList<String>();
 
-        UserData myData = UserData.getUserData(c);
-        DataSnapshot snapdata = myData.getUserSnapshot();
-        DataSnapshot monthlyData = snapdata.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1));
-
         numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         int difference = numberOfDaysTotal - curDay;
         numberOfDaysLeft = numberOfDaysTotal - difference;
 
         for(int i=0;i<numberOfDaysLeft;i++){
-            for(DataSnapshot child : monthlyData.getChildren()){
-                float x = Float.parseFloat(child.getKey());
-                int y = Integer.parseInt(child.getValue().toString());
-                if(x == (i+1)) {
-                    Log.d(TAG, "X value is: " + x + " Y value is: " + y);
-                    Entry curEntry = new Entry(y, i);
-                    valsComp1.add(curEntry);
+
+            //Grab today's data//
+            Calendar monthCal = Calendar.getInstance();
+            monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,0,0,0);
+            long monthRangeStart = monthCal.getTimeInMillis();
+            monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
+            long monthRangeStop = monthCal.getTimeInMillis();
+
+
+            UserData myData = UserData.getUserData(c);
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
+
+            if(curSteps!=null&&curSteps.getCount()!=0){
+                int totalStepsForToday = 0;
+                while (curSteps.isAfterLast() == false) {
+                    totalStepsForToday+=curSteps.getInt(4);
+
+                    curSteps.moveToNext();
+//                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
+                    //works
                 }
+                curSteps.close();
+                Entry curEntry = new Entry(totalStepsForToday, i);
+                valsComp1.add(curEntry);
+            }else{
+                //no steps for this time period.
+                Entry curEntry = new Entry(0, i);
+                valsComp1.add(curEntry);
 
             }
+
+
+
+
             xVals.add((i+1)+"");
         }
 
@@ -343,37 +336,56 @@ public class Home extends ActionBarActivity {
 
             UserData myData = UserData.getUserData(c);
 //            Firebase fb = myData.getCurrentUserRef()
-            DataSnapshot data = myData.getUserSnapshot();
+//            DataSnapshot data = myData.getUserSnapshot();
 
             int dayToDisplay = (numberOfDaysLeft - (position));
 
 
             TextView day = (TextView) gridView.findViewById(R.id.day);
+
+
             if(dayToDisplay == curDay){
                 day.setText("Today");
             }else {
                 day.setText(dayToDisplay+"");
             }
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
-            if(data!=null){
-                try {
-                    //String what = calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay;
-                    DataSnapshot todaysData = data.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+dayToDisplay);
-                    if(!todaysData.getValue().equals("")){
-                        steps.setText(todaysData.getValue()+"");
-                    }else{
-                        steps.setText("0");
-                    }
-                    steps.setText(todaysData.getValue()+"");
-                }catch(Exception e){
-                    steps.setText("0");
-//                    e.printStackTrace();
+
+            TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
+            Calendar today = Calendar.getInstance();
+            today.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
+            String wholeDate = today.getTimeInMillis()+"";
+            date.setText(wholeDate);
+            //Grab today's data//
+            Calendar monthCal = Calendar.getInstance();
+            monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
+            long monthRangeStart = monthCal.getTimeInMillis();
+            monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
+            long monthRangeStop = monthCal.getTimeInMillis();
+
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID() );
+
+            if(curSteps!=null&&curSteps.getCount()!=0){
+                int totalStepsForToday = 0;
+                while (curSteps.isAfterLast() == false) {
+                    totalStepsForToday+=curSteps.getInt(4);
+
+                    curSteps.moveToNext();
+//                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
+                    //works
                 }
+
+
+
+                steps.setText(totalStepsForToday+"");
+
+
             }else{
-                steps.setText("1234");
+                steps.setText(0+"");
+
 
             }
-
+            curSteps.close();
             return gridView;
         }
 
@@ -401,8 +413,8 @@ public class Home extends ActionBarActivity {
                 UserData myData = UserData.getUserData(c);
                 Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
-//                upload();
-                testMeSql();
+                upload();
+//                testMeSql();
                 break;
             case 2:
                 Log.d(TAG, "Users pressed");
@@ -481,70 +493,29 @@ public class Home extends ActionBarActivity {
         mUD.storeCurrentUser();
     }
 
-    public void setUpCharts(){
-        UserData myData = UserData.getUserData(c);
+    public static void setUpChartsExternalCall(Context c){
+        Home h = new Home();
+//        h.setUpCharts(c);
+    }
+
+    public void setUpCharts(Context c){
+//        UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
-        currentUserRef = myData.getCurrentUserRef();
-        currentUserRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                Log.d(TAG, snapshot.getValue() + "");
-                UserData myData = UserData.getUserData(c);
-                myData.setUserSnapshot(snapshot);
-                gridview.setAdapter(new GridViewCalendar(Home.this));
-                gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View v, int position1, long id) {
-                        // name = getResources().getResourceEntryName(mThumbIds[position1]);
-                        //do stuff here on grid click
-                        UserData myData = UserData.getUserData(c);
-//                        calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay
-//                        Log.d(TAG, "Transaction function start: "+myData.getCurUID()+"/"+calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1)+"/"+curDay);
-                        //This function increments steps taken today when clicking on the gridview. This will sync with server as soon as it can.
-                        Firebase ref3 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/" + calendar.get(Calendar.YEAR) + "/" + (calendar.get(Calendar.MONTH) + 1) + "/" + curDay);
-                        ref3.runTransaction(new Transaction.Handler() {
-                            @Override
-                            public Transaction.Result doTransaction(MutableData currentData) {
-                                if (currentData.getValue() == null) {
-                                    currentData.setValue(1);
-                                } else {
-                                    currentData.setValue((Long) currentData.getValue() + 1);
-                                }
-                                return Transaction.success(currentData); //we can also abort by calling Transaction.abort()
-                            }
 
-                            @Override
-                            public void onComplete(FirebaseError firebaseError, boolean committed, DataSnapshot currentData) {
-                                //This method will be called once with the results of the transaction.
-                                Log.d(TAG, "Transaction increment successful");
-                                gridview.invalidate();
-                                chart.invalidate();
-                            }
-                        });
-
-
-                    }
-                });
-                gridview.invalidate();
+        gridview.invalidate();
                 setUpChart();
                 pbBar.setVisibility(View.GONE);
                 if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
                     gridview.setVisibility(View.VISIBLE);
                 }
 
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-            }
-        });
     }
 
-    public static void refreshCharts(){
+    public void refreshCharts(){
 //        currentUserRef
 //        gridview.deferNotifyDataSetChanged();
-//        setUpCharts();
+        setUpCharts(c);
         gridview.invalidate();
         chart.invalidate();
     }
@@ -557,6 +528,8 @@ public class Home extends ActionBarActivity {
         syncText.setVisibility(View.VISIBLE);
 
         final String  syncUniqueID = UUID.randomUUID().toString();
+        final String currentUserId = UserData.getUserData(c).getCurUID();
+
         final Date start = new Date();
         final String startSyncDate = start.toString();
 
@@ -577,33 +550,11 @@ public class Home extends ActionBarActivity {
 
 
                 if( data != null ) {
-                    Collections.sort(data);
 
-                        for( final WaveRequest.WaveDataPoint point : data ) {
-                            Log.v(TAG, "The point: " + point);
-//
-                            long TWO_MINUTES_IN_MILLIS = 120000;//millisecs
-                            long endLong = point.date.getTime();
-                            endLong = endLong + TWO_MINUTES_IN_MILLIS;
-                            Date endDate = new Date(endLong);
+                    final int result = insertPoints( db, syncUniqueID, currentUserId, data, sync.device.device.getAddress());
 
-                            ContentValues values = new ContentValues();
-//                        values.put(Database.StepEntry._ID, UUID.randomUUID().toString());
-                            values.put(Database.StepEntry.STEPS, point.value);
-                            values.put(Database.StepEntry.START, point.date.getTime());
-                            values.put(Database.StepEntry.END, endDate.getTime());
-                            values.put(Database.StepEntry.IS_PUSHED, 0);
-                            values.put(Database.StepEntry.SYNC_ID, syncUniqueID);
+                    Log.d( TAG, "Database insertion status: " + result );
 
-
-                            long newRowId;
-                            newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                    null,
-                                    values);
-
-                            Log.d(TAG, "Inserted into database: new row " + newRowId);
-
-                        }
 
                     Date stop = new Date();
 
@@ -611,7 +562,7 @@ public class Home extends ActionBarActivity {
                     syncValues.put(Database.SyncEntry.GUID, syncUniqueID);
                     syncValues.put(Database.SyncEntry.SYNC_START, start.getTime());
                     syncValues.put(Database.SyncEntry.SYNC_END, stop.getTime());
-                    syncValues.put(Database.SyncEntry.USER,UserData.getUserData(c).getCurUID());
+                    syncValues.put(Database.SyncEntry.USER,currentUserId);
                     syncValues.put(Database.SyncEntry.STATUS, 0);
                     long newRowId;
                     newRowId = db.insert(Database.SyncEntry.SYNC_TABLE_NAME,
@@ -626,7 +577,11 @@ public class Home extends ActionBarActivity {
                     ContentValues valuesRead = new ContentValues();
                     Cursor cur = db.query(
                             Database.SyncEntry.SYNC_TABLE_NAME,  // The table to query
-                            new String[] { Database.SyncEntry.GUID, Database.SyncEntry.SYNC_START },                               // The columns to return
+                            new String[] { Database.SyncEntry.GUID, //blob
+                                    Database.SyncEntry.SYNC_START, //int
+                                    Database.SyncEntry.SYNC_END, //int
+                                    Database.SyncEntry.USER, //string
+                                    Database.SyncEntry.STATUS }, //bool                          // The columns to return
                             selection,                                // The columns for the WHERE clause
                             new String[] { syncUniqueID },                            // The values for the WHERE clause
                             null,                                     // don't group the rows
@@ -635,38 +590,159 @@ public class Home extends ActionBarActivity {
                     );
 
                     cur.moveToFirst();
-                    cur.getString(1); //start
+                    //start
                     long itemId = cur.getLong(
                             cur.getColumnIndexOrThrow(Database.SyncEntry.GUID)
 
                     );
-                    Log.d("TAG", "Found sync id "+syncUniqueID+": "+cur.getColumnIndexOrThrow(Database.SyncEntry.GUID));
+                    //firebase upload sync
+//                    UserData myData = UserData.getUserData(c);
+                    //sync ref
+                    Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +cur.getString(3) + "/sync/"+cur.getString(0));
+
+
+                    Map<String,Object > syncData = new HashMap<String, Object>();
+//                    syncData.put(Database.SyncEntry.GUID, cur.getString(0));
+                    syncData.put(Database.SyncEntry.SYNC_START, WaveRequest.UTC.isoFormat(Long.parseLong(cur.getString(1))));
+                    syncData.put(Database.SyncEntry.SYNC_END, WaveRequest.UTC.isoFormat(Long.parseLong(cur.getString(2))));
+                    syncData.put(Database.SyncEntry.USER, cur.getString(3));
+                    syncData.put(Database.SyncEntry.STATUS, cur.getString(4));
+
+                    Log.d(TAG, "Sync ID is "+cur.getString(0));
+                    ref.setValue(syncData);
+                    cur.close();
+                    //*****************steps***********************//
+                    Cursor curSteps = getStepsForSync(syncUniqueID);
+
+
+                    Map<String, Map<String, Map<String, Object>>> monthMap = new HashMap<String, Map<String, Map<String, Object>>>(); //day<minutes,steps>>
+//                    List<Object>[] monthList = new List[];
+                    Map<String, Map<String, String>>  minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
+                    Map<String, Map<String, String>> dayMap = new HashMap<String, Map<String, String>>(); //day<minutes,steps>>
+
+                    Calendar cal = WaveRequest.UTC.newCal();
+
+                    ArrayList list = new ArrayList();
+                    int date = -1;
+                    int oldDate =-1;
+                    String username = "";
+                    while (curSteps.isAfterLast() == false) {
+                        if(Integer.parseInt(curSteps.getString(4))!=0) {
+                        username = curSteps.getString(3);
+
+
+                        long stepTime = Long.parseLong(curSteps.getString(2));
+                        Date curDate = new Date(stepTime);
+
+                        cal.set( Calendar.YEAR, 2015);
+                        cal.set( Calendar.MONTH, curDate.getMonth());
+                        cal.set( Calendar.DATE, curDate.getDate() );
+                        cal.set( Calendar.HOUR_OF_DAY, curDate.getHours() );
+                        cal.set( Calendar.MINUTE, curDate.getMinutes() );
+                        cal.set( Calendar.SECOND, 0 );
+                        cal.set( Calendar.MILLISECOND, 0 );
+                        String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
+
+                        if((date!=curDate.getDate()) &&(date!=-1)){
+                            String startTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            oldDate = date;
+                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
+                            refStep2.setValue(minuteMap);
+
+
+
+                            minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
+                            Map<String,String > stepData = new HashMap<String, String>();
+//                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+
+
+                                minuteMap.put(startTime, stepData);
+
+                            date = curDate.getDate();
+
+                        }else{
+                            oldDate = date;
+                            String startTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            Map<String,String > stepData = new HashMap<String, String>();
+                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+
+                            if(Integer.parseInt(curSteps.getString(4))!=0) {
+                                minuteMap.put(startTime, stepData);
+                            }
+
+                            date = curDate.getDate();
+                        }
+                        }
+
+
+
+//                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+curDate.getYear()+"/"+curDate.getMonth()+"/"+curDate.getDate());
+////                            refStep2.updateChildren( minuteMap);
+//                        list.add(curDate.getDate()+"",stepData);
+
+//
+//
+
+                        curSteps.moveToNext();
+
+                    }
+                    try {
+                        curSteps.moveToLast();
+                        long stepTime = Long.parseLong(curSteps.getString(2));
+                        Date curDate = new Date(stepTime);
+
+                        String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                        String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
+
+
+                        cal.set(Calendar.YEAR, 2015);
+                        cal.set(Calendar.MONTH, curDate.getMonth());
+                        cal.set(Calendar.DATE, curDate.getDate());
+                        cal.set(Calendar.HOUR_OF_DAY, curDate.getHours());
+                        cal.set(Calendar.MINUTE, curDate.getMinutes());
+                        cal.set(Calendar.SECOND, 0);
+                        cal.set(Calendar.MILLISECOND, 0);
+                        String dayMinute = (curDate.getMinutes() + (curDate.getHours() * 60)) + "";
+
+
+                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                        refStep2.setValue(minuteMap);
+//                    refStep.setValue(list);
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        Log.d(TAG, "No new entries to upload");
+                    }
+                    curSteps.close();
+
+//                    Home.setUpCharts(c);
+//                    Log.d("TAG", "Found sync id "+syncUniqueID+": "+cur.getString(0));//0 is sync, 1 is Timestamp
                 } else {
                     Log.w(TAG, "OH noes! " + sync);
                 }
 
 
-
+//                setUpCharts(c);
+                gridview.invalidate();
                 Log.d(TAG, "Upload data complete");
                 syncProgressBar.setProgress(0);
                 syncProgressBar.setVisibility(View.GONE);
                 syncText.setVisibility(View.GONE);
-
-
-
-
-
-
-
-
             }
-
+            //            myData.getCurUID()
             @Override
-<<<<<<< HEAD
-            public void notify( WaveAgent.DataSync sync, float progress) {
-=======
             public void notify( final WaveAgent.DataSync sync, float progress) {
->>>>>>> 0dce42d67b46e2056211197728ac45f8daa077f8
                 int intProgress = (int)(progress *100);
                 syncProgressBar.setProgress(intProgress);
                 Log.d(TAG, "Progress % " + progress * 100 );
@@ -692,83 +768,131 @@ public class Home extends ActionBarActivity {
         });
 
         // Or we can scan for a specific device directly....
-        //final String address = "C2:4C:53:BB:CD:FC";
-        //final String address = "ED:09:F5:BB:E9:FF";
-        final String address = "EB:3B:2D:61:17:44";
-        //final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
-        //final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
-        
+        final String address = "C2:4C:53:BB:CD:FC"; //phil new
+        //final String address = "ED:09:F5:BB:E9:FF"; //alex brick
+        //final String address = "EB:3B:2D:61:17:44"; //alex new
+        // final WaveAgent.DataSync sync0 = WaveAgent.DataSync.byAddress( 10000, address, syncCallback );
+//        final WaveAgent.DataSync sync1 = WaveAgent.DataSync.bySerial( 10000, "UNKNOWN", syncCallback );
+
     }
 
-    public void testMeSql(){
-        final Calendar cal = WaveRequest.UTC.newCal();
-        cal.set( Calendar.YEAR, 2015);
-        cal.set( Calendar.MONTH, Calendar.APRIL );
-        cal.set( Calendar.DATE, 19 );
-        cal.set( Calendar.HOUR_OF_DAY, 0 );
-        cal.set( Calendar.MINUTE, 0 );
-        cal.set( Calendar.SECOND, 0 );
-        cal.set( Calendar.MILLISECOND, 0 );
-        final Date testDate = cal.getTime();
 
-        Log.d( TAG, "Test data point time stamp: " +  testDate.getTime() );
+    private static boolean insertPoint( final SQLiteDatabase db,
+                                        final String guid,
+                                        final String userID,
+                                        final WaveRequest.WaveDataPoint point,
+                                        final String deviceAddress) {
 
-
-
-        List<WaveRequest.WaveDataPoint> points = new LinkedList<>();
-        for ( int i = 0; i < 2 ; i ++ ) {
-            points.add( new WaveRequest.WaveDataPoint(WaveRequest.WaveDataPoint.Mode.DAILY,
-                    5 + i,
-                    testDate) );
-        }
-
-        DatabaseHelper mDbHelper = new DatabaseHelper(c);
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-
-        final boolean result = insertPoints( db, points );
-
-        Log.d( TAG, "Point insertion test: " + result );
-
-        db.close();
-    }
-
-    private void insertPoint( final SQLiteDatabase db, final WaveRequest.WaveDataPoint point ) {
         long TWO_MINUTES_IN_MILLIS=120000;//millisecs
         long endLong = point.date.getTime();
         endLong = endLong + TWO_MINUTES_IN_MILLIS;
 
         ContentValues values = new ContentValues();
-//                        values.put(Database.StepEntry._ID, UUID.randomUUID().toString());
+        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
         values.put(Database.StepEntry.STEPS, point.value);
         values.put(Database.StepEntry.START, point.date.getTime());
         values.put(Database.StepEntry.END,endLong);
+        values.put(Database.StepEntry.USER,userID);
         values.put(Database.StepEntry.IS_PUSHED, 0);
-        values.put(Database.StepEntry.SYNC_ID, 123);
+        values.put(Database.StepEntry.SYNC_ID, guid);
+        values.put(Database.StepEntry.DEVICEID, deviceAddress);
+//        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+        //TODO: add workout type
 
         long newRowId;
-        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                null,
-                values);
 
-        Log.d(TAG, "Inserted into database: new row "+newRowId );
-    }
+            newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                    null,
+                    values);
 
-    private boolean insertPoints( final SQLiteDatabase db,
-                                  Collection<WaveRequest.WaveDataPoint> points ) {
-        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
-        //db.beginTransaction();
-        boolean ret = false;
-        try {
-            for(WaveRequest.WaveDataPoint point : points ) {
-                insertPoint(db, point);
+
+            final boolean ret = newRowId >= 0;
+            if (ret) {
+                Log.d(TAG, "Inserted into database: new row " + newRowId + " guid: " + guid);
+                Log.d(TAG, "Inserted data: " + point);
             }
-            //db.setTransactionSuccessful();
-            ret = true;
-        } finally {
-            //db.endTransaction();
-        }
-        return ret;
+            return ret;
+
     }
 
 
+    private static int insertPoints( final SQLiteDatabase db,
+                                     final String guid,
+                                     final String userID,
+                                     Collection<WaveRequest.WaveDataPoint> points,
+                                     final String deviceAddress) {
+        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
+
+
+        db.beginTransaction();
+        boolean success = false;
+        int ret = 0;
+        try {
+            for (WaveRequest.WaveDataPoint point : points) {
+                if(point.value!=0) {
+                if (insertPoint(db, guid, userID, point, deviceAddress)) {
+                    ret += 1;
+                }
+                }else{
+                    Log.d(TAG, "Not inserting object, steps are 0");
+                }
+            }
+//            db.setTransactionSuccessful();
+            db.setTransactionSuccessful();
+            success = true;
+        } finally {
+            db.endTransaction();
+        }
+        return success ? ret : -1;
+    }
+
+
+    public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID){
+
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ? AND "+Database.StepEntry.USER + " =? ";
+        Cursor curSteps = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                new String[] { Database.StepEntry.SYNC_ID, //blob
+                        Database.StepEntry.START, //int
+                        Database.StepEntry.END, //int
+                        Database.StepEntry.USER, //string
+                        Database.StepEntry.STEPS, //int
+                        Database.StepEntry.DEVICEID }, //blob                          // The columns to return
+                selectionSteps,                                // The columns for the WHERE clause
+                new String[] { monthRangeStart+"", monthRangeStop+"",userID },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+
+        curSteps.moveToFirst();
+
+        return curSteps;
+    }
+
+    public static Cursor getStepsForSync(String syncID){
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        String selectionSteps =  Database.StepEntry.SYNC_ID + "=?";
+        Cursor curSteps = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                new String[] { Database.StepEntry.SYNC_ID, //blob
+                        Database.StepEntry.START, //int
+                        Database.StepEntry.END, //int
+                        Database.StepEntry.USER, //string
+                        Database.StepEntry.STEPS, //int
+                        Database.StepEntry.DEVICEID, //blob
+                        Database.StepEntry.GUID}, //blob                          // The columns to return
+                selectionSteps,                                // The columns for the WHERE clause
+                new String[] { syncID },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+        curSteps.moveToFirst();
+        return curSteps;
+    }
 }
