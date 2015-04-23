@@ -42,6 +42,7 @@ public class UserData extends Activity{
     private Firebase currentUserRef;
 
 
+
     public static UserData getUserData(Context c) {
         if (instance == null) {
             instance = new UserData(c);
@@ -147,6 +148,8 @@ public class UserData extends Activity{
                 setCurToken(authData.getToken());
                 currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
 
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+                prefs.edit().putBoolean("userExists", true);
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
                 updateHomePage();
                 status = true;
@@ -302,7 +305,6 @@ public class UserData extends Activity{
     }
 
     public void updateHomePage() {
-
         new Thread() {
             public void run() {
 
@@ -311,7 +313,7 @@ public class UserData extends Activity{
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            Home.refreshCharts();
+                            Home.setUpChartsExternalCall(appContext);
                         }
                     });
                 }catch (Exception e){

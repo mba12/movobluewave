@@ -34,10 +34,14 @@ public class WaveRequest {
      */
     static class UTC {
         final private static DateFormat dateFormat;
+        final private static DateFormat dateFormatShort;
         final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
         static {
             dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US );
             dateFormat.setTimeZone( timeZone );
+
+            dateFormatShort = new SimpleDateFormat( "'T'HH:mm:ss'Z'", Locale.US );
+            dateFormatShort.setTimeZone( timeZone );
         }
 
         /** ISO-8601 date formatter.
@@ -56,6 +60,9 @@ public class WaveRequest {
          */
         public static String isoFormat( final long timestamp ) {
             return dateFormat.format( new Date( timestamp ) );
+        }
+        public static String isoFormatShort( final long timestamp ) {
+            return dateFormatShort.format( new Date( timestamp ) );
         }
 
         /** Creates a new utc calendar object
