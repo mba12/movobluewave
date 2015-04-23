@@ -7,14 +7,14 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="100dip"
-        android:background="@android:color/white"
+        android:background="@drawable/calendarbg"
         android:orientation="horizontal" >
 
         <RelativeLayout
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="fill_parent"
             android:layout_above="@+id/stepsContainer"
-            android:background="@drawable/daily_stats_gradient"
+            android:background="@drawable/calendargradient"
             android:orientation="horizontal" >
 
             <TextView

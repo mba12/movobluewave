@@ -102,39 +102,6 @@ public class Home extends ActionBarActivity {
         ContentValues values = new ContentValues();
 
 
-// Define a projection that specifies which columns from the database
-// you will actually use after this query.
-        String[] projection = {
-                Database.StepEntry._ID,
-                Database.StepEntry.SYNC_ID,
-                Database.StepEntry.IS_PUSHED
-        };
-
-// How you want the results sorted in the resulting Cursor
-        String sortOrder =
-                Database.StepEntry._ID + " DESC";
-
-        Cursor cur = db.query(
-                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                projection,                               // The columns to return
-                null,                                // The columns for the WHERE clause
-                null,                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                sortOrder                                 // The sort order
-        );
-
-        cur.moveToFirst();
-//        long itemId = cur.getLong(
-//                cur.getColumnIndexOrThrow(Database.StepEntry._ID)
-//
-//        );
-//        Log.d(TAG, cur.toString());
-
-
-
-
-
 
         UserData myData = UserData.getUserData(c);
         gridview= (GridView) findViewById(R.id.gridview);
@@ -180,31 +147,6 @@ public class Home extends ActionBarActivity {
 
 
 
-//            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
-//            ref.authWithPassword("philg@sensorstar.com", "nZyQjn2cvQHNbfYz", new Firebase.AuthResultHandler() {
-//                @Override
-//                public void onAuthenticated(AuthData authData) {
-//                    //success, save auth data
-//                    UserData myData = UserData.getUserData(c);
-//                    myData.setCurUID(authData.getUid());
-//                    myData.setCurEmail("philg@sensorstar.com");
-//                    myData.setCurPW("nZyQjn2cvQHNbfYz");
-//                    myData.setCurToken(authData.getToken());
-//                    currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
-//                    myData.setCurrentUserRef(currentUserRef);
-//                    myData.addCurUserTolist();
-//                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-//                    setUpCharts();
-//
-//                }
-//
-//                @Override
-//                public void onAuthenticationError(FirebaseError firebaseError) {
-//                    UserData myData = UserData.getUserData(c);
-//                    Log.d(TAG, "Error logging in \n Username:"+myData.getCurUID()+" " + firebaseError.getDetails());
-//
-//                }
-//            });
         }
 
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -223,12 +165,6 @@ public class Home extends ActionBarActivity {
 
             }
         });
-
-
-
-
-
-
 
 
 
@@ -294,11 +230,6 @@ public class Home extends ActionBarActivity {
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
         ArrayList<String> xVals = new ArrayList<String>();
 
-//        UserData myData = UserData.getUserData(c);
-//        DataSnapshot snapdata = myData.getUserSnapshot();
-//        DataSnapshot monthlyData = snapdata.child(calendar.get(Calendar.YEAR)+"/"+(calendar.get(Calendar.MONTH)+1));
-
-
         numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         int difference = numberOfDaysTotal - curDay;
         numberOfDaysLeft = numberOfDaysTotal - difference;
@@ -312,27 +243,9 @@ public class Home extends ActionBarActivity {
             monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
 
-            DatabaseHelper mDbHelper = new DatabaseHelper(c);
-            SQLiteDatabase db = mDbHelper.getReadableDatabase();
 
-            String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
-            ContentValues valuesReadSteps = new ContentValues();
-            Cursor curSteps = db.query(
-                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                    new String[] { Database.StepEntry.SYNC_ID, //blob
-                            Database.StepEntry.START, //int
-                            Database.StepEntry.END, //int
-                            Database.StepEntry.USER, //string
-                            Database.StepEntry.STEPS, //int
-                            Database.StepEntry.DEVICEID }, //blob                          // The columns to return
-                    selectionSteps,                                // The columns for the WHERE clause
-                    new String[] { monthRangeStart+"", monthRangeStop+"" },                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
-
-            curSteps.moveToFirst();
+            UserData myData = UserData.getUserData(c);
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
 
             if(curSteps!=null&&curSteps.getCount()!=0){
                 int totalStepsForToday = 0;
@@ -450,27 +363,7 @@ public class Home extends ActionBarActivity {
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
 
-            DatabaseHelper mDbHelper = new DatabaseHelper(c);
-            SQLiteDatabase db = mDbHelper.getReadableDatabase();
-
-            String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
-            ContentValues valuesReadSteps = new ContentValues();
-            Cursor curSteps = db.query(
-                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                    new String[] { Database.StepEntry.SYNC_ID, //blob
-                            Database.StepEntry.START, //int
-                            Database.StepEntry.END, //int
-                            Database.StepEntry.USER, //string
-                            Database.StepEntry.STEPS, //int
-                            Database.StepEntry.DEVICEID }, //blob                          // The columns to return
-                    selectionSteps,                                // The columns for the WHERE clause
-                    new String[] { monthRangeStart+"", monthRangeStop+"" },                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
-
-            curSteps.moveToFirst();
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID() );
 
             if(curSteps!=null&&curSteps.getCount()!=0){
                 int totalStepsForToday = 0;
@@ -481,7 +374,7 @@ public class Home extends ActionBarActivity {
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
                     //works
                 }
-                curSteps.close();
+
 
 
                 steps.setText(totalStepsForToday+"");
@@ -490,8 +383,9 @@ public class Home extends ActionBarActivity {
             }else{
                 steps.setText(0+"");
 
-            }
 
+            }
+            curSteps.close();
             return gridView;
         }
 
@@ -702,7 +596,7 @@ public class Home extends ActionBarActivity {
 
                     );
                     //firebase upload sync
-                    UserData myData = UserData.getUserData(c);
+//                    UserData myData = UserData.getUserData(c);
                     //sync ref
                     Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +cur.getString(3) + "/sync/"+cur.getString(0));
 
@@ -718,26 +612,7 @@ public class Home extends ActionBarActivity {
                     ref.setValue(syncData);
                     cur.close();
                     //*****************steps***********************//
-                    String selectionSteps =  Database.StepEntry.SYNC_ID + "=?";
-                    ContentValues valuesReadSteps = new ContentValues();
-                    Cursor curSteps = db.query(
-                            Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                            new String[] { Database.StepEntry.SYNC_ID, //blob
-                                    Database.StepEntry.START, //int
-                                    Database.StepEntry.END, //int
-                                    Database.StepEntry.USER, //string
-                                    Database.StepEntry.STEPS, //int
-                                    Database.StepEntry.DEVICEID, //blob
-                                    Database.StepEntry.GUID}, //blob                          // The columns to return
-                            selectionSteps,                                // The columns for the WHERE clause
-                            new String[] { syncUniqueID },                            // The values for the WHERE clause
-                            null,                                     // don't group the rows
-                            null,                                     // don't filter by row groups
-                            null                                 // The sort order
-                    );
-
-                    curSteps.moveToFirst();
-                    //step ref
+                    Cursor curSteps = getStepsForSync(syncUniqueID);
 
 
                     Map<String, Map<String, Map<String, Object>>> monthMap = new HashMap<String, Map<String, Map<String, Object>>>(); //day<minutes,steps>>
@@ -973,4 +848,52 @@ public class Home extends ActionBarActivity {
     }
 
 
+    public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID){
+
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+        String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ? AND "+Database.StepEntry.USER + " =? ";
+        Cursor curSteps = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                new String[] { Database.StepEntry.SYNC_ID, //blob
+                        Database.StepEntry.START, //int
+                        Database.StepEntry.END, //int
+                        Database.StepEntry.USER, //string
+                        Database.StepEntry.STEPS, //int
+                        Database.StepEntry.DEVICEID }, //blob                          // The columns to return
+                selectionSteps,                                // The columns for the WHERE clause
+                new String[] { monthRangeStart+"", monthRangeStop+"",userID },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+
+        curSteps.moveToFirst();
+
+        return curSteps;
+    }
+
+    public static Cursor getStepsForSync(String syncID){
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        String selectionSteps =  Database.StepEntry.SYNC_ID + "=?";
+        Cursor curSteps = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                new String[] { Database.StepEntry.SYNC_ID, //blob
+                        Database.StepEntry.START, //int
+                        Database.StepEntry.END, //int
+                        Database.StepEntry.USER, //string
+                        Database.StepEntry.STEPS, //int
+                        Database.StepEntry.DEVICEID, //blob
+                        Database.StepEntry.GUID}, //blob                          // The columns to return
+                selectionSteps,                                // The columns for the WHERE clause
+                new String[] { syncID },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+        curSteps.moveToFirst();
+        return curSteps;
+    }
 }

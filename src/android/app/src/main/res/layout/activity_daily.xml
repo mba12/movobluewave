@@ -16,7 +16,7 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/daily_stats_gradient">
+        android:background="@drawable/splashmovo">
 
         <TextView
             android:id="@+id/tvMiles"
