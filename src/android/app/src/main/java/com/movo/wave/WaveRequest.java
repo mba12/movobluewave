@@ -29,6 +29,8 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
+    static boolean DEBUG = false;
+
     /** Utility namespace for using UTC time
      * All wave devices are dealt with in UTC.
      */
@@ -258,7 +260,8 @@ public class WaveRequest {
             final BluetoothGattCharacteristic characteristic = device.getCharacteristic( writeUUIDs );
             characteristic.setValue(message);
 
-            Log.d( TAG, "Sending message: " + BLEAgent.bytesToHex( message ));
+            if( DEBUG )
+                Log.d( TAG, "Sending message: " + BLEAgent.bytesToHex( message ));
             logFailure(device.gatt.writeCharacteristic(characteristic),
                     "start write to wave");
             return false;
@@ -295,10 +298,13 @@ public class WaveRequest {
             } else if( characteristic.getUuid().equals( notifyCharacteristicUUID )) {
                 logFailure(status == BluetoothGatt.GATT_SUCCESS, "complete notify from wave");
                 final byte[] value = characteristic.getValue();
-                Log.d(TAG, "Wave response: " + BLEAgent.bytesToHex(value));
+
+                if( DEBUG )
+                    Log.d(TAG, "Wave response: " + BLEAgent.bytesToHex(value));
 
                 if( ! buildResponse( value ) ) {
-                    Log.d( TAG, "Partial message detected. " + responseSize +
+                    if( DEBUG )
+                        Log.d( TAG, "Partial message detected. " + responseSize +
                             " of " + MarshalByte.SIZE.parse( response ) + " bytes.");
                     return false;
                 }
@@ -318,7 +324,8 @@ public class WaveRequest {
                     logFailure( false, "Received failure response code from wave.");
                     success = false;
                 } else if( responseCode == op.SUCCESS ) {
-                    Log.d( TAG, " wave indicates success.");
+                    if( DEBUG )
+                        Log.d( TAG, " wave indicates success.");
                 } else {
                     logFailure(false, "Mismatch ops, received "
                             + BLEAgent.byteToHex( responseCode ) + " expected "
@@ -570,7 +577,8 @@ public class WaveRequest {
         public boolean dispatch(BLEAgent agent) {
             final Calendar cal = UTC.newCal();
             final Date now = new Date();
-            Log.d( TAG, "Setting time as " + UTC.isoFormat( now ) + " (" + now + ")" );
+            if( DEBUG )
+                Log.d( TAG, "Setting time as " + UTC.isoFormat( now ) + " (" + now + ")" );
             cal.setTime( now );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );

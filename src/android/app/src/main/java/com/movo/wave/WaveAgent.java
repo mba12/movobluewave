@@ -20,6 +20,8 @@ import java.util.Set;
  */
 public class WaveAgent {
 
+    static boolean DEBUG = false;
+
     final static String TAG = "WaveAgent";
 
     public static class WaveDevice {
@@ -403,16 +405,18 @@ public class WaveAgent {
 
                     if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
                         //skip reserved values.
+
                         Log.v(TAG, "Dropping point(mode): " + point );
                         continue;
                     } else if( point.date.compareTo( deviceDate ) > 0 ) {
                         //skip future data.
-                        Log.v(TAG, "Dropping point(date): " + point );
+                        if( DEBUG )
+                            Log.v(TAG, "Dropping point(date): " + point );
                         continue;
                     }
                     data.add(point);
                 }
-                if( dump ) {
+                if( dump && DEBUG ) {
                     Log.i( TAG, "DUMP START: " + day + " " + hour );
                     for (WaveRequest.WaveDataPoint point : data) {
                         Log.i( TAG, "DUMP: " + point );
