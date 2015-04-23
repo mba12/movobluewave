@@ -20,6 +20,7 @@ import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 
@@ -33,6 +34,7 @@ public class FirstLogin extends Activity {
     Firebase loginRef;
     Context c;
     String TAG = "Movo.FirstLogin";
+    ProgressBar loginProgress;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +48,7 @@ public class FirstLogin extends Activity {
 
         username = (EditText) findViewById(R.id.username);
         pass = (EditText) findViewById(R.id.password);
+        loginProgress = (ProgressBar) findViewById(R.id.progressBarLogin);
 
 
 
@@ -54,6 +57,7 @@ public class FirstLogin extends Activity {
             public void onClick(View v) {
                 mEmail = username.getText().toString();
                 mPassword = pass.getText().toString();
+                loginProgress.setVisibility(View.VISIBLE);
                 loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                     @Override
                     public void onAuthenticated(AuthData authData) {
@@ -65,18 +69,30 @@ public class FirstLogin extends Activity {
                         myData.setCurPW(mPassword);
                         Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
                         myData.setCurrentUserRef(currentUserRef);
-                        myData.addCurUserTolist();
+                        boolean firstTime = myData.addCurUserTolist();
+
+                        if(firstTime){
+
+                        }else{
+
+                        }
+                        loginProgress.setVisibility(View.INVISIBLE);
+
 
                         Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
                         Intent intent = new Intent(getApplicationContext(),
                                 Home.class);
                         startActivity(intent);
 
+
+
+
+
                     }
 
                     @Override
                     public void onAuthenticationError(FirebaseError firebaseError) {
-                        System.out.println("Error logging in. ");
+                        Log.d(TAG,"Error logging in. ");
 
                         Toast.makeText(c, "Could not Authenticate user", Toast.LENGTH_SHORT);
                     }

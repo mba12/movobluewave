@@ -29,6 +29,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
@@ -352,7 +353,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
      * the user.
      */
     public class UserLoginTask extends AsyncTask<Void, Void, Boolean> {
-
+        boolean result = true;
         private final String mEmail;
         private final String mPassword;
 
@@ -363,41 +364,16 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
             mEmail = email;
             mPassword = password;
         }
-        //This is a little bit of a kludgey way to do this. But if login fails, it tries user create, if that succeeds, it tries login.
         @Override
         protected Boolean doInBackground(Void... params) {
 
             UserData.getUserData(c).storeCurrentUser();
 
-//                //this works to create new user
-//            ref.createUser("philgtest@sensorstar.com", "testpassword", new Firebase.ValueResultHandler<Map<String, Object>>() {
-//                @Override
-//                public void onSuccess(Map<String, Object> result) {
-//                    System.out.println("Successfully created user account with uid: " + result.get("uid"));
-//                }
-//                @Override
-//                public void onError(FirebaseError firebaseError) {
-//                    System.out.println("Error creating user: " + firebaseError.getDetails());
-//                }
-//            });
-            //this will check if user already exists
-//            userRef.child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot snapshot) {
-//                    if (snapshot.getValue() !== null) {
-//                        //user exists, do something
-//                    } else {
-//                        //user does not exist, do something else
-//                    }
-//                }
-//                @Override
-//                public void onCancelled(FirebaseError arg0) {
-//                }
-//            });
 
             loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                 @Override
                 public void onAuthenticated(AuthData authData) {
+                    result = true;
                     //success, save auth data
                     UserData myData = UserData.getUserData(c);
                     myData.setCurUID(authData.getUid());
@@ -409,63 +385,52 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                     Log.d(TAG,"User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
                     updateHomePage();
 
-                    //this bit of code was a test to see if I could filter by UID to get data, it worked.
-//                    Firebase ref2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+myData.getCurUID());
-//                    ref2.addValueEventListener(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot snapshot) {
-//                            System.out.println(snapshot.getValue());
-//                        }
-//                        @Override
-//                        public void onCancelled(FirebaseError firebaseError) {
-//                            System.out.println("The read failed: " + firebaseError.getMessage());
-//                        }
-//                    });
-
-                    //Home.refreshCharts();
 
                 }
                 @Override
                 public void onAuthenticationError(FirebaseError firebaseError) {
+                    result = false;
                     System.out.println("Error logging in, trying user create. ");
-                    //this works to create new user
-                    loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
-                        @Override
-                        public void onSuccess(Map<String, Object> result) {
-                            System.out.println("Successfully created user account with uid: " + result.get("uid"));
-                            loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
-                                @Override
-                                public void onAuthenticated(AuthData authData) {
-                                    //success, save auth data
-                                    UserData myData = UserData.getUserData(c);
-                                    myData.setCurUID(authData.getUid());
-                                    myData.setCurToken(authData.getToken());
-                                    myData.setCurEmail(mEmail);
-                                    myData.setCurPW(mPassword);
-                                    myData.addCurUserTolist();
+                    Toast.makeText(c, "Error logging into user "+mEmail+".",Toast.LENGTH_SHORT);
 
-                                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                                    updateHomePage();
-
-                                }
-
-                                @Override
-                                public void onAuthenticationError(FirebaseError firebaseError) {
-                                    Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
-
-                                }
-                            });
-                        }
-                        @Override
-                        public void onError(FirebaseError firebaseError) {
-                            Log.d(TAG,"Error creating user: " + firebaseError.getDetails());
-                        }
-                    });
+                    //this works to create new user...really bad place to put it really.
+//                    loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
+//                        @Override
+//                        public void onSuccess(Map<String, Object> result) {
+//                            System.out.println("Successfully created user account with uid: " + result.get("uid"));
+//                            loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
+//                                @Override
+//                                public void onAuthenticated(AuthData authData) {
+//                                    //success, save auth data
+//                                    UserData myData = UserData.getUserData(c);
+//                                    myData.setCurUID(authData.getUid());
+//                                    myData.setCurToken(authData.getToken());
+//                                    myData.setCurEmail(mEmail);
+//                                    myData.setCurPW(mPassword);
+//                                    myData.addCurUserTolist();
+//
+//                                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+//                                    updateHomePage();
+//
+//                                }
+//
+//                                @Override
+//                                public void onAuthenticationError(FirebaseError firebaseError) {
+//                                    Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
+//
+//                                }
+//                            });
+//                        }
+//                        @Override
+//                        public void onError(FirebaseError firebaseError) {
+//                            Log.d(TAG,"Error creating user: " + firebaseError.getDetails());
+//                        }
+//                    });
 
                 }
             });
 
-            return true;
+            return result;
         }
 
         @Override
@@ -477,7 +442,7 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
 //                Home.refreshCharts();
                 finish();
             } else {
-                mPasswordView.setError(getString(R.string.error_incorrect_password));
+                mPasswordView.setError("Error logging in");
                 mPasswordView.requestFocus();
             }
         }

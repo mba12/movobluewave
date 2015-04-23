@@ -214,7 +214,48 @@ public class UserData extends Activity{
         }
     }
 
+
+
+
+    public boolean logoutCurrentUser(){
+        String storeUID = currentUID;
+
+
+        SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+        ArrayList<String> allUsersReturn = new ArrayList<>();
+
+
+        SharedPreferences.Editor allUsersEditor = allUsers.edit();
+        allUsersEditor.remove(currentUID);
+
+        allUsersEditor.commit();
+
+        allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+
+
+        ArrayList<String> users = new ArrayList<String>();
+        users = getUserList();
+        if(!users.isEmpty()) {
+
+            String uid = getUIDByEmail(users.get(0));
+            loadNewUser(uid);
+
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+            prefs.edit().putBoolean("userExists", true);
+            return true;
+        }else{
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+            prefs.edit().putBoolean("userExists", false);
+            instance = null;
+            return false;
+
+        }
+    }
+
+
+
     public boolean addCurUserTolist(){
+        boolean userAlreadyExists = false;
         Map<String, String> userDataString = new HashMap<String, String>();
         userDataString.put("currentUID", currentUID);
         userDataString.put("currentToken", currentToken);
@@ -235,10 +276,13 @@ public class UserData extends Activity{
 
         if (!(allUsers.contains(currentUID))) {
             allUsersEditor.putString(currentUID, currentEmail);
+            userAlreadyExists = false;
+        }else{
+            userAlreadyExists = true;
         }
         allUsersEditor.commit();
 
-        return true;
+        return userAlreadyExists;
     }
 
 
@@ -261,6 +305,10 @@ public class UserData extends Activity{
 
         return true;
 
+    }
+
+    public String getCurrentUserEmail(){
+       return currentEmail;
     }
 
     public ArrayList<String> getUserList(){
