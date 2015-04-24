@@ -827,6 +827,7 @@ public class Home extends ActionBarActivity {
         db.beginTransaction();
         boolean success = false;
         int ret = 0;
+        int skippedForZero = 0;
         try {
             for (WaveRequest.WaveDataPoint point : points) {
                 if(point.value!=0) {
@@ -834,10 +835,11 @@ public class Home extends ActionBarActivity {
                     ret += 1;
                 }
                 }else{
-                    Log.d(TAG, "Not inserting object, steps are 0");
+                    skippedForZero += 1;
+
                 }
             }
-//            db.setTransactionSuccessful();
+            Log.d(TAG, "Skipped " + skippedForZero + " objects with 0 steps.");
             db.setTransactionSuccessful();
             success = true;
         } finally {

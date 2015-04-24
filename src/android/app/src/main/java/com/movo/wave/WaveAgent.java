@@ -5,6 +5,8 @@ package com.movo.wave;
 import android.speech.tts.SynthesisCallback;
 import android.util.Log;
 
+import com.movo.wave.util.LazyLogger;
+
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,9 +22,7 @@ import java.util.Set;
  */
 public class WaveAgent {
 
-    static boolean DEBUG = false;
-
-    final static String TAG = "WaveAgent";
+    final private static LazyLogger lazyLog = new LazyLogger( "WaveAgent" );
 
     public static class WaveDevice {
         final public BLEAgent.BLEDevice ble;
@@ -97,7 +97,7 @@ public class WaveAgent {
                     }
 
                 } else if( ! callback.seen.contains( device )
-                        && "Wave".equals( device.device.getName() ) ) {
+                        && "Wave".equals(device.device.getName()) ) {
 
                     /*
                      AH 2015-04-19: Connect to prevent devices from getting board before we can
@@ -119,12 +119,12 @@ public class WaveAgent {
                         protected void onComplete(boolean success, String serial) {
 
                             if( ! success ) {
-                                Log.w( WaveAgent.TAG, "scanForWaveDevices(): couldn't scan device "
-                                        + device.device.getAddress());
+                                WaveAgent.lazyLog.w( "scanForWaveDevices(): couldn't scan device "
+                                       , device.device.getAddress());
                             } else {
                                 final WaveDevice wave = new WaveDevice(device, "UNKNOWN", serial);
-                                Log.d(WaveAgent.TAG, "Pairing device '" + device.device.getAddress() +
-                                        "' to serial '" + serial + "'");
+                                WaveAgent.lazyLog.d("Pairing device '", device.device.getAddress(),
+                                        "' to serial '", serial, "'");
                                 deviceMap.put(device, wave);
                                 callback.notify(wave);
                             }
@@ -149,7 +149,8 @@ public class WaveAgent {
      */
     protected static class DataSync {
 
-        final static String TAG = "WaveAgent::DataSync";
+        //final private static LazyLogger lazyLog = new LazyLogger("WaveAgent::DataSync");
+        final private static LazyLogger lazyLog = new LazyLogger("WaveAgent::DataSync",WaveAgent.lazyLog);
 
         /** Callback for state notifications
          * Can be used for multiple sync sessions. Each sync session will present it's object as
@@ -312,23 +313,23 @@ public class WaveAgent {
             progress();
             callback.notify( this, state, success );
 
-            Log.v( TAG, this.toString() + "\tState was: " + state + " (" + success + ")" );
+            lazyLog.v( this.toString(), "\tState was: ", state, " (", success, ")" );
 
             if( success ) {
 
                 state = state.next();
-                Log.v( TAG, this.toString() + "\tState now: " + state );
+                lazyLog.v( this.toString(), "\tState now: ", state );
 
                 switch (state) {
                     case VERSION:
-                        Log.d( TAG, "DeviceName: '" + device.device.getName() +
-                                "' DeviceAddress: " + device.device.getAddress() );
+                        lazyLog.d( "DeviceName: '", device.device.getName(),
+                                "' DeviceAddress: ", device.device.getAddress() );
                         BLEAgent.handle(new WaveRequest.ReadVersion(device, timeout) {
                             @Override
                             protected void onComplete(boolean success, final String version) {
                                 if( version != null && ! version.equals("4E4F2E31") ) {
-                                    Log.e(DataSync.TAG, "Unrecognized device version: '" + version
-                                            + "' address: " + device.device.getAddress());
+                                    DataSync.lazyLog.e("Unrecognized device version: '", version
+                                           , "' address: ", device.device.getAddress());
                                 }
                                 nextState( success );
                             }
@@ -340,8 +341,8 @@ public class WaveAgent {
                             protected void onComplete(boolean success, Date date) {
                                 deviceDate = date;
                                 localDate = new Date();
-                                Log.i( DataSync.TAG, "Device Time: " + WaveRequest.UTC.isoFormat( deviceDate ) );
-                                Log.i( DataSync.TAG, "Local Time: " + WaveRequest.UTC.isoFormat( localDate ) );
+                                DataSync.lazyLog.i( "Device Time: ", WaveRequest.UTC.isoFormat( deviceDate ) );
+                                DataSync.lazyLog.i( "Local Time: ", WaveRequest.UTC.isoFormat( localDate ) );
                                 nextState(success);
                             }
                         });
@@ -361,7 +362,7 @@ public class WaveAgent {
                         callback.complete( this, data );
                         break;
                     default:
-                        Log.e( TAG, "Unexpected state: " + state);
+                        lazyLog.e( "Unexpected state: ", state);
                         break;
                 }
             } else {
@@ -406,26 +407,25 @@ public class WaveAgent {
                     if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
                         //skip reserved values.
 
-                        Log.v(TAG, "Dropping point(mode): " + point );
+                        lazyLog.v("Dropping point(mode): ", point );
                         continue;
                     } else if( point.date.compareTo( deviceDate ) > 0 ) {
                         //skip future data.
-                        if( DEBUG )
-                            Log.v(TAG, "Dropping point(date): " + point );
+                        lazyLog.v("Dropping point(date): ", point );
                         continue;
                     }
                     data.add(point);
                 }
-                if( dump && DEBUG ) {
-                    Log.i( TAG, "DUMP START: " + day + " " + hour );
+                if( dump ) {
+                    lazyLog.i( "DUMP START: ", day, " ", hour );
                     for (WaveRequest.WaveDataPoint point : data) {
-                        Log.i( TAG, "DUMP: " + point );
+                        lazyLog.i( "DUMP: ", point );
                     }
-                    Log.i( TAG, "DUMP END: " + day + " " + hour );
+                    lazyLog.i( "DUMP END: ", day, " ", hour );
                 }
             } else {
                 dataFailure += 1;
-                Log.w(TAG, "FAILED data: " + day + " " + hour );
+                lazyLog.w("FAILED data: ", day, " ", hour );
             }
 
             if( dataSuccess + dataFailure == 7 * 24 / 3 ) {

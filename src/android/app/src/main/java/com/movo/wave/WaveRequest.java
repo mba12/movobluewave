@@ -5,6 +5,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.util.Log;
 import android.util.Pair;
 
+import com.movo.wave.util.LazyLogger;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -29,7 +31,10 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
-    static boolean DEBUG = false;
+    /** logger
+     *
+     */
+    final static private LazyLogger lazyLog = new LazyLogger( "WaveRequest", false );
 
     /** Utility namespace for using UTC time
      * All wave devices are dealt with in UTC.
@@ -79,7 +84,7 @@ public class WaveRequest {
         private UTC() {}
     }
 
-    final static String TAG = "WaveRequest";
+
 
     /** Enum describing wave operation byte codes
      * Op codes entered from spec.
@@ -123,7 +128,7 @@ public class WaveRequest {
      */
     abstract public static class BLERequestWaveOp extends BLEAgent.BLERequest {
 
-        static final String TAG = "BLERequestWaveOp";
+        static final LazyLogger lazyLog = new LazyLogger( "BLERequestWaveOp", WaveRequest.lazyLog );
 
         static final UUID notifyCharacteristicUUID =
                 UUID.fromString( "0000ffe4-0000-1000-8000-00805f9b34fb" );
@@ -146,12 +151,6 @@ public class WaveRequest {
             notifyUUIDs = new Pair<>( notifyServiceUUID, notifyCharacteristicUUID );
         }
 
-        static protected void logFailure( final boolean success, final String msg ) {
-            if( ! success ) {
-                Log.e( TAG, "Failure: " + msg );
-            }
-        }
-
         // Meat and potatoes of this class: setup an array with op, expect response with op.
         final protected WaveOp op;
         final protected byte[] message;
@@ -167,7 +166,7 @@ public class WaveRequest {
          */
         private boolean buildResponse( final byte[] responsePart ) {
             if( responseSize == 0 && MarshalByte.OP.parse( responsePart ) == 0x00 ) {
-                Log.w( TAG, "Skipping bad preamble" );
+                lazyLog.w( "Skipping bad preamble" );
                 return false;
             }
             System.arraycopy( responsePart, 0, response, responseSize, responsePart.length );
@@ -206,7 +205,7 @@ public class WaveRequest {
                                  int timeout ){
             super( device, timeout );
             // Spec says limit is 200 bytes
-            logFailure( bodySize <= 200, "Message length " + bodySize + " too long!!!!");
+            lazyLog.a(bodySize <= 200, "Message length ", bodySize, " too long!!!!");
             this.op = op;
             message = new byte[ bodySize + 3 ];
             MarshalByte.OP.put( message, op.CODE );
@@ -219,13 +218,13 @@ public class WaveRequest {
          * @return checksum byte
          */
         public static byte calcChecksum( final byte[] message ) {
-            logFailure( message.length >= 3, "Message too small! " + message.length);
+            lazyLog.a(message.length >= 3, "Message too small! ", message.length);
             if( message.length == 3 ) {
                 return 0x00;
             } else {
                 byte ret = message[ 2 ];
                 final int limit = 2 + MarshalByte.SIZE.parse(message);
-                logFailure( limit < message.length, " Message length exceeds buffer!" );
+                lazyLog.a(limit < message.length, " Message length exceeds buffer!");
                 for( int index = 3; index < limit; index++ ) {
                     ret ^= message[ index ];
                 }
@@ -241,10 +240,10 @@ public class WaveRequest {
          * @return checksum byte
          */
         public static byte getChecksum( final byte[] message ) {
-            logFailure( message.length >= 3, "Message too short! " + message.length );
+            lazyLog.a(message.length >= 3, "Message too short! ", message.length);
             final int index = 2 + MarshalByte.SIZE.parse(message);
-            logFailure( message.length >= index, "index larger than message " + index
-                    + " " + message.length );
+            lazyLog.a(message.length >= index, "index larger than message ", index
+                   , " ", message.length);
             return message[ index ];
         }
 
@@ -260,9 +259,8 @@ public class WaveRequest {
             final BluetoothGattCharacteristic characteristic = device.getCharacteristic( writeUUIDs );
             characteristic.setValue(message);
 
-            if( DEBUG )
-                Log.d( TAG, "Sending message: " + BLEAgent.bytesToHex( message ));
-            logFailure(device.gatt.writeCharacteristic(characteristic),
+            lazyLog.d(  "Sending message: ", BLEAgent.bytesToHex( message ));
+            lazyLog.a(device.gatt.writeCharacteristic(characteristic),
                     "start write to wave");
             return false;
         }
@@ -284,28 +282,26 @@ public class WaveRequest {
             if( characteristic.getUuid().equals( writeCharacteristicUUID )) {
                 final boolean ret = BluetoothGatt.GATT_SUCCESS != status;
                 final byte[] sent = characteristic.getValue();
-                logFailure( sent.equals( message ), "Sent message doesn't match constructed! Sent: "
-                        + BLEAgent.bytesToHex(sent) + " Constructed: "
-                        + BLEAgent.bytesToHex(message));
+                lazyLog.a(sent.equals(message), "Sent message doesn't match constructed! Sent: "
+                       , BLEAgent.bytesToHex(sent), " Constructed: "
+                       , BLEAgent.bytesToHex(message));
 
                 if( ret ) {
-                    Log.e( TAG, "FAILED: write to wave device: " + device.device.getAddress() );
+                    lazyLog.e(  "FAILED: write to wave device: ", device.device.getAddress() );
                     onComplete(false, null);
                 }
                 return ret;
 
                 // on notify
             } else if( characteristic.getUuid().equals( notifyCharacteristicUUID )) {
-                logFailure(status == BluetoothGatt.GATT_SUCCESS, "complete notify from wave");
+                lazyLog.a(status == BluetoothGatt.GATT_SUCCESS, "complete notify from wave");
                 final byte[] value = characteristic.getValue();
 
-                if( DEBUG )
-                    Log.d(TAG, "Wave response: " + BLEAgent.bytesToHex(value));
+                lazyLog.d( "Wave response: ", BLEAgent.bytesToHex(value));
 
                 if( ! buildResponse( value ) ) {
-                    if( DEBUG )
-                        Log.d( TAG, "Partial message detected. " + responseSize +
-                            " of " + MarshalByte.SIZE.parse( response ) + " bytes.");
+                    lazyLog.d(  "Partial message detected. ", responseSize,
+                            " of ", MarshalByte.SIZE.parse( response ), " bytes.");
                     return false;
                 }
 
@@ -314,23 +310,22 @@ public class WaveRequest {
 
                 boolean success = check == checksum;
 
-                logFailure(success, "Checksum mismatch. received "
-                        + BLEAgent.byteToHex(checksum) + " expected "
-                        + BLEAgent.byteToHex(check));
+                lazyLog.a(success, "Checksum mismatch. received "
+                       , BLEAgent.byteToHex(checksum), " expected "
+                       , BLEAgent.byteToHex(check));
 
                 final byte responseCode = (byte) MarshalByte.OP.parse( response );
 
                 if( responseCode == op.FAILURE ) {
-                    logFailure( false, "Received failure response code from wave.");
+                    lazyLog.a(false, "Received failure response code from wave.");
                     success = false;
                 } else if( responseCode == op.SUCCESS ) {
-                    if( DEBUG )
-                        Log.d( TAG, " wave indicates success.");
+                    lazyLog.d(  " wave indicates success.");
                 } else {
-                    logFailure(false, "Mismatch ops, received "
-                            + BLEAgent.byteToHex( responseCode ) + " expected "
-                            + BLEAgent.byteToHex( op.SUCCESS) + " or "
-                            + BLEAgent.byteToHex( op.FAILURE ));
+                    lazyLog.a(false, "Mismatch ops, received "
+                           , BLEAgent.byteToHex(responseCode), " expected "
+                           , BLEAgent.byteToHex(op.SUCCESS), " or "
+                           , BLEAgent.byteToHex(op.FAILURE));
                     success = false;
                 }
 
@@ -439,7 +434,8 @@ public class WaveRequest {
         DEVICE_LID          ( 2, 0x01, 0x09, 0 );
         ;
 
-        final static String TAG = "WaveAgent.MarshalByte";
+        final private static LazyLogger lazyLog = new LazyLogger( "WaveAgent.MarshalByte",
+                WaveRequest.lazyLog );
 
         private final int index;    //* index: raw index in message byte array.
         private final int min;      //* min: lower (inclusive) bounds for byte value.
@@ -448,7 +444,7 @@ public class WaveRequest {
 
         private MarshalByte(final int index, final int min, final int max, final int offset) {
             if( ( min < 0 && max > 127 ) || min < -128 || max > 255 || min > max ) {
-                Log.e( TAG, "Error, illegal range for casting: [" + min + "," + max + "]" );
+                WaveRequest.lazyLog.e("Error, illegal range for casting: [", min, ",", max, "]");
             }
             this.index = index;
             this.min = min;
@@ -458,8 +454,8 @@ public class WaveRequest {
 
         private void checkRange( int value ) {
             if( value < min || value > max ) {
-                Log.e("WaveAgent::MessageByte", "Value exceeds bounds("
-                        + min + "," + max + "): " + value);
+                lazyLog.e("WaveAgent::MessageByte", "Value exceeds bounds("
+                       , min, ",", max, "): ", value);
             }
         }
 
@@ -498,8 +494,8 @@ public class WaveRequest {
         public void put( byte[] buffer, int value, int offset ) {
             value -= this.offset;
             if( value < min || value > max ) {
-                Log.e("WaveAgent::MessageByte", "Value exceeds bounds("
-                        + min + "," + max + "): " + value);
+                lazyLog.e("WaveAgent::MessageByte", "Value exceeds bounds("
+                       , min, ",", max, "): ", value);
             }
             buffer[ index + offset ] = (byte)value;
         }
@@ -577,8 +573,7 @@ public class WaveRequest {
         public boolean dispatch(BLEAgent agent) {
             final Calendar cal = UTC.newCal();
             final Date now = new Date();
-            if( DEBUG )
-                Log.d( TAG, "Setting time as " + UTC.isoFormat( now ) + " (" + now + ")" );
+            lazyLog.d(  "Setting time as ", UTC.isoFormat( now ), " (", now, ")" );
             cal.setTime( now );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
@@ -699,7 +694,7 @@ public class WaveRequest {
                 case (0x02):
                     return Mode.SPORTS;
                 default:
-                    //Log.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
+                    //lazyLog.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
                     return Mode.RESERVED;
             }
         }
@@ -801,7 +796,8 @@ public class WaveRequest {
      */
     abstract static public class DataByDay extends BLERequestWaveOp {
 
-        final static String TAG = "WaveRequest::DataByDate";
+        final private static LazyLogger lazyLog = new LazyLogger( "DataByDate",
+                BLERequestWaveOp.lazyLog );
 
         protected final Date date;
         final int hour;
@@ -849,28 +845,28 @@ public class WaveRequest {
 
                 final Date responseDate;
 
-                Log.d( TAG, "Response date stamp: " + year + "-" + month + "-" + date +
-                        "(" + day + ") " + hour + ":00:00" );
+                lazyLog.d(  "Response date stamp: ", year, "-", month, "-", date,
+                        "(", day, ") ", hour, ":00:00" );
                 if( this.date != null ) {
                     responseDate = this.date;
-                    logFailure(year == this.date.getYear(), "Year mismatch "
-                            + year + " " + this.date.getYear());
-                    logFailure(month == this.date.getMonth(), "Month mismatch "
-                            + month + " " + this.date.getMonth());
-                    logFailure(date == this.date.getDate(), "Date mismatch "
-                            + date + " " + this.date.getDate());
+                    lazyLog.a(year == this.date.getYear(), "Year mismatch "
+                           , year, " ", this.date.getYear());
+                    lazyLog.a(month == this.date.getMonth(), "Month mismatch "
+                           , month, " ", this.date.getMonth());
+                    lazyLog.a(date == this.date.getDate(), "Date mismatch "
+                           , date, " ", this.date.getDate());
                 } else {
                     responseDate = new Date( year, month, date, hour, 0, 0 );
                 }
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
-                Log.d( TAG, "Data by date for " + responseDate + " returned " + qty +
-                        " data points. (day: " + day + ", hour: " + hour + ")." );
+                lazyLog.d(  "Data by date for ", responseDate, " returned ", qty,
+                        " data points. (day: ", day, ", hour: ", hour, ")." );
 
                 ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date, hour );
             } else {
-                Log.d( TAG, "Failed to get data (day: " + day + ", hour: " + hour + ")." );
+                lazyLog.d(  "Failed to get data (day: ", day, ", hour: ", hour, ")." );
             }
 
             onComplete( success, ret );
@@ -903,7 +899,7 @@ public class WaveRequest {
             super( WaveOp.SET_NAME, bodySize, device, timeout );
             final char[] chars = name.toCharArray();
             final int copyLimit = Math.min(bodySize, chars.length);
-            logFailure( copyLimit == chars.length, "Requested name longer than 15: " + name );
+            lazyLog.a(copyLimit == chars.length, "Requested name longer than 15: ", name);
 
             for( int index = 0; index < copyLimit; index++ ) {
                 message[ index + 2 ] = (byte) chars[ index ];
@@ -991,7 +987,7 @@ public class WaveRequest {
 
             if( lid == LocalIdentifier.BATTERY) {
 
-                Log.e(TAG, "Parsing of battery data not implemented");
+                lazyLog.e( "Parsing of battery data not implemented");
                 success = false;
             } else {
                 if (success) {
