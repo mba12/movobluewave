@@ -75,6 +75,7 @@ public class Home extends ActionBarActivity {
     private CharSequence mTitle;
     Firebase currentUserRef;
     String[] menuOptions;
+    TextView currentUserTV;
     public static String TAG = "Movo Wave V2";
 
 
@@ -111,9 +112,7 @@ public class Home extends ActionBarActivity {
         //this gets our user steps. We will save the data out and display it
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
-        UserData myUserData = UserData.getUserData(c);
-        ArrayList<String> users = new ArrayList<String>();
-        users = myUserData.getUserList();
+
         chart = (LineChart) findViewById(R.id.chart);
         ImageView chartToggle = (ImageView) findViewById(R.id.chartButton);
 //        chartToggle.setOnClickListener();
@@ -131,12 +130,20 @@ public class Home extends ActionBarActivity {
 
             }
         });
+
+//        UserData myUserData = UserData.getUserData(c);
+        ArrayList<String> users = new ArrayList<String>();
+        users = myData.getUserList();
         if(!users.isEmpty()) {
             if(userExists==true) {
                 setUpCharts(c);
+                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+                currentUserTV.setText(myData.getCurrentUserEmail());
             }else{
                 String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
                 UserData.getUserData(c).loadNewUser(uid);
+                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+                currentUserTV.setText(myData.getCurrentUserEmail());
                 setUpCharts(c);
             }
         }else{
@@ -223,6 +230,8 @@ public class Home extends ActionBarActivity {
         }
         gridview.invalidate();
         chart.invalidate();
+        TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+        currentUserTV.setText(UserData.getUserData(c).getCurrentUserEmail());
     }
 
 
@@ -480,7 +489,7 @@ public class Home extends ActionBarActivity {
 
     public void login(){
         Intent intent = new Intent(getApplicationContext(),
-                LoginActivity.class);
+                FirstLogin.class);
         startActivity(intent);
     }
     public void users(){
@@ -490,7 +499,12 @@ public class Home extends ActionBarActivity {
     }
     public void logout(){
         UserData mUD = UserData.getUserData(c);
-        mUD.storeCurrentUser();
+        boolean status = mUD.logoutCurrentUser();
+        if(!status){
+            Intent intent = new Intent(getApplicationContext(),
+                    FirstLaunch.class);
+            startActivity(intent);
+        }
     }
 
     public static void setUpChartsExternalCall(Context c){

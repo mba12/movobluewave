@@ -6,24 +6,27 @@
     <EditText
         android:id="@+id/username"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:gravity="center_horizontal"
+        android:layout_height="40dip"
+        android:gravity="center"
         android:singleLine="true"
         android:background="@android:color/white"
-        android:hint="Email"/>
+        android:hint="Email"
+        android:layout_above="@+id/loginButton"
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="200dp" />
 
     <EditText
         android:id="@+id/password"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/username"
-        android:gravity="center_horizontal"
-        android:layout_alignLeft="@+id/username"
+        android:layout_height="40dip"
+        android:gravity="center"
         android:background="@android:color/white"
         android:password="true"
         android:singleLine="true"
-        android:hint="Password"/>
+        android:hint="Password"
+        android:layout_alignTop="@+id/username"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="93dp" />
 
     <Button
         android:id="@+id/loginButton"
@@ -46,4 +49,13 @@
         android:textColor="@android:color/darker_gray"
 
         />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBarLogin"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:indeterminate="false"
+        android:visibility="gone"/>
 </RelativeLayout>
