@@ -2,12 +2,9 @@ package com.movo.wave;
 
 //Created by Alexander Haase on 4/10/2015.
 
-import android.speech.tts.SynthesisCallback;
-import android.util.Log;
-
 import com.movo.wave.util.LazyLogger;
+import com.movo.wave.util.UTC;
 
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -329,7 +326,7 @@ public class WaveAgent {
                             protected void onComplete(boolean success, final String version) {
                                 if( version != null && ! version.equals("4E4F2E31") ) {
                                     DataSync.lazyLog.e("Unrecognized device version: '", version
-                                           , "' address: ", device.device.getAddress());
+                                            , "' address: ", device.device.getAddress());
                                 }
                                 nextState( success );
                             }
@@ -341,8 +338,8 @@ public class WaveAgent {
                             protected void onComplete(boolean success, Date date) {
                                 deviceDate = date;
                                 localDate = new Date();
-                                DataSync.lazyLog.i( "Device Time: ", WaveRequest.UTC.isoFormat( deviceDate ) );
-                                DataSync.lazyLog.i( "Local Time: ", WaveRequest.UTC.isoFormat( localDate ) );
+                                DataSync.lazyLog.i( "Device Time: ", UTC.isoFormat( deviceDate ) );
+                                DataSync.lazyLog.i( "Local Time: ", UTC.isoFormat( localDate ) );
                                 nextState(success);
                             }
                         });
@@ -407,11 +404,11 @@ public class WaveAgent {
                     if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
                         //skip reserved values.
 
-                        lazyLog.v("Dropping point(mode): ", point );
+                        //lazyLog.v("Dropping point(mode): ", point );
                         continue;
                     } else if( point.date.compareTo( deviceDate ) > 0 ) {
                         //skip future data.
-                        lazyLog.v("Dropping point(date): ", point );
+                        lazyLog.w("Dropping point(future date): ", point);
                         continue;
                     }
                     data.add(point);
