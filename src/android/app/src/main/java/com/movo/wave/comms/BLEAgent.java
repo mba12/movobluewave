@@ -1,4 +1,4 @@
-package com.movo.wave;
+package com.movo.wave.comms;
 
 
 import android.bluetooth.BluetoothAdapter;
@@ -12,8 +12,9 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 import android.util.Pair;
+
+import com.movo.wave.util.LazyLogger;
 
 import java.util.Collections;
 import java.util.Date;
@@ -47,6 +48,11 @@ import java.util.HashSet;
  * @author Alexander Haase
  */
 public class BLEAgent {
+
+    /** Logger
+     *
+     */
+    private final static LazyLogger lazyLog = new LazyLogger( "BLEAgent", false );
 
     /**
      * bytesToHex method
@@ -107,7 +113,6 @@ public class BLEAgent {
     // singleton instance, only available via handle() to requests
     final static private BLEAgent self = new BLEAgent();
 
-    private final static String TAG = "BLEAgent";
     private static Context context;
 
     private static Handler UIHandler;
@@ -130,19 +135,19 @@ public class BLEAgent {
                 self.adapter = btManager.getAdapter();
 
                 if( self.adapter == null || !self.adapter.isEnabled() ) {
-                    Log.e( TAG, "Bluetooth not enabled!");
+                    lazyLog.e( "Bluetooth not enabled!");
                 } else {
-                    Log.d( TAG, "Initialized" );
+                    lazyLog.d("Initialized" );
                 }
 
             } else if (ctx != context) {
-                Log.e(TAG, "Error, BLEAgent already open! (and context references differ): " +
-                        context + " != " + ctx);
+                lazyLog.e( "Error, BLEAgent already open! (and context references differ): ",
+                        context, " != ", ctx);
                 ret = false;
             }
             mutex.release();
         } catch ( InterruptedException e ) {
-            Log.e( TAG, "Unexpected interrupt in open()" );
+            lazyLog.e( "Unexpected interrupt in open()" );
             ret = false;
         }
         return ret;
@@ -156,10 +161,10 @@ public class BLEAgent {
      */
      private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         private boolean checkGatt( final BluetoothGatt gatt ) {
-            logFailure( currentOp != null, "Expected op");
-            logFailure( currentDevice != null, "Expected request");
+            lazyLog.a(currentOp != null, "Expected op");
+            lazyLog.a(currentDevice != null, "Expected request");
             if( currentDevice != null )
-                logFailure( currentDevice.gatt == gatt, "Gatt objects mismatch");
+                lazyLog.a(currentDevice.gatt == gatt, "Gatt objects mismatch");
             return currentOp != null && currentDevice != null && currentDevice.gatt == gatt;
         }
 
@@ -177,22 +182,22 @@ public class BLEAgent {
                         }
                     } else {
                         //try to lookup device
-                        Log.i( TAG, "Trying to reroute connection state to device... " );
+                        lazyLog.i( "Trying to reroute connection state to device... " );
                         final String address = gatt.getDevice().getAddress();
                         final BLEDevice device = deviceMap.get( address );
 
                         if (device != null) {
-                            Log.i( TAG, address + " " +
-                                    DebugOp.describeState( device.connectionState ) + " => " +
+                            lazyLog.i( address, " ",
+                                    DebugOp.describeState( device.connectionState ), " => ",
                                     DebugOp.describeState( newState ));
                             device.connectionState = newState;
                             if( device != currentDevice &&
                                     newState != BluetoothGatt.STATE_DISCONNECTED ) {
-                                Log.i( TAG, "Disconnecting from errant device: " + address );
+                                lazyLog.i( "Disconnecting from errant device: ", address );
                                 //gatt.disconnect();
                             }
                         } else {
-                            Log.e( TAG, "Failed to look up device for " + address );
+                            lazyLog.e( "Failed to look up device for ", address );
                         }
 
                     }
@@ -315,7 +320,7 @@ public class BLEAgent {
             this.lastSeen = seen;
             this.device = device;
             this.gatt = device.connectGatt( context, false, self.gattCallback );
-            logFailure( this.gatt != null, "BLEDevice failed at connectGatt()!");
+            lazyLog.a( this.gatt != null, "BLEDevice failed at connectGatt()!");
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
         }
@@ -350,9 +355,9 @@ public class BLEAgent {
 
             final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
 
-            logFailure( gatt.setCharacteristicNotification( notifyCharacteristic, false ),
-                    "Failed to disable notification for service: " + notifyUUID.first +
-                            " characteristic: " + notifyUUID.second
+            lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
+                    "Failed to disable notification for service: ", notifyUUID.first,
+                    " characteristic: ", notifyUUID.second
             );
         }
 
@@ -366,25 +371,25 @@ public class BLEAgent {
         private void dispatchListenUUID( final Pair<UUID, UUID > notifyUUID ) {
             // Check for pending ops--mostly a debug warning since interrupts are allowed.
             if( pendingUUID != null ) {
-                logFailure(false,
-                        "Started new listen operation uncleanly. old service: " + pendingUUID.first +
-                                " old characteristic: " + pendingUUID.second);
+                lazyLog.a(false,
+                        "Started new listen operation uncleanly. old service: ", pendingUUID.first,
+                        " old characteristic: ", pendingUUID.second);
             }
 
             final BluetoothGattCharacteristic characteristic = getCharacteristic( notifyUUID );
 
             // check for notification failure
-            logFailure( gatt.setCharacteristicNotification( characteristic, true ),
-                    "Failed to disable notification for service: " + notifyUUID.first +
-                            " characteristic: " + notifyUUID.second );
+            lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
+                    "Failed to disable notification for service: ", notifyUUID.first,
+                    " characteristic: ", notifyUUID.second);
 
             final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     notifyDescriptorUUID );
 
             descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
 
-            logFailure(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
-                    + notifyUUID.first + " characteristic " + notifyUUID.second);
+            lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
+                    , notifyUUID.first, " characteristic ", notifyUUID.second);
 
             pendingUUID = notifyUUID;
         }
@@ -394,14 +399,14 @@ public class BLEAgent {
          * @param gattStatus callback return value
          */
         private void completeListenUUID( final int gattStatus ) {
-            logFailure( pendingUUID != null,
+            lazyLog.a(pendingUUID != null,
                     "Error, complete listen to UUID with no dispatch!!!"
             );
             if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
                 notifyUUIDs.add(pendingUUID);
             } else {
-                Log.e( TAG, "Error, non-success gatt status (" + gattStatus + ") for service " +
-                        pendingUUID.first + " characteristic " + pendingUUID.second );
+                lazyLog.e( "Error, non-success gatt status (", gattStatus, ") for service ",
+                        pendingUUID.first, " characteristic ", pendingUUID.second );
             }
             pendingUUID = null;
         }
@@ -463,23 +468,23 @@ public class BLEAgent {
          * @return indication of if the request has been completed.
          */
         public boolean onReceive( final BluetoothGattCharacteristic characteristic, int status ) {
-            Log.e( TAG, "Unexpected Characteristic received " +
-                    characteristic.getUuid() + " status: " + status + " value: " +
+            lazyLog.e( "Unexpected Characteristic received ",
+                    characteristic.getUuid(), " status: ", status, " value: ",
                             bytesToHex( characteristic.getValue() )
             );
             return false;
         }
 
         public boolean onReceive( final BluetoothGattDescriptor descriptor, int status ) {
-            Log.e( TAG, "Unexpected Characteristic received " +
-                            descriptor.getUuid() + " status: " + status + " value: " +
+            lazyLog.e( "Unexpected Characteristic received ",
+                            descriptor.getUuid(), " status: ", status, " value: ",
                             bytesToHex( descriptor.getValue() )
             );
             return false;
         }
 
         public boolean onReceive( final BLEDevice device ) {
-            Log.e( TAG, "Unexpected Device received " + device.device.getAddress() );
+            lazyLog.e( "Unexpected Device received ", device.device.getAddress() );
             return false;
         }
 
@@ -514,7 +519,7 @@ public class BLEAgent {
             }
             mutex.release();
         } catch ( InterruptedException e ) {
-            Log.e( TAG, "Unexpected interrupt in close()" );
+            lazyLog.e( "Unexpected interrupt in close()" );
         }
     }
 
@@ -523,18 +528,18 @@ public class BLEAgent {
             new BluetoothAdapter.LeScanCallback() {
         @Override
         public void onLeScan( final BluetoothDevice device, int rssi, byte[] scanRecord ) {
-            Log.d(TAG, "Found Device: " + device.getAddress());
+            lazyLog.d("Found Device: ", device.getAddress());
             updateDevice(device);
         }
     };
 
     public void startScan() {
-        Log.d( TAG, "Start ble scan");
-        logFailure(adapter.startLeScan(scanCallback), " Scan start");
+        lazyLog.d( "Start ble scan");
+        lazyLog.a(adapter.startLeScan(scanCallback), " Scan start");
     }
 
     public void stopScan() {
-        Log.d( TAG, "stop ble scan");
+        lazyLog.d( "stop ble scan");
         adapter.stopLeScan( scanCallback );
     }
 
@@ -585,49 +590,49 @@ public class BLEAgent {
 
         @Override
         public boolean onConnectionStateChange(int status, int newState) {
-            Log.e( TAG, "Unexpected connection state change: " + describeState( newState ) +
-                    " status: " + status );
+            lazyLog.e( "Unexpected connection state change: ", describeState( newState ),
+                    " status: ", status );
             return false;
         }
 
         @Override
         public boolean onServicesDiscovered(int status) {
-            Log.e( TAG, "Unexpected service discovery: " + status);
+            lazyLog.e( "Unexpected service discovery: ", status);
             return false;
         }
 
         @Override
         public boolean onCharacteristicRead(BluetoothGattCharacteristic characteristic, int status) {
-            Log.e( TAG, "Unexpected characteristic read: " + characteristic.getUuid() + " ("
-                    + status + ") " + bytesToHex( characteristic.getValue() ) );
+            lazyLog.e( "Unexpected characteristic read: ", characteristic.getUuid(), " ("
+                   , status, ") ", bytesToHex( characteristic.getValue() ) );
             return false;
         }
 
         @Override
         public boolean onCharacteristicWrite(BluetoothGattCharacteristic characteristic, int status) {
-            Log.e( TAG, "Unexpected characteristic write: " + characteristic.getUuid() + " ("
-                    + status + ") " + bytesToHex( characteristic.getValue() ) );
+            lazyLog.e( "Unexpected characteristic write: ", characteristic.getUuid(), " ("
+                   , status, ") ", bytesToHex( characteristic.getValue() ) );
             return false;
         }
 
         @Override
         public boolean onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
-            Log.e( TAG, "Unexpected characteristic change: " + characteristic.getUuid() + " " +
+            lazyLog.e( "Unexpected characteristic change: ", characteristic.getUuid(), " ",
                     bytesToHex( characteristic.getValue() ) );
             return false;
         }
 
         @Override
         public boolean onDescriptorRead(BluetoothGattDescriptor descriptor, int status) {
-            Log.e( TAG, "Unexpected descriptor read: " + descriptor.getUuid() + " ("
-                    + status + ") " + bytesToHex( descriptor.getValue() ) );
+            lazyLog.e( "Unexpected descriptor read: ", descriptor.getUuid(), " ("
+                   , status, ") ", bytesToHex( descriptor.getValue() ) );
             return false;
         }
 
         @Override
         public boolean onDescriptorWrite(BluetoothGattDescriptor descriptor, int status) {
-            Log.e( TAG, "Unexpected descriptor write: " + descriptor.getUuid() + " ("
-                    + status + ") " + bytesToHex( descriptor.getValue() ) );
+            lazyLog.e( "Unexpected descriptor write: ", descriptor.getUuid(), " ("
+                   , status, ") ", bytesToHex( descriptor.getValue() ) );
             return false;
         }
     }
@@ -669,7 +674,7 @@ public class BLEAgent {
      * Note: OpStack is cleared by timeout
      */
     private boolean nextOp() {
-        logFailure( opBuildStack.size() == 0, "Op build stack not empty before next op!");
+        lazyLog.a(opBuildStack.size() == 0, "Op build stack not empty before next op!");
         try {
             currentOp = opStack.pop();
             UIHandler.post(currentOp);
@@ -688,19 +693,19 @@ public class BLEAgent {
         currentOp = null;
         try {
             if( currentRequest != null ) {
-                Log.d( TAG, "BLEAgent: Request completed: " + currentRequest + " at " + new Date());
+                lazyLog.d( "BLEAgent: Request completed: ", currentRequest, " at ", new Date());
             }
 
             final BLERequest request = requestQueue.remove();
             currentRequest = request;
-            Log.d( TAG, "BLEAgent: Preparing request: " + currentRequest );
+            lazyLog.d( "BLEAgent: Preparing request: ", currentRequest );
 
             stackOp(new SetupOp() {
                 @Override
                 public void run() {
-                    logFailure(currentRequest == request,
+                    lazyLog.a(currentRequest == request,
                             "nextRequest(): currentRequest != request");
-                    Log.d(TAG, "Starting request " + request + " at " + new Date());
+                    lazyLog.d( "Starting request ", request, " at ", new Date());
                     if (request.dispatch(BLEAgent.this)) {
                         nextRequest();
                     }
@@ -755,7 +760,7 @@ public class BLEAgent {
                 @Override
                 public void run() {
                     if (currentRequest == request) {
-                        Log.w( TAG, "BLEAgent: Request timed out: " + request + " at " + new Date());
+                        lazyLog.w( "BLEAgent: Request timed out: ", request, " at ", new Date());
                         request.onFailure();
                         currentRequest = null;
                         nextRequest();
@@ -766,17 +771,6 @@ public class BLEAgent {
             nextOp();
         } catch( NoSuchElementException e ) {
             currentRequest = null;
-        }
-    }
-
-    /** Macro for log error if false with our tag
-     *
-     * @param success condition to trigger logging
-     * @param msg message to append to failure
-     */
-    private static void logFailure( final boolean success, final String msg ) {
-        if( ! success ) {
-            Log.e( TAG, "FAILED: " + msg );
         }
     }
 
@@ -792,7 +786,7 @@ public class BLEAgent {
                 @Override
                 public void run() {
 
-                    Log.d(TAG, "Disconnecting from device: " + currentDevice.device.getAddress());
+                    lazyLog.d( "Disconnecting from device: ", currentDevice.device.getAddress());
 
                     // disable notifications
                     for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
@@ -807,11 +801,11 @@ public class BLEAgent {
                     final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
                     currentDevice.connectionState = newState;
                     if (!ret) {
-                        Log.w(TAG, "Not disconnected??!? " + describeState(newState));
-                        Log.w(TAG, "Retrying disconnect..." + currentDevice.device.getAddress());
+                        lazyLog.w( "Not disconnected??!? ", describeState(newState));
+                        lazyLog.w( "Retrying disconnect...", currentDevice.device.getAddress());
                         currentDevice.gatt.disconnect();
                     } else {
-                        Log.d(TAG, "Disconnected from " + currentDevice.device.getAddress());
+                        lazyLog.d( "Disconnected from ", currentDevice.device.getAddress());
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
@@ -825,9 +819,9 @@ public class BLEAgent {
                 fifoOp(new SetupOp() {
                     @Override
                     public void run() {
-                        Log.d(TAG, "Connecting to device " + device.device.getAddress());
+                        lazyLog.d( "Connecting to device ", device.device.getAddress());
                         currentDevice = device;
-                        logFailure(device.gatt.connect(), "gatt-connect to device: " + device.device.getAddress());
+                        lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
                     }
 
                     @Override
@@ -835,10 +829,10 @@ public class BLEAgent {
                         boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
                         device.connectionState = newState;
                         if (!ret) {
-                            Log.i(TAG, "Retrying connection. received: " + describeState(newState));
+                            lazyLog.i( "Retrying connection. received: ", describeState(newState));
                             currentDevice.gatt.connect();
                         } else {
-                            Log.d(TAG, "Connected to device " + device.device.getAddress());
+                            lazyLog.d( "Connected to device ", device.device.getAddress());
                         }
                         return ret;
                     }
@@ -858,8 +852,8 @@ public class BLEAgent {
                 fifoOp( new SetupOp() {
                     @Override
                     public void run() {
-                        Log.d( TAG, "Discovering services for device "
-                                +  device.device.getAddress());
+                        lazyLog.d( "Discovering services for device "
+                               ,  device.device.getAddress());
                         device.gatt.discoverServices();
                     }
 
@@ -867,12 +861,12 @@ public class BLEAgent {
                     public boolean onServicesDiscovered(int status) {
                         final boolean ret = status == BluetoothGatt.GATT_SUCCESS;
                         if( ret ) {
-                            Log.d( TAG, "Discovered services for device "
-                                    + device.device.getAddress());
+                            lazyLog.d( "Discovered services for device "
+                                   , device.device.getAddress());
                             device.servicesDiscovered = true;
                         } else {
-                            Log.w( TAG, "Failed to discover services for device " +
-                                    device.device.getAddress() + ". retrying..." );
+                            lazyLog.w( "Failed to discover services for device ",
+                                    device.device.getAddress(), ". retrying..." );
                             device.gatt.discoverServices();
                         }
                         return ret;
@@ -924,9 +918,9 @@ public class BLEAgent {
                 fifoOp( new SetupOp() {
                     @Override
                     public void run() {
-                        Log.d( TAG, "enabling listening to device " +  device.device.getAddress()
-                                + " for service " + notifyUUID.first
-                                + " characteristic " + notifyUUID.second );
+                        lazyLog.d( "enabling listening to device ",  device.device.getAddress()
+                               , " for service ", notifyUUID.first
+                               , " characteristic ", notifyUUID.second );
 
                         currentDevice.dispatchListenUUID(notifyUUID);
                     }
@@ -937,13 +931,13 @@ public class BLEAgent {
                         final boolean ret = status == BluetoothGatt.GATT_SUCCESS;
                         currentDevice.completeListenUUID( status );
                         if( ! ret ) {
-                            Log.w( TAG, "retrying notification for " + notifyUUID);
+                            lazyLog.w( "retrying notification for ", notifyUUID);
                             currentDevice.dispatchListenUUID( notifyUUID );
                         } else {
-                            Log.d( TAG, "enabled listening to device "
-                                    +  device.device.getAddress()
-                                    + " for service " + notifyUUID.first
-                                    + " characteristic " + notifyUUID.second );
+                            lazyLog.d( "enabled listening to device "
+                                   ,  device.device.getAddress()
+                                   , " for service ", notifyUUID.first
+                                   , " characteristic ", notifyUUID.second );
                         }
                         return ret;
                     }
@@ -971,7 +965,7 @@ public class BLEAgent {
                     dev = new BLEDevice( device, now );
                     deviceMap.put( address, dev );
                 }
-                logFailure( currentRequest != null, "No active request!!!");
+                lazyLog.a(currentRequest != null, "No active request!!!");
                 if( currentRequest != null && currentRequest.onReceive( dev ) ) {
                     nextRequest();
                 }
@@ -1015,7 +1009,7 @@ public class BLEAgent {
             //redirect current BLE map into handler.
             for( BLEDevice device : agent.deviceMap.values() ) {
                 if( filter( device ) ) {
-                    Log.d(TAG, "Exiting with pre-existing device: " + device.device.getAddress());
+                    lazyLog.d( "Exiting with pre-existing device: ", device.device.getAddress());
                     onComplete(device);
                     return true;
                 }
@@ -1049,7 +1043,7 @@ public class BLEAgent {
          */
         @Override
         public void onFailure() {
-            Log.d( TAG, "BLE Scan abort.");
+            lazyLog.d( "BLE Scan abort.");
             onComplete( null );
             //FIXME: reference cheating
             self.stopScan();

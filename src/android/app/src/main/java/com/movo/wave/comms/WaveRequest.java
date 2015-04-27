@@ -1,21 +1,17 @@
-package com.movo.wave;
+package com.movo.wave.comms;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 import android.util.Pair;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import com.movo.wave.util.LazyLogger;
+import com.movo.wave.util.UTC;
+
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.UUID;
 
 //Created by Alexander Haase on 4/8/2015.
@@ -29,55 +25,11 @@ import java.util.UUID;
  */
 public class WaveRequest {
 
-    /** Utility namespace for using UTC time
-     * All wave devices are dealt with in UTC.
+    /** logger
+     *
      */
-    static class UTC {
-        final private static DateFormat dateFormat;
-        final private static DateFormat dateFormatShort;
-        final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
-        static {
-            dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US );
-            dateFormat.setTimeZone( timeZone );
+    final static private LazyLogger lazyLog = new LazyLogger( "WaveRequest", true );
 
-            dateFormatShort = new SimpleDateFormat( "'T'HH:mm:ss'Z'", Locale.US );
-            dateFormatShort.setTimeZone( timeZone );
-        }
-
-        /** ISO-8601 date formatter.
-         *
-         * @param date to format
-         * @return ISO 8601 formatted string
-         */
-        public static String isoFormat( final Date date ) {
-            return dateFormat.format( date );
-        }
-
-        /** ISO-8601 date formatter.
-         *
-         * @param timestamp to format (long, epoch milliseconds)
-         * @return ISO 8601 formatted string
-         */
-        public static String isoFormat( final long timestamp ) {
-            return dateFormat.format( new Date( timestamp ) );
-        }
-        public static String isoFormatShort( final long timestamp ) {
-            return dateFormatShort.format( new Date( timestamp ) );
-        }
-
-        /** Creates a new utc calendar object
-         *
-         * @return utc calendar
-         */
-        static public Calendar newCal() {
-            return Calendar.getInstance( timeZone );
-        }
-
-        //prevent object creation
-        private UTC() {}
-    }
-
-    final static String TAG = "WaveRequest";
 
     /** Enum describing wave operation byte codes
      * Op codes entered from spec.
@@ -121,7 +73,7 @@ public class WaveRequest {
      */
     abstract public static class BLERequestWaveOp extends BLEAgent.BLERequest {
 
-        static final String TAG = "BLERequestWaveOp";
+        static final LazyLogger lazyLog = new LazyLogger( "BLERequestWaveOp", WaveRequest.lazyLog );
 
         static final UUID notifyCharacteristicUUID =
                 UUID.fromString( "0000ffe4-0000-1000-8000-00805f9b34fb" );
@@ -144,12 +96,6 @@ public class WaveRequest {
             notifyUUIDs = new Pair<>( notifyServiceUUID, notifyCharacteristicUUID );
         }
 
-        static protected void logFailure( final boolean success, final String msg ) {
-            if( ! success ) {
-                Log.e( TAG, "Failure: " + msg );
-            }
-        }
-
         // Meat and potatoes of this class: setup an array with op, expect response with op.
         final protected WaveOp op;
         final protected byte[] message;
@@ -165,7 +111,7 @@ public class WaveRequest {
          */
         private boolean buildResponse( final byte[] responsePart ) {
             if( responseSize == 0 && MarshalByte.OP.parse( responsePart ) == 0x00 ) {
-                Log.w( TAG, "Skipping bad preamble" );
+                lazyLog.w( "Skipping bad preamble" );
                 return false;
             }
             System.arraycopy( responsePart, 0, response, responseSize, responsePart.length );
@@ -204,7 +150,7 @@ public class WaveRequest {
                                  int timeout ){
             super( device, timeout );
             // Spec says limit is 200 bytes
-            logFailure( bodySize <= 200, "Message length " + bodySize + " too long!!!!");
+            lazyLog.a(bodySize <= 200, "Message length ", bodySize, " too long!!!!");
             this.op = op;
             message = new byte[ bodySize + 3 ];
             MarshalByte.OP.put( message, op.CODE );
@@ -217,13 +163,13 @@ public class WaveRequest {
          * @return checksum byte
          */
         public static byte calcChecksum( final byte[] message ) {
-            logFailure( message.length >= 3, "Message too small! " + message.length);
+            lazyLog.a(message.length >= 3, "Message too small! ", message.length);
             if( message.length == 3 ) {
                 return 0x00;
             } else {
                 byte ret = message[ 2 ];
                 final int limit = 2 + MarshalByte.SIZE.parse(message);
-                logFailure( limit < message.length, " Message length exceeds buffer!" );
+                lazyLog.a(limit < message.length, " Message length exceeds buffer!");
                 for( int index = 3; index < limit; index++ ) {
                     ret ^= message[ index ];
                 }
@@ -239,10 +185,10 @@ public class WaveRequest {
          * @return checksum byte
          */
         public static byte getChecksum( final byte[] message ) {
-            logFailure( message.length >= 3, "Message too short! " + message.length );
+            lazyLog.a(message.length >= 3, "Message too short! ", message.length);
             final int index = 2 + MarshalByte.SIZE.parse(message);
-            logFailure( message.length >= index, "index larger than message " + index
-                    + " " + message.length );
+            lazyLog.a(message.length >= index, "index larger than message ", index
+                   , " ", message.length);
             return message[ index ];
         }
 
@@ -258,8 +204,8 @@ public class WaveRequest {
             final BluetoothGattCharacteristic characteristic = device.getCharacteristic( writeUUIDs );
             characteristic.setValue(message);
 
-            Log.d( TAG, "Sending message: " + BLEAgent.bytesToHex( message ));
-            logFailure(device.gatt.writeCharacteristic(characteristic),
+            lazyLog.d(  "Sending message: ", BLEAgent.bytesToHex( message ));
+            lazyLog.a(device.gatt.writeCharacteristic(characteristic),
                     "start write to wave");
             return false;
         }
@@ -281,25 +227,26 @@ public class WaveRequest {
             if( characteristic.getUuid().equals( writeCharacteristicUUID )) {
                 final boolean ret = BluetoothGatt.GATT_SUCCESS != status;
                 final byte[] sent = characteristic.getValue();
-                logFailure( sent.equals( message ), "Sent message doesn't match constructed! Sent: "
-                        + BLEAgent.bytesToHex(sent) + " Constructed: "
-                        + BLEAgent.bytesToHex(message));
+                lazyLog.a(sent.equals(message), "Sent message doesn't match constructed! Sent: "
+                       , BLEAgent.bytesToHex(sent), " Constructed: "
+                       , BLEAgent.bytesToHex(message));
 
                 if( ret ) {
-                    Log.e( TAG, "FAILED: write to wave device: " + device.device.getAddress() );
+                    lazyLog.e(  "FAILED: write to wave device: ", device.device.getAddress() );
                     onComplete(false, null);
                 }
                 return ret;
 
                 // on notify
             } else if( characteristic.getUuid().equals( notifyCharacteristicUUID )) {
-                logFailure(status == BluetoothGatt.GATT_SUCCESS, "complete notify from wave");
+                lazyLog.a(status == BluetoothGatt.GATT_SUCCESS, "complete notify from wave");
                 final byte[] value = characteristic.getValue();
-                Log.d(TAG, "Wave response: " + BLEAgent.bytesToHex(value));
+
+                lazyLog.d( "Wave response: ", BLEAgent.bytesToHex(value));
 
                 if( ! buildResponse( value ) ) {
-                    Log.d( TAG, "Partial message detected. " + responseSize +
-                            " of " + MarshalByte.SIZE.parse( response ) + " bytes.");
+                    lazyLog.d(  "Partial message detected. ", responseSize,
+                            " of ", MarshalByte.SIZE.parse( response ), " bytes.");
                     return false;
                 }
 
@@ -308,22 +255,22 @@ public class WaveRequest {
 
                 boolean success = check == checksum;
 
-                logFailure(success, "Checksum mismatch. received "
-                        + BLEAgent.byteToHex(checksum) + " expected "
-                        + BLEAgent.byteToHex(check));
+                lazyLog.a(success, "Checksum mismatch. received "
+                       , BLEAgent.byteToHex(checksum), " expected "
+                       , BLEAgent.byteToHex(check));
 
                 final byte responseCode = (byte) MarshalByte.OP.parse( response );
 
                 if( responseCode == op.FAILURE ) {
-                    logFailure( false, "Received failure response code from wave.");
+                    lazyLog.a(false, "Received failure response code from wave.");
                     success = false;
                 } else if( responseCode == op.SUCCESS ) {
-                    Log.d( TAG, " wave indicates success.");
+                    lazyLog.d(  " wave indicates success.");
                 } else {
-                    logFailure(false, "Mismatch ops, received "
-                            + BLEAgent.byteToHex( responseCode ) + " expected "
-                            + BLEAgent.byteToHex( op.SUCCESS) + " or "
-                            + BLEAgent.byteToHex( op.FAILURE ));
+                    lazyLog.a(false, "Mismatch ops, received "
+                           , BLEAgent.byteToHex(responseCode), " expected "
+                           , BLEAgent.byteToHex(op.SUCCESS), " or "
+                           , BLEAgent.byteToHex(op.FAILURE));
                     success = false;
                 }
 
@@ -420,9 +367,9 @@ public class WaveRequest {
         BT_AUTO_TIMEOUT     ( 47, 0, 120, 0 ),
 
         //sports data related
-        DATA_REQUEST_DAY    ( 2, 1, 7, -1 ),
-        DATA_REQUEST_HOUR   ( 3, 0, 23, 0 ),
-        DATA_REQUEST_QTY    ( 4, 1, 3, 0 ),
+        DATA_REQUEST_YEAR    ( 2, 0, 99, 2000 ),
+        DATA_REQUEST_MONTH   ( 3, 1, 12, -1 ),
+        DATA_REQUEST_DATE    ( 4, 1, 31, 0 ),
 
         DATA_RESPONSE_YEAR  ( 2, 0, 99, 2000 ),
         DATA_RESPONSE_MONTH ( 3, 1, 12, -1 ),
@@ -432,7 +379,8 @@ public class WaveRequest {
         DEVICE_LID          ( 2, 0x01, 0x09, 0 );
         ;
 
-        final static String TAG = "WaveAgent.MarshalByte";
+        final private static LazyLogger lazyLog = new LazyLogger( "WaveAgent.MarshalByte",
+                WaveRequest.lazyLog );
 
         private final int index;    //* index: raw index in message byte array.
         private final int min;      //* min: lower (inclusive) bounds for byte value.
@@ -441,7 +389,7 @@ public class WaveRequest {
 
         private MarshalByte(final int index, final int min, final int max, final int offset) {
             if( ( min < 0 && max > 127 ) || min < -128 || max > 255 || min > max ) {
-                Log.e( TAG, "Error, illegal range for casting: [" + min + "," + max + "]" );
+                WaveRequest.lazyLog.e("Error, illegal range for casting: [", min, ",", max, "]");
             }
             this.index = index;
             this.min = min;
@@ -451,8 +399,8 @@ public class WaveRequest {
 
         private void checkRange( int value ) {
             if( value < min || value > max ) {
-                Log.e("WaveAgent::MessageByte", "Value exceeds bounds("
-                        + min + "," + max + "): " + value);
+                lazyLog.e("WaveAgent::MessageByte", "Value exceeds bounds("
+                       , min, ",", max, "): ", value);
             }
         }
 
@@ -491,8 +439,8 @@ public class WaveRequest {
         public void put( byte[] buffer, int value, int offset ) {
             value -= this.offset;
             if( value < min || value > max ) {
-                Log.e("WaveAgent::MessageByte", "Value exceeds bounds("
-                        + min + "," + max + "): " + value);
+                lazyLog.e("WaveAgent::MessageByte", "Value exceeds bounds("
+                       , min, ",", max, "): ", value);
             }
             buffer[ index + offset ] = (byte)value;
         }
@@ -525,7 +473,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
-                final Calendar cal = UTC.newCal();
+                final Calendar cal = com.movo.wave.util.UTC.newCal();
                 cal.set( Calendar.YEAR, MarshalByte.YEAR.parse(response) );
                 cal.set( Calendar.MONTH, MarshalByte.MONTH.parse(response) );
                 cal.set( Calendar.DATE, MarshalByte.DATE.parse(response) );
@@ -568,9 +516,9 @@ public class WaveRequest {
          */
         @Override
         public boolean dispatch(BLEAgent agent) {
-            final Calendar cal = UTC.newCal();
+            final Calendar cal = com.movo.wave.util.UTC.newCal();
             final Date now = new Date();
-            Log.d( TAG, "Setting time as " + UTC.isoFormat( now ) + " (" + now + ")" );
+            lazyLog.d(  "Setting time as ", com.movo.wave.util.UTC.isoFormat( now ), " (", now, ")" );
             cal.setTime( now );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
@@ -691,7 +639,7 @@ public class WaveRequest {
                 case (0x02):
                     return Mode.SPORTS;
                 default:
-                    //Log.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
+                    //lazyLog.w( "WaveAgent.WaveDataPoint", "Data point with RESERVED value" );
                     return Mode.RESERVED;
             }
         }
@@ -742,7 +690,6 @@ public class WaveRequest {
          * @param year of first data point.
          * @param month of first data point.
          * @param date of first data point.
-         * @param hour of first data point.
          * @return array of parsed WaveDataPoint objects.
          */
         public static WaveDataPoint[] parseResponse( final byte[] message,
@@ -750,21 +697,20 @@ public class WaveRequest {
                                                      final int qty,
                                                      final int year,
                                                      final int month,
-                                                     final int date,
-                                                     final int hour ) {
+                                                     final int date ) {
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
-            final Calendar cal = UTC.newCal();
+            final Calendar cal = com.movo.wave.util.UTC.newCal();
             cal.set( Calendar.YEAR, year );
             cal.set( Calendar.MONTH, month );
             cal.set( Calendar.DATE, date );
-            cal.set( Calendar.HOUR_OF_DAY, hour );
+            cal.set( Calendar.HOUR_OF_DAY, 0 );
             cal.set( Calendar.MINUTE, 0 );
             cal.set( Calendar.SECOND, 0 );
             cal.set( Calendar.MILLISECOND, 0 );
 
             for( int index = 0 ; index < qty;  index += 1 ) {
                 ret[ index ] = new WaveDataPoint( message, index * 2 + offset, cal.getTime() );
-                cal.add( Calendar.MINUTE, 2 );
+                cal.add( Calendar.MINUTE, 30 );
             }
 
             return ret;
@@ -776,7 +722,7 @@ public class WaveRequest {
          */
         @Override
         public String toString() {
-            return mode.toString() + " " + value + " " + UTC.isoFormat( date );
+            return mode.toString() + " " + value + " " + com.movo.wave.util.UTC.isoFormat( date );
         }
 
         /** Data comparison for sort by date.
@@ -791,43 +737,91 @@ public class WaveRequest {
     /** Request for data by day of the week
      *
      */
-    abstract static public class DataByDay extends BLERequestWaveOp {
+    abstract static public class ReadData extends BLERequestWaveOp {
 
-        final static String TAG = "WaveRequest::DataByDate";
+        final private static LazyLogger lazyLog = new LazyLogger( "DataByDate",
+                BLERequestWaveOp.lazyLog );
 
-        protected final Date date;
-        final int hour;
-        final int day;
+        protected final Calendar cal = UTC.newCal();
 
-        public DataByDay( final BLEAgent.BLEDevice device,
-                                     final int timeout,
-                                     final Date date ){
-            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+        /** Check calendar values and set message request bytes
+         *
+         */
+        private void initMessage() {
+            lazyLog.a( cal.get( Calendar.HOUR_OF_DAY ) == 0, "Dropping non-zero HOUR in data request" );
+            lazyLog.a( cal.get( Calendar.MINUTE ) == 0, "Dropping non-zero MINUTE in data request" );
+            lazyLog.a( cal.get( Calendar.SECOND ) == 0, "Dropping non-zero SECOND in data request" );
+            lazyLog.a( cal.get( Calendar.MILLISECOND ) == 0, "Dropping non-zero MILLISECOND in data request" );
 
-            this.date = date;
-            hour = date.getHours();
-            day = date.getDay();
-
-            MarshalByte.DATA_REQUEST_DAY.put( message, day );
-            MarshalByte.DATA_REQUEST_HOUR.put( message, hour );
-            MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
-            //TODO: Check date within the last 7 days.
+            MarshalByte.DATA_REQUEST_YEAR.put( message, cal.get( Calendar.YEAR ) );
+            MarshalByte.DATA_REQUEST_MONTH.put( message, cal.get( Calendar.MONTH ) );
+            MarshalByte.DATA_REQUEST_DATE.put( message, cal.get( Calendar.DATE ) );
         }
 
-        public DataByDay( final BLEAgent.BLEDevice device,
-                          final int timeout,
-                          final int day,
-                          final int hour){
+        /** Create a new request at the given Date
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param date time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final Date date){
+            this( device, timeout, date.getTime() );
+        }
+
+        /** Create a new request at the given Calendar
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param date time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final Calendar date){
+            this( device, timeout, date.getTimeInMillis() );
+        }
+
+        /** Create a new request at the given timestamp
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param timestamp time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final long timestamp){
+            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+            cal.setTimeInMillis( timestamp );
+
+            initMessage();
+        }
+
+
+        /** Create a request for the given year, month, date
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param year to request.
+         * @param month to request.
+         * @param date to request.
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final int year,
+                        final int month,
+                        final int date){
             super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
 
-            this.date = null;
-            this.day = day;
-            this.hour = hour;
+            cal.set( Calendar.YEAR, year );
+            cal.set( Calendar.MONTH, month );
+            cal.set( Calendar.DATE, date );
+            cal.set( Calendar.HOUR_OF_DAY, 0 );
+            cal.set( Calendar.MINUTE, 0 );
+            cal.set( Calendar.SECOND, 0 );
+            cal.set( Calendar.MILLISECOND, 0 );
 
-            MarshalByte.DATA_REQUEST_DAY.put( message, day);
-            MarshalByte.DATA_REQUEST_HOUR.put( message, hour);
-            MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
-            //TODO: Check date within the last 7 days.
+            initMessage();
         }
 
         @Override
@@ -839,30 +833,30 @@ public class WaveRequest {
                 final int month = MarshalByte.DATA_RESPONSE_MONTH.parse( response );
                 final int date = MarshalByte.DATA_RESPONSE_DATE.parse( response );
 
-                final Date responseDate;
+                lazyLog.a( MarshalByte.SIZE.parse( message ) == 99,
+                        "Data length doesn't match spec: 99!=",
+                        MarshalByte.SIZE.parse( message ) );
 
-                Log.d( TAG, "Response date stamp: " + year + "-" + month + "-" + date +
-                        "(" + day + ") " + hour + ":00:00" );
-                if( this.date != null ) {
-                    responseDate = this.date;
-                    logFailure(year == this.date.getYear(), "Year mismatch "
-                            + year + " " + this.date.getYear());
-                    logFailure(month == this.date.getMonth(), "Month mismatch "
-                            + month + " " + this.date.getMonth());
-                    logFailure(date == this.date.getDate(), "Date mismatch "
-                            + date + " " + this.date.getDate());
+                lazyLog.d(  "Response date stamp: ", year, "-", month, "-", date,
+                        0, ":00:00" );
+                if( this.cal != null ) {
+                    lazyLog.a(year == cal.get( Calendar.YEAR ), "Year mismatch "
+                           , year, " ", cal.get( Calendar.YEAR ) );
+                    lazyLog.a(month == cal.get( Calendar.MONTH ), "Month mismatch "
+                           , month, " ", cal.get( Calendar.MONTH ));
+                    lazyLog.a(date == cal.get( Calendar.DATE ), "Date mismatch "
+                           , date, " ", cal.get( Calendar.DATE ));
                 } else {
-                    responseDate = new Date( year, month, date, hour, 0, 0 );
                 }
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
-                Log.d( TAG, "Data by date for " + responseDate + " returned " + qty +
-                        " data points. (day: " + day + ", hour: " + hour + ")." );
+                lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
+                        " data points." );
 
-                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date, hour );
+                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date );
             } else {
-                Log.d( TAG, "Failed to get data (day: " + day + ", hour: " + hour + ")." );
+                lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
             }
 
             onComplete( success, ret );
@@ -895,7 +889,7 @@ public class WaveRequest {
             super( WaveOp.SET_NAME, bodySize, device, timeout );
             final char[] chars = name.toCharArray();
             final int copyLimit = Math.min(bodySize, chars.length);
-            logFailure( copyLimit == chars.length, "Requested name longer than 15: " + name );
+            lazyLog.a(copyLimit == chars.length, "Requested name longer than 15: ", name);
 
             for( int index = 0; index < copyLimit; index++ ) {
                 message[ index + 2 ] = (byte) chars[ index ];
@@ -983,7 +977,7 @@ public class WaveRequest {
 
             if( lid == LocalIdentifier.BATTERY) {
 
-                Log.e(TAG, "Parsing of battery data not implemented");
+                lazyLog.e( "Parsing of battery data not implemented");
                 success = false;
             } else {
                 if (success) {

@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="UTF-8" ?>
 <resources>
     <string name="hello">Hello World, Click Me!</string>
     <string name="app_name">Wave_Android_uitest</string>
@@ -18,4 +18,5 @@
     <string name="title_activity_first_login">Login</string>
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="title_activity_scan_for_wave">Scan For Waves</string>
 </resources>

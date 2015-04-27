@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteQueryBuilder;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
@@ -33,25 +32,21 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
-import com.firebase.client.AuthData;
-import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
-import com.firebase.client.FirebaseError;
-import com.firebase.client.MutableData;
-import com.firebase.client.Transaction;
-import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.movo.wave.comms.BLEAgent;
+import com.movo.wave.comms.WaveAgent;
+import com.movo.wave.comms.WaveRequest;
+import com.movo.wave.util.UTC;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -88,7 +83,7 @@ public class Home extends ActionBarActivity {
         c = this.getApplicationContext();
 
         // Setup BLE context
-        BLEAgent.open( c );
+        BLEAgent.open(c);
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
@@ -637,8 +632,8 @@ public class Home extends ActionBarActivity {
 
                     Map<String,Object > syncData = new HashMap<String, Object>();
 //                    syncData.put(Database.SyncEntry.GUID, cur.getString(0));
-                    syncData.put(Database.SyncEntry.SYNC_START, WaveRequest.UTC.isoFormat(Long.parseLong(cur.getString(1))));
-                    syncData.put(Database.SyncEntry.SYNC_END, WaveRequest.UTC.isoFormat(Long.parseLong(cur.getString(2))));
+                    syncData.put(Database.SyncEntry.SYNC_START, UTC.isoFormat(Long.parseLong(cur.getString(1))));
+                    syncData.put(Database.SyncEntry.SYNC_END, UTC.isoFormat(Long.parseLong(cur.getString(2))));
                     syncData.put(Database.SyncEntry.USER, cur.getString(3));
                     syncData.put(Database.SyncEntry.STATUS, cur.getString(4));
 
@@ -654,7 +649,7 @@ public class Home extends ActionBarActivity {
                     Map<String, Map<String, String>>  minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
                     Map<String, Map<String, String>> dayMap = new HashMap<String, Map<String, String>>(); //day<minutes,steps>>
 
-                    Calendar cal = WaveRequest.UTC.newCal();
+                    Calendar cal = UTC.newCal();
 
                     ArrayList list = new ArrayList();
                     int date = -1;
@@ -678,8 +673,8 @@ public class Home extends ActionBarActivity {
                         String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
 
                         if((date!=curDate.getDate()) &&(date!=-1)){
-                            String startTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                            String endTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                             oldDate = date;
                             Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
                             refStep2.setValue(minuteMap);
@@ -702,8 +697,8 @@ public class Home extends ActionBarActivity {
 
                         }else{
                             oldDate = date;
-                            String startTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                            String endTime = WaveRequest.UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                             Map<String,String > stepData = new HashMap<String, String>();
                             stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
                             stepData.put(Database.StepEntry.START, startTime);
@@ -737,8 +732,8 @@ public class Home extends ActionBarActivity {
                         long stepTime = Long.parseLong(curSteps.getString(2));
                         Date curDate = new Date(stepTime);
 
-                        String startTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
-                        String endTime = WaveRequest.UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
+                        String startTime = UTC.isoFormat(Long.parseLong(curSteps.getString(1)));
+                        String endTime = UTC.isoFormat(Long.parseLong(curSteps.getString(2)));
 
 
                         cal.set(Calendar.YEAR, 2015);
@@ -791,13 +786,13 @@ public class Home extends ActionBarActivity {
             }
 
             @Override
-            void notify(WaveAgent.WaveDevice wave) {
+            public void notify(WaveAgent.WaveDevice wave) {
                 Log.i(TAG, "Found wave device: " + wave.ble.device.getAddress());
                 new WaveAgent.DataSync(wave.ble, syncCallback);
             }
 
             @Override
-            void onComplete() {
+            public void onComplete() {
 
             }
         });
@@ -862,6 +857,7 @@ public class Home extends ActionBarActivity {
         db.beginTransaction();
         boolean success = false;
         int ret = 0;
+        int skippedForZero = 0;
         try {
             for (WaveRequest.WaveDataPoint point : points) {
                 if(point.value!=0) {
@@ -869,10 +865,11 @@ public class Home extends ActionBarActivity {
                     ret += 1;
                 }
                 }else{
-                    Log.d(TAG, "Not inserting object, steps are 0");
+                    skippedForZero += 1;
+
                 }
             }
-//            db.setTransactionSuccessful();
+            Log.d(TAG, "Skipped " + skippedForZero + " objects with 0 steps.");
             db.setTransactionSuccessful();
             success = true;
         } finally {
