@@ -13,12 +13,13 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
-    <!--
-    Bluetooth LE permissions
-    -->
-    <uses-permission android:name="android.permission.BLUETOOTH"/>
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
-    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+<!--     Bluetooth LE permissions -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -30,12 +31,10 @@
             android:name=".Home"
             android:label="@string/title_activity_home" >
             <intent-filter>
-
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
         <activity
             android:name=".LoginActivity"
@@ -51,7 +50,6 @@
             android:name=".UserActivity"
             android:label="User Select" >
         </activity>
-
         <activity
             android:name=".DailyActivity"
             android:label="Daily Activity" >
@@ -59,8 +57,6 @@
         <activity
             android:name=".FirstLaunch"
             android:label="@string/title_activity_first_launch" >
-
-
         </activity>
         <activity
             android:name=".FirstLogin"
@@ -81,6 +77,16 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.movo.wave.FirstLaunch" />
+        </activity>
+        <activity
+            android:name=".ScanForWaveActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:label="@string/title_activity_scan_for_wave"
+            android:parentActivityName=".Home"
+            android:theme="@style/FullscreenTheme" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.movo.wave.Home" />
         </activity>
     </application>
 

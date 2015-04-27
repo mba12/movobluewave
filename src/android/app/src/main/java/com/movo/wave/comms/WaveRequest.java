@@ -1,23 +1,17 @@
-package com.movo.wave;
+package com.movo.wave.comms;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.util.Log;
 import android.util.Pair;
 
 import com.movo.wave.util.LazyLogger;
+import com.movo.wave.util.UTC;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.UUID;
 
 //Created by Alexander Haase on 4/8/2015.
@@ -35,55 +29,6 @@ public class WaveRequest {
      *
      */
     final static private LazyLogger lazyLog = new LazyLogger( "WaveRequest", false );
-
-    /** Utility namespace for using UTC time
-     * All wave devices are dealt with in UTC.
-     */
-    static class UTC {
-        final private static DateFormat dateFormat;
-        final private static DateFormat dateFormatShort;
-        final public static TimeZone timeZone = TimeZone.getTimeZone( "UTC" );
-        static {
-            dateFormat = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US );
-            dateFormat.setTimeZone( timeZone );
-
-            dateFormatShort = new SimpleDateFormat( "'T'HH:mm:ss'Z'", Locale.US );
-            dateFormatShort.setTimeZone( timeZone );
-        }
-
-        /** ISO-8601 date formatter.
-         *
-         * @param date to format
-         * @return ISO 8601 formatted string
-         */
-        public static String isoFormat( final Date date ) {
-            return dateFormat.format( date );
-        }
-
-        /** ISO-8601 date formatter.
-         *
-         * @param timestamp to format (long, epoch milliseconds)
-         * @return ISO 8601 formatted string
-         */
-        public static String isoFormat( final long timestamp ) {
-            return dateFormat.format( new Date( timestamp ) );
-        }
-        public static String isoFormatShort( final long timestamp ) {
-            return dateFormatShort.format( new Date( timestamp ) );
-        }
-
-        /** Creates a new utc calendar object
-         *
-         * @return utc calendar
-         */
-        static public Calendar newCal() {
-            return Calendar.getInstance( timeZone );
-        }
-
-        //prevent object creation
-        private UTC() {}
-    }
-
 
 
     /** Enum describing wave operation byte codes
@@ -422,9 +367,9 @@ public class WaveRequest {
         BT_AUTO_TIMEOUT     ( 47, 0, 120, 0 ),
 
         //sports data related
-        DATA_REQUEST_DAY    ( 2, 1, 7, -1 ),
-        DATA_REQUEST_HOUR   ( 3, 0, 23, 0 ),
-        DATA_REQUEST_QTY    ( 4, 1, 3, 0 ),
+        DATA_REQUEST_YEAR    ( 2, 0, 99, 2000 ),
+        DATA_REQUEST_MONTH   ( 3, 1, 12, -1 ),
+        DATA_REQUEST_DATE    ( 4, 1, 31, 0 ),
 
         DATA_RESPONSE_YEAR  ( 2, 0, 99, 2000 ),
         DATA_RESPONSE_MONTH ( 3, 1, 12, -1 ),
@@ -528,7 +473,7 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             Date ret = null;
             if( success && response != null) {
-                final Calendar cal = UTC.newCal();
+                final Calendar cal = com.movo.wave.util.UTC.newCal();
                 cal.set( Calendar.YEAR, MarshalByte.YEAR.parse(response) );
                 cal.set( Calendar.MONTH, MarshalByte.MONTH.parse(response) );
                 cal.set( Calendar.DATE, MarshalByte.DATE.parse(response) );
@@ -571,9 +516,9 @@ public class WaveRequest {
          */
         @Override
         public boolean dispatch(BLEAgent agent) {
-            final Calendar cal = UTC.newCal();
+            final Calendar cal = com.movo.wave.util.UTC.newCal();
             final Date now = new Date();
-            lazyLog.d(  "Setting time as ", UTC.isoFormat( now ), " (", now, ")" );
+            lazyLog.d(  "Setting time as ", com.movo.wave.util.UTC.isoFormat( now ), " (", now, ")" );
             cal.setTime( now );
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
@@ -745,7 +690,6 @@ public class WaveRequest {
          * @param year of first data point.
          * @param month of first data point.
          * @param date of first data point.
-         * @param hour of first data point.
          * @return array of parsed WaveDataPoint objects.
          */
         public static WaveDataPoint[] parseResponse( final byte[] message,
@@ -753,21 +697,20 @@ public class WaveRequest {
                                                      final int qty,
                                                      final int year,
                                                      final int month,
-                                                     final int date,
-                                                     final int hour ) {
+                                                     final int date ) {
             final WaveDataPoint[] ret = new WaveDataPoint[qty];
-            final Calendar cal = UTC.newCal();
+            final Calendar cal = com.movo.wave.util.UTC.newCal();
             cal.set( Calendar.YEAR, year );
             cal.set( Calendar.MONTH, month );
             cal.set( Calendar.DATE, date );
-            cal.set( Calendar.HOUR_OF_DAY, hour );
+            cal.set( Calendar.HOUR_OF_DAY, 0 );
             cal.set( Calendar.MINUTE, 0 );
             cal.set( Calendar.SECOND, 0 );
             cal.set( Calendar.MILLISECOND, 0 );
 
             for( int index = 0 ; index < qty;  index += 1 ) {
                 ret[ index ] = new WaveDataPoint( message, index * 2 + offset, cal.getTime() );
-                cal.add( Calendar.MINUTE, 2 );
+                cal.add( Calendar.MINUTE, 30 );
             }
 
             return ret;
@@ -779,7 +722,7 @@ public class WaveRequest {
          */
         @Override
         public String toString() {
-            return mode.toString() + " " + value + " " + UTC.isoFormat( date );
+            return mode.toString() + " " + value + " " + com.movo.wave.util.UTC.isoFormat( date );
         }
 
         /** Data comparison for sort by date.
@@ -794,44 +737,91 @@ public class WaveRequest {
     /** Request for data by day of the week
      *
      */
-    abstract static public class DataByDay extends BLERequestWaveOp {
+    abstract static public class ReadData extends BLERequestWaveOp {
 
         final private static LazyLogger lazyLog = new LazyLogger( "DataByDate",
                 BLERequestWaveOp.lazyLog );
 
-        protected final Date date;
-        final int hour;
-        final int day;
+        protected final Calendar cal = UTC.newCal();
 
-        public DataByDay( final BLEAgent.BLEDevice device,
-                                     final int timeout,
-                                     final Date date ){
-            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+        /** Check calendar values and set message request bytes
+         *
+         */
+        private void initMessage() {
+            lazyLog.a( cal.get( Calendar.HOUR_OF_DAY ) == 0, "Dropping non-zero HOUR in data request" );
+            lazyLog.a( cal.get( Calendar.MINUTE ) == 0, "Dropping non-zero MINUTE in data request" );
+            lazyLog.a( cal.get( Calendar.SECOND ) == 0, "Dropping non-zero SECOND in data request" );
+            lazyLog.a( cal.get( Calendar.MILLISECOND ) == 0, "Dropping non-zero MILLISECOND in data request" );
 
-            this.date = date;
-            hour = date.getHours();
-            day = date.getDay();
-
-            MarshalByte.DATA_REQUEST_DAY.put( message, day );
-            MarshalByte.DATA_REQUEST_HOUR.put( message, hour );
-            MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
-            //TODO: Check date within the last 7 days.
+            MarshalByte.DATA_REQUEST_YEAR.put( message, cal.get( Calendar.YEAR ) );
+            MarshalByte.DATA_REQUEST_MONTH.put( message, cal.get( Calendar.MONTH ) );
+            MarshalByte.DATA_REQUEST_DATE.put( message, cal.get( Calendar.DATE ) );
         }
 
-        public DataByDay( final BLEAgent.BLEDevice device,
-                          final int timeout,
-                          final int day,
-                          final int hour){
+        /** Create a new request at the given Date
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param date time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final Date date){
+            this( device, timeout, date.getTime() );
+        }
+
+        /** Create a new request at the given Calendar
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param date time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final Calendar date){
+            this( device, timeout, date.getTimeInMillis() );
+        }
+
+        /** Create a new request at the given timestamp
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param timestamp time for request (hour, minutes, and seconds should be zero in UTC).
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final long timestamp){
+            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
+            cal.setTimeInMillis( timestamp );
+
+            initMessage();
+        }
+
+
+        /** Create a request for the given year, month, date
+         *
+         * @param device communications target.
+         * @param timeout relative time after operation begins before request is abandoned.
+         * @param year to request.
+         * @param month to request.
+         * @param date to request.
+         */
+        public ReadData(final BLEAgent.BLEDevice device,
+                        final int timeout,
+                        final int year,
+                        final int month,
+                        final int date){
             super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
 
-            this.date = null;
-            this.day = day;
-            this.hour = hour;
+            cal.set( Calendar.YEAR, year );
+            cal.set( Calendar.MONTH, month );
+            cal.set( Calendar.DATE, date );
+            cal.set( Calendar.HOUR_OF_DAY, 0 );
+            cal.set( Calendar.MINUTE, 0 );
+            cal.set( Calendar.SECOND, 0 );
+            cal.set( Calendar.MILLISECOND, 0 );
 
-            MarshalByte.DATA_REQUEST_DAY.put( message, day);
-            MarshalByte.DATA_REQUEST_HOUR.put( message, hour);
-            MarshalByte.DATA_REQUEST_QTY.put( message, 3 );
-            //TODO: Check date within the last 7 days.
+            initMessage();
         }
 
         @Override
@@ -843,30 +833,30 @@ public class WaveRequest {
                 final int month = MarshalByte.DATA_RESPONSE_MONTH.parse( response );
                 final int date = MarshalByte.DATA_RESPONSE_DATE.parse( response );
 
-                final Date responseDate;
+                lazyLog.a( MarshalByte.SIZE.parse( message ) == 99,
+                        "Data length doesn't match spec: 99!=",
+                        MarshalByte.SIZE.parse( message ) );
 
                 lazyLog.d(  "Response date stamp: ", year, "-", month, "-", date,
-                        "(", day, ") ", hour, ":00:00" );
-                if( this.date != null ) {
-                    responseDate = this.date;
-                    lazyLog.a(year == this.date.getYear(), "Year mismatch "
-                           , year, " ", this.date.getYear());
-                    lazyLog.a(month == this.date.getMonth(), "Month mismatch "
-                           , month, " ", this.date.getMonth());
-                    lazyLog.a(date == this.date.getDate(), "Date mismatch "
-                           , date, " ", this.date.getDate());
+                        0, ":00:00" );
+                if( this.cal != null ) {
+                    lazyLog.a(year == cal.get( Calendar.YEAR ), "Year mismatch "
+                           , year, " ", cal.get( Calendar.YEAR ) );
+                    lazyLog.a(month == cal.get( Calendar.MONTH ), "Month mismatch "
+                           , month, " ", cal.get( Calendar.MONTH ));
+                    lazyLog.a(date == cal.get( Calendar.DATE ), "Date mismatch "
+                           , date, " ", cal.get( Calendar.DATE ));
                 } else {
-                    responseDate = new Date( year, month, date, hour, 0, 0 );
                 }
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
-                lazyLog.d(  "Data by date for ", responseDate, " returned ", qty,
-                        " data points. (day: ", day, ", hour: ", hour, ")." );
+                lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
+                        " data points." );
 
-                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date, hour );
+                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date );
             } else {
-                lazyLog.d(  "Failed to get data (day: ", day, ", hour: ", hour, ")." );
+                lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
             }
 
             onComplete( success, ret );

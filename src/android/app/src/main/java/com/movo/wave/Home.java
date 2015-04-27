@@ -36,6 +36,9 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.movo.wave.comms.BLEAgent;
+import com.movo.wave.comms.WaveAgent;
+import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.UTC;
 
 import java.util.ArrayList;
@@ -79,7 +82,7 @@ public class Home extends ActionBarActivity {
         c = this.getApplicationContext();
 
         // Setup BLE context
-        BLEAgent.open( c );
+        BLEAgent.open(c);
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
@@ -765,13 +768,13 @@ public class Home extends ActionBarActivity {
             }
 
             @Override
-            void notify(WaveAgent.WaveDevice wave) {
+            public void notify(WaveAgent.WaveDevice wave) {
                 Log.i(TAG, "Found wave device: " + wave.ble.device.getAddress());
                 new WaveAgent.DataSync(wave.ble, syncCallback);
             }
 
             @Override
-            void onComplete() {
+            public void onComplete() {
 
             }
         });

@@ -1,10 +1,11 @@
-package com.movo.wave;
+package com.movo.wave.comms;
 
 //Created by Alexander Haase on 4/10/2015.
 
 import com.movo.wave.util.LazyLogger;
 import com.movo.wave.util.UTC;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,11 +55,11 @@ public class WaveAgent {
             }
         }
 
-        abstract void notify( WaveDevice device );
+        abstract public void notify( WaveDevice device );
 
         /** Called at scan completion
          */
-        abstract void onComplete();
+        abstract public void onComplete();
     }
 
     /** Test for if a BLEDevice is a wave device. Requires service discovery
@@ -144,7 +145,7 @@ public class WaveAgent {
     /** Data sync representation object
      *
      */
-    protected static class DataSync {
+    public static class DataSync {
 
         //final private static LazyLogger lazyLog = new LazyLogger("WaveAgent::DataSync");
         final private static LazyLogger lazyLog = new LazyLogger("WaveAgent::DataSync",WaveAgent.lazyLog);
@@ -191,11 +192,12 @@ public class WaveAgent {
 
         /**
          * Discovery: 1 (maybe)
-         * Data: 8 requests/day * 7 days
+         * //Data: 8 requests/day * 7 days
+         * Data: ~3 requests per week
          * Get and set date: 2
          * Serial and version: 2
          */
-        private static float PROGRESS_STEP = 1.0f / (24 * 7 / 3 + 5 );
+        private static float PROGRESS_STEP = 1.0f / ( 3 + 5 );
 
         private void progress() {
             callback.notify( this, requestProgress += PROGRESS_STEP );
@@ -273,7 +275,7 @@ public class WaveAgent {
 
             WaveAgent.scanForWaveDevices( timeout, new WaveScanCallback() {
                 @Override
-                void notify(WaveDevice device) {
+                public void notify(WaveDevice device) {
                     if( device.serial.equals( serial ) ) {
                         ret.device = device.ble;
                         ret.nextState( true );
@@ -281,7 +283,7 @@ public class WaveAgent {
                 }
 
                 @Override
-                void onComplete() {
+                public void onComplete() {
                     if( ret.device == null ) {
                         ret.nextState( false );
                     }
@@ -371,28 +373,29 @@ public class WaveAgent {
          * TODO: refactor to one-at-a-time to release radio sooner on failure.
          */
         private void dispatchData() {
-            for( int day = 0; day < 7; day++ ) {
-                for( int hour = 0; hour < 24; hour += 3 ) {
-                    BLEAgent.handle(new WaveRequest.DataByDay(device, timeout, day, hour) {
-                        @Override
-                        protected void onComplete(boolean success,
-                                                  WaveRequest.WaveDataPoint[] data) {
-                            receiveData( data, day, hour );
-                        }
-                    });
-                }
+            final Calendar cal = UTC.newCal();
+            cal.set( Calendar.HOUR_OF_DAY, 0 );
+            cal.set( Calendar.MINUTE, 0 );
+            cal.set( Calendar.SECOND, 0 );
+            cal.set( Calendar.MILLISECOND, 0 );
+
+            for( int day = 0; day < 7; day += 2 ) {
+                cal.add( Calendar.DATE, -2 );
+                BLEAgent.handle(new WaveRequest.ReadData(device, timeout, cal) {
+                    @Override
+                    protected void onComplete(boolean success,
+                                              WaveRequest.WaveDataPoint[] data) {
+                        receiveData( data, cal );
+                    }
+                });
             }
         }
 
         /** Wrapper/barrier for receiving and inspecting requests
          *
          * @param response array of WaveDataPoints or null for failure.
-         * @param day of week for request.
-         * @param hour of day for request.
          */
-        private void receiveData( final WaveRequest.WaveDataPoint[] response,
-                                  final int day,
-                                  final int hour ) {
+        private void receiveData( final WaveRequest.WaveDataPoint[] response, final Calendar cal ) {
             progress();
             if( response != null) {
                 dataSuccess += 1;
@@ -414,15 +417,15 @@ public class WaveAgent {
                     data.add(point);
                 }
                 if( dump ) {
-                    lazyLog.i( "DUMP START: ", day, " ", hour );
+                    lazyLog.i( "DUMP START: ", UTC.isoFormat(cal) );
                     for (WaveRequest.WaveDataPoint point : data) {
                         lazyLog.i( "DUMP: ", point );
                     }
-                    lazyLog.i( "DUMP END: ", day, " ", hour );
+                    lazyLog.i( "DUMP END: ", UTC.isoFormat(cal) );
                 }
             } else {
                 dataFailure += 1;
-                lazyLog.w("FAILED data: ", day, " ", hour );
+                lazyLog.w("FAILED data: ",UTC.isoFormat(cal) );
             }
 
             if( dataSuccess + dataFailure == 7 * 24 / 3 ) {

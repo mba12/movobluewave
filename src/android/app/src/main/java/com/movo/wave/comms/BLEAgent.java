@@ -1,4 +1,4 @@
-package com.movo.wave;
+package com.movo.wave.comms;
 
 
 import android.bluetooth.BluetoothAdapter;
@@ -12,7 +12,6 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Handler;
-import android.util.Log;
 import android.util.Pair;
 
 import com.movo.wave.util.LazyLogger;
@@ -162,10 +161,10 @@ public class BLEAgent {
      */
      private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         private boolean checkGatt( final BluetoothGatt gatt ) {
-            lazyLog.a( currentOp != null, "Expected op");
-            lazyLog.a( currentDevice != null, "Expected request");
+            lazyLog.a(currentOp != null, "Expected op");
+            lazyLog.a(currentDevice != null, "Expected request");
             if( currentDevice != null )
-                lazyLog.a( currentDevice.gatt == gatt, "Gatt objects mismatch");
+                lazyLog.a(currentDevice.gatt == gatt, "Gatt objects mismatch");
             return currentOp != null && currentDevice != null && currentDevice.gatt == gatt;
         }
 
@@ -356,9 +355,9 @@ public class BLEAgent {
 
             final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
 
-            lazyLog.a( gatt.setCharacteristicNotification( notifyCharacteristic, false ),
+            lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
                     "Failed to disable notification for service: ", notifyUUID.first,
-                            " characteristic: ", notifyUUID.second
+                    " characteristic: ", notifyUUID.second
             );
         }
 
@@ -374,15 +373,15 @@ public class BLEAgent {
             if( pendingUUID != null ) {
                 lazyLog.a(false,
                         "Started new listen operation uncleanly. old service: ", pendingUUID.first,
-                                " old characteristic: ", pendingUUID.second);
+                        " old characteristic: ", pendingUUID.second);
             }
 
             final BluetoothGattCharacteristic characteristic = getCharacteristic( notifyUUID );
 
             // check for notification failure
-            lazyLog.a( gatt.setCharacteristicNotification( characteristic, true ),
+            lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
                     "Failed to disable notification for service: ", notifyUUID.first,
-                            " characteristic: ", notifyUUID.second );
+                    " characteristic: ", notifyUUID.second);
 
             final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     notifyDescriptorUUID );
@@ -390,7 +389,7 @@ public class BLEAgent {
             descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
 
             lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
-                   , notifyUUID.first, " characteristic ", notifyUUID.second);
+                    , notifyUUID.first, " characteristic ", notifyUUID.second);
 
             pendingUUID = notifyUUID;
         }
@@ -400,7 +399,7 @@ public class BLEAgent {
          * @param gattStatus callback return value
          */
         private void completeListenUUID( final int gattStatus ) {
-            lazyLog.a( pendingUUID != null,
+            lazyLog.a(pendingUUID != null,
                     "Error, complete listen to UUID with no dispatch!!!"
             );
             if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
@@ -675,7 +674,7 @@ public class BLEAgent {
      * Note: OpStack is cleared by timeout
      */
     private boolean nextOp() {
-        lazyLog.a( opBuildStack.size() == 0, "Op build stack not empty before next op!");
+        lazyLog.a(opBuildStack.size() == 0, "Op build stack not empty before next op!");
         try {
             currentOp = opStack.pop();
             UIHandler.post(currentOp);
@@ -966,7 +965,7 @@ public class BLEAgent {
                     dev = new BLEDevice( device, now );
                     deviceMap.put( address, dev );
                 }
-                lazyLog.a( currentRequest != null, "No active request!!!");
+                lazyLog.a(currentRequest != null, "No active request!!!");
                 if( currentRequest != null && currentRequest.onReceive( dev ) ) {
                     nextRequest();
                 }

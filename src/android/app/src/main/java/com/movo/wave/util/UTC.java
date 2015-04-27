@@ -44,6 +44,15 @@ public class UTC {
         return dateFormatShort.format( new Date( timestamp ) );
     }
 
+    /** ISO-8601 date formatter.
+     *
+     * @param calendar to format (long, epoch milliseconds)
+     * @return ISO 8601 formatted string
+     */
+    public static String isoFormat( final Calendar calendar ) {
+        return dateFormat.format( calendar.getTime() );
+    }
+
     /** Creates a new utc calendar object
      *
      * @return utc calendar
