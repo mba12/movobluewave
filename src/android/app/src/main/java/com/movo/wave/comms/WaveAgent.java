@@ -192,12 +192,12 @@ public class WaveAgent {
 
         /**
          * Discovery: 1 (maybe)
-         * //Data: 8 requests/day * 7 days
-         * Data: ~3 requests per week
+         * //Data: 8 requests/day * 7 days (2 min/point)
+         * Data: ~4 requests per week (2 days per request at 30 min/point)
          * Get and set date: 2
          * Serial and version: 2
          */
-        private static float PROGRESS_STEP = 1.0f / ( 3 + 5 );
+        private static float PROGRESS_STEP = 1.0f / ( 4 + 5 );
 
         private void progress() {
             callback.notify( this, requestProgress += PROGRESS_STEP );

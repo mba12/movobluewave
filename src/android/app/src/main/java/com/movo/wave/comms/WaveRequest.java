@@ -204,7 +204,7 @@ public class WaveRequest {
             final BluetoothGattCharacteristic characteristic = device.getCharacteristic( writeUUIDs );
             characteristic.setValue(message);
 
-            lazyLog.d(  "Sending message: ", BLEAgent.bytesToHex( message ));
+            lazyLog.d( "Sending message: ", BLEAgent.bytesToHex( message ));
             lazyLog.a(device.gatt.writeCharacteristic(characteristic),
                     "start write to wave");
             return false;
@@ -317,12 +317,12 @@ public class WaveRequest {
     public static enum MarshalByte {
 
         //General message stuff
-        OP                  (0, -128, 127, 0),
-        SIZE                (1, 0, 200, 0),
+        OP                  ( 0, -128, 127, 0 ),
+        SIZE                ( 1, 0, 200, 0 ),
 
         // date related
-        YEAR                (2, 0, 99, 2000 ),
-        MONTH               (3, 1, 12, -1 ),
+        YEAR                ( 2, 0, 99, 2000 ),
+        MONTH               ( 3, 1, 12, -1 ),
         DATE                ( 4, 1, 31, 0 ),
         HOUR                ( 5, 0, 23, 0 ),
         MINUTE              ( 6, 0, 59, 0 ),
@@ -366,15 +366,6 @@ public class WaveRequest {
         BT_AUTO_DISCONNECT  ( 46, 0, 1, 0 ),
         BT_AUTO_TIMEOUT     ( 47, 0, 120, 0 ),
 
-        //sports data related
-        DATA_REQUEST_YEAR    ( 2, 0, 99, 2000 ),
-        DATA_REQUEST_MONTH   ( 3, 1, 12, -1 ),
-        DATA_REQUEST_DATE    ( 4, 1, 31, 0 ),
-
-        DATA_RESPONSE_YEAR  ( 2, 0, 99, 2000 ),
-        DATA_RESPONSE_MONTH ( 3, 1, 12, -1 ),
-        DATA_RESPONSE_DATE  ( 4, 1, 31, 0 ),
-
         //device data related
         DEVICE_LID          ( 2, 0x01, 0x09, 0 );
         ;
@@ -399,7 +390,7 @@ public class WaveRequest {
 
         private void checkRange( int value ) {
             if( value < min || value > max ) {
-                lazyLog.e("WaveAgent::MessageByte", "Value exceeds bounds("
+                lazyLog.e("WaveAgent::MessageByte::", this.name(), " Value exceeds bounds("
                        , min, ",", max, "): ", value);
             }
         }
@@ -753,9 +744,9 @@ public class WaveRequest {
             lazyLog.a( cal.get( Calendar.SECOND ) == 0, "Dropping non-zero SECOND in data request" );
             lazyLog.a( cal.get( Calendar.MILLISECOND ) == 0, "Dropping non-zero MILLISECOND in data request" );
 
-            MarshalByte.DATA_REQUEST_YEAR.put( message, cal.get( Calendar.YEAR ) );
-            MarshalByte.DATA_REQUEST_MONTH.put( message, cal.get( Calendar.MONTH ) );
-            MarshalByte.DATA_REQUEST_DATE.put( message, cal.get( Calendar.DATE ) );
+            MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
+            MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
+            MarshalByte.DATE.put( message, cal.get( Calendar.DATE ) );
         }
 
         /** Create a new request at the given Date
@@ -828,33 +819,36 @@ public class WaveRequest {
         protected void onComplete(boolean success, byte[] response) {
             WaveDataPoint[] ret = null;
 
-            if( success ) {
-                final int year = MarshalByte.DATA_RESPONSE_YEAR.parse( response );
-                final int month = MarshalByte.DATA_RESPONSE_MONTH.parse( response );
-                final int date = MarshalByte.DATA_RESPONSE_DATE.parse( response );
+            success &= (response != null);
 
+            if( success ) {
                 lazyLog.a( MarshalByte.SIZE.parse( message ) == 99,
                         "Data length doesn't match spec: 99!=",
                         MarshalByte.SIZE.parse( message ) );
 
+                final int year = MarshalByte.YEAR.parse( response );
+                final int month = MarshalByte.MONTH.parse( response );
+                final int date = MarshalByte.DATE.parse( response );
+
                 lazyLog.d(  "Response date stamp: ", year, "-", month, "-", date,
                         0, ":00:00" );
-                if( this.cal != null ) {
-                    lazyLog.a(year == cal.get( Calendar.YEAR ), "Year mismatch "
-                           , year, " ", cal.get( Calendar.YEAR ) );
-                    lazyLog.a(month == cal.get( Calendar.MONTH ), "Month mismatch "
-                           , month, " ", cal.get( Calendar.MONTH ));
-                    lazyLog.a(date == cal.get( Calendar.DATE ), "Date mismatch "
-                           , date, " ", cal.get( Calendar.DATE ));
-                } else {
-                }
+                lazyLog.a(year == cal.get( Calendar.YEAR ), "Year mismatch "
+                       , year, " ", cal.get( Calendar.YEAR ) );
+                lazyLog.a(month == cal.get( Calendar.MONTH ), "Month mismatch "
+                       , month, " ", cal.get( Calendar.MONTH ));
+                lazyLog.a(date == cal.get( Calendar.DATE ), "Date mismatch "
+                       , date, " ", cal.get( Calendar.DATE ));
 
                 final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
 
                 lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
                         " data points." );
 
-                ret = WaveDataPoint.parseResponse( response, 5, qty, year, month, date );
+                success &= ( qty >= 0 );
+
+                if( success ) {
+                    ret = WaveDataPoint.parseResponse(response, 5, qty, year, month, date);
+                }
             } else {
                 lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
             }
