@@ -496,7 +496,10 @@ public class Home extends ActionBarActivity {
             Intent intent = new Intent(getApplicationContext(),
                     FirstLaunch.class);
             startActivity(intent);
+        }else{
+            setContentView(R.layout.activity_home);
         }
+
     }
 
     public static void setUpChartsExternalCall(Context c){
@@ -884,7 +887,7 @@ public class Home extends ActionBarActivity {
     public static Cursor getStepsForSync(String syncID){
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
-        String selectionSteps =  Database.StepEntry.SYNC_ID + "=?";
+        String selectionSteps =  Database.StepEntry.SYNC_ID + "=? AND "+Database.StepEntry.IS_PUSHED +"=?";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                 new String[] { Database.StepEntry.SYNC_ID, //blob
@@ -895,7 +898,7 @@ public class Home extends ActionBarActivity {
                         Database.StepEntry.DEVICEID, //blob
                         Database.StepEntry.GUID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[] { syncID },                            // The values for the WHERE clause
+                new String[] { syncID, "0" },                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
