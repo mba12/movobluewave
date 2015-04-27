@@ -28,7 +28,7 @@ public class WaveRequest {
     /** logger
      *
      */
-    final static private LazyLogger lazyLog = new LazyLogger( "WaveRequest", false );
+    final static private LazyLogger lazyLog = new LazyLogger( "WaveRequest", true );
 
 
     /** Enum describing wave operation byte codes
