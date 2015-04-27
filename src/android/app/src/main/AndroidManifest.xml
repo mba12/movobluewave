@@ -63,6 +63,12 @@
 
         </activity>
         <activity
+            android:name=".MyProfile"
+            android:label="My Profile" >
+
+
+        </activity>
+        <activity
             android:name=".FirstLogin"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_first_login"

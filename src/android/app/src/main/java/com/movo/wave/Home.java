@@ -31,6 +31,7 @@ import android.widget.TextView;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
@@ -177,13 +178,14 @@ public class Home extends ActionBarActivity {
 
 
         //**********************Set Up slider menu******************//
-        menuOptions = new String[6];
-        menuOptions[0] = "Login";
-        menuOptions[1] = "Upload Data";
-        menuOptions[2] = "Users";
-        menuOptions[3] = "FAQ";
-        menuOptions[4] = "Contact Us";
-        menuOptions[5] = "Logout";
+        menuOptions = new String[7];
+        menuOptions[0] = "My Life Calendar";
+        menuOptions[1] = "My Profile";
+        menuOptions[2] = "Upload Data";
+        menuOptions[3] = "Users";
+        menuOptions[4] = "FAQ";
+        menuOptions[5] = "Contact Us";
+        menuOptions[6] = "Logout";
 
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -414,33 +416,44 @@ public class Home extends ActionBarActivity {
         {
             case 0:
 //                create();
-                Log.d(TAG, "Login pressed");
-                login();
+                Log.d(TAG, "My Life Calendar Pressed");
+//                login();
                 break;
             case 1:
-                Log.d(TAG, "Upload pressed");
-                UserData myData = UserData.getUserData(c);
-                Log.d(TAG, "Cur user data: "+myData.getCurUID());
-
-                upload();
+                Log.d(TAG, "My Profile Pressed");
 //                testMeSql();
+                myProfile();
                 break;
             case 2:
+                Log.d(TAG, "Upload pressed");
+//                UserData myData = UserData.getUserData(c);
+//                Log.d(TAG, "Cur user data: "+myData.getCurUID());
+
+                upload();
+
+                break;
+            case 3:
                 Log.d(TAG, "Users pressed");
                 users();
 
-            case 3:
-                Log.d(TAG, "FAQ pressed");
-//                logout();
                 break;
             case 4:
-                Log.d(TAG, "Contact pressed");
-//                match();
+                Log.d(TAG, "FAQ pressed");
+//                logout();
+
                 break;
 
             case 5:
+                Log.d(TAG, "Contact pressed");
+//                match();
+
+                break;
+
+            case 6:
                 Log.d(TAG, "Logout pressed");
                 logout();
+
+
                 break;
         }
     }
@@ -484,8 +497,12 @@ public class Home extends ActionBarActivity {
     }
 
 
+    public void myProfile(){
+        Intent intent = new Intent(getApplicationContext(),
+                MyProfile.class);
+        startActivity(intent);
 
-
+    }
 
     public void login(){
         Intent intent = new Intent(getApplicationContext(),
@@ -740,6 +757,7 @@ public class Home extends ActionBarActivity {
                     }catch(Exception e){
                         e.printStackTrace();
                         Log.d(TAG, "No new entries to upload");
+                        Toast.makeText(c, "No new steps to add.",Toast.LENGTH_SHORT);
                     }
                     curSteps.close();
 
