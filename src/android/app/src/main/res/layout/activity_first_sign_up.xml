@@ -1,24 +1,27 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent" android:background="@android:color/black"
-    tools:context="com.movo.wave.FirstLogin">
+    tools:context="com.movo.wave.FirstSignUp">
 
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:paddingTop="150dip">
+        android:paddingTop="90dip">
         <EditText
             android:id="@+id/username"
-            android:layout_width="fill_parent"
+            android:layout_width="250dip"
             android:layout_height="40dip"
             android:gravity="center"
+            android:inputType="textEmailAddress"
+            android:layout_centerHorizontal="true"
             android:background="@android:color/white"
             android:singleLine="true"
+            android:textColor="@android:color/black"
             android:hint="Email Address"/>
 
         <EditText
             android:id="@+id/password"
-            android:layout_width="fill_parent"
+            android:layout_width="250dip"
             android:layout_height="40dip"
             android:layout_below="@+id/username"
             android:gravity="center"
@@ -26,49 +29,103 @@
             android:layout_alignLeft="@+id/username"
             android:background="@android:color/white"
             android:password="true"
+            android:textColor="@android:color/black"
             android:singleLine="true"
             android:hint="Password"/>
 
         <EditText
             android:id="@+id/password2"
-            android:layout_width="fill_parent"
+            android:layout_width="250dip"
             android:layout_height="40dip"
             android:layout_below="@+id/password"
             android:gravity="center"
             android:layout_marginTop="20dip"
-
+            android:textColor="@android:color/black"
             android:layout_alignLeft="@+id/username"
             android:background="@android:color/white"
             android:password="true"
             android:singleLine="true"
             android:hint="Confirm Password"/>
 
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="I Verify That I Am 13 Years Of Age Or Older"
+            android:id="@+id/cbAge"
+            android:gravity="center"
+            android:layout_below="@+id/password2"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="38dp"
+            android:checked="false" />
 
+        <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Terms of Service"
+        android:id="@+id/tvTerms"
+        android:layout_alignParentBottom="true"
+        android:layout_alignStart="@+id/cbAge" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Privacy Policy"
+            android:id="@+id/tvPrivacy"
+            android:layout_alignParentBottom="true"
+            android:layout_alignEnd="@+id/cbAge" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="By proceeding, you also agree to Movo's Terms of Service and Privacy Policy."
+            android:id="@+id/textView"
+            android:gravity="center"
+            android:layout_above="@+id/tvTerms"
+            android:layout_marginBottom="10dip"
+            android:layout_centerHorizontal="true" />
 
-        </RelativeLayout>
+    </RelativeLayout>
 
 
     <Button
         android:id="@+id/loginButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/forgotPass"
         android:layout_centerHorizontal="true"
         android:background="@drawable/red_button"
         android:text="CREATE ACCOUNT"
         android:textColor="@android:color/white"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="90dip"
         />
+
+    <!-- no longer used
     <Button
         android:id="@+id/forgotPass"
-        android:layout_width="wrap_content"
+        android:visibility="gone"
+        android:layout_width="0px"
         android:layout_height="wrap_content"
         android:text="Forgot Password?"
+        android:layout_alignLeft="@+id/loginButton"
+        android:layout_alignRight="@+id/loginButton"
         android:background="@drawable/greybtn_sm"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:textColor="@android:color/darker_gray"
+        android:layout_marginBottom="80dip"
 
         />
+
+        -->
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBarLogin"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:indeterminate="false"
+        android:visibility="gone"/>
 </RelativeLayout>

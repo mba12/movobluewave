@@ -48,6 +48,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,6 +73,10 @@ public class Home extends ActionBarActivity {
     Firebase currentUserRef;
     String[] menuOptions;
     TextView currentUserTV;
+    TextView older;
+    TextView newer;
+    TextView curMonthDisplay;
+
     public static String TAG = "Movo Wave V2";
 
 
@@ -81,16 +86,72 @@ public class Home extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         c = this.getApplicationContext();
-
+        ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
         // Setup BLE context
         BLEAgent.open(c);
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
-        calendar = Calendar.getInstance();
-        curDay = calendar.get(Calendar.DAY_OF_MONTH);
+        Intent intentIncoming = getIntent();
+
+            String date = intentIncoming.getStringExtra("date");
+            if(date!=null) {
+                Long dateLong = Long.parseLong(date);
+                calendar = Calendar.getInstance();
+                calendar.setTime(new Date(dateLong));
+                if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().MONTH)){
+                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+                }
+            }else{
+
+                calendar = Calendar.getInstance();
+                curDay = calendar.get(Calendar.DAY_OF_MONTH);
+            }
+
+
+
+
+
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
+
+        older = (TextView) findViewById(R.id.tvOlder);
+        newer = (TextView) findViewById(R.id.tvNewer);
+        curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
+        String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.SHORT, Locale.US);
+        curMonthDisplay.setText(month_name+"");
+
+        older.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),
+                        Home.class);
+                Bundle extras = new Bundle();
+                long todaymillis = calendar.getTimeInMillis();
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTime(new Date(todaymillis));
+                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)-1);
+                long monthForwardMillis = newCal.getTimeInMillis();
+                String tomorrow = (monthForwardMillis)+"";
+                intent.putExtra("date",tomorrow);
+                startActivity(intent);
+            }
+        });
+        newer.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(),
+                        Home.class);
+                Bundle extras = new Bundle();
+                long todaymillis = calendar.getTimeInMillis();
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTime(new Date(todaymillis));
+                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)+1);
+                long monthForwardMillis = newCal.getTimeInMillis();
+                String tomorrow = (monthForwardMillis)+"";
+                intent.putExtra("date",tomorrow);
+                startActivity(intent);
+            }
+        });
 
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
@@ -169,6 +230,14 @@ public class Home extends ActionBarActivity {
             }
         });
 
+        profilePic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myProfile();
+            }
+        });
+
+
 
 
 
@@ -216,7 +285,7 @@ public class Home extends ActionBarActivity {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        calendar = Calendar.getInstance();
+//        calendar = Calendar.getInstance();
         curDay = calendar.get(Calendar.DAY_OF_MONTH);
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
@@ -244,7 +313,7 @@ public class Home extends ActionBarActivity {
         for(int i=0;i<numberOfDaysLeft;i++){
 
             //Grab today's data//
-            Calendar monthCal = Calendar.getInstance();
+            Calendar monthCal = calendar;
             monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,0,0,0);
             long monthRangeStart = monthCal.getTimeInMillis();
             monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
@@ -352,7 +421,12 @@ public class Home extends ActionBarActivity {
 
 
             if(dayToDisplay == curDay){
-                day.setText("Today");
+                if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
+                    day.setText("Today");
+                }else{
+                    day.setText(dayToDisplay+"");
+                }
+
             }else {
                 day.setText(dayToDisplay+"");
             }
@@ -941,5 +1015,12 @@ public class Home extends ActionBarActivity {
         );
         curSteps.moveToFirst();
         return curSteps;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        //now getIntent() should always return the last received intent
     }
 }
