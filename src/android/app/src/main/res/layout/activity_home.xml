@@ -126,12 +126,31 @@
         android:layout_height="fill_parent"
         android:layout_below="@id/midBarLayout">
 
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/chart"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:visibility="gone"/>
 
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/chart"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:visibility="visible"
+            android:layout_above="@+id/weeklyAverages"/>
+
+        <RelativeLayout
+            android:id="@+id/weeklyAverages"
+            android:layout_width="fill_parent"
+            android:layout_height="100dip"
+            android:layout_alignParentBottom="true">
+
+
+
+            </RelativeLayout>
+
+
+    </RelativeLayout>
     <GridView
         android:id="@+id/gridview"
         android:layout_width="wrap_content"

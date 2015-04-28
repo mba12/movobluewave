@@ -16,25 +16,25 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/splashmovo">
+        android:background="@drawable/splash">
 
         <TextView
             android:id="@+id/tvMiles"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
+            android:textSize="35sp"
             android:text="Miles"
             android:textColor="@android:color/white"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
             android:layout_marginStart="43dp"
-            android:layout_marginBottom="120dp" />
+            android:layout_marginBottom="170dp" />
 
         <TextView
             android:id="@+id/tvCalories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
+            android:textSize="35sp"
             android:text="Calories"
             android:textColor="@android:color/white"
             android:layout_alignTop="@+id/tvMiles"
@@ -55,7 +55,7 @@
             android:id="@+id/tvSteps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="40sp"
+            android:textSize="505sp"
             android:text="Steps"
             android:textColor="@android:color/white"
             android:layout_below="@+id/tvCalories"
