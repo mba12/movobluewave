@@ -61,8 +61,10 @@
         <activity
             android:name=".MyProfile"
             android:label="My Profile" >
-
-
+        </activity>
+        <activity
+            android:name=".DiscoverWaveActivity"
+            android:label="Discover Wave" >
         </activity>
         <activity
             android:name=".FirstLogin"
@@ -83,16 +85,6 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.movo.wave.FirstLaunch" />
-        </activity>
-        <activity
-            android:name=".ScanForWaveActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_scan_for_wave"
-            android:parentActivityName=".Home"
-            android:theme="@style/FullscreenTheme" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.movo.wave.Home" />
         </activity>
     </application>
 

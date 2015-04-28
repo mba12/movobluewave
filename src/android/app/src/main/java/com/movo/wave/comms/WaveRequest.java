@@ -821,10 +821,26 @@ public class WaveRequest {
 
             success &= (response != null);
 
-            if( success ) {
-                lazyLog.a( MarshalByte.SIZE.parse( message ) == 99,
+            do {
+                if( ! success ) {
+                    lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
+                    break;
+                }
+                lazyLog.a( MarshalByte.SIZE.parse( response ) == 99,
                         "Data length doesn't match spec: 99!=",
-                        MarshalByte.SIZE.parse( message ) );
+                        MarshalByte.SIZE.parse( response ) );
+
+                final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
+
+                lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
+                        " data points." );
+
+                success &= ( qty >= 0 );
+
+                if( ! success ) {
+                    lazyLog.d("No data points for ", cal);
+                    break;
+                }
 
                 final int year = MarshalByte.YEAR.parse( response );
                 final int month = MarshalByte.MONTH.parse( response );
@@ -839,19 +855,9 @@ public class WaveRequest {
                 lazyLog.a(date == cal.get( Calendar.DATE ), "Date mismatch "
                        , date, " ", cal.get( Calendar.DATE ));
 
-                final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
+                ret = WaveDataPoint.parseResponse(response, 5, qty, year, month, date);
 
-                lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
-                        " data points." );
-
-                success &= ( qty >= 0 );
-
-                if( success ) {
-                    ret = WaveDataPoint.parseResponse(response, 5, qty, year, month, date);
-                }
-            } else {
-                lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
-            }
+            } while( false );
 
             onComplete( success, ret );
         }

@@ -380,7 +380,6 @@ public class WaveAgent {
             cal.set( Calendar.MILLISECOND, 0 );
 
             for( int day = 0; day < 7; day += 2 ) {
-
                 BLEAgent.handle(new WaveRequest.ReadData(device, timeout,
                         cal.get( Calendar.YEAR ),
                         cal.get( Calendar.MONTH),
@@ -391,6 +390,7 @@ public class WaveAgent {
                         receiveData( data, cal );
                     }
                 });
+
                 cal.add( Calendar.DATE, -2 );
             }
         }
