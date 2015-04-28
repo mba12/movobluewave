@@ -182,7 +182,7 @@ public class Home extends ActionBarActivity {
 
 
         //**********************Set Up slider menu******************//
-        menuOptions = new String[7];
+        menuOptions = new String[8];
         menuOptions[0] = "My Life Calendar";
         menuOptions[1] = "My Profile";
         menuOptions[2] = "Upload Data";
@@ -190,6 +190,7 @@ public class Home extends ActionBarActivity {
         menuOptions[4] = "FAQ";
         menuOptions[5] = "Contact Us";
         menuOptions[6] = "Logout";
+        menuOptions[7] = "Discover Waves";
 
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
         mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -457,7 +458,16 @@ public class Home extends ActionBarActivity {
                 Log.d(TAG, "Logout pressed");
                 logout();
 
+                break;
 
+            case 7:
+                Log.d(TAG, "Wave Discover pressed");
+                discover();
+
+                break;
+
+            default:
+                Log.e( TAG, "Unexpected menu ordinal: " + position);
                 break;
         }
     }
@@ -529,6 +539,11 @@ public class Home extends ActionBarActivity {
             setContentView(R.layout.activity_home);
         }
 
+    }
+
+    public void discover() {
+        Intent intent = new Intent( getApplicationContext(), DiscoverWaveActivity.class);
+        startActivity( intent );
     }
 
     public static void setUpChartsExternalCall(Context c){
