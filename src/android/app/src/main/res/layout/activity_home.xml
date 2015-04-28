@@ -118,7 +118,36 @@
         android:layout_below="@id/topBarLayout">
 
 
-        </RelativeLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Older"
+            android:id="@+id/tvOlder"
+            android:textColor="@android:color/black"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Newer"
+            android:id="@+id/tvNewer"
+            android:textColor="@android:color/black"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:text="Cur Month"
+            android:id="@+id/tvCurMonth"
+            android:textColor="@android:color/black"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/botBarLayout"
@@ -136,7 +165,7 @@
             android:id="@+id/chart"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:visibility="visible"
+            android:visibility="gone"
             android:layout_above="@+id/weeklyAverages"/>
 
         <RelativeLayout
