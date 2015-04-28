@@ -70,7 +70,11 @@ public class UserActivity extends ActionBarActivity {
         Button addUser = (Button) findViewById(R.id.addUserButton);
         addUser.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-            Toast.makeText(c, "TODO!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(getApplicationContext(),
+                            FirstLogin.class);
+                    startActivity(intent);
+
 
             }
         });

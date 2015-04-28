@@ -16,36 +16,48 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:background="@drawable/splashmovo">
+        android:background="@drawable/splash">
 
         <TextView
             android:id="@+id/tvMiles"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="35sp"
             android:text="Miles"
+            android:textColor="@android:color/white"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
             android:layout_marginStart="43dp"
-            android:layout_marginBottom="120dp" />
+            android:layout_marginBottom="170dp" />
 
         <TextView
             android:id="@+id/tvCalories"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="35sp"
             android:text="Calories"
+            android:textColor="@android:color/white"
             android:layout_alignTop="@+id/tvMiles"
             android:layout_alignStart="@+id/tvMiles"
             android:layout_marginTop="33dp" />
-
+        <!--
+        <ImageView
+            android:id="@+id/gradient"
+            android:layout_width="75dip"
+            android:layout_height="35dip"
+            android:layout_alignLeft="@id/tvCalories"
+            android:layout_alignTop="@id/tvCalories"
+            android:scaleType="fitXY"
+            android:background="@drawable/datebgwide"/>
+            -->
         <TextView
 
             android:id="@+id/tvSteps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="505sp"
             android:text="Steps"
+            android:textColor="@android:color/white"
             android:layout_below="@+id/tvCalories"
             android:layout_alignStart="@+id/tvCalories"
             android:layout_marginTop="29dp" />

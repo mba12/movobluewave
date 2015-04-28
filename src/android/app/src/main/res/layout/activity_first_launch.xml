@@ -14,14 +14,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/logored"/>
-    <TextView android:text="Welcome to Movo
-    Let's get started."
+    <TextView android:text="Welcome to Movo\nLet's get started."
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:textColor="@android:color/white"
         android:layout_below="@+id/movoLogo"
-        android:gravity="center_horizontal"/>
+        android:gravity="center"/>
 
     <Button
         android:id="@+id/login"
@@ -35,8 +34,10 @@
 
     <Button
         android:id="@+id/register"
-        android:layout_width="wrap_content"
+        android:layout_width="0px"
         android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/login"
+        android:layout_alignRight="@+id/login"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:textColor="@android:color/white"

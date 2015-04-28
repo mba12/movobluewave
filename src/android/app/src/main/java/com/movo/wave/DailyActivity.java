@@ -90,10 +90,10 @@ public class DailyActivity extends ActionBarActivity {
                 double caloriesUsed = calc.simple_calculate_calories(stepsTaken);
 
 //                    calculate_calories(int steps, int height, int weight, String gender, int birthYear, int minutes) {
-                calories.setText(String.format("%.2f CAL", caloriesUsed));
+                calories.setText(String.format("%.1f CAL", caloriesUsed));
 
                 double milesTraveled = calc.calculate_distance(stepsTaken, 72);
-                miles.setText(String.format("%.3f MILES", milesTraveled));
+                miles.setText(String.format("%.1f MILES", milesTraveled));
             }else{
                 steps.setText(0 + " STEPS");
 

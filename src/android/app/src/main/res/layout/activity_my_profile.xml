@@ -1,0 +1,147 @@
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <!--
+         As the main content view, the view below consumes the entire
+         space available using match_parent in both dimensions.
+    -->
+
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/profilePic"
+            android:src="@drawable/default_user_icon"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp" />
+
+        <LinearLayout
+            android:id="@+id/masterLinear"
+            android:orientation="horizontal"
+            android:layout_below="@id/profilePic"
+            android:layout_marginTop="20dp"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:weightSum="1">
+
+            <LinearLayout
+
+                android:id="@+id/leftLayout"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:orientation="vertical"
+                android:background="@android:color/white"
+                android:layout_weight="0.5">
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Full Name"
+                    android:id="@+id/tvName" />
+
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Birthday"
+                    android:id="@+id/tvBirth"
+                    android:layout_below="@+id/editText"
+                    android:layout_alignStart="@+id/tvName" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Height"
+                    android:id="@+id/tvHeight"
+                    android:layout_centerVertical="true"
+                    android:layout_alignStart="@+id/textView" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Weight"
+                    android:id="@+id/tvWeight"
+                    android:layout_below="@+id/textView2"
+                    android:layout_alignStart="@+id/textView2" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Gender"
+                    android:id="@+id/tvGender"
+                    android:layout_below="@+id/textView3"
+                    android:layout_alignStart="@+id/textView3" />
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/rightLayout"
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="fill_parent"
+                android:layout_weight="0.5"
+                >
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edName"
+                    android:hint="Full Name" />
+
+                <DatePicker
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edBirth"
+                    android:hint="Birthday"/>
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edHeight"
+                    android:hint="Height"/>
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edWeight"
+                    android:hint="Weight"/>
+
+                <EditText
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/edGender"
+                    android:hint="Gender" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </RelativeLayout>
+    <ListView
+        android:id="@+id/left_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"
+        android:background="#111"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" />
+</android.support.v4.widget.DrawerLayout>
