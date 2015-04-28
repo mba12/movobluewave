@@ -11,6 +11,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
+import android.view.Window;
 import android.widget.TextView;
 
 import com.movo.wave.util.Calculator;
@@ -28,6 +29,7 @@ public class DailyActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_daily);
         c = this.getApplicationContext();
@@ -35,6 +37,8 @@ public class DailyActivity extends ActionBarActivity {
         miles = (TextView) findViewById(R.id.tvMiles);
         calories = (TextView) findViewById(R.id.tvCalories);
         steps = (TextView) findViewById(R.id.tvSteps);
+
+
 
         Intent intent = getIntent();
         if (null != intent) { //Null Checking

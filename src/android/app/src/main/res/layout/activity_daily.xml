@@ -1,4 +1,4 @@
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
@@ -9,66 +9,107 @@
          space available using match_parent in both dimensions.
     -->
 
-    <FrameLayout
-        android:id="@+id/content_frame"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+    <RelativeLayout
+        android:id="@+id/topBar"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:paddingLeft="20dip"
+        android:paddingRight="20dip"
+        android:background="@android:color/darker_gray"
+        >
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Apr"
+            android:id="@+id/tvBack"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Apr 27"
+            android:id="@+id/tvCurDate"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Photo"
+            android:id="@+id/tvPhoto"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true" />
+    </RelativeLayout>
+
+
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
+        android:layout_below="@id/topBar"
         android:background="@drawable/splash">
 
-        <TextView
-            android:id="@+id/tvMiles"
+        <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="35sp"
-            android:text="Miles"
-            android:textColor="@android:color/white"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginStart="43dp"
-            android:layout_marginBottom="170dp" />
+            android:paddingLeft="40dip"
+            android:paddingRight="40dip"
+            android:layout_marginStart="43dip"
+            android:layout_marginBottom="25dip"
+            android:background="@drawable/datebgwide"
+            >
 
-        <TextView
-            android:id="@+id/tvCalories"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="35sp"
-            android:text="Calories"
-            android:textColor="@android:color/white"
-            android:layout_alignTop="@+id/tvMiles"
-            android:layout_alignStart="@+id/tvMiles"
-            android:layout_marginTop="33dp" />
-        <!--
-        <ImageView
-            android:id="@+id/gradient"
-            android:layout_width="75dip"
-            android:layout_height="35dip"
-            android:layout_alignLeft="@id/tvCalories"
-            android:layout_alignTop="@id/tvCalories"
-            android:scaleType="fitXY"
-            android:background="@drawable/datebgwide"/>
-            -->
-        <TextView
+            <TextView
+                android:id="@+id/tvMiles"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="35sp"
+                android:text="Miles"
+                android:textColor="@android:color/white"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true"/>
 
-            android:id="@+id/tvSteps"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textSize="50sp"
-            android:text="Steps"
-            android:textColor="@android:color/white"
-            android:layout_below="@+id/tvCalories"
-            android:layout_alignStart="@+id/tvCalories"
-            android:layout_marginTop="29dp" />
+            <TextView
+                android:id="@+id/tvCalories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="35sp"
+                android:text="Calories"
+                android:textColor="@android:color/white"
+                android:layout_alignTop="@+id/tvMiles"
+                android:layout_alignStart="@+id/tvMiles"
+                android:layout_marginTop="33dp" />
+            <!--
+            <ImageView
+                android:id="@+id/gradient"
+                android:layout_width="75dip"
+                android:layout_height="35dip"
+                android:layout_alignLeft="@id/tvCalories"
+                android:layout_alignTop="@id/tvCalories"
+                android:scaleType="fitXY"
+                android:background="@drawable/datebgwide"/>
+                -->
+            <TextView
+
+                android:id="@+id/tvSteps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="50sp"
+                android:text="Steps"
+                android:textColor="@android:color/white"
+                android:layout_below="@+id/tvCalories"
+                android:layout_alignStart="@+id/tvCalories"
+                android:layout_marginTop="29dp" />
+
+
+            </RelativeLayout>
+
     </RelativeLayout>
-    <ListView
-        android:id="@+id/left_drawer"
-        android:layout_width="240dp"
-        android:layout_height="match_parent"
-        android:layout_gravity="left"
-        android:background="#111"
-        android:choiceMode="singleChoice"
-        android:divider="@android:color/transparent"
-        android:dividerHeight="0dp" />
-</android.support.v4.widget.DrawerLayout>
+
+</RelativeLayout>

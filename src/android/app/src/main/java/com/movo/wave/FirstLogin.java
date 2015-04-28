@@ -162,6 +162,12 @@ public class FirstLogin extends Activity {
                                         ref.changePassword(mEmail, mPassword, resetPass1, new Firebase.ResultHandler() {
                                             @Override
                                             public void onSuccess() {
+
+                                                UserData myData = UserData.getUserData(c);
+//                                                myData.setCurUID(authData.getUid());
+//                                                myData.setCurToken(authData.getToken());
+//                                                myData.setCurEmail(mEmail);
+                                                myData.setCurPW(resetPass1);
                                                 // password changed
                                                 Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
                                                 child.addValueEventListener(new ValueEventListener() {
