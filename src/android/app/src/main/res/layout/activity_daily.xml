@@ -55,7 +55,7 @@
             android:id="@+id/tvSteps"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="505sp"
+            android:textSize="50sp"
             android:text="Steps"
             android:textColor="@android:color/white"
             android:layout_below="@+id/tvCalories"

@@ -72,6 +72,7 @@ public class Home extends ActionBarActivity {
     Firebase currentUserRef;
     String[] menuOptions;
     TextView currentUserTV;
+
     public static String TAG = "Movo Wave V2";
 
 
@@ -81,7 +82,7 @@ public class Home extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
         c = this.getApplicationContext();
-
+        ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
         // Setup BLE context
         BLEAgent.open(c);
 
@@ -168,6 +169,14 @@ public class Home extends ActionBarActivity {
 
             }
         });
+
+        profilePic.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                myProfile();
+            }
+        });
+
 
 
 

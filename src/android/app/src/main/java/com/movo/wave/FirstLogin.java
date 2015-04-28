@@ -9,8 +9,12 @@ import com.movo.wave.util.SystemUiHider;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
@@ -18,12 +22,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.MenuItem;
 import android.support.v4.app.NavUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -43,11 +49,17 @@ import java.util.UUID;
 public class FirstLogin extends Activity {
     Button login;
     Button forgot;
+    EditText pass1;
+    EditText pass2;
+    String resetPass1;
+    String resetPass2;
+    View dialogView;
     String mEmail;
     String mPassword;
     EditText username;
     EditText pass;
     Firebase loginRef;
+    Button forgotPass;
     static Context c;
     static String TAG = "Movo.FirstLogin";
     static String curYear;
@@ -68,9 +80,34 @@ public class FirstLogin extends Activity {
         username = (EditText) findViewById(R.id.username);
         pass = (EditText) findViewById(R.id.password);
         loginProgress = (ProgressBar) findViewById(R.id.progressBarLogin);
+        forgotPass = (Button) findViewById(R.id.forgotPass);
 
 
+        forgotPass.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                loginProgress.setVisibility(View.VISIBLE);
+                mEmail = username.getText().toString();
+                if(mEmail.equals("")){
+                    Toast.makeText(c, "Error: Email is empty", Toast.LENGTH_LONG).show();
+                }else {
+                    loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
+                        @Override
+                        public void onSuccess() {
+                            // password reset email sent
+                            Toast.makeText(c, "Password reset email has been sent", Toast.LENGTH_LONG).show();
+                            loginProgress.setVisibility(View.GONE);
+                        }
 
+                        @Override
+                        public void onError(FirebaseError firebaseError) {
+                            // error encountered
+                            Toast.makeText(c, "Error: " + firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+                            loginProgress.setVisibility(View.GONE);
+                        }
+                    });
+                }
+            }
+        });
 
         login.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -86,56 +123,120 @@ public class FirstLogin extends Activity {
                         myData.setCurToken(authData.getToken());
                         myData.setCurEmail(mEmail);
                         myData.setCurPW(mPassword);
-                        Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+                        final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
                         myData.setCurrentUserRef(currentUserRef);
                         boolean firstTime = myData.addCurUserTolist();
-                        Calendar cal = Calendar.getInstance();
-                        int month = cal.get(Calendar.MONTH);
-                        month++;
+                        final Calendar cal = Calendar.getInstance();
+                        int monthtemp = cal.get(Calendar.MONTH);
+                        final int month = monthtemp++;
                         int year = cal.get(Calendar.YEAR);
                         curYear = year + "";
                         curMonth = month+"";
 
+                        if((Boolean)authData.getProviderData().get("isTemporaryPassword")){
 
-                        Firebase child =currentUserRef.child("/steps/"+cal.get(Calendar.YEAR)+"/"+month);
-                        child.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot snapshot) {
-                                System.out.println(snapshot.getValue());
-                                loginProgress.setVisibility(View.INVISIBLE);
+                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(FirstLogin.this);
+// ...Irrelevant code for customizing the buttons and title
+                            LayoutInflater inflater = FirstLogin.this.getLayoutInflater();
+                            dialogView = inflater.inflate(R.layout.reset_password_prompt, null);
+                            dialogBuilder.setView(dialogView);
 
-                                insertSteps(snapshot);
+                            pass1 = (EditText) dialogView.findViewById(R.id.pass1);
+                            pass2 = (EditText) dialogView.findViewById(R.id.pass2);
+                            Button reset = (Button) dialogView.findViewById(R.id.reset);
+                            Button cancel = (Button) dialogView.findViewById(R.id.cancel);
+
+
+
+                            final AlertDialog alertDialog = dialogBuilder.create();
+                            reset.setOnClickListener(new View.OnClickListener() {
+                                public void onClick(View v) {
+
+                                    resetPass1 = pass1.getText().toString();
+                                    resetPass2 = pass2.getText().toString();
+
+                                    if(resetPass1.equals(resetPass2)) {
+                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                        pb2.setVisibility(View.VISIBLE);
+                                        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/");
+                                        ref.changePassword(mEmail, mPassword, resetPass1, new Firebase.ResultHandler() {
+                                            @Override
+                                            public void onSuccess() {
+                                                // password changed
+                                                Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
+                                                child.addValueEventListener(new ValueEventListener() {
+                                                    @Override
+                                                    public void onDataChange(DataSnapshot snapshot) {
+                                                        System.out.println(snapshot.getValue());
+                                                        loginProgress.setVisibility(View.INVISIBLE);
+
+                                                        insertSteps(snapshot);
 
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                                Intent intent = new Intent(getApplicationContext(),
-                                        Home.class);
-                                startActivity(intent);
-                            }
-                            @Override
-                            public void onCancelled(FirebaseError firebaseError) {
-                                System.out.println("The read failed: " + firebaseError.getMessage());
-                            }
-                        });
+                                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                                        pb2.setVisibility(View.GONE);
+
+                                                        Intent intent = new Intent(getApplicationContext(),
+                                                                Home.class);
+                                                        startActivity(intent);
+                                                    }
+
+                                                    @Override
+                                                    public void onCancelled(FirebaseError firebaseError) {
+                                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                                        pb2.setVisibility(View.GONE);
+                                                        System.out.println("The read failed: " + firebaseError.getMessage());
+                                                    }
+                                                });
+                                            }
+                                            @Override
+                                            public void onError(FirebaseError firebaseError) {
+                                                // error encountered
+                                                Toast.makeText(c, "Reset Passwords do not match",Toast.LENGTH_LONG).show();
+                                                alertDialog.cancel();
+                                            }
+                                        });
 
 
-//                        if(firstTime){
-//                            //we gotta download the user's data from firebase
-//
-//
-//
-//                        }else{
-//                            //we should sync the user's data with firebase, but this can happen in the background
-////                            loginProgress.setVisibility(View.INVISIBLE);
-////
-////
-////                            Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-////                            Intent intent = new Intent(getApplicationContext(),
-////                                    Home.class);
-////                            startActivity(intent);
-//                        }
+                                    }else{
+                                        Toast.makeText(c, "Reset Passwords do not match",Toast.LENGTH_LONG).show();
+                                    }
+
+                                }
+                            });
+
+                            cancel.setOnClickListener(new View.OnClickListener() {
+                                public void onClick(View v) {
+                                    alertDialog.cancel();
+                                }
+                            });
+                            alertDialog.show();
 
 
+                        }else {
+                            Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
+                            child.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot snapshot) {
+                                    System.out.println(snapshot.getValue());
+                                    loginProgress.setVisibility(View.INVISIBLE);
 
+                                    insertSteps(snapshot);
+
+//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+
+
+                                    Intent intent = new Intent(getApplicationContext(),
+                                            Home.class);
+                                    startActivity(intent);
+                                }
+
+                                @Override
+                                public void onCancelled(FirebaseError firebaseError) {
+                                    System.out.println("The read failed: " + firebaseError.getMessage());
+                                }
+                            });
+                        }
 
 
 
@@ -144,8 +245,8 @@ public class FirstLogin extends Activity {
                     @Override
                     public void onAuthenticationError(FirebaseError firebaseError) {
                         Log.d(TAG,"Error logging in. ");
-
-                        Toast.makeText(c, "Could not Authenticate user", Toast.LENGTH_SHORT);
+                        loginProgress.setVisibility(View.INVISIBLE);
+                        Toast.makeText(c, "Could not Authenticate user", Toast.LENGTH_LONG).show();
                     }
                 });
 
@@ -193,7 +294,7 @@ public class FirstLogin extends Activity {
                         values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
                         values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
                         values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
                         //TODO: add workout type
 
                         long newRowId;
@@ -218,6 +319,32 @@ public class FirstLogin extends Activity {
         db.close();
 
     }
+
+
+//
+//    @Override
+//    public Dialog onCreateDialog(Bundle savedInstanceState) {
+//        AlertDialog.Builder builder = new AlertDialog.Builder(c);
+//        // Get the layout inflater
+//        LayoutInflater inflater = getActivity().getLayoutInflater();
+//
+//        // Inflate and set the layout for the dialog
+//        // Pass null as the parent view because its going in the dialog layout
+//        builder.setView(inflater.inflate(R.layout.dialog_signin, null))
+//                // Add action buttons
+//                .setPositiveButton(R.string.signin, new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        // sign in the user ...
+//                    }
+//                })
+//                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+//                    public void onClick(DialogInterface dialog, int id) {
+//                        LoginDialogFragment.this.getDialog().cancel();
+//                    }
+//                });
+//        return builder.create();
+//    }
 
 
 }
