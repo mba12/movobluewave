@@ -27,7 +27,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.StepEntry.START + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.END + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.STEPS + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.USER + INTEGER_TYPE + COMMA_SEP +
+                    Database.StepEntry.USER + TEXT_TYPE + COMMA_SEP +
                     Database.StepEntry.IS_PUSHED + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
@@ -48,6 +48,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     " UNIQUE ( "+Database.SyncEntry.GUID+" ) ON CONFLICT REPLACE" +
                     " )";
 
+    private static final String SQL_CREATE_KNOWN_WAVES =
+            "CREATE TABLE " + Database.KnownWaves.WAVE_TABLE_NAME + " (" +
+                    Database.KnownWaves.MAC + TEXT_TYPE + " PRIMARY KEY NOT NULL ON CONFLICT REPLACE " + COMMA_SEP +
+                    Database.KnownWaves.QUERIED + INTEGER_TYPE  + COMMA_SEP +
+                    Database.KnownWaves.SERIAL + TEXT_TYPE + COMMA_SEP +
+                    Database.KnownWaves.USER + TEXT_TYPE + ")";
+
+
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + Database.StepEntry.STEPS_TABLE_NAME;
 
@@ -62,11 +70,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
     public void onCreate(SQLiteDatabase db) {
+
+        Log.d(TAG, "Creating steps table: " +SQL_CREATE_ENTRIES_STEPS);
         db.execSQL(SQL_CREATE_ENTRIES_STEPS);
-        Log.v(TAG, "SQL Steps creation string: "+SQL_CREATE_ENTRIES_STEPS);
-        Log.d(TAG, "Creating steps table");
+
+        Log.d(TAG, "Creating sync table: " + SQL_CREATE_ENTRIES_SYNC);
         db.execSQL(SQL_CREATE_ENTRIES_SYNC);
-        Log.d(TAG, "Creating sync table");
+
+        Log.d(TAG, "Creating wave table: "+ SQL_CREATE_KNOWN_WAVES);
+        db.execSQL(SQL_CREATE_KNOWN_WAVES);
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
