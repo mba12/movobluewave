@@ -122,36 +122,36 @@ public class Home extends ActionBarActivity {
         String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.SHORT, Locale.US);
         curMonthDisplay.setText(month_name+"");
 
-        older.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),
-                        Home.class);
-                Bundle extras = new Bundle();
-                long todaymillis = calendar.getTimeInMillis();
-                Calendar newCal = Calendar.getInstance();
-                newCal.setTime(new Date(todaymillis));
-                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)-1);
-                long monthForwardMillis = newCal.getTimeInMillis();
-                String tomorrow = (monthForwardMillis)+"";
-                intent.putExtra("date",tomorrow);
-                startActivity(intent);
-            }
-        });
-        newer.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(),
-                        Home.class);
-                Bundle extras = new Bundle();
-                long todaymillis = calendar.getTimeInMillis();
-                Calendar newCal = Calendar.getInstance();
-                newCal.setTime(new Date(todaymillis));
-                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)+1);
-                long monthForwardMillis = newCal.getTimeInMillis();
-                String tomorrow = (monthForwardMillis)+"";
-                intent.putExtra("date",tomorrow);
-                startActivity(intent);
-            }
-        });
+//        older.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                Intent intent = new Intent(getApplicationContext(),
+//                        Home.class);
+//                Bundle extras = new Bundle();
+//                long todaymillis = calendar.getTimeInMillis();
+//                Calendar newCal = Calendar.getInstance();
+//                newCal.setTime(new Date(todaymillis));
+//                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)-1);
+//                long monthForwardMillis = newCal.getTimeInMillis();
+//                String tomorrow = (monthForwardMillis)+"";
+//                intent.putExtra("date",tomorrow);
+//                startActivity(intent);
+//            }
+//        });
+//        newer.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                Intent intent = new Intent(getApplicationContext(),
+//                        Home.class);
+//                Bundle extras = new Bundle();
+//                long todaymillis = calendar.getTimeInMillis();
+//                Calendar newCal = Calendar.getInstance();
+//                newCal.setTime(new Date(todaymillis));
+//                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)+1);
+//                long monthForwardMillis = newCal.getTimeInMillis();
+//                String tomorrow = (monthForwardMillis)+"";
+//                intent.putExtra("date",tomorrow);
+//                startActivity(intent);
+//            }
+//        });
 
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
@@ -218,12 +218,16 @@ public class Home extends ActionBarActivity {
             public void onItemClick(AdapterView<?> parent, View v,
                                     int position, long id) {
                 TextView tv = (TextView) v.findViewById(R.id.wholeDate);
-                tv.getText();
+                String dateStr = tv.getText().toString();
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(new Date(Long.parseLong(dateStr)));
+                cal.set(Calendar.MONTH,(cal.get(Calendar.MONTH)-1));
+                long intentTime = cal.getTimeInMillis();
                 Intent intent = new Intent(getApplicationContext(),
                         DailyActivity.class);
                 Bundle extras = new Bundle();
 //                extras.putString(*/
-                intent.putExtra("date",tv.getText().toString());
+                intent.putExtra("date",intentTime+"");
                 startActivity(intent);
                 // DO something
 

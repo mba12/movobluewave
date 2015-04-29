@@ -8,8 +8,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Base64;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -18,11 +23,16 @@ import android.view.Window;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.movo.wave.util.Calculator;
 
+import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class DailyActivity extends ActionBarActivity {
@@ -35,7 +45,9 @@ public class DailyActivity extends ActionBarActivity {
     TextView photo;
     TextView tvToday;
     Date today;
+    Calendar monthCal;
     RelativeLayout wholeView;
+    private static final int SELECT_PHOTO = 100;
 
 
     @Override
@@ -50,7 +62,15 @@ public class DailyActivity extends ActionBarActivity {
         steps = (TextView) findViewById(R.id.tvSteps);
         tvToday = (TextView) findViewById(R.id.tvCurDate);
         wholeView = (RelativeLayout) findViewById(R.id.drawer_layout);
+        photo = (TextView) findViewById(R.id.tvPhoto);
 
+        photo.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.setType("image/*");
+                startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+            }
+        });
 
         back = (TextView) findViewById(R.id.tvBack);
         back.setOnClickListener(new View.OnClickListener() {
@@ -59,13 +79,7 @@ public class DailyActivity extends ActionBarActivity {
             }
         });
 
-//start new dailyactivity
-//        Intent intent = new Intent(getApplicationContext(),
-//                DailyActivity.class);
-//        Bundle extras = new Bundle();
-////                extras.putString(*/
-//        intent.putExtra("date",tv.getText().toString());
-//        startActivity(intent);
+
 
 
 
@@ -79,7 +93,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
 
-            final Calendar monthCal = Calendar.getInstance();
+          monthCal = Calendar.getInstance();
             monthCal.setTime(today);
             SimpleDateFormat month_date = new SimpleDateFormat("MMM");
             String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
@@ -227,6 +241,71 @@ public class DailyActivity extends ActionBarActivity {
                 }
                 return false;
             }
+        }
+    }
+
+
+
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    Intent imageReturnedIntent) {
+        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+
+        switch(requestCode) {
+            case SELECT_PHOTO:
+                if(resultCode == RESULT_OK){
+                    Uri selectedImage = imageReturnedIntent.getData();
+                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                    Cursor cursor = getContentResolver().query(
+                            selectedImage, filePathColumn, null, null, null);
+                    cursor.moveToFirst();
+
+                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                    String filePath = cursor.getString(columnIndex);
+                    cursor.close();
+
+
+//                    Bitmap selectedImageToUpload; = BitmapFactory.decodeFile(filePath);
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
+                    byte[] b = baos.toByteArray();
+                    String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+
+                    UserData myData = UserData.getUserData(c);
+                    String user = myData.getCurUID();
+
+                    Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+
+
+                    if(encodedImage.length()>1000000) {
+                        List<String> strings = new ArrayList<String>();
+                        int index = 0;
+                        while (index < encodedImage.length()) {
+                            strings.add(encodedImage.substring(index, Math.min(index + 1000000, encodedImage.length())));
+                            index += 1000000;
+                        }
+
+
+                        Log.d(TAG, "Starting image upload " + ref);
+                    for(int i = 0;i<strings.size();i++){
+                        ref.child(""+i).setValue(strings.get(i), new Firebase.CompletionListener() {
+                            @Override
+                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                if (firebaseError != null) {
+                                    Log.i(firebaseError.toString(), firebaseError.toString());
+                                }
+                            }
+
+                        });
+                        Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
+                    }
+                    }else{
+
+                    }
+                    ref.child(0+"").setValue(encodedImage);
+                    Log.d(TAG, "End image upload "+ref);
+//                    ref.setValue(encodedImage);
+                }
         }
     }
 }
