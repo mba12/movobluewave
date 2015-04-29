@@ -39,6 +39,12 @@ public final class Database {
 
     }
 
-
+    public static abstract class KnownWaves implements BaseColumns {
+        public static final String WAVE_TABLE_NAME = "waves";
+        public static final String MAC = "mac";
+        public static final String QUERIED = "queried";
+        public static final String SERIAL = "serial";
+        public static final String USER = "user";
+    }
 
 }
