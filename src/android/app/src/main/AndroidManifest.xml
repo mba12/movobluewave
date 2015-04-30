@@ -66,6 +66,7 @@
             android:name=".MyProfile"
             android:launchMode="singleInstance"
             android:label="My Profile" >
+            android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".DiscoverWaveActivity"
