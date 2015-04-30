@@ -33,7 +33,9 @@ public abstract class MenuActivity extends ActionBarActivity {
                 return intent;
             }
         },
+
         SyncData  ("Sync Wave", SyncDataActivity.class),
+
         User        ("Users", UserActivity.class ),
         FAQ         ("FAQ", null),
         Contact     ("Contact", null),
