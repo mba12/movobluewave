@@ -1,9 +1,7 @@
 package com.movo.wave;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -26,7 +24,7 @@ public abstract class MenuActivity extends ActionBarActivity {
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        UploadData  ("Upload Data", Home.class),
+        SyncData  ("Sync Wave", SyncDataActivity.class),
         User        ("Users", UserActivity.class ),
         FAQ         ("FAQ", null),
         Contact     ("Contact", null),
@@ -37,7 +35,7 @@ public abstract class MenuActivity extends ActionBarActivity {
                 return new Intent( context, mUD.logoutCurrentUser() ? FirstLaunch.class : Home.class );
             }
         },
-        DiscoverWave    ( "Discover Wave", DiscoverWaveActivity.class),
+        DiscoverWave    ( "My Waves", DiscoverWaveActivity.class),
         ;
 
         final public String text;

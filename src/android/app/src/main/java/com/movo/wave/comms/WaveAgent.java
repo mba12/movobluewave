@@ -179,9 +179,11 @@ public class WaveAgent {
         }
 
         public BLEAgent.BLEDevice device = null;
+        public WaveInfo info;
         final public int timeout = 10000;
         public Date deviceDate = null;
         public Date localDate = null;
+        private int dataTotal = 0;
         private int dataSuccess = 0;
         private int dataFailure = 0;
         final public Callback callback;
@@ -293,6 +295,36 @@ public class WaveAgent {
             return ret;
         }
 
+        /** Constructor for finding device by WaveInfo
+         *
+         * Since double string overload is a no-no.
+         *
+         * NOTE: may be very slow......
+         *
+         * @param timeout discovery timeout in seconds.
+         * @param info WaveInfo object for target device.
+         * @param callback notification callback.
+         * @return DataSync object for operation.
+         */
+        public static DataSync byInfo( final int timeout,
+                                       final WaveInfo info,
+                                       final Callback callback) {
+            DataSync ret = null;
+            if( info.mac != null ) {
+                ret = byAddress( timeout, info.mac, callback );
+            } else if( info.serial != null ) {
+                ret = bySerial( timeout, info.serial, callback );
+            } else {
+                lazyLog.a( info.mac != null || info.serial != null,
+                        " At least one of mac and serial must be not-null!");
+            }
+
+            if( ret != null ) {
+                ret.info = info;
+            }
+            return ret;
+        }
+
         /** Sync constructor for known device.
          *
          * @param device communications target.
@@ -380,6 +412,7 @@ public class WaveAgent {
             cal.set( Calendar.MILLISECOND, 0 );
 
             for( int day = 0; day < 7; day += 2 ) {
+                dataTotal += 1;
                 BLEAgent.handle(new WaveRequest.ReadData(device, timeout,
                         cal.get( Calendar.YEAR ),
                         cal.get( Calendar.MONTH),
@@ -432,7 +465,7 @@ public class WaveAgent {
                 lazyLog.w("FAILED data: ",UTC.isoFormat(cal) );
             }
 
-            if( dataSuccess + dataFailure == 7 * 24 / 3 ) {
+            if( dataSuccess + dataFailure == dataTotal ) {
                 nextState( true );
             }
         }
