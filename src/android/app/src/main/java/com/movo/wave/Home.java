@@ -929,7 +929,7 @@ public class Home extends MenuActivity {
     }
 
 
-    private static int insertPoints( final SQLiteDatabase db,
+    public static int insertPoints( final SQLiteDatabase db,
                                      final String guid,
                                      final String userID,
                                      Collection<WaveRequest.WaveDataPoint> points,

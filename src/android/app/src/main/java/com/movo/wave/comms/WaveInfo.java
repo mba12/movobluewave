@@ -99,7 +99,7 @@ public class WaveInfo {
      * @param user for which to query waves
      * @return number of WaveInfo instances inserted.
      */
-    static long byUser( SQLiteDatabase db, Collection<WaveInfo> destination, String user ) {
+    public static long byUser( SQLiteDatabase db, Collection<WaveInfo> destination, String user ) {
         long ret = 0;
         Cursor cursor = db.query( Database.KnownWaves.WAVE_TABLE_NAME,
                 queryColumns,
