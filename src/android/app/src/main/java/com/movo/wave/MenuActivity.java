@@ -24,16 +24,6 @@ public abstract class MenuActivity extends ActionBarActivity {
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        UploadData  ("Upload Data", Home.class){
-            @Override
-            public Intent select(Context context) {
-                UserData mUD = UserData.getUserData(context);
-                Intent intent = new Intent( context,Home.class);
-                intent.putExtra("Upload",true);
-                return intent;
-            }
-        },
-
         SyncData  ("Sync Wave", SyncDataActivity.class),
 
         User        ("Users", UserActivity.class ),
@@ -88,14 +78,16 @@ public abstract class MenuActivity extends ActionBarActivity {
             mDrawerList.setItemChecked(position, false);
             mDrawerLayout.closeDrawer(mDrawerList);
 
-            if( position >= Option.values().length ) {
-                lazyLog.e( "Menu ordinal out of range: " + position );
-            } else {
-                final Intent intent = Option.values()[position].select(c);
+            final Option option = Option.values()[position];
+
+            if( option.activity != MenuActivity.this.getClass()) {
+                final Intent intent = option.select(c);
                 if (intent != null) {
                     startActivity(intent);
                     finish();
                 }
+            } else {
+                lazyLog.i( "Already in menu option: ", option );
             }
         }
     }
