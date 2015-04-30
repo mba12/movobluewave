@@ -52,6 +52,10 @@
                 android:id="@+id/profilePic"
                 android:layout_width="50dip"
                 android:layout_height="50dip"
+                android:maxHeight="100dip"
+                android:maxWidth="100dip"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:background="@android:color/black"/>
@@ -115,28 +119,65 @@
             android:id="@+id/midBarLayout"
             android:layout_width="fill_parent"
             android:layout_height="51dip"
+
             android:layout_below="@id/topBarLayout">
 
-
-            <TextView
+            <RelativeLayout
+                android:id="@+id/previous"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Older"
-                android:id="@+id/tvOlder"
-                android:textColor="@android:color/black"
                 android:layout_centerVertical="true"
-                android:layout_alignParentStart="true" />
+                android:paddingLeft="10dip"
+                android:layout_alignParentStart="true" >
 
-            <TextView
+                <ImageView
+                    android:id="@+id/leftArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/backwards"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_toRightOf="@id/leftArrow"
+                    android:text="Older"
+                    android:id="@+id/tvOlder"
+                    android:textColor="@android:color/black"
+                    android:layout_centerVertical="true" />
+
+
+                </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/next"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Newer"
-                android:id="@+id/tvNewer"
-                android:textColor="@android:color/black"
                 android:layout_centerVertical="true"
-                android:layout_alignParentEnd="true" />
+                android:paddingRight="10dip"
+                android:layout_alignParentEnd="true" >
+                <ImageView
+                    android:id="@+id/rightArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/forward"
+                    android:layout_alignParentEnd="true"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Newer"
+                    android:layout_toLeftOf="@id/rightArrow"
+                    android:id="@+id/tvNewer"
+                    android:textColor="@android:color/black"
+                    android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -160,7 +201,7 @@
                 android:id="@+id/chartView"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:visibility="visible">
+                android:visibility="gone">
 
 
                 <com.github.mikephil.charting.charts.LineChart
@@ -319,7 +360,7 @@
                 android:numColumns="3"
                 android:stretchMode="columnWidth"
                 android:padding="10dip"
-                android:visibility="gone"/>
+                android:visibility="visible"/>
 
             <ProgressBar
                 android:layout_width="wrap_content"

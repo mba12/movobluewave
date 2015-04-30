@@ -77,9 +77,10 @@ public class Home extends MenuActivity {
     private CharSequence mTitle;
     Firebase currentUserRef;
     TextView currentUserTV;
-    TextView older;
-    TextView newer;
+    RelativeLayout older;
+    RelativeLayout newer;
     TextView curMonthDisplay;
+
 
     public static String TAG = "Movo Wave V2";
 
@@ -119,8 +120,8 @@ public class Home extends MenuActivity {
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
 
-        older = (TextView) findViewById(R.id.tvOlder);
-        newer = (TextView) findViewById(R.id.tvNewer);
+        older = (RelativeLayout) findViewById(R.id.previous);
+        newer = (RelativeLayout) findViewById(R.id.next);
         if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
             newer.setVisibility(View.GONE);
 
@@ -141,6 +142,10 @@ public class Home extends MenuActivity {
 
 
         UserData myData = UserData.getUserData(c);
+        Bitmap prof = myData.getCurUserPhoto();
+        if(prof!=null){
+            profilePic.setImageBitmap(prof);
+        }
 
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -419,15 +424,15 @@ public class Home extends MenuActivity {
         TextView calsTotal = (TextView) findViewById(R.id.caloriesTotal);
         TextView calsAve = (TextView) findViewById(R.id.caloriesAverage);
         double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, numberOfDaysLeft );
-        stepsAve.setText(stepsAverageDouble+"");
+        stepsAve.setText(String.format("%.1f", stepsAverageDouble));
         double milesTotalDouble = calculateTotalMiles(totalStepsForMonth);
-        milesTotal.setText(milesTotalDouble+"");
+        milesTotal.setText(String.format("%.1f", milesTotalDouble));
         double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, numberOfDaysLeft );
-        milesAve.setText(milesAverageDouble+"");
+        milesAve.setText(String.format("%.1f",milesAverageDouble));
         double caloriesDouble = calculateTotalCalories(totalStepsForMonth);
-        calsTotal.setText(caloriesDouble+"");
+        calsTotal.setText(String.format("%.1f",caloriesDouble));
         double caloriesAverage = calculateAverageCalories(totalStepsForMonth, numberOfDaysLeft);
-        calsAve.setText(caloriesAverage+"");
+        calsAve.setText(String.format("%.1f",caloriesAverage));
 
             stepsTotal.setText(totalStepsForMonth+"");
 //        }
@@ -534,7 +539,7 @@ public class Home extends MenuActivity {
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
-            Bitmap bm = dailyBitmapFetch(monthCal.getTimeInMillis());
+            Bitmap bm = dailyBitmapFetch(monthRangeStart);
 
             if(bm!=null){
                 background.setImageBitmap(bm);
