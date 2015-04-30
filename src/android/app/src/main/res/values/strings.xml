@@ -19,5 +19,20 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_scan_for_wave">Scan For Waves</string>
-    <string name="sync_flavor_text">Syncing data from Wave:</string>
+    <string name="sync_flavor_text">Syncing Data with Wave</string>
+    <string-array name="sync_state_enum">
+        <item>Connecting</item>
+        <item>Checking Version</item>
+        <item>Checking Time</item>
+        <item>Uploading Data</item>
+        <item>Setting Time</item>
+        <item>Complete</item>
+    </string-array>
+    <string name="sync_sql_save">Saving Data&#8230;</string>
+    <string name="sync_serial_label">Wave Serial: </string>
+    <string-array name="scan_state_enum">
+        <item>Waiting For Bluetooth</item>
+        <item>Scanning</item>
+        <item>Complete</item>
+    </string-array>
 </resources>

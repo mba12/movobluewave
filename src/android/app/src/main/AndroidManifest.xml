@@ -70,13 +70,13 @@
         </activity>
         <activity
             android:name=".DiscoverWaveActivity"
-            android:label="My Waves"
+            android:label="Select Wave to Sync"
             android:launchMode="singleInstance"
             android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".SyncDataActivity"
-            android:label="Sync Data"
+            android:label="Syncing Data with Wave"
             android:parentActivityName=".DiscoverWaveActivity">
         </activity>
         <activity

@@ -2,22 +2,16 @@ package com.movo.wave;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.os.PersistableBundle;
-import android.util.Log;
-import android.view.Menu;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
-import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
 import com.movo.wave.comms.WaveRequest;
@@ -49,16 +43,20 @@ public class SyncDataActivity extends MenuActivity {
         @Override
         public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean status) {
             lazyLog.d( sync.info, " Sync: ", sync, " state: ", state, " status: ", status);
+            updateSyncState( state );
         }
 
         @Override
         public void notify(WaveAgent.DataSync sync, float progress) {
-            progressBar.setProgress( (int)(100.0f * progress));
+            updateSyncProgress( progress );
         }
 
         @Override
         public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
-            onSyncComplete( sync, data );
+            syncState.setText( resources.getString(R.string.sync_sql_save) );
+            onSyncComplete(sync, data);
+            updateSyncState(WaveAgent.DataSync.SyncState.COMPLETE);
+            updateSyncProgress( 1.0f );
             db.close();
             if( ! destroyed ) {
                 startActivity( new Intent( c, Home.class ));
@@ -274,16 +272,34 @@ public class SyncDataActivity extends MenuActivity {
     Date start;
 
     WaveAgent.DataSync sync;
-    ProgressBar progressBar;
+    ProgressBar syncProgress;
+    TextView syncState;
+    TextView syncPercent;
+
+    Resources resources;
+
+    private void updateSyncState( WaveAgent.DataSync.SyncState state ) {
+        String[] enumText = resources.getStringArray( R.array.sync_state_enum );
+        syncState.setText( enumText[ state.ordinal() ] + "\u2026");
+    }
+
+    private void updateSyncProgress( float progress ) {
+        int percent = (int)(100.0f * progress);
+        syncProgress.setProgress(percent);
+        syncPercent.setText( percent + "%");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_sync_data);
+        resources = getResources();
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
 
-        progressBar = (ProgressBar) findViewById( R.id.syncProgress );
-        TextView waveSerial = (TextView) findViewById( R.id.waveSerial );
+        syncProgress = (ProgressBar) findViewById( R.id.syncProgress );
+        syncState = (TextView) findViewById( R.id.syncState );
+        syncPercent = (TextView) findViewById(R.id.syncPercent);
+        TextView syncSerial = (TextView) findViewById( R.id.syncSerial );
 
         db = mDbHelper.getWritableDatabase();
         start = new Date();
@@ -294,10 +310,10 @@ public class SyncDataActivity extends MenuActivity {
         lazyLog.i( "Starting sync with MAC ", mac );
         final WaveInfo info = new WaveInfo( db, mac );
 
-        waveSerial.setText( info.serial );
-        progressBar.setProgress( 0 );
-
+        syncSerial.setText( resources.getString(R.string.sync_serial_label) + info.serial );
         sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
+        updateSyncProgress( 0 );
+        updateSyncState( sync.getState() );
     }
 
     @Override

@@ -2,13 +2,17 @@ package com.movo.wave;
 
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
@@ -34,7 +38,62 @@ public class DiscoverWaveActivity extends MenuActivity {
     ArrayAdapter<WaveInfo> arrayAdapter;
     ListView waveList;
 
+    enum ScanState {
+        WAITING,
+        SCANNING,
+        COMPLETE ("!", true)
+        ;
+
+        final public String terminator;
+        final boolean scanEnabled;
+
+        private ScanState() {
+            terminator = "\u2026";
+            scanEnabled = false;
+        }
+
+        private ScanState( String terminator,  boolean scanEnabled ) {
+            this.terminator = terminator;
+            this.scanEnabled = scanEnabled;
+        }
+
+        public ScanState next() {
+            if( this.ordinal() + 1 == values().length ) {
+                return values()[ 0 ];
+            } else {
+                return values()[ordinal() + 1];
+            }
+        }
+    }
+
+    Resources resources;
+    ScanState scanState = ScanState.COMPLETE;
+    ProgressBar scanProgress;
+    TextView scanStatus;
+    Button scanButton;
+
+    private void nextState() {
+        scanState = scanState.next();
+        if( scanState.scanEnabled ) {
+            scanProgress.setVisibility( View.INVISIBLE );
+        } else {
+            scanProgress.setVisibility( View.VISIBLE );
+        }
+
+        scanStatus.setText( resources.getTextArray(R.array.scan_state_enum)[ scanState.ordinal() ] +
+            scanState.terminator);
+
+        scanButton.setEnabled( scanState.scanEnabled );
+    }
+
     private final BLEAgent.BLERequestScan scanRequest = new BLEAgent.BLERequestScan(10000) {
+
+        @Override
+        public boolean dispatch(BLEAgent agent) {
+            nextState();
+            return super.dispatch(agent);
+        }
+
         @Override
         public boolean filter(BLEAgent.BLEDevice device) {
             do {
@@ -94,11 +153,12 @@ public class DiscoverWaveActivity extends MenuActivity {
 
         @Override
         public void onComplete(BLEAgent.BLEDevice device) {
+            nextState();
             lazyLog.i( "Wave discovery complete" );
         }
     };
 
-    public static final LazyLogger lazyLog = new LazyLogger( "Movo Discover Wave",
+    public static final LazyLogger lazyLog = new LazyLogger( "WaveScanActivity",
             MenuActivity.lazyLog );
 
     @Override
@@ -106,6 +166,14 @@ public class DiscoverWaveActivity extends MenuActivity {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_discover_wave);
         waveList = (ListView) findViewById(R.id.waveList);
+
+        resources = getResources();
+        scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
+        scanStatus = (TextView) findViewById(R.id.waveScanStatus);
+        scanButton = (Button) findViewById(R.id.waveScanButton);
+
+        nextState();
+
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
 
         db = mDbHelper.getWritableDatabase();

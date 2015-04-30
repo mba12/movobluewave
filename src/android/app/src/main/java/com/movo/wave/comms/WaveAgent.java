@@ -191,6 +191,14 @@ public class WaveAgent {
         private SyncState state = SyncState.DISCOVERY;
         private float requestProgress = 0;
 
+        /** Public state getter
+         *
+         * @return current state
+         */
+        public SyncState getState() {
+            return state;
+        }
+
 
         /**
          * Discovery: 1 (maybe)

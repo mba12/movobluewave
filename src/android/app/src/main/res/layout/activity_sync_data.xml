@@ -26,23 +26,46 @@
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:text="@string/sync_flavor_text"
+            android:textStyle="bold"
+            android:padding="5pt"
+            android:id="@+id/syncTitle"
             android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:id="@+id/textView2" />
+            android:layout_toStartOf="@+id/syncPercent" />
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:id="@+id/waveSerial"
-            android:layout_below="@+id/textView2"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:padding="5pt"
+            android:id="@+id/syncSerial"
+            android:layout_below="@+id/syncTitle"
             android:layout_alignParentStart="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5pt"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="italic"
+            android:textAlignment="center"
+            android:id="@+id/syncState"
+            android:layout_below="@+id/syncSerial"
+            android:layout_alignParentStart="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5pt"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="italic"
+            android:textAlignment="center"
+            android:id="@+id/syncPercent"
+            android:layout_below="@+id/syncSerial"
+            android:layout_alignParentEnd="true" />
 
         <ProgressBar
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/syncProgress"
-            android:layout_below="@+id/waveSerial"
+            android:layout_below="@+id/syncState"
             android:padding="5pt"
             android:layout_alignParentStart="true" />
 
