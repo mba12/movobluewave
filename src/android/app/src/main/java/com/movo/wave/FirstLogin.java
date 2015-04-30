@@ -125,6 +125,8 @@ public class FirstLogin extends Activity {
                         myData.setCurPW(mPassword);
                         final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
                         myData.setCurrentUserRef(currentUserRef);
+                        Firebase metadataChild = currentUserRef.child("metadata");
+                        myData.setMetadata(metadataChild);
                         boolean firstTime = myData.addCurUserTolist();
                         final Calendar cal = Calendar.getInstance();
                         int monthtemp = cal.get(Calendar.MONTH);
@@ -164,6 +166,7 @@ public class FirstLogin extends Activity {
                                             public void onSuccess() {
 
                                                 UserData myData = UserData.getUserData(c);
+                                                myData.downloadProfilePic();
 //                                                myData.setCurUID(authData.getUid());
 //                                                myData.setCurToken(authData.getToken());
 //                                                myData.setCurEmail(mEmail);
@@ -181,6 +184,7 @@ public class FirstLogin extends Activity {
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
                                                         ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
                                                         pb2.setVisibility(View.GONE);
+
 
                                                         Intent intent = new Intent(getApplicationContext(),
                                                                 Home.class);
@@ -220,6 +224,7 @@ public class FirstLogin extends Activity {
 
 
                         }else {
+                            myData.downloadProfilePic();
                             Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
                             child.addValueEventListener(new ValueEventListener() {
                                 @Override

@@ -142,10 +142,7 @@ public class Home extends MenuActivity {
 
 
         UserData myData = UserData.getUserData(c);
-        Bitmap prof = myData.getCurUserPhoto();
-        if(prof!=null){
-            profilePic.setImageBitmap(prof);
-        }
+
 
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -325,6 +322,15 @@ public class Home extends MenuActivity {
             upload();
         }
 
+        try{
+            Bitmap prof = myData.getCurUserPhoto();
+            if(prof!=null){
+                profilePic.setImageBitmap(prof);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
 
 //        upload();
     }
@@ -354,15 +360,19 @@ public class Home extends MenuActivity {
 //
         }
         try {
-            gridview.setAdapter(new GridViewCalendar(Home.this));
-            setUpChart();
+            if(UserData.getUserData(c).getCurUID()!=null) {
+                gridview.setAdapter(new GridViewCalendar(Home.this));
+                setUpChart();
+                gridview.invalidate();
+                chart.invalidate();
+                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+                currentUserTV.setText(UserData.getUserData(c).getCurrentUserEmail());
+            }
         }catch(Exception e){
             e.printStackTrace();
         }
-        gridview.invalidate();
-        chart.invalidate();
-        TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-        currentUserTV.setText(UserData.getUserData(c).getCurrentUserEmail());
+
+
     }
 
 
@@ -539,8 +549,12 @@ public class Home extends MenuActivity {
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
-            Bitmap bm = dailyBitmapFetch(monthRangeStart);
-
+            Bitmap bm = null;
+            try {
+                bm = dailyBitmapFetch(monthRangeStart);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
             if(bm!=null){
                 background.setImageBitmap(bm);
             }

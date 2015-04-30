@@ -1,6 +1,7 @@
 package com.movo.wave;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -8,15 +9,20 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,16 +37,16 @@ public class UserData extends Activity{
     private String TAG = "Wave.UserData";
     boolean status = false;
     Context appContext;
-    private String currentUID;
-    private String currentToken;
-    private String currentEmail;
-    private String currentPW;
-    private String currentBirthdate;
-    private String currentHeight1;
-    private String currentHeight2;
-    private String currentWeight;
-    private String currentGender;
-    private String currentFullName;
+    private String currentUID = "Error";
+    private String currentToken = "Error";
+    private String currentEmail = "Error";
+    private String currentPW = "Error";
+    private String currentBirthdate = "Error";
+    private String currentHeight1 = "Error";
+    private String currentHeight2 = "Error";
+    private String currentWeight = "Error";
+    private String currentGender = "Error";
+    private String currentFullName = "Error";
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
@@ -521,6 +527,84 @@ public class UserData extends Activity{
             curPhoto.close(); 
             return null;
         }
+    }
+
+    public void downloadProfilePic(){
+        Log.d(TAG, "Loading image from firebase");
+        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + currentUID + "/metadata/profilepic");
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                //                    System.out.println(snapshot.getValue());
+                if(snapshot.getChildrenCount()==1){
+                    final BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inJustDecodeBounds = false;
+                    options.inSampleSize = 4;
+                    ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
+                    byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+
+                    DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+                    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//
+
+                            //file from cloud is different than local, save to device
+                            Calendar profile = Calendar.getInstance();
+                            profile.setTimeInMillis(0);
+                            ContentValues syncValues = new ContentValues();
+                            syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
+                            syncValues.put(Database.PhotoStore.USER, currentUID);
+                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                            long newRowId;
+                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                    null,
+                                    syncValues);
+                            Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                            db.close();
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+//                            background.setImageBitmap(decodedByte);
+
+                        }
+
+
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("The read failed: " + firebaseError.getMessage());
+            }
+        });
+    }
+
+    public void setMetadata(Firebase child){
+
+        child.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                setCurEmail(snapshot.child("currentEmail").getValue(String.class));
+                setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
+                setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
+                setCurWeight(snapshot.child("currentWeight").getValue(String.class));
+                setCurGender(snapshot.child("currentGender").getValue(String.class));
+                setCurName(snapshot.child("currentFullName").getValue(String.class));
+                setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+
+
+//
+//        setCurEmail(child.child("currentEmail"));
+////        currentPW =  child.child("currentEmail").toString();
+////        currentToken = userData.getString("currentToken","Error");
+//        setCurHeight1(child.child("currentHeight1").toString());
+//        setCurHeight2(child.child("currentHeight2").toString());
+//        setCurWeight(child.child("currentWeight").toString());
+//        setCurGender(child.child("currentGender").toString());
+//        setCurName(child.child("currentFullName").toString());
+////        currentPW = prefs.getString("currentPW", "Error");
+//        setCurBirthdate(child.child("currentBirthdate").toString());
     }
 
 
