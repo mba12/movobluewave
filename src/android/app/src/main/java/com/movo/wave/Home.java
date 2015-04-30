@@ -46,6 +46,7 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveRequest;
+import com.movo.wave.util.Calculator;
 import com.movo.wave.util.UTC;
 
 import java.text.SimpleDateFormat;
@@ -408,18 +409,25 @@ public class Home extends MenuActivity {
             //add +1 for the 0 based day compensation.
             xVals.add((i+1)+"");
         }
+        Calendar monthCal = calendar;
+        monthCal.setTimeInMillis(timestamp);
 
         TextView stepsTotal = (TextView) findViewById(R.id.stepTotal);
-        TextView stepsAve = (TextView) findViewById(R.id.stepTotal);
-        TextView milesTotal = (TextView) findViewById(R.id.stepTotal);
-        TextView milesAve = (TextView) findViewById(R.id.stepTotal);
-        TextView calsTotal = (TextView) findViewById(R.id.stepTotal);
-        TextView calsAve = (TextView) findViewById(R.id.stepTotal);
-        double stepsAverageDouble = 0;
-        int milesTotalInt = 0;
-        double milesAverageDouble = 0;
-        int caloriesInt = 0;
-        double caloriesAcerage = 0;
+        TextView stepsAve = (TextView) findViewById(R.id.stepAverage);
+        TextView milesTotal = (TextView) findViewById(R.id.distanceTotal);
+        TextView milesAve = (TextView) findViewById(R.id.distanceAverage);
+        TextView calsTotal = (TextView) findViewById(R.id.caloriesTotal);
+        TextView calsAve = (TextView) findViewById(R.id.caloriesAverage);
+        double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, numberOfDaysLeft );
+        stepsAve.setText(stepsAverageDouble+"");
+        double milesTotalDouble = calculateTotalMiles(totalStepsForMonth);
+        milesTotal.setText(milesTotalDouble+"");
+        double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, numberOfDaysLeft );
+        milesAve.setText(milesAverageDouble+"");
+        double caloriesDouble = calculateTotalCalories(totalStepsForMonth);
+        calsTotal.setText(caloriesDouble+"");
+        double caloriesAverage = calculateAverageCalories(totalStepsForMonth, numberOfDaysLeft);
+        calsAve.setText(caloriesAverage+"");
 
             stepsTotal.setText(totalStepsForMonth+"");
 //        }
@@ -1133,6 +1141,70 @@ public class Home extends MenuActivity {
         }
     }
 
-    pu
+    public static double calculateAverageSteps(int steps, int daysInMonth){
+        double ave=0;
+        if(daysInMonth!=0){
+            ave = steps/daysInMonth;
+        }
+        return ave;
+    }
+
+    public static double calculateTotalMiles(int steps){
+        Calculator calc = new Calculator();
+
+//                double caloriesUsed = calc.calculate_calories(stepsTaken, 72, 170, "Male", 1987, 24);
+//        double caloriesUsed = calc.simple_calculate_calories(stepsTaken);
+
+//                    calculate_calories(int steps, int height, int weight, String gender, int birthYear, int minutes) {
+//        calories.setText(String.format("%.1f CAL", caloriesUsed));
+
+        double milesTraveled = calc.calculate_distance(steps, 72);
+        return milesTraveled;
+    }
+    public static double calculateTotalCalories(int steps){
+        Calculator calc = new Calculator();
+
+                double caloriesUsed = calc.simple_calculate_calories(steps);
+            return caloriesUsed;
+
+
+    }
+
+    public static double calculateAverageMiles(int steps, int daysInMonth){
+        double milesTraveled = 0;
+        Calculator calc = new Calculator();
+
+
+        if(daysInMonth!=0){
+            milesTraveled = calc.calculate_distance(steps, 72);
+            milesTraveled = milesTraveled / daysInMonth;
+        }
+
+//                double caloriesUsed = calc.calculate_calories(stepsTaken, 72, 170, "Male", 1987, 24);
+//        double caloriesUsed = calc.simple_calculate_calories(stepsTaken);
+
+//                    calculate_calories(int steps, int height, int weight, String gender, int birthYear, int minutes) {
+//        calories.setText(String.format("%.1f CAL", caloriesUsed));
+
+
+            return milesTraveled;
+
+    }
+
+    public static double calculateAverageCalories(int steps, int daysInMonth){
+        double caloriesUsed = 0;
+        Calculator calc = new Calculator();
+
+
+        if(daysInMonth!=0){
+             caloriesUsed = calc.simple_calculate_calories(steps);
+            caloriesUsed = caloriesUsed / daysInMonth;
+        }
+
+//
+
+
+        return caloriesUsed;
+    }
 
 }
