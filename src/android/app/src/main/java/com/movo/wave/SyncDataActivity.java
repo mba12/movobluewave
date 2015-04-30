@@ -267,7 +267,7 @@ public class SyncDataActivity extends MenuActivity {
             }catch(Exception e){
                 e.printStackTrace();
                 lazyLog.d( "No new entries to upload");
-                Toast.makeText(c, "No new steps to add.", Toast.LENGTH_SHORT);
+                Toast.makeText(c, "No new steps to add.", Toast.LENGTH_SHORT).show();
             }
             curSteps.close();
         } else {

@@ -3,10 +3,11 @@ package com.movo.wave;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
-import android.provider.BaseColumns;
-import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.firebase.client.AuthData;
@@ -15,12 +16,9 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Calendar;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 
 /**
@@ -37,6 +35,12 @@ public class UserData extends Activity{
     private String currentToken;
     private String currentEmail;
     private String currentPW;
+    private String currentBirthdate;
+    private String currentHeight1;
+    private String currentHeight2;
+    private String currentWeight;
+    private String currentGender;
+    private String currentFullName;
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
@@ -62,7 +66,13 @@ public class UserData extends Activity{
             currentUID = prefs.getString("currentUID", "Error");
             currentToken = prefs.getString("currentToken", "Error");
             currentEmail = prefs.getString("currentEmail", "Error");
+            currentHeight1 = prefs.getString("currentHeight1", "Error");
+            currentHeight2 = prefs.getString("currentHeight2", "Error");
+            currentWeight = prefs.getString("currentWeight", "Error");
+            currentGender = prefs.getString("currentGender", "Error");
+            currentFullName = prefs.getString("currentFullName", "Error");
             currentPW = prefs.getString("currentPW", "Error");
+            currentBirthdate= prefs.getString("currentBirthdate", "Error");
 //            currentUserSnapshot = prefs.gets
 //            reAuthenticate(currentEmail, currentPW);
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
@@ -107,12 +117,56 @@ public class UserData extends Activity{
         return currentToken;
     }
 
+    public String setCurBirthdate(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentBirthdate", input + "").commit();
+        currentBirthdate = input+"";
+        return currentToken;
+    }
     public String setCurEmail(String input) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentEmail", input).commit();
         currentEmail = input;
         return currentEmail;
     }
+
+    public String setCurName(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentFullName", input).commit();
+        currentFullName = input;
+        return currentFullName;
+
+    }
+
+    public String setCurHeight1(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentHeight1", input).commit();
+        currentHeight1 = input;
+        return currentHeight1;
+    }
+
+    public String setCurHeight2(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentHeight2", input).commit();
+        currentHeight2 = input;
+        return currentHeight2;
+    }
+
+    public String setCurWeight(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentWeight", input).commit();
+        currentWeight = input;
+        return currentWeight;
+    }
+
+    public String setCurGender(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentGender", input).commit();
+        currentGender = input;
+        return currentGender;
+    }
+
+
 
     public String setCurPW(String input) {
         //TODO: We will want to encrypt this, as android shared prefs are only secure if the device isn't rooted.
@@ -147,7 +201,7 @@ public class UserData extends Activity{
                 setCurPW(pw);
                 setCurToken(authData.getToken());
                 currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
-
+                //TODO: pull user info like name from server
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
                 prefs.edit().putBoolean("userExists", true);
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
@@ -172,6 +226,12 @@ public class UserData extends Activity{
             userDataString.put("currentToken", currentToken);
             userDataString.put("currentEmail", currentEmail);
             userDataString.put("currentPW", currentPW);
+            userDataString.put("currentHeight1", currentHeight1);
+            userDataString.put("currentHeight2", currentHeight2);
+            userDataString.put("currentWeight", currentWeight);
+            userDataString.put("currentGender", currentGender);
+            userDataString.put("currentFullName", currentFullName);
+            userDataString.put("currentBirthdate", currentBirthdate);
 
 
             SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
@@ -261,6 +321,20 @@ public class UserData extends Activity{
         userDataString.put("currentToken", currentToken);
         userDataString.put("currentEmail", currentEmail);
         userDataString.put("currentPW", currentPW);
+        userDataString.put("currentBirthdate", currentBirthdate);
+        userDataString.put("currentBirthdate", currentHeight1);
+        userDataString.put("currentBirthdate", currentHeight2);
+        userDataString.put("currentBirthdate", currentWeight);
+        userDataString.put("currentBirthdate", currentGender);
+        userDataString.put("currentBirthdate", currentFullName);
+
+
+
+//            currentHeight1 = prefs.getString("currentHeight1", "Error");
+//            currentHeight2 = prefs.getString("currentHeight2", "Error");
+//            currentWeight = prefs.getString("currentWeight", "Error");
+//            currentGender = prefs.getString("currentGender", "Error");
+//            currentFullName = prefs.getString("currentFullName", "Error");
 
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
@@ -298,6 +372,13 @@ public class UserData extends Activity{
             currentEmail = userData.getString("currentEmail", "Error");
             currentPW = userData.getString("currentPW", "Error");
             currentToken = userData.getString("currentToken","Error");
+            currentHeight1 = prefs.getString("currentHeight1", "Error");
+            currentHeight2 = prefs.getString("currentHeight2", "Error");
+            currentWeight = prefs.getString("currentWeight", "Error");
+            currentGender = prefs.getString("currentGender", "Error");
+            currentFullName = prefs.getString("currentFullName", "Error");
+            currentPW = prefs.getString("currentPW", "Error");
+            currentBirthdate= prefs.getString("currentBirthdate", "Error");
 
             reAuthenticate(currentEmail, currentPW);
         }
@@ -371,6 +452,77 @@ public class UserData extends Activity{
             }
         }.start();
     }
+
+
+
+    public String getCurrentHeight1() { return currentHeight1; }
+    public String getCurrentHeight2() { return currentHeight2; }
+    public String getCurrentWeight() { return currentWeight; }
+    public String getCurrentGender() { return currentGender; }
+    public String getCurrentFullName() { return currentFullName; }
+    public String getCurrentBirthdate() { return currentBirthdate; }
+
+    public void uploadToFirebase(){
+        Map<String, String> userDataString = new HashMap<String, String>();
+//        userDataString.put("currentUID", currentUID);
+//        userDataString.put("currentToken", currentToken);
+        userDataString.put("currentEmail", currentEmail);
+//        userDataString.put("currentPW", currentPW);
+        userDataString.put("currentHeight1", currentHeight1);
+        userDataString.put("currentHeight2", currentHeight2);
+        userDataString.put("currentWeight", currentWeight);
+        userDataString.put("currentGender", currentGender);
+        userDataString.put("currentFullName", currentFullName);
+        userDataString.put("currentBirthdate", currentBirthdate);
+
+
+        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +getCurUID() + "/metadata/");
+        ref.setValue(userDataString);
+
+
+    }
+
+    public Bitmap getCurUserPhoto(){
+//        UserData myData = UserData.getUserData(c);
+        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        String user = getCurUID();
+        Calendar profile = Calendar.getInstance();
+        profile.setTimeInMillis(0); // user photos will be stored at the dawn of time.
+        String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
+        Cursor curPhoto = db.query(
+                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+                new String[] {
+                        Database.StepEntry.USER, //string
+                        Database.PhotoStore.DATE, //int
+                        Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
+                photo,                                // The columns for the WHERE clause
+                new String[] { profile.getTimeInMillis()+"", user },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+
+        curPhoto.moveToFirst();
+        boolean localFile = false;
+        if(curPhoto.getCount()!=0){
+            localFile = true;
+            byte[] byteArray = curPhoto.getBlob(2);
+//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+//            uniquePic = byteArray.length;
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = 4;
+            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
+            curPhoto.close();
+             return bm;
+
+        }else{
+            curPhoto.close(); 
+            return null;
+        }
+    }
+
 
 
 

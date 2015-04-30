@@ -104,7 +104,7 @@ public class DailyActivity extends ActionBarActivity {
             monthCal.setTime(today);
             SimpleDateFormat month_date = new SimpleDateFormat("MMM");
             String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
-            tvToday.setText(month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH));
+            tvToday.setText((month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH)).toUpperCase());
 //            monthCal.set(2015,calendar.get(today.getMonth()),i+1,0,0,0);
             long monthRangeStart = dateLong;
             long oneDayInMillis = 86400000;
@@ -122,10 +122,18 @@ public class DailyActivity extends ActionBarActivity {
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
                     Bundle extras = new Bundle();
-                    String tomorrow = (today.getTime()+86400000)+"";
+                    long timeTarget = today.getTime()+86400000;
+                    String tomorrow = timeTarget+"";
                     intent.putExtra("date",tomorrow);
-                    startActivity(intent);
-                    finish();
+                    Calendar todayTime = Calendar.getInstance();
+//                    todayTime.setTimeInMillis(today.getTime());
+
+                    if(todayTime.getTimeInMillis()<=timeTarget){
+                        //Do not pass go.
+                    }else {
+                        startActivity(intent);
+                        finish();
+                    }
                 }
                 @Override
                 public void onSwipeRight() {
