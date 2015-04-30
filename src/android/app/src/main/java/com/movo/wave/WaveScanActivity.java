@@ -1,9 +1,7 @@
 package com.movo.wave;
 
-import android.content.ContentValues;
 import android.content.Intent;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
@@ -21,7 +19,6 @@ import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.LazyLogger;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -29,10 +26,19 @@ import java.util.HashMap;
  * Created by Alex Haase on 3/23/2015.
  */
 
-public class DiscoverWaveActivity extends MenuActivity {
+public class WaveScanActivity extends MenuActivity {
 
     private HashMap<String,WaveInfo> wavesByMAC = new HashMap<>();
     private SQLiteDatabase db;
+    private int pendingRequests = 0;
+
+    private int acquire() {
+        return pendingRequests += 1;
+    }
+
+    private int release() {
+        return pendingRequests -= 1;
+    }
 
     ArrayList<WaveInfo> waves;
     ArrayAdapter<WaveInfo> arrayAdapter;
@@ -90,6 +96,7 @@ public class DiscoverWaveActivity extends MenuActivity {
 
         @Override
         public boolean dispatch(BLEAgent agent) {
+            acquire();
             nextState();
             return super.dispatch(agent);
         }
@@ -117,6 +124,7 @@ public class DiscoverWaveActivity extends MenuActivity {
                     arrayAdapter.notifyDataSetChanged();
                     lazyLog.d( "Loading sql-cached wave device", info );
                 } else {
+                    acquire();
                     // query device serial && gatt attributes
                     BLEAgent.handle(new WaveRequest.ReadSerial(device, 10000) {
 
@@ -144,6 +152,9 @@ public class DiscoverWaveActivity extends MenuActivity {
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
+                            if( release() == 0 ) {
+                                nextState();
+                            }
                         }
                     });
                 }
@@ -153,7 +164,9 @@ public class DiscoverWaveActivity extends MenuActivity {
 
         @Override
         public void onComplete(BLEAgent.BLEDevice device) {
-            nextState();
+            if( release() == 0 ) {
+                nextState();
+            }
             lazyLog.i( "Wave discovery complete" );
         }
     };
@@ -161,10 +174,21 @@ public class DiscoverWaveActivity extends MenuActivity {
     public static final LazyLogger lazyLog = new LazyLogger( "WaveScanActivity",
             MenuActivity.lazyLog );
 
+    public boolean startScan() {
+        if( scanState != ScanState.COMPLETE ) {
+            lazyLog.e( "Call to startScan() while scan in progress!");
+            return false;
+        }
+
+        nextState();
+        BLEAgent.handle( scanRequest );
+        return true;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initMenu(R.layout.activity_discover_wave);
+        initMenu(R.layout.activity_wave_sync);
         waveList = (ListView) findViewById(R.id.waveList);
 
         resources = getResources();
@@ -172,7 +196,12 @@ public class DiscoverWaveActivity extends MenuActivity {
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);
         scanButton = (Button) findViewById(R.id.waveScanButton);
 
-        nextState();
+        scanButton.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startScan();
+            }
+        });
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
 
@@ -206,8 +235,14 @@ public class DiscoverWaveActivity extends MenuActivity {
                 startActivity( intent );
             }
         });
+    }
 
-        BLEAgent.handle( scanRequest );
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if( scanState == ScanState.COMPLETE ) {
+            startScan();
+        }
     }
 
     @Override
