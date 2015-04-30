@@ -128,7 +128,7 @@ public class FirstLogin extends Activity {
                         boolean firstTime = myData.addCurUserTolist();
                         final Calendar cal = Calendar.getInstance();
                         int monthtemp = cal.get(Calendar.MONTH);
-                        final int month = monthtemp++;
+                        final int month = monthtemp;
                         int year = cal.get(Calendar.YEAR);
                         curYear = year + "";
                         curMonth = month+"";

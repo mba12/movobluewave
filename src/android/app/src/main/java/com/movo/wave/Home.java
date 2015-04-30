@@ -8,6 +8,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
@@ -24,6 +26,7 @@ import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
@@ -32,7 +35,10 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -42,6 +48,7 @@ import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.UTC;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -55,6 +62,7 @@ import java.util.UUID;
 
 public class Home extends MenuActivity {
     static LineChart chart;
+    RelativeLayout chartView;
     int curYear;
     int curMonth;
     int curDay;
@@ -75,6 +83,7 @@ public class Home extends MenuActivity {
     public static String TAG = "Movo Wave V2";
 
 
+    private long timestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,20 +99,19 @@ public class Home extends MenuActivity {
 
             String date = intentIncoming.getStringExtra("date");
             if(date!=null) {
-                Long dateLong = Long.parseLong(date);
+                timestamp = Long.parseLong(date);
                 calendar = Calendar.getInstance();
-                calendar.setTime(new Date(dateLong));
-                if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().MONTH)){
-                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
-                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+                calendar.setTimeInMillis(timestamp);
+                if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
+//                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+//                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
                 }
             }else{
-
                 calendar = Calendar.getInstance();
+                timestamp = calendar.getTimeInMillis();
                 curDay = calendar.get(Calendar.DAY_OF_MONTH);
             }
-
-
+//        curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
 
 
@@ -112,40 +120,16 @@ public class Home extends MenuActivity {
 
         older = (TextView) findViewById(R.id.tvOlder);
         newer = (TextView) findViewById(R.id.tvNewer);
+        if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
+            newer.setVisibility(View.GONE);
+
+        }
+
         curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
         String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.SHORT, Locale.US);
         curMonthDisplay.setText(month_name+"");
 
-//        older.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(),
-//                        Home.class);
-//                Bundle extras = new Bundle();
-//                long todaymillis = calendar.getTimeInMillis();
-//                Calendar newCal = Calendar.getInstance();
-//                newCal.setTime(new Date(todaymillis));
-//                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)-1);
-//                long monthForwardMillis = newCal.getTimeInMillis();
-//                String tomorrow = (monthForwardMillis)+"";
-//                intent.putExtra("date",tomorrow);
-//                startActivity(intent);
-//            }
-//        });
-//        newer.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                Intent intent = new Intent(getApplicationContext(),
-//                        Home.class);
-//                Bundle extras = new Bundle();
-//                long todaymillis = calendar.getTimeInMillis();
-//                Calendar newCal = Calendar.getInstance();
-//                newCal.setTime(new Date(todaymillis));
-//                newCal.set(Calendar.MONTH, newCal.get(Calendar.MONTH)+1);
-//                long monthForwardMillis = newCal.getTimeInMillis();
-//                String tomorrow = (monthForwardMillis)+"";
-//                intent.putExtra("date",tomorrow);
-//                startActivity(intent);
-//            }
-//        });
+
 
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
@@ -156,6 +140,7 @@ public class Home extends MenuActivity {
 
 
         UserData myData = UserData.getUserData(c);
+
         gridview= (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
         syncProgressBar = (ProgressBar) findViewById(R.id.syncProgressBar);
@@ -165,17 +150,18 @@ public class Home extends MenuActivity {
         boolean userExists = prefs.getBoolean("userExists", false);
 
         chart = (LineChart) findViewById(R.id.chart);
+        chartView = (RelativeLayout) findViewById(R.id.chartView);
         ImageView chartToggle = (ImageView) findViewById(R.id.chartButton);
 //        chartToggle.setOnClickListener();
         chartToggle.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if(toggle){
                     gridview.setVisibility(View.INVISIBLE);
-                    chart.setVisibility(View.VISIBLE);
+                    chartView.setVisibility(View.VISIBLE);
                     toggle = false;
                 }else{
                     gridview.setVisibility(View.VISIBLE);
-                    chart.setVisibility(View.INVISIBLE);
+                    chartView.setVisibility(View.INVISIBLE);
                     toggle = true;
                 }
 
@@ -197,6 +183,8 @@ public class Home extends MenuActivity {
                 currentUserTV.setText(myData.getCurrentUserEmail());
                 setUpCharts(c);
             }
+
+
         }else{
 
             Intent intent = new Intent(getApplicationContext(),
@@ -207,6 +195,94 @@ public class Home extends MenuActivity {
 
         }
 
+        older.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
+                pbBar.setVisibility(View.VISIBLE);
+
+
+                Intent intent = new Intent(getApplicationContext(),
+                        Home.class);
+                Bundle extras = new Bundle();
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTimeInMillis(timestamp);
+                newCal.add(Calendar.MONTH, -1);
+                final Calendar editedCal = newCal;
+
+                long monthForwardMillis = newCal.getTimeInMillis();
+                String lastMonth = (monthForwardMillis)+"";
+                intent.putExtra("date",lastMonth);
+                final Intent editedIntent = intent;
+                UserData myData = UserData.getUserData(c);
+                Firebase ref =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +myData.getCurUID() + "/steps/"+newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH));
+                ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        System.out.println(snapshot.getValue());
+//                        loginProgress.setVisibility(View.INVISIBLE);
+
+                        insertSteps(snapshot,editedCal.get(Calendar.YEAR),editedCal.get(Calendar.MONTH),c);
+
+                                Log.d(TAG, "Inserting steps into database");
+
+
+                        startActivity(editedIntent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        System.out.println("The read failed: " + firebaseError.getMessage());
+                    }
+                });
+
+
+
+
+            }
+        });
+        newer.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
+                pbBar.setVisibility(View.VISIBLE);
+
+                Intent intent = new Intent(getApplicationContext(),
+                        Home.class);
+                Bundle extras = new Bundle();
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTimeInMillis(timestamp);
+                newCal.add(Calendar.MONTH, +1);
+                final Calendar editedCal = newCal;
+
+                long monthForwardMillis = newCal.getTimeInMillis();
+                String lastMonth = (monthForwardMillis) + "";
+                intent.putExtra("date", lastMonth);
+                final Intent editedIntent = intent;
+                UserData myData = UserData.getUserData(c);
+                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH)+"/");
+                ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        System.out.println(snapshot.getValue());
+//                        loginProgress.setVisibility(View.INVISIBLE);
+
+                        insertSteps(snapshot, editedCal.get(Calendar.YEAR), editedCal.get(Calendar.MONTH), c);
+
+                        Log.d(TAG, "Inserting steps into database");
+
+
+                        startActivity(editedIntent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        System.out.println("The read failed: " + firebaseError.getMessage());
+                    }
+                });
+            }
+        });
+
         gridview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v,
@@ -215,7 +291,7 @@ public class Home extends MenuActivity {
                 String dateStr = tv.getText().toString();
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(new Date(Long.parseLong(dateStr)));
-                cal.set(Calendar.MONTH,(cal.get(Calendar.MONTH)-1));
+//                cal.set(Calendar.MONTH,(cal.get(Calendar.MONTH)));
                 long intentTime = cal.getTimeInMillis();
                 Intent intent = new Intent(getApplicationContext(),
                         DailyActivity.class);
@@ -237,6 +313,13 @@ public class Home extends MenuActivity {
 
         Log.d(TAG, "Cur user data: "+myData.getCurUID());
 
+
+        boolean upload = intentIncoming.getBooleanExtra("Upload",false);
+        if(upload) {
+            upload();
+        }
+
+
 //        upload();
     }
 
@@ -245,9 +328,25 @@ public class Home extends MenuActivity {
     public void onResume() {
         super.onResume();  // Always call the superclass method first
 //        calendar = Calendar.getInstance();
-        curDay = calendar.get(Calendar.DAY_OF_MONTH);
-        curMonth = calendar.get(Calendar.MONTH);
-        curYear = calendar.get(Calendar.YEAR);
+//        curDay = calendar.get(Calendar.DAY_OF_MONTH);
+//        curMonth = calendar.get(Calendar.MONTH);
+//        curYear = calendar.get(Calendar.YEAR);
+        Intent intentIncoming = getIntent();
+//
+        String date = intentIncoming.getStringExtra("date");
+        if(date!=null) {
+            Long dateLong = Long.parseLong(date);
+            calendar = Calendar.getInstance();
+            calendar.setTime(new Date(dateLong));
+            if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
+                calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
+                curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            }else{
+                curDay = calendar.get(Calendar.DAY_OF_MONTH);
+            }
+        }else {
+//
+        }
         try {
             gridview.setAdapter(new GridViewCalendar(Home.this));
             setUpChart();
@@ -268,14 +367,15 @@ public class Home extends MenuActivity {
         numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         int difference = numberOfDaysTotal - curDay;
         numberOfDaysLeft = numberOfDaysTotal - difference;
-
+        int totalStepsForMonth= 0;
         for(int i=0;i<numberOfDaysLeft;i++){
 
-            //Grab today's data//
+            //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
             Calendar monthCal = calendar;
-            monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,0,0,0);
+            monthCal.setTimeInMillis(timestamp);
+            monthCal.set(monthCal.get(Calendar.YEAR),monthCal.get(Calendar.MONTH),i,0,0,0);
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(2015,calendar.get(Calendar.MONTH),i+1,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
+            monthCal.set(monthCal.get(Calendar.YEAR),monthCal.get(Calendar.MONTH),i,monthCal.getActualMaximum(Calendar.HOUR_OF_DAY),monthCal.getActualMaximum(Calendar.MINUTE),monthCal.getActualMaximum(monthCal.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
 
 
@@ -285,12 +385,14 @@ public class Home extends MenuActivity {
             if(curSteps!=null&&curSteps.getCount()!=0){
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday+=curSteps.getInt(4);
+                    totalStepsForToday+=curSteps.getInt(4);//step count
+
 
                     curSteps.moveToNext();
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
                     //works
                 }
+                totalStepsForMonth+=totalStepsForToday;
                 curSteps.close();
                 Entry curEntry = new Entry(totalStepsForToday, i);
                 valsComp1.add(curEntry);
@@ -303,10 +405,24 @@ public class Home extends MenuActivity {
 
 
 
-
+            //add +1 for the 0 based day compensation.
             xVals.add((i+1)+"");
         }
 
+        TextView stepsTotal = (TextView) findViewById(R.id.stepTotal);
+        TextView stepsAve = (TextView) findViewById(R.id.stepTotal);
+        TextView milesTotal = (TextView) findViewById(R.id.stepTotal);
+        TextView milesAve = (TextView) findViewById(R.id.stepTotal);
+        TextView calsTotal = (TextView) findViewById(R.id.stepTotal);
+        TextView calsAve = (TextView) findViewById(R.id.stepTotal);
+        double stepsAverageDouble = 0;
+        int milesTotalInt = 0;
+        double milesAverageDouble = 0;
+        int caloriesInt = 0;
+        double caloriesAcerage = 0;
+
+            stepsTotal.setText(totalStepsForMonth+"");
+//        }
 
 
         LineDataSet setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
@@ -331,7 +447,7 @@ public class Home extends MenuActivity {
         public int getCount() {
             //This gets total days in month, we want days past
             //numberOfDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-
+            calendar.setTimeInMillis(timestamp);
             numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
             int difference = numberOfDaysTotal - curDay;
             numberOfDaysLeft = numberOfDaysTotal - difference;
@@ -378,7 +494,7 @@ public class Home extends MenuActivity {
 
             TextView day = (TextView) gridView.findViewById(R.id.day);
 
-
+            calendar.setTimeInMillis(timestamp);
             if(dayToDisplay == curDay){
                 if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
                     day.setText("Today");
@@ -391,6 +507,9 @@ public class Home extends MenuActivity {
             }
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
 
+
+
+
             TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
             Calendar today = Calendar.getInstance();
             today.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
@@ -398,11 +517,20 @@ public class Home extends MenuActivity {
             date.setText(wholeDate);
             //Grab today's data//
             Calendar monthCal = Calendar.getInstance();
+
+
+
+
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
             long monthRangeStart = monthCal.getTimeInMillis();
             monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
+            ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
+            Bitmap bm = dailyBitmapFetch(monthCal.getTimeInMillis());
 
+            if(bm!=null){
+                background.setImageBitmap(bm);
+            }
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID() );
 
             if(curSteps!=null&&curSteps.getCount()!=0){
@@ -623,7 +751,7 @@ public class Home extends MenuActivity {
                             String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
                             String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                             oldDate = date;
-                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth()+1)+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
+                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth())+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
                             refStep2.setValue(minuteMap);
 
 
@@ -881,4 +1009,130 @@ public class Home extends MenuActivity {
         setIntent(intent);
         //now getIntent() should always return the last received intent
     }
+
+    private static void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
+        UserData myData = UserData.getUserData(c);
+        Iterable<DataSnapshot> children = snapshot.getChildren();
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+        for (DataSnapshot child : children){
+            String date = child.getKey();
+            Iterable<DataSnapshot> syncEvents = child.getChildren();
+            for(DataSnapshot syncsForToday : syncEvents){
+                String syncName = syncsForToday.getKey();
+                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
+                for(DataSnapshot stepChunk : stepEvents){
+                    String stepTime = stepChunk.getKey();
+                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
+                    Object stepEvent = stepChunk.getValue();
+                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
+                    monthMap = (Map<String, String>) stepChunk.getValue();
+                    Log.d(TAG, "Monthmap test"+monthMap);
+                    Calendar thisCal = Calendar.getInstance();
+//                    Date curDate = monthMap.get("starttime").toString();
+                    String dateConcatStart = year + "-" +month+ "-" +date+ "" +monthMap.get("starttime").toString();
+                    String dateConcatStop = year + "-" +month+ "-" +date+ "" +monthMap.get("endtime").toString();
+
+
+                    try {
+                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
+                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
+//                        Log.d("TAG", "date is "+curDate);
+                        thisCal.setTime(curDateStart);
+
+                        ContentValues values = new ContentValues();
+                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
+                        values.put(Database.StepEntry.START,curDateStart.getTime());
+                        values.put(Database.StepEntry.END,curDateStop.getTime());
+                        values.put(Database.StepEntry.USER,myData.getCurUID());
+                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
+                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
+                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
+                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+                        //TODO: add workout type
+
+                        long newRowId;
+
+                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                                null,
+                                values);
+                        Log.d(TAG, "Database insert result: "+newRowId+" for: "+values);
+
+
+
+                    }catch(Exception e){
+                        e.printStackTrace();;
+                    }
+
+                }
+
+            }
+
+        }
+
+        db.close();
+
+    }
+
+
+    public static Date trim(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear(); // as per BalusC comment.
+        cal.setTime( date );
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+
+    public Bitmap dailyBitmapFetch(long today){
+        boolean localFile = false;
+//        today = trim(today);
+        Date currentDay = new Date(today);
+        currentDay = trim(currentDay);
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        UserData myData = UserData.getUserData(c);
+        String user = myData.getCurUID();
+        String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
+        Cursor curPhoto = db.query(
+                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+                new String[] {
+                        Database.StepEntry.USER, //string
+                        Database.PhotoStore.DATE, //int
+                        Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
+                photo,                                // The columns for the WHERE clause
+                new String[] { currentDay.getTime()+"", user },                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+
+        curPhoto.moveToFirst();
+        localFile = false;
+        int uniquePic;
+        if(curPhoto.getCount()!=0){
+            localFile = true;
+            byte[] byteArray = curPhoto.getBlob(2);
+//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+            uniquePic = byteArray.length;
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = false;
+            options.inSampleSize = 10;
+            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
+            Log.d(TAG, "Found photo for today");
+            return bm;
+//            background.setImageBitmap(bm);
+//                setContentView(R.layout.activity_daily);
+        }else{
+            return null;
+        }
+    }
+
+    pu
+
 }

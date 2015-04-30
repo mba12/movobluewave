@@ -13,200 +13,327 @@
         android:id="@+id/content_frame"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
-<RelativeLayout
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@android:color/white">
-
-
     <RelativeLayout
-        android:id="@+id/topBarLayout"
-        android:layout_width="fill_parent"
-        android:layout_height="66dip"
-        android:padding="7dip">
-
-        <ProgressBar
-            style="@android:style/Widget.ProgressBar.Horizontal"
-            android:layout_width="150dip"
-            android:layout_height="50dip"
-            android:minHeight="20dip"
-            android:maxHeight="50dip"
-            android:paddingLeft="5dip"
-            android:id="@+id/syncProgressBar"
-            android:layout_toRightOf="@+id/nameText"
-            android:layout_toLeftOf="@+id/chartButton"
-            android:layout_centerHorizontal="true"
-            android:visibility="gone"
-            />
-        <TextView
-            android:id="@+id/syncingText"
-            android:layout_width="150dip"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/syncProgressBar"
-            android:text="Syncing..."
-            android:visibility="gone"/>
-
-
-
-        <ImageView
-            android:id="@+id/profilePic"
-            android:layout_width="50dip"
-            android:layout_height="50dip"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"
-            android:background="@android:color/black"/>
-
-        <TextView
-            android:id="@+id/nameText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="7dip"
-            android:layout_toRightOf="@id/profilePic"
-            android:text="Username Here" />
-
-        <ImageView
-            android:id="@+id/blueCircle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="7dip"
-            android:src="@drawable/levelcoloredcircle"
-            android:layout_below="@id/nameText"
-            android:layout_toRightOf="@id/profilePic"
-            android:visibility="gone"/>
-        <ImageView
-            android:id="@+id/splitOne"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/dividerf"
-            android:layout_toRightOf="@id/blueCircle"/>
-
-        <ImageView
-            android:id="@+id/checkMark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/checkmarkb"
-            android:layout_toRightOf="@id/splitOne"
-            android:layout_below="@id/nameText"
-            android:visibility="gone"/>
-        <ImageView
-            android:id="@+id/splitTwo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/dividerf"
-            android:layout_toRightOf="@id/checkMark"/>
-        <ImageView
-            android:id="@+id/xMark"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/xmarkb"
-            android:layout_toRightOf="@id/splitTwo"
-            android:layout_below="@id/nameText"
-            android:visibility="gone"/>
-        <ImageView
-            android:id="@+id/chartButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/statsicon_selected"
-            android:layout_alignParentRight="true"
-            android:layout_below="@id/nameText"/>
-
-    </RelativeLayout>
-    <RelativeLayout
-        android:id="@+id/midBarLayout"
-        android:layout_width="fill_parent"
-        android:layout_height="51dip"
-        android:layout_below="@id/topBarLayout">
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Older"
-            android:id="@+id/tvOlder"
-            android:textColor="@android:color/black"
-            android:layout_centerVertical="true"
-            android:layout_alignParentStart="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Newer"
-            android:id="@+id/tvNewer"
-            android:textColor="@android:color/black"
-            android:layout_centerVertical="true"
-            android:layout_alignParentEnd="true" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Cur Month"
-            android:id="@+id/tvCurMonth"
-            android:textColor="@android:color/black"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
-    </RelativeLayout>
-
-    <RelativeLayout
-        android:id="@+id/botBarLayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_below="@id/midBarLayout">
+        android:background="@android:color/white">
 
-
-    <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-
-
-        <com.github.mikephil.charting.charts.LineChart
-            android:id="@+id/chart"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:visibility="gone"
-            android:layout_above="@+id/weeklyAverages"/>
 
         <RelativeLayout
-            android:id="@+id/weeklyAverages"
+            android:id="@+id/topBarLayout"
             android:layout_width="fill_parent"
-            android:layout_height="100dip"
-            android:layout_alignParentBottom="true">
+            android:layout_height="66dip"
+            android:padding="7dip">
 
+            <ProgressBar
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="150dip"
+                android:layout_height="50dip"
+                android:minHeight="20dip"
+                android:maxHeight="50dip"
+                android:paddingLeft="5dip"
+                android:id="@+id/syncProgressBar"
+                android:layout_toRightOf="@+id/nameText"
+                android:layout_toLeftOf="@+id/chartButton"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone"
+                />
+            <TextView
+                android:id="@+id/syncingText"
+                android:layout_width="150dip"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/syncProgressBar"
+                android:text="Syncing..."
+                android:visibility="gone"/>
+
+
+
+            <ImageView
+                android:id="@+id/profilePic"
+                android:layout_width="50dip"
+                android:layout_height="50dip"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@android:color/black"/>
+
+            <TextView
+                android:id="@+id/nameText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="7dip"
+                android:layout_toRightOf="@id/profilePic"
+                android:text="Username Here" />
+
+            <ImageView
+                android:id="@+id/blueCircle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="7dip"
+                android:src="@drawable/levelcoloredcircle"
+                android:layout_below="@id/nameText"
+                android:layout_toRightOf="@id/profilePic"
+                android:visibility="gone"/>
+            <ImageView
+                android:id="@+id/splitOne"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/dividerf"
+                android:layout_toRightOf="@id/blueCircle"/>
+
+            <ImageView
+                android:id="@+id/checkMark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/checkmarkb"
+                android:layout_toRightOf="@id/splitOne"
+                android:layout_below="@id/nameText"
+                android:visibility="gone"/>
+            <ImageView
+                android:id="@+id/splitTwo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/dividerf"
+                android:layout_toRightOf="@id/checkMark"/>
+            <ImageView
+                android:id="@+id/xMark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/xmarkb"
+                android:layout_toRightOf="@id/splitTwo"
+                android:layout_below="@id/nameText"
+                android:visibility="gone"/>
+            <ImageView
+                android:id="@+id/chartButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/statsicon_selected"
+                android:layout_alignParentRight="true"
+                android:layout_below="@id/nameText"/>
+
+        </RelativeLayout>
+        <RelativeLayout
+            android:id="@+id/midBarLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="51dip"
+            android:layout_below="@id/topBarLayout">
+
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Older"
+                android:id="@+id/tvOlder"
+                android:textColor="@android:color/black"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Newer"
+                android:id="@+id/tvNewer"
+                android:textColor="@android:color/black"
+                android:layout_centerVertical="true"
+                android:layout_alignParentEnd="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Cur Month"
+                android:id="@+id/tvCurMonth"
+                android:textColor="@android:color/black"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/botBarLayout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_below="@id/midBarLayout">
+
+
+            <RelativeLayout
+                android:id="@+id/chartView"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:visibility="visible">
+
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/chart"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent"
+                    android:visibility="visible"
+                    android:layout_above="@+id/weeklyAverages"/>
+
+                <LinearLayout
+                    android:id="@+id/weeklyAverages"
+                    android:layout_width="fill_parent"
+                    android:layout_height="100dip"
+                    android:layout_alignParentBottom="true"
+                    android:orientation="horizontal">
+                    <RelativeLayout
+                        android:layout_width="0px"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1">
+                        <TextView
+                            android:id="@+id/titleBlockA"
+                            android:layout_width="fill_parent"
+                            android:layout_height="40dip"
+                            android:text="STEPS"
+                            android:textColor="@android:color/white"
+                            android:textSize="25sp"
+                            android:gravity="center"
+                            android:background="@drawable/redbtn_lg"/>
+                        <TextView
+                            android:id="@+id/stepTotal"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/titleBlockA"/>
+                        <TextView
+                            android:id="@+id/stepAverage"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/stepTotal"/>
+                        <TextView
+                            android:text="DAILY AVG."
+                            android:textColor="@android:color/black"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:gravity="center"
+                            android:layout_below="@+id/stepAverage"/>
+
+                    </RelativeLayout>
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="fill_parent"
+                        android:background="@android:color/darker_gray"/>
+                    <RelativeLayout
+                        android:layout_width="0px"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1">
+                        <TextView
+                            android:id="@+id/titleBlockB"
+                            android:layout_width="fill_parent"
+                            android:layout_height="40dip"
+                            android:text="MILES"
+                            android:textColor="@android:color/white"
+                            android:textSize="25sp"
+                            android:gravity="center"
+                            android:background="@drawable/tabbarselected"/>
+                        <TextView
+                            android:id="@+id/distanceTotal"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/titleBlockB"/>
+                        <TextView
+                            android:id="@+id/distanceAverage"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/distanceTotal"/>
+                        <TextView
+                            android:text="DAILY AVG."
+                            android:textColor="@android:color/black"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:gravity="center"
+                            android:layout_below="@+id/distanceAverage"/>
+
+                    </RelativeLayout>
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="fill_parent"
+                        android:background="@android:color/darker_gray"/>
+                    <RelativeLayout
+                        android:layout_width="0px"
+                        android:layout_height="fill_parent"
+                        android:layout_weight="1"
+                        >
+
+                        <TextView
+                            android:id="@+id/titleBlockc"
+                            android:layout_width="fill_parent"
+                            android:layout_height="40dip"
+                            android:text="CALORIES"
+                            android:textColor="@android:color/white"
+                            android:textSize="25sp"
+                            android:gravity="center"
+                            android:background="@drawable/tabbarselected"/>
+                        <TextView
+                            android:id="@+id/caloriesTotal"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/titleBlockc"/>
+                        <TextView
+                            android:id="@+id/caloriesAverage"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:text="0"
+                            android:gravity="center"
+                            android:textColor="@android:color/black"
+                            android:layout_below="@+id/caloriesTotal"/>
+                        <TextView
+                            android:text="DAILY AVG."
+                            android:textColor="@android:color/black"
+                            android:layout_width="fill_parent"
+                            android:layout_height="20dp"
+                            android:gravity="center"
+                            android:layout_below="@+id/caloriesAverage"/>
+
+                    </RelativeLayout>
+
+
+
+                </LinearLayout>
 
 
             </RelativeLayout>
+            <GridView
+                android:id="@+id/gridview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:fastScrollEnabled="true"
+                android:gravity="center"
+                android:horizontalSpacing="2dp"
+                android:isScrollContainer="false"
+                android:numColumns="3"
+                android:stretchMode="columnWidth"
+                android:padding="10dip"
+                android:visibility="gone"/>
 
-
-    </RelativeLayout>
-    <GridView
-        android:id="@+id/gridview"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:fastScrollEnabled="true"
-        android:gravity="center"
-        android:horizontalSpacing="2dp"
-        android:isScrollContainer="false"
-        android:numColumns="3"
-        android:stretchMode="columnWidth"
-        android:padding="10dip"
-        android:visibility="gone"/>
-
-        <ProgressBar
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/progressBar"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true"
-            android:visibility="visible"/>
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/progressBar"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true"
+                android:visibility="visible"/>
 
 
 
 
 
-    </RelativeLayout>
+        </RelativeLayout>
     </RelativeLayout>
     <ListView
         android:id="@+id/left_drawer"

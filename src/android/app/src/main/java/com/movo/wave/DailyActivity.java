@@ -20,11 +20,14 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
 import java.io.ByteArrayOutputStream;
@@ -45,8 +48,12 @@ public class DailyActivity extends ActionBarActivity {
     TextView photo;
     TextView tvToday;
     Date today;
+    String user;
+    int uniquePic;
     Calendar monthCal;
+    ImageView background;
     RelativeLayout wholeView;
+    boolean localFile;
     private static final int SELECT_PHOTO = 100;
 
 
@@ -63,6 +70,7 @@ public class DailyActivity extends ActionBarActivity {
         tvToday = (TextView) findViewById(R.id.tvCurDate);
         wholeView = (RelativeLayout) findViewById(R.id.drawer_layout);
         photo = (TextView) findViewById(R.id.tvPhoto);
+        background = (ImageView) findViewById(R.id.background);
 
         photo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -78,7 +86,6 @@ public class DailyActivity extends ActionBarActivity {
                 finish();
             }
         });
-
 
 
 
@@ -135,6 +142,107 @@ public class DailyActivity extends ActionBarActivity {
 
                 }
             });
+
+
+            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+            UserData myData = UserData.getUserData(c);
+            user = myData.getCurUID();
+            String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
+            Cursor curPhoto = db.query(
+                    Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+                    new String[] {
+                            Database.StepEntry.USER, //string
+                            Database.PhotoStore.DATE, //int
+                            Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
+                    photo,                                // The columns for the WHERE clause
+                    new String[] { curDay.getTime()+"", user },                            // The values for the WHERE clause
+                    null,                                     // don't group the rows
+                    null,                                     // don't filter by row groups
+                    null                                 // The sort order
+            );
+
+            curPhoto.moveToFirst();
+            localFile = false;
+            if(curPhoto.getCount()!=0){
+                localFile = true;
+                byte[] byteArray = curPhoto.getBlob(2);
+//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+                uniquePic = byteArray.length;
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = false;
+                options.inSampleSize = 4;
+                Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
+
+                background.setImageBitmap(bm);
+//                setContentView(R.layout.activity_daily);
+            }
+                Log.d(TAG, "Loading image from firebase");
+                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                ref.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+    //                    System.out.println(snapshot.getValue());
+                        if(snapshot.getChildrenCount()==1){
+                            final BitmapFactory.Options options = new BitmapFactory.Options();
+                            options.inJustDecodeBounds = false;
+                            options.inSampleSize = 4;
+                            ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
+                            byte[] decodedString = Base64.decode(result.get( 0 ), Base64.DEFAULT);
+
+                            DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//
+                            if(localFile) {
+                                int comparePic = decodedString.length;
+                                if(uniquePic!=comparePic){
+                                    //file from cloud is different than local, save to device
+                                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                    ContentValues syncValues = new ContentValues();
+                                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                    syncValues.put(Database.PhotoStore.USER, user);
+                                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                    long newRowId;
+                                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                            null,
+                                            syncValues);
+                                    Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                                    db.close();
+                                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+                                    background.setImageBitmap(decodedByte);
+
+                                }
+
+                            }else{
+                                //file doesn't exist on local device
+                                Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                ContentValues syncValues = new ContentValues();
+                                syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                syncValues.put(Database.PhotoStore.USER, user);
+                                syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                long newRowId;
+                                newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                        null,
+                                        syncValues);
+                                Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                                db.close();
+                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+                                background.setImageBitmap(decodedByte);
+                            }
+
+
+                        }else{
+                            //multipart file upload
+
+                        }
+                    }
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        System.out.println("The read failed: " + firebaseError.getMessage());
+                    }
+                });
+
+
+//            }
 
 
             String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
@@ -276,6 +384,22 @@ public class DailyActivity extends ActionBarActivity {
 
                     Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
 
+                    DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+
+                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                    ContentValues syncValues = new ContentValues();
+                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                    syncValues.put(Database.PhotoStore.USER, user);
+                    syncValues.put(Database.PhotoStore.PHOTOBLOB, b);
+
+                    long newRowId;
+                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                            null,
+                            syncValues);
+                    Log.d(TAG, "Photo database add: "+newRowId);
+                    db.close();
 
                     if(encodedImage.length()>1000000) {
                         List<String> strings = new ArrayList<String>();
@@ -307,5 +431,15 @@ public class DailyActivity extends ActionBarActivity {
 //                    ref.setValue(encodedImage);
                 }
         }
+    }
+    public static Date trim(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.clear(); // as per BalusC comment.
+        cal.setTime( date );
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
     }
 }

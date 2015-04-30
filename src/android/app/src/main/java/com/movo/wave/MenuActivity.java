@@ -26,7 +26,15 @@ public abstract class MenuActivity extends ActionBarActivity {
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        UploadData  ("Upload Data", Home.class),
+        UploadData  ("Upload Data", Home.class){
+            @Override
+            public Intent select(Context context) {
+                UserData mUD = UserData.getUserData(context);
+                Intent intent = new Intent( context,Home.class);
+                intent.putExtra("Upload",true);
+                return intent;
+            }
+        },
         User        ("Users", UserActivity.class ),
         FAQ         ("FAQ", null),
         Contact     ("Contact", null),
@@ -34,7 +42,7 @@ public abstract class MenuActivity extends ActionBarActivity {
             @Override
             public Intent select(Context context) {
                 UserData mUD = UserData.getUserData(context);
-                return new Intent( context, mUD.logoutCurrentUser() ? FirstLaunch.class : Home.class );
+                return new Intent( context, mUD.logoutCurrentUser() ? Home.class : FirstLaunch.class );
             }
         },
         DiscoverWave    ( "Discover Wave", DiscoverWaveActivity.class),

@@ -52,8 +52,20 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_below="@id/topBar"
-        android:background="@drawable/splash">
+        android:layout_below="@id/topBar">
+
+        <ImageView
+            android:id="@+id/background"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/splash"/>
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scaleType="fitXY"
+            android:background="@drawable/daily_stats_gradient"
+            />
 
         <RelativeLayout
             android:layout_width="wrap_content"
@@ -63,8 +75,10 @@
             android:paddingRight="40dip"
             android:layout_marginStart="43dip"
             android:layout_marginBottom="25dip"
-            android:background="@drawable/datebgwide"
+
+
             >
+
 
             <TextView
                 android:id="@+id/tvMiles"
