@@ -31,7 +31,7 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
     }
     
     
-    let waveController:waveControlAndSync!
+    var waveController:waveControlAndSync!
     var deviceId:NSString!
     
     required init?(coder aDecoder:NSCoder) {
@@ -41,7 +41,7 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
     }
     
     func connectedWaveDevice(id: NSString) {
-        connectedLabel.stringValue = id
+        connectedLabel.stringValue = id as String
         waveController.cancelScan()
         deviceId = id
     }
@@ -61,7 +61,7 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
     }
     func receivedMessage(message: NSObject, id: NSString) {
         
-        var data:NSData! = message as NSData
+        var data:NSData! = message as! NSData
         var count = data.length
         var array = [UInt8](count: count, repeatedValue: 0)
         data.getBytes(&array, length: count)
