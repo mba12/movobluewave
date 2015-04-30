@@ -50,7 +50,7 @@
 		020425B41AC1E91A00272B95 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		020425B51AC1E91A00272B95 /* bluetoothTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bluetoothTestTests.swift; sourceTree = "<group>"; };
 		02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = bluetoothiOSTest.xcodeproj; path = bluetoothiOSTest/bluetoothiOSTest.xcodeproj; sourceTree = "<group>"; };
-		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = waveControlAndSync.swift; sourceTree = "<group>"; };
+		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = waveControlAndSync/waveControlAndSync.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
