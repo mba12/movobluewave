@@ -24,7 +24,7 @@ public abstract class MenuActivity extends ActionBarActivity {
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        SyncData  ("Sync Wave", SyncDataActivity.class),
+        DiscoverWave( "Upload Data", DiscoverWaveActivity.class),
 
         User        ("Users", UserActivity.class ),
         FAQ         ("FAQ", null),
@@ -36,7 +36,6 @@ public abstract class MenuActivity extends ActionBarActivity {
                 return new Intent( context, mUD.logoutCurrentUser() ? Home.class : FirstLaunch.class );
             }
         },
-        DiscoverWave    ( "My Waves", DiscoverWaveActivity.class),
         ;
 
         final public String text;

@@ -1,6 +1,7 @@
 package com.movo.wave;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -53,13 +54,9 @@ public class DiscoverWaveActivity extends MenuActivity {
                 wavesByMAC.put( mac, info );
 
                 if( info.complete() ) {
-                    // don't show devices already associated with user.
-                    if( ! UserData.getUserData(c).getCurUID().equals(info.user)) {
-                        waves.add(info);
-                        arrayAdapter.notifyDataSetChanged();
-                    } else {
-                        lazyLog.d( "skipping associated device ", info );
-                    }
+                    waves.add(info);
+                    arrayAdapter.notifyDataSetChanged();
+                    lazyLog.d( "Loading sql-cached wave device", info );
                 } else {
                     // query device serial && gatt attributes
                     BLEAgent.handle(new WaveRequest.ReadSerial(device, 10000) {
@@ -135,9 +132,10 @@ public class DiscoverWaveActivity extends MenuActivity {
                 info.user = currentUser;
                 info.store( db );
 
-                // remove as option
-                waves.remove( position );
-                arrayAdapter.notifyDataSetChanged();
+                // start sync activity
+                Intent intent = new Intent( c, SyncDataActivity.class );
+                intent.putExtra( "MAC", info.mac );
+                startActivity( intent );
             }
         });
 

@@ -19,4 +19,5 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_scan_for_wave">Scan For Waves</string>
+    <string name="sync_flavor_text">Syncing data from Wave:</string>
 </resources>

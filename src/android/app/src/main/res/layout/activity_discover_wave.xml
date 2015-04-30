@@ -25,8 +25,8 @@
             android:id="@+id/waveList"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            />
-
+            tools:listitem="@layout/wave_sync">
+        </ListView>
 
 
     </RelativeLayout>
