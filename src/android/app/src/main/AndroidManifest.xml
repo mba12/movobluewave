@@ -50,12 +50,14 @@
         <activity
             android:name=".UserActivity"
             android:launchMode="singleInstance"
-            android:label="User Select" >
+            android:label="User Select"
+            android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".DailyActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:label="Daily Activity" >
+            android:label="Daily Activity"
+            android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".FirstLaunch"

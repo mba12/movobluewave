@@ -287,6 +287,7 @@ public class FirstLogin extends Activity {
                                                 Intent intent = new Intent(getApplicationContext(),
                                                         Home.class);
                                                 startActivity(intent);
+                                                finish();
                                             }
 
                                             @Override
@@ -339,6 +340,7 @@ public class FirstLogin extends Activity {
                             Intent intent = new Intent(getApplicationContext(),
                                     Home.class);
                             startActivity(intent);
+                            finish();
                         }
 
                         @Override

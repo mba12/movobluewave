@@ -55,6 +55,7 @@ public class UserActivity extends MenuActivity {
 //                Toast.makeText(c, users.get(position)+"", Toast.LENGTH_SHORT).show();
                 String uid = UserData.getUserData(c).getUIDByEmail(users.get(position));
                 UserData.getUserData(c).loadNewUser(uid);
+                //startActivity( new Intent( c, Home.class ) );
                 finish();
             }
         });

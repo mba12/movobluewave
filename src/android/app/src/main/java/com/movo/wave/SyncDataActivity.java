@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -20,6 +21,7 @@ import com.movo.wave.util.UTC;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -58,8 +60,9 @@ public class SyncDataActivity extends MenuActivity {
             updateSyncState(WaveAgent.DataSync.SyncState.COMPLETE);
             updateSyncProgress( 1.0f );
             db.close();
+            db = null;
             if( ! destroyed ) {
-                startActivity( new Intent( c, Home.class ));
+                //startActivity( new Intent( c, Home.class ));
                 finish();
             }
         }
@@ -91,7 +94,7 @@ public class SyncDataActivity extends MenuActivity {
         final String currentUserId = sync.info.user;
         if (data != null) {
 
-            final int result = Home.insertPoints(db, syncUniqueID, currentUserId, data, sync.device.device.getAddress());
+            final int result = insertPoints(db, syncUniqueID, currentUserId, data, sync.device.device.getAddress());
 
             lazyLog.d("Database insertion status: " + result);
 
@@ -267,8 +270,79 @@ public class SyncDataActivity extends MenuActivity {
         } else {
             lazyLog.d("SYNC FAILED!" + sync);
         }
+    }
+
+    private static boolean insertPoint( final SQLiteDatabase db,
+                                        final String guid,
+                                        final String userID,
+                                        final WaveRequest.WaveDataPoint point,
+                                        final String deviceAddress) {
+
+        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
+        long endLong = point.date.getTime();
+        endLong = endLong + TWO_MINUTES_IN_MILLIS;
+
+        ContentValues values = new ContentValues();
+        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+        values.put(Database.StepEntry.STEPS, point.value);
+        values.put(Database.StepEntry.START, point.date.getTime());
+        values.put(Database.StepEntry.END,endLong);
+        values.put(Database.StepEntry.USER,userID);
+        values.put(Database.StepEntry.IS_PUSHED, 0);
+        values.put(Database.StepEntry.SYNC_ID, guid);
+        values.put(Database.StepEntry.DEVICEID, deviceAddress);
+//        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+        //TODO: add workout type
+
+        long newRowId;
+
+        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                null,
+                values);
+
+
+        final boolean ret = newRowId >= 0;
+        if (ret) {
+            lazyLog.d( "Inserted into database: new row " + newRowId + " guid: " + guid);
+            lazyLog.d( "Inserted data: " + point);
+        }
+        return ret;
 
     }
+
+
+    public static int insertPoints( final SQLiteDatabase db,
+                                    final String guid,
+                                    final String userID,
+                                    Collection<WaveRequest.WaveDataPoint> points,
+                                    final String deviceAddress) {
+        //http://www.vogella.com/tutorials/AndroidSQLite/article.html
+
+
+        db.beginTransaction();
+        boolean success = false;
+        int ret = 0;
+        int skippedForZero = 0;
+        try {
+            for (WaveRequest.WaveDataPoint point : points) {
+                if(point.value!=0) {
+                    if (insertPoint(db, guid, userID, point, deviceAddress)) {
+                        ret += 1;
+                    }
+                }else{
+                    skippedForZero += 1;
+
+                }
+            }
+            lazyLog.d( "Skipped " + skippedForZero + " objects with 0 steps.");
+            db.setTransactionSuccessful();
+            success = true;
+        } finally {
+            db.endTransaction();
+        }
+        return success ? ret : -1;
+    }
+
     Date start;
 
     WaveAgent.DataSync sync;
@@ -294,13 +368,14 @@ public class SyncDataActivity extends MenuActivity {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_sync_data);
         resources = getResources();
-        DatabaseHelper mDbHelper = new DatabaseHelper(c);
 
         syncProgress = (ProgressBar) findViewById( R.id.syncProgress );
         syncState = (TextView) findViewById( R.id.syncState );
         syncPercent = (TextView) findViewById(R.id.syncPercent);
         TextView syncSerial = (TextView) findViewById( R.id.syncSerial );
 
+
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getWritableDatabase();
         start = new Date();
 

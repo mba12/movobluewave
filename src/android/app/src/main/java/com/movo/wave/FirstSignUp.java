@@ -171,7 +171,7 @@ public class FirstSignUp extends Activity {
                                             Intent intent = new Intent(getApplicationContext(),
                                                     Home.class);
                                             startActivity(intent);
-
+                                            finish();
                                         }
 
                                         @Override
