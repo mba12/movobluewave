@@ -89,7 +89,7 @@ public class DailyActivity extends ActionBarActivity {
                 //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
                 Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
+                //photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 photoPickerIntent.setType("image/*");
                 Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
                 chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
@@ -404,36 +404,15 @@ public class DailyActivity extends ActionBarActivity {
 
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-                    /*Cursor cursor = getContentResolver().query(
-                            selectedImage, filePathColumn, null, null, null);
-                    if( cursor == null || ! cursor.moveToFirst() ) {
+                    Log.i( TAG, "Resolving URI: " + selectedImage);
+                    try {
+                        final InputStream is = getContentResolver().openInputStream(selectedImage);
+                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                    } catch( FileNotFoundException e ) {
+                        baos = null;
                         final String error = "Cannot resolve URI: " + selectedImage;
                         Log.e( TAG, error );
                         Toast.makeText(c, error, Toast.LENGTH_LONG).show();
-                    }
-
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-
-
-                    if( columnIndex != -1 ) {
-                        String filePath = cursor.getString(columnIndex);
-
-                        BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
-                    } else {*/
-                        Log.i( TAG, "Resolving URI: " + selectedImage);
-                        try {
-                            final InputStream is = getContentResolver().openInputStream(selectedImage);
-                            BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
-                        } catch( FileNotFoundException e ) {
-                            baos = null;
-                            final String error = "Cannot resolve URI: " + selectedImage;
-                            Log.e( TAG, error );
-                            Toast.makeText(c, error, Toast.LENGTH_LONG).show();
-                        }
-                    /*}
-                    cursor.close();*/
-
-                    if( baos == null ) {
                         break;
                     }
 
