@@ -23,6 +23,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -404,8 +405,9 @@ public class DailyActivity extends ActionBarActivity {
                     Cursor cursor = getContentResolver().query(
                             selectedImage, filePathColumn, null, null, null);
                     if( cursor == null || ! cursor.moveToFirst() ) {
-                        Log.e( TAG, "Cannot resolve URI: " + selectedImage);
-                        break;
+                        final String error = "Cannot resolve URI: " + selectedImage;
+                        Log.e( TAG, error );
+                        Toast.makeText(c, error, Toast.LENGTH_LONG).show();
                     }
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
@@ -423,7 +425,9 @@ public class DailyActivity extends ActionBarActivity {
                             BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
                         } catch( FileNotFoundException e ) {
                             baos = null;
-                            Log.e( TAG, "Can't load URI:" + selectedImage);
+                            final String error = "Cannot resolve URI: " + selectedImage;
+                            Log.e( TAG, error );
+                            Toast.makeText(c, error, Toast.LENGTH_LONG).show();
                         }
                     }
                     cursor.close();
@@ -485,6 +489,10 @@ public class DailyActivity extends ActionBarActivity {
                     ref.child(0+"").setValue(encodedImage);
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
+                } else {
+                    final String error = "No photo selected";
+                    Log.e( TAG, error );
+                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
                 }
                 break;
             default:
