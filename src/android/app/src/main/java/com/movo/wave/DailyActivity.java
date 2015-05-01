@@ -89,10 +89,11 @@ public class DailyActivity extends ActionBarActivity {
                 //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
                 Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 photoPickerIntent.setType("image/*");
                 Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
-                chooserIntent.putExtra( Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[] { takePhotoIntent});
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                        new Intent[]{takePhotoIntent});
                 startActivityForResult(chooserIntent, SELECT_PHOTO);
             }
         });
@@ -199,6 +200,7 @@ public class DailyActivity extends ActionBarActivity {
                 Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
 
                 background.setImageBitmap(bm);
+                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
 //                setContentView(R.layout.activity_daily);
             }
                 Log.d(TAG, "Loading image from firebase");

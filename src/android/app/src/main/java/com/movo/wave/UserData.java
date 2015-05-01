@@ -3,6 +3,7 @@ package com.movo.wave;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -358,7 +359,7 @@ public class UserData extends Activity{
 //            currentGender = prefs.getString("currentGender", "Error");
 //            currentFullName = prefs.getString("currentFullName", "Error");
 
-        uploadToFirebase();
+//        uploadToFirebase();
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
         SharedPreferences.Editor userDataEditor = userData.edit();
@@ -597,8 +598,9 @@ public class UserData extends Activity{
         });
     }
 
-    public void setMetadata(Firebase child){
+    public void setMetadata(Firebase child, String useruid){
 
+        setCurUID(useruid);
         child.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -631,11 +633,34 @@ public class UserData extends Activity{
 ////        currentPW = prefs.getString("currentPW", "Error");
 //        setCurBirthdate(child.child("currentBirthdate").toString());
     }
-    public void downloadMetadata(){
+    public void downloadMetadata(String useruid){
+        setCurUID(useruid);
+                Firebase child = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+currentUID+"/metadata");
+                child.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        Log.d(TAG,""+snapshot.getValue());
+
+                        setCurEmail(snapshot.child("currentEmail").getValue(String.class));
+                        setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
+                        setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
+                        setCurWeight(snapshot.child("currentWeight").getValue(String.class));
+                        setCurGender(snapshot.child("currentGender").getValue(String.class));
+                        setCurName(snapshot.child("currentFullName").getValue(String.class));
+                        setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+                        setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+
+                    }
+
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+
+                    }
+                });
+            }
 
 
 
-    }
 
 
 
