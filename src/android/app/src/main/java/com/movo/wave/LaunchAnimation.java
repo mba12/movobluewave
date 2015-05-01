@@ -9,7 +9,7 @@ import com.movo.wave.util.LazyLogger;
 //Created by alex on 5/1/2015.
 
 /** Centralized animation enum
- *
+ * http://stackoverflow.com/questions/10243557/how-to-slide-animation-between-two-activity-in-android
  * @author Alexander Haase
  */
 public enum LaunchAnimation {

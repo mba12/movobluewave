@@ -102,7 +102,7 @@ public class Home extends MenuActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intentIncoming = getIntent();
-        //http://stackoverflow.com/questions/10243557/how-to-slide-animation-between-two-activity-in-android
+
         LaunchAnimation.apply( this, intentIncoming );
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()

@@ -38,6 +38,8 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -308,10 +310,7 @@ public class MyProfile extends MenuActivity {
 
         profilePic.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.setType("image/*");
-                Log.d(TAG, "Clicking profile picture");
-                startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+                startActivityForResult(photoPickerIntent(), SELECT_PHOTO);
             }
         });
     }
@@ -323,22 +322,25 @@ public class MyProfile extends MenuActivity {
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
-
+                    if( imageReturnedIntent == null ) {
+                        Log.e( TAG, "NULL image intent result!");
+                    }
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    Cursor cursor = getContentResolver().query(
-                            selectedImage, filePathColumn, null, null, null);
-                    cursor.moveToFirst();
-
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String filePath = cursor.getString(columnIndex);
-                    cursor.close();
-
-
-//                    Bitmap selectedImageToUpload; = BitmapFactory.decodeFile(filePath);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
+
+                    Log.i( TAG, "Resolving URI: " + selectedImage);
+                    try {
+                        final InputStream is = getContentResolver().openInputStream(selectedImage);
+                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                    } catch( FileNotFoundException e ) {
+                        final String error = "Cannot resolve URI: " + selectedImage;
+                        Log.e( TAG, error );
+                        Toast.makeText(c, error, Toast.LENGTH_LONG).show();
+                        break;
+                    }
+
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
@@ -398,7 +400,14 @@ public class MyProfile extends MenuActivity {
                         profilePic.setImageBitmap(prof);
                     }
 //                    ref.setValue(encodedImage);
+                }else {
+                    final String error = "No photo selected";
+                    Log.e( TAG, error );
+                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
                 }
+                break;
+            default:
+                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
     }
 }
