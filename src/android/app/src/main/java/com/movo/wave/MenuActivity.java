@@ -24,7 +24,7 @@ public abstract class MenuActivity extends ActionBarActivity {
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        DiscoverWave( "Upload Data", DiscoverWaveActivity.class),
+        DiscoverWave( "Upload Data", WaveScanActivity.class),
 
         User        ("Users", UserActivity.class ),
         FAQ         ("FAQ", null),

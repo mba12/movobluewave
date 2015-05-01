@@ -13,27 +13,19 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
@@ -330,7 +322,7 @@ public class Home extends MenuActivity {
                         DailyActivity.class);
                 Bundle extras = new Bundle();
 //                extras.putString(*/
-                intent.putExtra("date",intentTime+"");
+                intent.putExtra("date", intentTime + "");
                 startActivity(intent);
                 // DO something
 
@@ -344,7 +336,7 @@ public class Home extends MenuActivity {
             }
         });
 
-        Log.d(TAG, "Cur user data: "+myData.getCurUID());
+        Log.d(TAG, "Cur user data: " + myData.getCurUID());
 
 
         boolean upload = intentIncoming.getBooleanExtra("Upload",false);
@@ -725,7 +717,7 @@ public class Home extends MenuActivity {
     }
 
     public void discover() {
-        Intent intent = new Intent( getApplicationContext(), DiscoverWaveActivity.class);
+        Intent intent = new Intent( getApplicationContext(), WaveScanActivity.class);
         startActivity( intent );
     }
 
