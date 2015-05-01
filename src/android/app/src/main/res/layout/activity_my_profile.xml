@@ -102,7 +102,7 @@
                     android:layout_below="@+id/editText"
                     android:layout_alignStart="@+id/tvName" />
 
-                <com.movo.wave.buttons.ButtonPlus
+                <Button
                     android:id="@+id/birthday"
                     android:text="Birth"
                     android:gravity="left|center"

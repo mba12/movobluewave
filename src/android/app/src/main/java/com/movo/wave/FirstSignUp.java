@@ -144,9 +144,7 @@ public class FirstSignUp extends Activity {
                                 @Override
                                 public void onSuccess(Map<String, Object> result) {
                                     Log.d(TAG,"Successfully created user account with uid: " + result.get("uid"));
-                                    Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
-                                    Firebase thisUser = usernameEmailTies.child(mUsername);
-                                    thisUser.setValue(mEmail);
+
                                     loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                                         @Override
                                         public void onAuthenticated(AuthData authData) {
@@ -162,6 +160,11 @@ public class FirstSignUp extends Activity {
 
                                             myData.setCurrentUserRef(currentUserRef);
                                             myData.addCurUserTolist();
+
+                                            Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
+                                            Firebase thisUser = usernameEmailTies.child(mUsername);
+                                            thisUser.setValue(mEmail);
+
                                             loginProgress.setVisibility(View.GONE);
 
                                             Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());

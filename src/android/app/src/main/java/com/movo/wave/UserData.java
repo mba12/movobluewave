@@ -214,6 +214,7 @@ public class UserData extends Activity{
                 setCurEmail(email);
                 setCurPW(pw);
                 setCurToken(authData.getToken());
+
                 currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
                 //TODO: pull user info like name from server
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
@@ -345,13 +346,13 @@ public class UserData extends Activity{
         userDataString.put("currentUsername", currentUsername);
 
 
-
 //            currentHeight1 = prefs.getString("currentHeight1", "Error");
 //            currentHeight2 = prefs.getString("currentHeight2", "Error");
 //            currentWeight = prefs.getString("currentWeight", "Error");
 //            currentGender = prefs.getString("currentGender", "Error");
 //            currentFullName = prefs.getString("currentFullName", "Error");
 
+        uploadToFirebase();
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
         SharedPreferences.Editor userDataEditor = userData.edit();

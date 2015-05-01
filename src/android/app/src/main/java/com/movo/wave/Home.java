@@ -150,8 +150,8 @@ public class Home extends MenuActivity {
         }
 
         curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
-        String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.SHORT, Locale.US);
-        curMonthDisplay.setText(month_name+"");
+        String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.LONG, Locale.US);
+        curMonthDisplay.setText((month_name+"").toUpperCase());
 
 
 

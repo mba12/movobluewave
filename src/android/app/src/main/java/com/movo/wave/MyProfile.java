@@ -233,7 +233,7 @@ public class MyProfile extends MenuActivity {
 
         birthdateButton = (Button) findViewById(R.id.birthday);
 
-        if(!birth.equals("Error")){
+        if(!birth.equals("Error")&&(!birth.equals("null"))){
             Calendar birthCal = Calendar.getInstance();
             birthCal.setTimeInMillis(Long.parseLong(birth));
             String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.MONTH)+1)+"-"+birthCal.get(Calendar.YEAR);
@@ -298,6 +298,8 @@ public class MyProfile extends MenuActivity {
                 myUserData.setCurGender(gender);
                 myUserData.setCurBirthdate(birth);
                 myUserData.uploadToFirebase();
+
+                Toast.makeText(c,"Userdata has been saved.",Toast.LENGTH_LONG).show();
 
             }
         });
