@@ -2,7 +2,6 @@ package com.movo.wave;
 /**
  * Created by PhilG on 3/23/2015.
  */
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -61,7 +60,8 @@ public class Home extends MenuActivity {
     int numberOfDaysTotal;
     Calendar calendar;
     static GridView gridview;
-    boolean toggle = true;
+    final static String EXTRA_CHART_VIEW = "com.movo.wave.home.EXTRA_CHART_VIEW";
+    boolean chartVisible;
     private static ProgressBar syncProgressBar;
     private static TextView syncText;
     private CharSequence mTitle;
@@ -90,6 +90,16 @@ public class Home extends MenuActivity {
     private long timestamp;
 
     SQLiteDatabase db;
+
+    protected void setChartVisible( boolean visible ) {
+        if(visible){
+            gridview.setVisibility(View.INVISIBLE);
+            chartView.setVisibility(View.VISIBLE);
+        }else{
+            gridview.setVisibility(View.VISIBLE);
+            chartView.setVisibility(View.INVISIBLE);
+        }
+    }
 
     @Override
     protected void onDestroy() {
@@ -121,6 +131,7 @@ public class Home extends MenuActivity {
         // Setup BLE context
         BLEAgent.open(c);
 
+        chartVisible = intentIncoming.getBooleanExtra( EXTRA_CHART_VIEW, false );
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getReadableDatabase();
@@ -184,18 +195,12 @@ public class Home extends MenuActivity {
 //        chartToggle.setOnClickListener();
         chartToggle.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if(toggle){
-                    gridview.setVisibility(View.INVISIBLE);
-                    chartView.setVisibility(View.VISIBLE);
-                    toggle = false;
-                }else{
-                    gridview.setVisibility(View.VISIBLE);
-                    chartView.setVisibility(View.INVISIBLE);
-                    toggle = true;
-                }
-
+                chartVisible = ! chartVisible;
+                setChartVisible( chartVisible );
             }
         });
+        setChartVisible( chartVisible );
+
 
 //        UserData myUserData = UserData.getUserData(c);
         ArrayList<String> users = new ArrayList<String>();
@@ -232,24 +237,25 @@ public class Home extends MenuActivity {
 
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
-                LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
+                LaunchAnimation.SLIDE_RIGHT.setIntent(intent);
+                intent.putExtra( EXTRA_CHART_VIEW, chartVisible );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);
                 newCal.add(Calendar.MONTH, -1);
 
                 long monthForwardMillis = newCal.getTimeInMillis();
-                String lastMonth = (monthForwardMillis)+"";
-                intent.putExtra("date",lastMonth);
+                String lastMonth = (monthForwardMillis) + "";
+                intent.putExtra("date", lastMonth);
                 UserData myData = UserData.getUserData(c);
-                Firebase ref =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +myData.getCurUID() + "/steps/"+newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH));
+                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH));
                 ref.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        Log.d(TAG,""+snapshot.getValue());
+                        Log.d(TAG, "" + snapshot.getValue());
 //                        loginProgress.setVisibility(View.INVISIBLE);
 
-                        insertSteps(snapshot,newCal.get(Calendar.YEAR),newCal.get(Calendar.MONTH),c);
+                        insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
 
                         Log.d(TAG, "Inserting steps into database");
 
@@ -260,11 +266,9 @@ public class Home extends MenuActivity {
 
                     @Override
                     public void onCancelled(FirebaseError firebaseError) {
-                        Log.d(TAG,"The read failed: " + firebaseError.getMessage());
+                        Log.d(TAG, "The read failed: " + firebaseError.getMessage());
                     }
                 });
-
-
 
 
             }
@@ -277,6 +281,7 @@ public class Home extends MenuActivity {
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
                 LaunchAnimation.SLIDE_LEFT.setIntent( intent );
+                intent.putExtra( EXTRA_CHART_VIEW, chartVisible );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);
@@ -731,7 +736,11 @@ public class Home extends MenuActivity {
         setUpChart();
         pbBar.setVisibility(View.GONE);
         if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
-            gridview.setVisibility(View.VISIBLE);
+            if( chartVisible) {
+                chart.setVisibility( View.VISIBLE );
+            } else {
+                gridview.setVisibility(View.VISIBLE);
+            }
         }
 
     }
