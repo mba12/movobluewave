@@ -53,6 +53,7 @@ public class UserActivity extends MenuActivity {
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
                 // TODO Auto-generated method stub
 //                Toast.makeText(c, users.get(position)+"", Toast.LENGTH_SHORT).show();
+//                UserData.getUserData(c).
                 String uid = UserData.getUserData(c).getUIDByEmail(users.get(position));
                 UserData.getUserData(c).loadNewUser(uid);
                 //startActivity( new Intent( c, Home.class ) );

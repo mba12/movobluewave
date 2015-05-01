@@ -160,6 +160,8 @@ public class Home extends MenuActivity {
         if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
             newer.setVisibility(View.GONE);
 
+        }else{
+            newer.setVisibility(View.VISIBLE);
         }
 
         curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
@@ -238,7 +240,7 @@ public class Home extends MenuActivity {
                         Home.class);
                 Bundle extras = new Bundle();
                 Calendar newCal = Calendar.getInstance();
-                newCal.setTimeInMillis(timestamp);
+                newCal.setTimeInMillis(calendar.getTimeInMillis());
                 newCal.add(Calendar.MONTH, -1);
                 final Calendar editedCal = newCal;
 

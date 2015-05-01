@@ -56,6 +56,7 @@ public class FirstLogin extends Activity {
     View dialogView;
     String mEmail;
     String mPassword;
+    String usernameCust ="";
     EditText username;
     EditText pass;
     Firebase loginRef;
@@ -90,21 +91,63 @@ public class FirstLogin extends Activity {
                 if (mEmail.equals("")) {
                     Toast.makeText(c, "Error: Email is empty", Toast.LENGTH_LONG).show();
                 } else {
-                    loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
-                        @Override
-                        public void onSuccess() {
-                            // password reset email sent
-                            Toast.makeText(c, "Password reset email has been sent", Toast.LENGTH_LONG).show();
-                            loginProgress.setVisibility(View.GONE);
-                        }
 
-                        @Override
-                        public void onError(FirebaseError firebaseError) {
-                            // error encountered
-                            Toast.makeText(c, "Error: " + firebaseError.getMessage(), Toast.LENGTH_LONG).show();
-                            loginProgress.setVisibility(View.GONE);
-                        }
-                    });
+                    if (!(mEmail.contains("@"))) {
+                        Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                        Firebase child = lookupEmail.child(mEmail);
+                        child.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+                                Log.d(TAG, snapshot + "");
+                                String email = snapshot.getValue().toString();
+                                usernameCust = mEmail;
+                                mEmail = email;
+
+                                loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
+                                    @Override
+                                    public void onSuccess() {
+                                        // password reset email sent
+                                        Toast.makeText(c, "Password reset email has been sent", Toast.LENGTH_LONG).show();
+                                        loginProgress.setVisibility(View.GONE);
+                                    }
+
+                                    @Override
+                                    public void onError(FirebaseError firebaseError) {
+                                        // error encountered
+                                        Toast.makeText(c, "Error: " + firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+                                        loginProgress.setVisibility(View.GONE);
+                                    }
+                                });
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+                                Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+
+
+                        });
+                    } else {
+                       //is an email
+                        loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
+                            @Override
+                            public void onSuccess() {
+                                // password reset email sent
+                                Toast.makeText(c, "Password reset email has been sent", Toast.LENGTH_LONG).show();
+                                loginProgress.setVisibility(View.GONE);
+                            }
+
+                            @Override
+                            public void onError(FirebaseError firebaseError) {
+                                // error encountered
+                                Toast.makeText(c, "Error: " + firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+                                loginProgress.setVisibility(View.GONE);
+                            }
+                        });
+                    }
+
+
+
                 }
             }
         });
@@ -124,7 +167,9 @@ public class FirstLogin extends Activity {
                         public void onDataChange(DataSnapshot snapshot) {
                             Log.d(TAG, snapshot + "");
                             String email = snapshot.getValue().toString();
+                            usernameCust = mEmail;
                             mEmail = email;
+
 
                             login();
 
@@ -222,6 +267,7 @@ public class FirstLogin extends Activity {
                 myData.setCurToken(authData.getToken());
                 myData.setCurEmail(mEmail);
                 myData.setCurPW(mPassword);
+
                 final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
                 myData.setCurrentUserRef(currentUserRef);
                 Firebase metadataChild = currentUserRef.child("metadata");
@@ -265,10 +311,13 @@ public class FirstLogin extends Activity {
 
                                         UserData myData = UserData.getUserData(c);
                                         myData.downloadProfilePic();
+
 //                                                myData.setCurUID(authData.getUid());
 //                                                myData.setCurToken(authData.getToken());
 //                                                myData.setCurEmail(mEmail);
+                                        mPassword = resetPass1;
                                         myData.setCurPW(resetPass1);
+//                                        login();
                                         // password changed
                                         Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
                                         child.addValueEventListener(new ValueEventListener() {
@@ -277,7 +326,11 @@ public class FirstLogin extends Activity {
                                                 System.out.println(snapshot.getValue());
                                                 loginProgress.setVisibility(View.INVISIBLE);
 
+
+
                                                 insertSteps(snapshot);
+
+
 
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
                                                 ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
@@ -287,7 +340,9 @@ public class FirstLogin extends Activity {
                                                 Intent intent = new Intent(getApplicationContext(),
                                                         Home.class);
                                                 startActivity(intent);
+                                                alertDialog.cancel();
                                                 finish();
+
                                             }
 
                                             @Override
@@ -325,18 +380,21 @@ public class FirstLogin extends Activity {
 
                 } else {
                     myData.downloadProfilePic();
+                    if(usernameCust!=""){
+                        myData.setCurUsername(usernameCust);
+                    }
                     Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
                     child.addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot snapshot) {
                             System.out.println(snapshot.getValue());
-                            loginProgress.setVisibility(View.INVISIBLE);
+
 
                             insertSteps(snapshot);
 
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
 
-
+                            loginProgress.setVisibility(View.INVISIBLE);
                             Intent intent = new Intent(getApplicationContext(),
                                     Home.class);
                             startActivity(intent);

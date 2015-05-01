@@ -13,6 +13,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
@@ -86,14 +87,19 @@ public class UserData extends Activity{
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
             Log.d(TAG, "User info is: " + currentUID);
         } else {
-            //temporary use default user
-//            reAuthenticate("philg@sensorstar.com","testpassword");
+            //this case is if there is a user in the list, but nobody is logged in
+            ArrayList<String> users = new ArrayList<String>();
+            users = getUserList();
+            if(!users.isEmpty()) {
+                String uid = getUIDByEmail(users.get(0));
+                loadNewUser(uid);
 
-//            currentUID = "Error";
-//            currentToken = "Error";
-//            currentEmail = "Error";
-//            currentPW = "Error";
-//            Log.d(TAG, "User info doesn't exist");
+
+            }else{
+                prefs.edit().putBoolean("userExists",false).commit();
+            }
+
+
         }
 
 
@@ -394,10 +400,14 @@ public class UserData extends Activity{
             currentWeight = prefs.getString("currentWeight", "Error");
             currentGender = prefs.getString("currentGender", "Error");
             currentFullName = prefs.getString("currentFullName", "Error");
-            currentPW = prefs.getString("currentPW", "Error");
             currentBirthdate= prefs.getString("currentBirthdate", "Error");
+            currentUsername = prefs.getString("currentUsername", "Error");
 
-            reAuthenticate(currentEmail, currentPW);
+
+
+            prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
+
+
         }
 
 
@@ -599,12 +609,14 @@ public class UserData extends Activity{
                 setCurGender(snapshot.child("currentGender").getValue(String.class));
                 setCurName(snapshot.child("currentFullName").getValue(String.class));
                 setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+                setCurUsername(snapshot.child("currentUsername").getValue(String.class));
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
             }
         });
+
 
 
 //
@@ -618,6 +630,11 @@ public class UserData extends Activity{
 //        setCurName(child.child("currentFullName").toString());
 ////        currentPW = prefs.getString("currentPW", "Error");
 //        setCurBirthdate(child.child("currentBirthdate").toString());
+    }
+    public void downloadMetadata(){
+
+
+
     }
 
 

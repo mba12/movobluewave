@@ -47,7 +47,7 @@ public class DailyActivity extends ActionBarActivity {
     TextView miles;
     TextView calories;
     TextView steps;
-    TextView back;
+    ImageView back;
     TextView photo;
     TextView tvToday;
     Date today;
@@ -94,7 +94,7 @@ public class DailyActivity extends ActionBarActivity {
             }
         });
 
-        back = (TextView) findViewById(R.id.tvBack);
+        back = (ImageView) findViewById(R.id.tvBack);
         back.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
