@@ -124,4 +124,12 @@ public class Calculator {
         else { return  val; }
     }
 
+    public static void main(String[] args)
+            throws Exception {
+
+        Calculator calc = new Calculator();
+        double dist = calc.calculate_distance(13233, 72);
+        System.out.println("End process: " + dist);
+    }
+
 }
