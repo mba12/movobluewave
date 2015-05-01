@@ -310,6 +310,8 @@ public class MyProfile extends MenuActivity {
             public void onClick(View v) {
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
                 photoPickerIntent.setType("image/*");
+
+                photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 Log.d(TAG, "Clicking profile picture");
                 startActivityForResult(photoPickerIntent, SELECT_PHOTO);
             }
@@ -345,7 +347,7 @@ public class MyProfile extends MenuActivity {
                     UserData myData = UserData.getUserData(c);
                     String user = myData.getCurUID();
 
-                    Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/metadata/profilepic");
+                    Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/profilepic");
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();

@@ -18,8 +18,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.AuthData;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 
 import java.security.Policy;
 import java.util.Calendar;
@@ -48,6 +50,7 @@ public class FirstSignUp extends Activity {
     int mYear;
     int mMonth;
     int mDay;
+    boolean usernameTaken=false;
     boolean is13;
     Context c;
 //    CheckBox age;
@@ -130,70 +133,95 @@ public class FirstSignUp extends Activity {
                 if (!(username.getText().equals("")) && !(pass.getText().equals("")) && !(usernameCust.getText().equals(""))) {
                     if (is13) {
 
+                        Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                        Firebase child = lookupEmail.child(usernameCust.getText().toString());
+                        child.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot snapshot) {
+                                if(snapshot.getValue()==null){
+                                    Log.d(TAG, "Username not taken");
+                                    mEmail = username.getText().toString();
+                                    mUsername = usernameCust.getText().toString();
+                                    mPassword = pass.getText().toString();
+                                    mPasswordConf = passConf.getText().toString();
 
+                                    if (mPassword.equals(mPasswordConf)) {
+                                        loginProgress.setVisibility(View.VISIBLE);
+                                        loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
+                                            @Override
+                                            public void onSuccess(Map<String, Object> result) {
+                                                Log.d(TAG,"Successfully created user account with uid: " + result.get("uid"));
 
+                                                loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
+                                                    @Override
+                                                    public void onAuthenticated(AuthData authData) {
+                                                        //success, save auth data
+                                                        UserData myData = UserData.getUserData(c);
+                                                        myData.setCurUID(authData.getUid());
+                                                        myData.setCurToken(authData.getToken());
+                                                        myData.setCurEmail(mEmail);
+                                                        myData.setCurPW(mPassword);
+                                                        myData.setCurBirthdate(birthdateInput + "");
+                                                        myData.setCurUsername(mUsername);
+                                                        Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
 
-                        mEmail = username.getText().toString();
-                        mUsername = usernameCust.getText().toString();
-                        mPassword = pass.getText().toString();
-                        mPasswordConf = passConf.getText().toString();
+                                                        myData.setCurrentUserRef(currentUserRef);
+                                                        myData.addCurUserTolist();
 
-                        if (mPassword.equals(mPasswordConf)) {
-                            loginProgress.setVisibility(View.VISIBLE);
-                            loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
-                                @Override
-                                public void onSuccess(Map<String, Object> result) {
-                                    Log.d(TAG,"Successfully created user account with uid: " + result.get("uid"));
+                                                        Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
+                                                        Firebase thisUser = usernameEmailTies.child(mUsername);
+                                                        thisUser.setValue(mEmail);
 
-                                    loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
-                                        @Override
-                                        public void onAuthenticated(AuthData authData) {
-                                            //success, save auth data
-                                            UserData myData = UserData.getUserData(c);
-                                            myData.setCurUID(authData.getUid());
-                                            myData.setCurToken(authData.getToken());
-                                            myData.setCurEmail(mEmail);
-                                            myData.setCurPW(mPassword);
-                                            myData.setCurBirthdate(birthdateInput+"");
-                                            myData.setCurUsername(mUsername);
-                                            Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+                                                        loginProgress.setVisibility(View.GONE);
 
-                                            myData.setCurrentUserRef(currentUserRef);
-                                            myData.addCurUserTolist();
+                                                        Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+                                                        Intent intent = new Intent(getApplicationContext(),
+                                                                Home.class);
+                                                        startActivity(intent);
+                                                        finish();
+                                                    }
 
-                                            Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
-                                            Firebase thisUser = usernameEmailTies.child(mUsername);
-                                            thisUser.setValue(mEmail);
+                                                    @Override
+                                                    public void onAuthenticationError(FirebaseError firebaseError) {
+                                                        Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
+                                                        loginProgress.setVisibility(View.GONE);
+                                                        Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
 
-                                            loginProgress.setVisibility(View.GONE);
+                                                    }
+                                                });
+                                            }
 
-                                            Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                                            Intent intent = new Intent(getApplicationContext(),
-                                                    Home.class);
-                                            startActivity(intent);
-                                            finish();
-                                        }
-
-                                        @Override
-                                        public void onAuthenticationError(FirebaseError firebaseError) {
-                                            Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
-                                            loginProgress.setVisibility(View.GONE);
-                                            Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
-
-                                        }
-                                    });
+                                            @Override
+                                            public void onError(FirebaseError firebaseError) {
+                                                Log.d(TAG, "Error creating user: " + firebaseError.getMessage());
+                                                loginProgress.setVisibility(View.GONE);
+                                                Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+                                            }
+                                        });
+                                    } else {
+                                        Toast.makeText(c, "Passwords do not match.", Toast.LENGTH_LONG).show();
+                                    }
+                                }else{
+                                    Log.d(TAG, "Username taken");
+                                    String email = snapshot.getValue().toString();
+                                    Toast.makeText(c, "Username already taken.", Toast.LENGTH_LONG).show();
                                 }
 
-                                @Override
-                                public void onError(FirebaseError firebaseError) {
-                                    Log.d(TAG, "Error creating user: " + firebaseError.getMessage());
-                                    loginProgress.setVisibility(View.GONE);
-                                    Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        } else {
-                            Toast.makeText(c, "Passwords do not match.", Toast.LENGTH_LONG).show();
-                        }
+//
+
+
+                            }
+
+                            @Override
+                            public void onCancelled(FirebaseError firebaseError) {
+                                Toast.makeText(c, "Username not taken", Toast.LENGTH_LONG).show();
+                            }
+
+
+                        });
+
+
+
 
                     } else {
                         Toast.makeText(c, "Failed to create account. Please refer to our Terms of Service for registration guidelines, including minimum age.", Toast.LENGTH_LONG).show();
