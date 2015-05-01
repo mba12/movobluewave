@@ -2,6 +2,7 @@ package com.movo.wave;
 /**
  * Created by PhilG on 3/23/2015.
  */
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -10,7 +11,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -26,32 +26,23 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
-import android.widget.Toast;
-
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.movo.wave.comms.BLEAgent;
-import com.movo.wave.comms.WaveAgent;
-import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.Calculator;
-import com.movo.wave.util.UTC;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -110,6 +101,10 @@ public class Home extends MenuActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intentIncoming = getIntent();
+        //http://stackoverflow.com/questions/10243557/how-to-slide-animation-between-two-activity-in-android
+        LaunchAnimation.apply( this, intentIncoming );
+
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/gotham-book.otf")
                         .setFontAttrId(R.attr.fontPath)
@@ -132,7 +127,6 @@ public class Home extends MenuActivity {
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
-        Intent intentIncoming = getIntent();
 
         String date = intentIncoming.getStringExtra("date");
         if(date!=null) {
@@ -238,7 +232,7 @@ public class Home extends MenuActivity {
 
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
-                Bundle extras = new Bundle();
+                LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);
@@ -282,7 +276,7 @@ public class Home extends MenuActivity {
 
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
-                Bundle extras = new Bundle();
+                LaunchAnimation.SLIDE_LEFT.setIntent( intent );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);

@@ -74,6 +74,8 @@ public class DailyActivity extends ActionBarActivity {
         );
 
         setContentView(R.layout.activity_daily);
+        Intent intent = getIntent();
+        LaunchAnimation.apply( this, intent );
         c = this.getApplicationContext();
 
         miles = (TextView) findViewById(R.id.tvMiles);
@@ -108,7 +110,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
 
-        Intent intent = getIntent();
+
         if (null != intent) { //Null Checking
             String date= intent.getStringExtra("date");
             Long dateLong = Long.parseLong(date);
@@ -139,7 +141,7 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
+                    LaunchAnimation.SLIDE_LEFT.setIntent( intent );
                     long timeTarget = today.getTime()+86400000;
                     String tomorrow = timeTarget+"";
                     intent.putExtra("date",tomorrow);
@@ -159,13 +161,12 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
+
+                    LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
                     String tomorrow = (today.getTime()-86400000)+"";
                     intent.putExtra("date",tomorrow);
                     startActivity(intent);
                     finish();
-
-
                 }
             });
 
