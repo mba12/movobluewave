@@ -29,10 +29,14 @@
         <item>Complete</item>
     </string-array>
     <string name="sync_sql_save">Saving Data&#8230;</string>
-    <string name="sync_serial_label">Wave Serial: </string>
+    <string name="sync_serial_label">Wave Serial:&#160;</string>
     <string-array name="scan_state_enum">
         <item>Waiting For Bluetooth</item>
         <item>Scanning</item>
         <item>Complete</item>
+    </string-array>
+    <string name="contact_email_subject">Contact from&#160;</string>
+    <string-array name="contact_email_recipients">
+        <item>info@getmovo.com</item>
     </string-array>
 </resources>
