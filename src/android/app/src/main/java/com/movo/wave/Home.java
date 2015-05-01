@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.ActionBarActivity;
@@ -39,7 +40,10 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.AxisBase;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -59,6 +63,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 
 public class Home extends MenuActivity {
@@ -80,6 +87,18 @@ public class Home extends MenuActivity {
     RelativeLayout older;
     RelativeLayout newer;
     TextView curMonthDisplay;
+    public enum ChartType{
+        STEPS,
+        MILES,
+        CALORIES
+    }
+    ChartType curChart = ChartType.STEPS;
+    RelativeLayout stepsLayout;
+    TextView stepsText;
+    RelativeLayout milesLayout;
+    TextView milesText;
+    RelativeLayout caloriesLayout;
+    TextView caloriesText;
 
 
     public static String TAG = "Movo Wave V2";
@@ -90,8 +109,19 @@ public class Home extends MenuActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setDefaultFontPath("fonts/gotham-book.otf")
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );
         initMenu(R.layout.activity_home);
         ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
+        stepsLayout = (RelativeLayout) findViewById(R.id.stepsLayout);
+        milesLayout = (RelativeLayout) findViewById(R.id.milesLayout);
+        caloriesLayout = (RelativeLayout) findViewById(R.id.caloriesLayout);
+        stepsText = (TextView) findViewById(R.id.titleBlockA);
+        milesText = (TextView) findViewById(R.id.titleBlockB);
+        caloriesText = (TextView) findViewById(R.id.titleBlockC);
         // Setup BLE context
         BLEAgent.open(c);
 
@@ -99,20 +129,20 @@ public class Home extends MenuActivity {
         //Set up date works for calendar display
         Intent intentIncoming = getIntent();
 
-            String date = intentIncoming.getStringExtra("date");
-            if(date!=null) {
-                timestamp = Long.parseLong(date);
-                calendar = Calendar.getInstance();
-                calendar.setTimeInMillis(timestamp);
-                if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
+        String date = intentIncoming.getStringExtra("date");
+        if(date!=null) {
+            timestamp = Long.parseLong(date);
+            calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(timestamp);
+            if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
 //                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 //                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-                }
-            }else{
-                calendar = Calendar.getInstance();
-                timestamp = calendar.getTimeInMillis();
-                curDay = calendar.get(Calendar.DAY_OF_MONTH);
             }
+        }else{
+            calendar = Calendar.getInstance();
+            timestamp = calendar.getTimeInMillis();
+            curDay = calendar.get(Calendar.DAY_OF_MONTH);
+        }
 //        curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
 
@@ -178,12 +208,12 @@ public class Home extends MenuActivity {
             if(userExists==true) {
                 setUpCharts(c);
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(myData.getCurrentUserEmail());
+                currentUserTV.setText(myData.getCurrentUsername());
             }else{
                 String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
                 UserData.getUserData(c).loadNewUser(uid);
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(myData.getCurrentUserEmail());
+                currentUserTV.setText(myData.getCurrentUsername());
                 setUpCharts(c);
             }
 
@@ -226,7 +256,7 @@ public class Home extends MenuActivity {
 
                         insertSteps(snapshot,editedCal.get(Calendar.YEAR),editedCal.get(Calendar.MONTH),c);
 
-                                Log.d(TAG, "Inserting steps into database");
+                        Log.d(TAG, "Inserting steps into database");
 
 
                         startActivity(editedIntent);
@@ -330,9 +360,42 @@ public class Home extends MenuActivity {
         }catch(Exception e){
             e.printStackTrace();
         }
+        stepsLayout.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                curChart = ChartType.STEPS;
+                milesText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                caloriesText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                stepsText.setBackground(getResources().getDrawable(R.drawable.redbtn_lg));
+//                redbtn_lg
+                refreshCharts();
+            }
+        });
 
+        milesLayout.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                curChart = ChartType.MILES;
+                milesText.setBackground(getResources().getDrawable(R.drawable.redbtn_lg));
+                caloriesText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                stepsText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                refreshCharts();
+            }
+        });
+        caloriesLayout.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                curChart = ChartType.CALORIES;
+                milesText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                caloriesText.setBackground(getResources().getDrawable(R.drawable.redbtn_lg));
+                stepsText.setBackground(getResources().getDrawable(R.drawable.tabbarselected));
+                refreshCharts();
+            }
+        });
 
 //        upload();
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
 
@@ -366,7 +429,7 @@ public class Home extends MenuActivity {
                 gridview.invalidate();
                 chart.invalidate();
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(UserData.getUserData(c).getCurrentUserEmail());
+                currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
             }
         }catch(Exception e){
             e.printStackTrace();
@@ -384,6 +447,7 @@ public class Home extends MenuActivity {
         int difference = numberOfDaysTotal - curDay;
         numberOfDaysLeft = numberOfDaysTotal - difference;
         int totalStepsForMonth= 0;
+        int greatestSteps=0;
         for(int i=0;i<numberOfDaysLeft;i++){
 
             //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
@@ -408,9 +472,21 @@ public class Home extends MenuActivity {
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
                     //works
                 }
+                if(totalStepsForToday>greatestSteps){
+                    greatestSteps = totalStepsForToday;
+                }
                 totalStepsForMonth+=totalStepsForToday;
                 curSteps.close();
-                Entry curEntry = new Entry(totalStepsForToday, i);
+                Entry curEntry;
+                if(curChart.equals(ChartType.STEPS)) {
+                    curEntry  = new Entry(totalStepsForToday, i);
+                }else if(curChart.equals(ChartType.CALORIES)){
+                    float cals = (int)calculateTotalCalories(totalStepsForToday);
+                    curEntry = new Entry(cals, i);
+                }else{
+                    float miles = (int)calculateTotalMiles(totalStepsForToday);
+                    curEntry = new Entry(miles, i);
+                }
                 valsComp1.add(curEntry);
             }else{
                 //no steps for this time period.
@@ -444,16 +520,45 @@ public class Home extends MenuActivity {
         double caloriesAverage = calculateAverageCalories(totalStepsForMonth, numberOfDaysLeft);
         calsAve.setText(String.format("%.1f",caloriesAverage));
 
-            stepsTotal.setText(totalStepsForMonth+"");
+        stepsTotal.setText(totalStepsForMonth+"");
 //        }
 
 
         LineDataSet setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
+        setComp1.setColor(getResources().getColor(R.color.red ));
+
 
         ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
         dataSets.add(setComp1);
 
         LineData data = new LineData(xVals, dataSets);
+        YAxis rightAxis = chart.getAxisRight();
+        YAxis leftAxis = chart.getAxisLeft();
+        if(curChart.equals(ChartType.STEPS)) {
+
+            rightAxis.setStartAtZero(true);
+            rightAxis.setAxisMaxValue((float) greatestSteps);
+            leftAxis.setStartAtZero(true);
+            leftAxis.setAxisMaxValue((float) greatestSteps);
+
+        }else if(curChart.equals(ChartType.CALORIES)){
+
+            rightAxis.setStartAtZero(true);
+            rightAxis.setAxisMaxValue((float)calculateTotalCalories(greatestSteps));
+            leftAxis.setStartAtZero(true);
+            leftAxis.setAxisMaxValue((float)calculateTotalCalories(greatestSteps));
+        }else{
+
+            rightAxis.setStartAtZero(true);
+            rightAxis.setAxisMaxValue((float)calculateTotalMiles(greatestSteps));
+            leftAxis.setStartAtZero(true);
+            leftAxis.setAxisMaxValue((float)calculateTotalMiles(greatestSteps));
+        }
+        rightAxis.setDrawLabels(false);
+        leftAxis.setDrawLabels(true);
+//        chart.getPaint(Chart.PAINT_HOLE).setColor(Color.RED);
+        chart.setBackgroundColor(getResources().getColor(R.color.white));
+        chart.setBorderColor(getResources().getColor(R.color.grey));
         chart.setData(data);
         chart.invalidate(); // refresh
     }
@@ -635,11 +740,11 @@ public class Home extends MenuActivity {
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         gridview.invalidate();
-                setUpChart();
-                pbBar.setVisibility(View.GONE);
-                if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
-                    gridview.setVisibility(View.VISIBLE);
-                }
+        setUpChart();
+        pbBar.setVisibility(View.GONE);
+        if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
+            gridview.setVisibility(View.VISIBLE);
+        }
 
     }
 
@@ -759,62 +864,62 @@ public class Home extends MenuActivity {
                     String username = "";
                     while (curSteps.isAfterLast() == false) {
                         if(Integer.parseInt(curSteps.getString(4))!=0) {
-                        username = curSteps.getString(3);
+                            username = curSteps.getString(3);
 
 
-                        long stepTime = Long.parseLong(curSteps.getString(2));
-                        Date curDate = new Date(stepTime);
+                            long stepTime = Long.parseLong(curSteps.getString(2));
+                            Date curDate = new Date(stepTime);
 
-                        cal.set( Calendar.YEAR, 2015);
-                        cal.set( Calendar.MONTH, curDate.getMonth());
-                        cal.set( Calendar.DATE, curDate.getDate() );
-                        cal.set( Calendar.HOUR_OF_DAY, curDate.getHours() );
-                        cal.set( Calendar.MINUTE, curDate.getMinutes() );
-                        cal.set( Calendar.SECOND, 0 );
-                        cal.set( Calendar.MILLISECOND, 0 );
-                        String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
+                            cal.set( Calendar.YEAR, 2015);
+                            cal.set( Calendar.MONTH, curDate.getMonth());
+                            cal.set( Calendar.DATE, curDate.getDate() );
+                            cal.set( Calendar.HOUR_OF_DAY, curDate.getHours() );
+                            cal.set( Calendar.MINUTE, curDate.getMinutes() );
+                            cal.set( Calendar.SECOND, 0 );
+                            cal.set( Calendar.MILLISECOND, 0 );
+                            String dayMinute = (curDate.getMinutes() + (curDate.getHours() *60))+"";
 
-                        if((date!=curDate.getDate()) &&(date!=-1)){
-                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-                            oldDate = date;
-                            Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth())+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
-                            refStep2.setValue(minuteMap);
+                            if((date!=curDate.getDate()) &&(date!=-1)){
+                                String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                                String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                                oldDate = date;
+                                Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+(curDate.getYear()+1900)+"/"+(curDate.getMonth())+"/"+oldDate).child(curSteps.getString(0)); //to modify child node
+                                refStep2.setValue(minuteMap);
 
 
 
-                            minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
-                            Map<String,String > stepData = new HashMap<String, String>();
+                                minuteMap = new HashMap<String,Map<String, String>>(); //minutes, steps
+                                Map<String,String > stepData = new HashMap<String, String>();
 //                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                            stepData.put(Database.StepEntry.START, startTime);
-                            stepData.put(Database.StepEntry.END, endTime);
+                                stepData.put(Database.StepEntry.START, startTime);
+                                stepData.put(Database.StepEntry.END, endTime);
 //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+                                stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                                stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
 
                                 minuteMap.put(startTime, stepData);
 
-                            date = curDate.getDate();
+                                date = curDate.getDate();
 
-                        }else{
-                            oldDate = date;
-                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-                            Map<String,String > stepData = new HashMap<String, String>();
-                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                            stepData.put(Database.StepEntry.START, startTime);
-                            stepData.put(Database.StepEntry.END, endTime);
+                            }else{
+                                oldDate = date;
+                                String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                                String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                                Map<String,String > stepData = new HashMap<String, String>();
+                                stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+                                stepData.put(Database.StepEntry.START, startTime);
+                                stepData.put(Database.StepEntry.END, endTime);
 //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+                                stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                                stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
 
-                            if(Integer.parseInt(curSteps.getString(4))!=0) {
-                                minuteMap.put(startTime, stepData);
+                                if(Integer.parseInt(curSteps.getString(4))!=0) {
+                                    minuteMap.put(startTime, stepData);
+                                }
+
+                                date = curDate.getDate();
                             }
-
-                            date = curDate.getDate();
-                        }
                         }
 
 
@@ -933,26 +1038,26 @@ public class Home extends MenuActivity {
 
         long newRowId;
 
-            newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                    null,
-                    values);
+        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                null,
+                values);
 
 
-            final boolean ret = newRowId >= 0;
-            if (ret) {
-                Log.d(TAG, "Inserted into database: new row " + newRowId + " guid: " + guid);
-                Log.d(TAG, "Inserted data: " + point);
-            }
-            return ret;
+        final boolean ret = newRowId >= 0;
+        if (ret) {
+            Log.d(TAG, "Inserted into database: new row " + newRowId + " guid: " + guid);
+            Log.d(TAG, "Inserted data: " + point);
+        }
+        return ret;
 
     }
 
 
     public static int insertPoints( final SQLiteDatabase db,
-                                     final String guid,
-                                     final String userID,
-                                     Collection<WaveRequest.WaveDataPoint> points,
-                                     final String deviceAddress) {
+                                    final String guid,
+                                    final String userID,
+                                    Collection<WaveRequest.WaveDataPoint> points,
+                                    final String deviceAddress) {
         //http://www.vogella.com/tutorials/AndroidSQLite/article.html
 
 
@@ -963,9 +1068,9 @@ public class Home extends MenuActivity {
         try {
             for (WaveRequest.WaveDataPoint point : points) {
                 if(point.value!=0) {
-                if (insertPoint(db, guid, userID, point, deviceAddress)) {
-                    ret += 1;
-                }
+                    if (insertPoint(db, guid, userID, point, deviceAddress)) {
+                        ret += 1;
+                    }
                 }else{
                     skippedForZero += 1;
 
@@ -1183,8 +1288,8 @@ public class Home extends MenuActivity {
     public static double calculateTotalCalories(int steps){
         Calculator calc = new Calculator();
 
-                double caloriesUsed = calc.simple_calculate_calories(steps);
-            return caloriesUsed;
+        double caloriesUsed = calc.simple_calculate_calories(steps);
+        return caloriesUsed;
 
 
     }
@@ -1206,7 +1311,7 @@ public class Home extends MenuActivity {
 //        calories.setText(String.format("%.1f CAL", caloriesUsed));
 
 
-            return milesTraveled;
+        return milesTraveled;
 
     }
 
@@ -1216,7 +1321,7 @@ public class Home extends MenuActivity {
 
 
         if(daysInMonth!=0){
-             caloriesUsed = calc.simple_calculate_calories(steps);
+            caloriesUsed = calc.simple_calculate_calories(steps);
             caloriesUsed = caloriesUsed / daysInMonth;
         }
 

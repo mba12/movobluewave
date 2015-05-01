@@ -65,6 +65,7 @@ public class FirstLogin extends Activity {
     static String curYear;
     static String curMonth;
     ProgressBar loginProgress;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +75,6 @@ public class FirstLogin extends Activity {
         forgot = (Button) findViewById(R.id.forgotPass);
         Firebase.setAndroidContext(c);
         loginRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
-
 
 
         username = (EditText) findViewById(R.id.username);
@@ -87,9 +87,9 @@ public class FirstLogin extends Activity {
             public void onClick(View v) {
                 loginProgress.setVisibility(View.VISIBLE);
                 mEmail = username.getText().toString();
-                if(mEmail.equals("")){
+                if (mEmail.equals("")) {
                     Toast.makeText(c, "Error: Email is empty", Toast.LENGTH_LONG).show();
-                }else {
+                } else {
                     loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
                         @Override
                         public void onSuccess() {
@@ -114,180 +114,61 @@ public class FirstLogin extends Activity {
                 mEmail = username.getText().toString();
                 mPassword = pass.getText().toString();
                 loginProgress.setVisibility(View.VISIBLE);
-                loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
-                    @Override
-                    public void onAuthenticated(AuthData authData) {
-                        //success, save auth data
-                        UserData myData = UserData.getUserData(c);
-                        myData.setCurUID(authData.getUid());
-                        myData.setCurToken(authData.getToken());
-                        myData.setCurEmail(mEmail);
-                        myData.setCurPW(mPassword);
-                        final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
-                        myData.setCurrentUserRef(currentUserRef);
-                        Firebase metadataChild = currentUserRef.child("metadata");
-                        myData.setMetadata(metadataChild);
-                        boolean firstTime = myData.addCurUserTolist();
-                        final Calendar cal = Calendar.getInstance();
-                        int monthtemp = cal.get(Calendar.MONTH);
-                        final int month = monthtemp;
-                        int year = cal.get(Calendar.YEAR);
-                        curYear = year + "";
-                        curMonth = month+"";
+//                loginRef.auth
 
-                        if((Boolean)authData.getProviderData().get("isTemporaryPassword")){
+                if (!(mEmail.contains("@"))) {
+                    Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                    Firebase child = lookupEmail.child(mEmail);
+                    child.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            Log.d(TAG, snapshot + "");
+                            String email = snapshot.getValue().toString();
+                            mEmail = email;
 
-                            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(FirstLogin.this);
-// ...Irrelevant code for customizing the buttons and title
-                            LayoutInflater inflater = FirstLogin.this.getLayoutInflater();
-                            dialogView = inflater.inflate(R.layout.reset_password_prompt, null);
-                            dialogBuilder.setView(dialogView);
-
-                            pass1 = (EditText) dialogView.findViewById(R.id.pass1);
-                            pass2 = (EditText) dialogView.findViewById(R.id.pass2);
-                            Button reset = (Button) dialogView.findViewById(R.id.reset);
-                            Button cancel = (Button) dialogView.findViewById(R.id.cancel);
+                            login();
 
 
+                        }
 
-                            final AlertDialog alertDialog = dialogBuilder.create();
-                            reset.setOnClickListener(new View.OnClickListener() {
-                                public void onClick(View v) {
-
-                                    resetPass1 = pass1.getText().toString();
-                                    resetPass2 = pass2.getText().toString();
-
-                                    if(resetPass1.equals(resetPass2)) {
-                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
-                                        pb2.setVisibility(View.VISIBLE);
-                                        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/");
-                                        ref.changePassword(mEmail, mPassword, resetPass1, new Firebase.ResultHandler() {
-                                            @Override
-                                            public void onSuccess() {
-
-                                                UserData myData = UserData.getUserData(c);
-                                                myData.downloadProfilePic();
-//                                                myData.setCurUID(authData.getUid());
-//                                                myData.setCurToken(authData.getToken());
-//                                                myData.setCurEmail(mEmail);
-                                                myData.setCurPW(resetPass1);
-                                                // password changed
-                                                Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
-                                                child.addValueEventListener(new ValueEventListener() {
-                                                    @Override
-                                                    public void onDataChange(DataSnapshot snapshot) {
-                                                        System.out.println(snapshot.getValue());
-                                                        loginProgress.setVisibility(View.INVISIBLE);
-
-                                                        insertSteps(snapshot);
-
-//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-                                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
-                                                        pb2.setVisibility(View.GONE);
-
-
-                                                        Intent intent = new Intent(getApplicationContext(),
-                                                                Home.class);
-                                                        startActivity(intent);
-                                                    }
-
-                                                    @Override
-                                                    public void onCancelled(FirebaseError firebaseError) {
-                                                        ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
-                                                        pb2.setVisibility(View.GONE);
-                                                        System.out.println("The read failed: " + firebaseError.getMessage());
-                                                    }
-                                                });
-                                            }
-                                            @Override
-                                            public void onError(FirebaseError firebaseError) {
-                                                // error encountered
-                                                Toast.makeText(c, "Reset Passwords do not match",Toast.LENGTH_LONG).show();
-                                                alertDialog.cancel();
-                                            }
-                                        });
-
-
-                                    }else{
-                                        Toast.makeText(c, "Reset Passwords do not match",Toast.LENGTH_LONG).show();
-                                    }
-
-                                }
-                            });
-
-                            cancel.setOnClickListener(new View.OnClickListener() {
-                                public void onClick(View v) {
-                                    alertDialog.cancel();
-                                }
-                            });
-                            alertDialog.show();
-
-
-                        }else {
-                            myData.downloadProfilePic();
-                            Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
-                            child.addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot snapshot) {
-                                    System.out.println(snapshot.getValue());
-                                    loginProgress.setVisibility(View.INVISIBLE);
-
-                                    insertSteps(snapshot);
-
-//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-
-
-                                    Intent intent = new Intent(getApplicationContext(),
-                                            Home.class);
-                                    startActivity(intent);
-                                }
-
-                                @Override
-                                public void onCancelled(FirebaseError firebaseError) {
-                                    System.out.println("The read failed: " + firebaseError.getMessage());
-                                }
-                            });
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+                            Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
                         }
 
 
-
-                    }
-
-                    @Override
-                    public void onAuthenticationError(FirebaseError firebaseError) {
-                        Log.d(TAG,"Error logging in. ");
-                        loginProgress.setVisibility(View.INVISIBLE);
-                        Toast.makeText(c, "Could not Authenticate user", Toast.LENGTH_LONG).show();
-                    }
-                });
-
+                    });
+                } else {
+                    login();
+                }
             }
         });
-
     }
+
+
     private static void insertSteps(DataSnapshot snapshot) {
         UserData myData = UserData.getUserData(c);
         Iterable<DataSnapshot> children = snapshot.getChildren();
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
-        for (DataSnapshot child : children){
+        for (DataSnapshot child : children) {
             String date = child.getKey();
             Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for(DataSnapshot syncsForToday : syncEvents){
+            for (DataSnapshot syncsForToday : syncEvents) {
                 String syncName = syncsForToday.getKey();
                 Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for(DataSnapshot stepChunk : stepEvents){
+                for (DataSnapshot stepChunk : stepEvents) {
                     String stepTime = stepChunk.getKey();
                     Iterable<DataSnapshot> step = syncsForToday.getChildren();
                     Object stepEvent = stepChunk.getValue();
                     Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
                     monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test"+monthMap);
+                    Log.d(TAG, "Monthmap test" + monthMap);
                     Calendar thisCal = Calendar.getInstance();
 //                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = curYear + "-" +curMonth+ "-" +date+ "" +monthMap.get("starttime").toString();
-                    String dateConcatStop = curYear + "-" +curMonth+ "-" +date+ "" +monthMap.get("endtime").toString();
+                    String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
+                    String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
 
 
                     try {
@@ -299,9 +180,9 @@ public class FirstLogin extends Activity {
                         ContentValues values = new ContentValues();
                         values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
                         values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START,curDateStart.getTime());
-                        values.put(Database.StepEntry.END,curDateStop.getTime());
-                        values.put(Database.StepEntry.USER,myData.getCurUID());
+                        values.put(Database.StepEntry.START, curDateStart.getTime());
+                        values.put(Database.StepEntry.END, curDateStop.getTime());
+                        values.put(Database.StepEntry.USER, myData.getCurUID());
                         values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
                         values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
                         values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
@@ -313,12 +194,12 @@ public class FirstLogin extends Activity {
                         newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                                 null,
                                 values);
-                        Log.d(TAG, "Database insert result: "+newRowId+" for: "+values);
+                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
 
 
-
-                    }catch(Exception e){
-                        e.printStackTrace();;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ;
                     }
 
                 }
@@ -331,31 +212,152 @@ public class FirstLogin extends Activity {
 
     }
 
+    public void login() {
+        loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
+            @Override
+            public void onAuthenticated(AuthData authData) {
+                //success, save auth data
+                UserData myData = UserData.getUserData(c);
+                myData.setCurUID(authData.getUid());
+                myData.setCurToken(authData.getToken());
+                myData.setCurEmail(mEmail);
+                myData.setCurPW(mPassword);
+                final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+                myData.setCurrentUserRef(currentUserRef);
+                Firebase metadataChild = currentUserRef.child("metadata");
+                myData.setMetadata(metadataChild);
+                boolean firstTime = myData.addCurUserTolist();
+                final Calendar cal = Calendar.getInstance();
+                int monthtemp = cal.get(Calendar.MONTH);
+                final int month = monthtemp + 1;
+                int year = cal.get(Calendar.YEAR);
+                curYear = year + "";
+                curMonth = month + "";
 
-//
-//    @Override
-//    public Dialog onCreateDialog(Bundle savedInstanceState) {
-//        AlertDialog.Builder builder = new AlertDialog.Builder(c);
-//        // Get the layout inflater
-//        LayoutInflater inflater = getActivity().getLayoutInflater();
-//
-//        // Inflate and set the layout for the dialog
-//        // Pass null as the parent view because its going in the dialog layout
-//        builder.setView(inflater.inflate(R.layout.dialog_signin, null))
-//                // Add action buttons
-//                .setPositiveButton(R.string.signin, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        // sign in the user ...
-//                    }
-//                })
-//                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int id) {
-//                        LoginDialogFragment.this.getDialog().cancel();
-//                    }
-//                });
-//        return builder.create();
-//    }
+                if ((Boolean) authData.getProviderData().get("isTemporaryPassword")) {
+
+                    AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(FirstLogin.this);
+// ...Irrelevant code for customizing the buttons and title
+                    LayoutInflater inflater = FirstLogin.this.getLayoutInflater();
+                    dialogView = inflater.inflate(R.layout.reset_password_prompt, null);
+                    dialogBuilder.setView(dialogView);
+
+                    pass1 = (EditText) dialogView.findViewById(R.id.pass1);
+                    pass2 = (EditText) dialogView.findViewById(R.id.pass2);
+                    Button reset = (Button) dialogView.findViewById(R.id.reset);
+                    Button cancel = (Button) dialogView.findViewById(R.id.cancel);
 
 
+                    final AlertDialog alertDialog = dialogBuilder.create();
+                    reset.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+
+                            resetPass1 = pass1.getText().toString();
+                            resetPass2 = pass2.getText().toString();
+
+                            if (resetPass1.equals(resetPass2)) {
+                                ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                pb2.setVisibility(View.VISIBLE);
+                                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/");
+                                ref.changePassword(mEmail, mPassword, resetPass1, new Firebase.ResultHandler() {
+                                    @Override
+                                    public void onSuccess() {
+
+                                        UserData myData = UserData.getUserData(c);
+                                        myData.downloadProfilePic();
+//                                                myData.setCurUID(authData.getUid());
+//                                                myData.setCurToken(authData.getToken());
+//                                                myData.setCurEmail(mEmail);
+                                        myData.setCurPW(resetPass1);
+                                        // password changed
+                                        Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
+                                        child.addValueEventListener(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot snapshot) {
+                                                System.out.println(snapshot.getValue());
+                                                loginProgress.setVisibility(View.INVISIBLE);
+
+                                                insertSteps(snapshot);
+
+//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+                                                ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                                pb2.setVisibility(View.GONE);
+
+
+                                                Intent intent = new Intent(getApplicationContext(),
+                                                        Home.class);
+                                                startActivity(intent);
+                                            }
+
+                                            @Override
+                                            public void onCancelled(FirebaseError firebaseError) {
+                                                ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
+                                                pb2.setVisibility(View.GONE);
+                                                System.out.println("The read failed: " + firebaseError.getMessage());
+                                            }
+                                        });
+                                    }
+
+                                    @Override
+                                    public void onError(FirebaseError firebaseError) {
+                                        // error encountered
+                                        Toast.makeText(c, "Reset Passwords do not match", Toast.LENGTH_LONG).show();
+                                        alertDialog.cancel();
+                                    }
+                                });
+
+
+                            } else {
+                                Toast.makeText(c, "Reset Passwords do not match", Toast.LENGTH_LONG).show();
+                            }
+
+                        }
+                    });
+
+                    cancel.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            alertDialog.cancel();
+                        }
+                    });
+                    alertDialog.show();
+
+
+                } else {
+                    myData.downloadProfilePic();
+                    Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
+                    child.addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot snapshot) {
+                            System.out.println(snapshot.getValue());
+                            loginProgress.setVisibility(View.INVISIBLE);
+
+                            insertSteps(snapshot);
+
+//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
+
+
+                            Intent intent = new Intent(getApplicationContext(),
+                                    Home.class);
+                            startActivity(intent);
+                        }
+
+                        @Override
+                        public void onCancelled(FirebaseError firebaseError) {
+                            System.out.println("The read failed: " + firebaseError.getMessage());
+                        }
+                    });
+                }
+
+
+            }
+
+            @Override
+            public void onAuthenticationError(FirebaseError firebaseError) {
+                Log.d(TAG, "Error logging in. ");
+                loginProgress.setVisibility(View.INVISIBLE);
+                Toast.makeText(c, "Could not Authenticate user", Toast.LENGTH_LONG).show();
+            }
+        });
+    }
 }
+

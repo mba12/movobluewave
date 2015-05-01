@@ -32,11 +32,13 @@ public class FirstSignUp extends Activity {
     Button login;
     Button forgot;
     String mEmail;
+    String mUsername;
     String mPassword;
     String mPasswordConf;
     EditText username;
     EditText pass;
     EditText passConf;
+    EditText usernameCust;
     TextView terms;
     TextView privacy;
     Firebase loginRef;
@@ -81,6 +83,7 @@ public class FirstSignUp extends Activity {
         username = (EditText) findViewById(R.id.username);
         pass = (EditText) findViewById(R.id.password);
         passConf = (EditText) findViewById(R.id.password2);
+        usernameCust = (EditText) findViewById(R.id.usernameCust);
 
 //        birthdate = (Button) findViewById(R.id.birthday);
         final Calendar cal = Calendar.getInstance();
@@ -124,11 +127,14 @@ public class FirstSignUp extends Activity {
 
         login.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!(username.getText().equals("")) && !(pass.getText().equals(""))) {
+                if (!(username.getText().equals("")) && !(pass.getText().equals("")) && !(usernameCust.getText().equals(""))) {
                     if (is13) {
 
 
+
+
                         mEmail = username.getText().toString();
+                        mUsername = usernameCust.getText().toString();
                         mPassword = pass.getText().toString();
                         mPasswordConf = passConf.getText().toString();
 
@@ -137,7 +143,10 @@ public class FirstSignUp extends Activity {
                             loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
                                 @Override
                                 public void onSuccess(Map<String, Object> result) {
-                                    System.out.println("Successfully created user account with uid: " + result.get("uid"));
+                                    Log.d(TAG,"Successfully created user account with uid: " + result.get("uid"));
+                                    Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
+                                    Firebase thisUser = usernameEmailTies.child(mUsername);
+                                    thisUser.setValue(mEmail);
                                     loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
                                         @Override
                                         public void onAuthenticated(AuthData authData) {
@@ -148,14 +157,14 @@ public class FirstSignUp extends Activity {
                                             myData.setCurEmail(mEmail);
                                             myData.setCurPW(mPassword);
                                             myData.setCurBirthdate(birthdateInput+"");
+                                            myData.setCurUsername(mUsername);
                                             Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+
                                             myData.setCurrentUserRef(currentUserRef);
                                             myData.addCurUserTolist();
-//                                myData.addCurUserTolist();
                                             loginProgress.setVisibility(View.GONE);
 
                                             Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-//                                updateHomePage();
                                             Intent intent = new Intent(getApplicationContext(),
                                                     Home.class);
                                             startActivity(intent);

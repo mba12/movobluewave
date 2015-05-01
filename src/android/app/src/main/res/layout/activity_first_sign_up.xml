@@ -46,6 +46,20 @@
             android:password="true"
             android:singleLine="true"
             android:hint="Confirm Password"/>
+
+
+        <EditText
+            android:id="@+id/usernameCust"
+            android:layout_width="250dip"
+            android:layout_height="40dip"
+            android:layout_below="@+id/password2"
+            android:gravity="center"
+            android:layout_marginTop="20dip"
+            android:textColor="@android:color/black"
+            android:layout_alignLeft="@+id/username"
+            android:background="@android:color/white"
+            android:singleLine="true"
+            android:hint="Username"/>
         <!--
                 <CheckBox
                     android:layout_width="wrap_content"
@@ -67,7 +81,7 @@
             android:background="@android:color/white"
             android:layout_alignLeft="@+id/username"
             android:gravity="center"
-            android:layout_below="@+id/password2"
+            android:layout_below="@+id/usernameCust"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="20dp"/>
 

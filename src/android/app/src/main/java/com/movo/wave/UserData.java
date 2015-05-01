@@ -47,6 +47,7 @@ public class UserData extends Activity{
     private String currentWeight = "Error";
     private String currentGender = "Error";
     private String currentFullName = "Error";
+    private String currentUsername = "Error";
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
@@ -79,6 +80,7 @@ public class UserData extends Activity{
             currentFullName = prefs.getString("currentFullName", "Error");
             currentPW = prefs.getString("currentPW", "Error");
             currentBirthdate= prefs.getString("currentBirthdate", "Error");
+            currentUsername= prefs.getString("currentUsername", "Error");
 //            currentUserSnapshot = prefs.gets
 //            reAuthenticate(currentEmail, currentPW);
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
@@ -171,6 +173,12 @@ public class UserData extends Activity{
         currentGender = input;
         return currentGender;
     }
+    public String setCurUsername(String input) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putString("currentUsername", input).commit();
+        currentUsername = input;
+        return currentUsername;
+    }
 
 
 
@@ -238,6 +246,7 @@ public class UserData extends Activity{
             userDataString.put("currentGender", currentGender);
             userDataString.put("currentFullName", currentFullName);
             userDataString.put("currentBirthdate", currentBirthdate);
+            userDataString.put("currentUsername", currentUsername);
 
 
             SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
@@ -333,6 +342,7 @@ public class UserData extends Activity{
         userDataString.put("currentBirthdate", currentWeight);
         userDataString.put("currentBirthdate", currentGender);
         userDataString.put("currentBirthdate", currentFullName);
+        userDataString.put("currentUsername", currentUsername);
 
 
 
@@ -467,6 +477,7 @@ public class UserData extends Activity{
     public String getCurrentGender() { return currentGender; }
     public String getCurrentFullName() { return currentFullName; }
     public String getCurrentBirthdate() { return currentBirthdate; }
+    public String getCurrentUsername() { return currentUsername; }
 
     public void uploadToFirebase(){
         Map<String, String> userDataString = new HashMap<String, String>();
@@ -480,6 +491,7 @@ public class UserData extends Activity{
         userDataString.put("currentGender", currentGender);
         userDataString.put("currentFullName", currentFullName);
         userDataString.put("currentBirthdate", currentBirthdate);
+        userDataString.put("currentUsername", currentUsername);
 
 
         Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +getCurUID() + "/metadata/");

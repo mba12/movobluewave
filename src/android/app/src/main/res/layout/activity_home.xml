@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    tools:ignore="MissingPrefix">
 
     <!--
          As the main content view, the view below consumes the entire
@@ -185,6 +186,7 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Cur Month"
                 android:id="@+id/tvCurMonth"
+                fontPath="fonts/gotham-book.otf"
                 android:textColor="@android:color/black"
                 android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true" />
@@ -209,6 +211,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:visibility="visible"
+                    android:background="@android:color/white"
                     android:layout_above="@+id/weeklyAverages"/>
 
                 <LinearLayout
@@ -218,6 +221,7 @@
                     android:layout_alignParentBottom="true"
                     android:orientation="horizontal">
                     <RelativeLayout
+                        android:id="@+id/stepsLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1">
@@ -227,7 +231,7 @@
                             android:layout_height="40dip"
                             android:text="STEPS"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/redbtn_lg"/>
                         <TextView
@@ -260,6 +264,7 @@
                         android:layout_height="fill_parent"
                         android:background="@android:color/darker_gray"/>
                     <RelativeLayout
+                        android:id="@+id/milesLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1">
@@ -269,7 +274,7 @@
                             android:layout_height="40dip"
                             android:text="MILES"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/tabbarselected"/>
                         <TextView
@@ -302,18 +307,19 @@
                         android:layout_height="fill_parent"
                         android:background="@android:color/darker_gray"/>
                     <RelativeLayout
+                        android:id="@+id/caloriesLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1"
                         >
 
                         <TextView
-                            android:id="@+id/titleBlockc"
+                            android:id="@+id/titleBlockC"
                             android:layout_width="fill_parent"
                             android:layout_height="40dip"
                             android:text="CALORIES"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/tabbarselected"/>
                         <TextView
@@ -323,7 +329,7 @@
                             android:text="0"
                             android:gravity="center"
                             android:textColor="@android:color/black"
-                            android:layout_below="@+id/titleBlockc"/>
+                            android:layout_below="@+id/titleBlockC"/>
                         <TextView
                             android:id="@+id/caloriesAverage"
                             android:layout_width="fill_parent"

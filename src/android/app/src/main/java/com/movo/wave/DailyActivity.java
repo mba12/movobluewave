@@ -38,6 +38,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class DailyActivity extends ActionBarActivity {
     Context c;
     String TAG = "Movo DailyActivity";
@@ -61,6 +64,12 @@ public class DailyActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setDefaultFontPath("fonts/gotham-book.otf")
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );
+
         setContentView(R.layout.activity_daily);
         c = this.getApplicationContext();
 
@@ -313,6 +322,12 @@ public class DailyActivity extends ActionBarActivity {
 
         }
 
+    }
+
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
 
