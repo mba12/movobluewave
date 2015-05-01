@@ -31,6 +31,8 @@ import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -388,24 +390,48 @@ public class DailyActivity extends ActionBarActivity {
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
+        //http://dimitar.me/how-to-get-picasa-images-using-the-image-picker-on-android-devices-running-any-os-version/
+
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
+                    if( imageReturnedIntent == null ) {
+                        Log.e( TAG, "NULL image intent result!");
+                    }
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
                     Cursor cursor = getContentResolver().query(
                             selectedImage, filePathColumn, null, null, null);
-                    cursor.moveToFirst();
+                    if( cursor == null || ! cursor.moveToFirst() ) {
+                        Log.e( TAG, "Cannot resolve URI: " + selectedImage);
+                        break;
+                    }
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String filePath = cursor.getString(columnIndex);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    if( columnIndex != -1 ) {
+                        String filePath = cursor.getString(columnIndex);
+
+                        BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
+                    } else {
+                        Log.i( TAG, "Resolving remote uri: " + selectedImage);
+                        try {
+                            final InputStream is = getContentResolver().openInputStream(selectedImage);
+                            BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                        } catch( FileNotFoundException e ) {
+                            baos = null;
+                            Log.e( TAG, "Can't load URI:" + selectedImage);
+                        }
+                    }
                     cursor.close();
 
+                    if( baos == null ) {
+                        break;
+                    }
 
-//                    Bitmap selectedImageToUpload; = BitmapFactory.decodeFile(filePath);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
@@ -460,6 +486,9 @@ public class DailyActivity extends ActionBarActivity {
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
                 }
+                break;
+            default:
+                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
     }
     public static Date trim(Date date) {
