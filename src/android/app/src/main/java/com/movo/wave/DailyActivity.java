@@ -402,7 +402,9 @@ public class DailyActivity extends ActionBarActivity {
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    Cursor cursor = getContentResolver().query(
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    /*Cursor cursor = getContentResolver().query(
                             selectedImage, filePathColumn, null, null, null);
                     if( cursor == null || ! cursor.moveToFirst() ) {
                         final String error = "Cannot resolve URI: " + selectedImage;
@@ -412,14 +414,13 @@ public class DailyActivity extends ActionBarActivity {
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
                     if( columnIndex != -1 ) {
                         String filePath = cursor.getString(columnIndex);
 
                         BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
-                    } else {
-                        Log.i( TAG, "Resolving remote uri: " + selectedImage);
+                    } else {*/
+                        Log.i( TAG, "Resolving URI: " + selectedImage);
                         try {
                             final InputStream is = getContentResolver().openInputStream(selectedImage);
                             BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
@@ -429,8 +430,8 @@ public class DailyActivity extends ActionBarActivity {
                             Log.e( TAG, error );
                             Toast.makeText(c, error, Toast.LENGTH_LONG).show();
                         }
-                    }
-                    cursor.close();
+                    /*}
+                    cursor.close();*/
 
                     if( baos == null ) {
                         break;
