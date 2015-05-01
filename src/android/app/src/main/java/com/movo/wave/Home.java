@@ -881,7 +881,7 @@ public class Home extends MenuActivity {
 
     public Bitmap dailyBitmapFetch(long today){
         boolean localFile = false;
-//        today = trim(today);
+//        today = trim(today); 
         Date currentDay = new Date(today);
         currentDay = trim(currentDay);
         UserData myData = UserData.getUserData(c);
