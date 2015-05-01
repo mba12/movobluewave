@@ -25,7 +25,6 @@ import com.movo.wave.util.LazyLogger;
  */
 public abstract class MenuActivity extends ActionBarActivity {
     final static LazyLogger lazyLog = new LazyLogger( "MenuActivity");
-    final static String[] movoEmailList = new String[] {"info@getmovo.com"} ;
 
     /** Menu option enumeration for all activities. Add new menu items here, and subclass select()
      * as needed.
@@ -49,7 +48,11 @@ public abstract class MenuActivity extends ActionBarActivity {
             public Intent select(Context context) {
                 final Intent emailIntent = new Intent( Intent.ACTION_SEND );
                 emailIntent.setType("plain/text");
-                emailIntent.putExtra( Intent.EXTRA_EMAIL, movoEmailList );
+                emailIntent.putExtra( Intent.EXTRA_EMAIL,
+                        context.getResources().getStringArray( R.array.contact_email_recipients ) );
+                emailIntent.putExtra( Intent.EXTRA_SUBJECT,
+                        context.getString(R.string.contact_email_subject) +
+                                UserData.getUserData(context).getCurrentUsername() );
                 return emailIntent;
             }
         },
