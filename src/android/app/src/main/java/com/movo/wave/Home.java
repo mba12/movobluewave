@@ -160,6 +160,8 @@ public class Home extends MenuActivity {
         if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
             newer.setVisibility(View.GONE);
 
+        }else{
+            newer.setVisibility(View.VISIBLE);
         }
 
         curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
@@ -234,38 +236,37 @@ public class Home extends MenuActivity {
                 pbBar.setVisibility(View.VISIBLE);
 
 
-                Intent intent = new Intent(getApplicationContext(),
+                final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
                 Bundle extras = new Bundle();
-                Calendar newCal = Calendar.getInstance();
+                final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
+                newCal.set(Calendar.DATE, 1);
                 newCal.add(Calendar.MONTH, -1);
-                final Calendar editedCal = newCal;
 
                 long monthForwardMillis = newCal.getTimeInMillis();
                 String lastMonth = (monthForwardMillis)+"";
                 intent.putExtra("date",lastMonth);
-                final Intent editedIntent = intent;
                 UserData myData = UserData.getUserData(c);
                 Firebase ref =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +myData.getCurUID() + "/steps/"+newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH));
                 ref.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        System.out.println(snapshot.getValue());
+                        Log.d(TAG,""+snapshot.getValue());
 //                        loginProgress.setVisibility(View.INVISIBLE);
 
-                        insertSteps(snapshot,editedCal.get(Calendar.YEAR),editedCal.get(Calendar.MONTH),c);
+                        insertSteps(snapshot,newCal.get(Calendar.YEAR),newCal.get(Calendar.MONTH),c);
 
                         Log.d(TAG, "Inserting steps into database");
 
 
-                        startActivity(editedIntent);
+                        startActivity(intent);
                         finish();
                     }
 
                     @Override
                     public void onCancelled(FirebaseError firebaseError) {
-                        System.out.println("The read failed: " + firebaseError.getMessage());
+                        Log.d(TAG,"The read failed: " + firebaseError.getMessage());
                     }
                 });
 
@@ -279,38 +280,37 @@ public class Home extends MenuActivity {
                 ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
                 pbBar.setVisibility(View.VISIBLE);
 
-                Intent intent = new Intent(getApplicationContext(),
+                final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
                 Bundle extras = new Bundle();
-                Calendar newCal = Calendar.getInstance();
+                final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
+                newCal.set(Calendar.DATE, 1);
                 newCal.add(Calendar.MONTH, +1);
-                final Calendar editedCal = newCal;
 
                 long monthForwardMillis = newCal.getTimeInMillis();
                 String lastMonth = (monthForwardMillis) + "";
                 intent.putExtra("date", lastMonth);
-                final Intent editedIntent = intent;
                 UserData myData = UserData.getUserData(c);
                 Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH)+"/");
                 ref.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        System.out.println(snapshot.getValue());
+                        Log.d(TAG,""+snapshot.getValue());
 //                        loginProgress.setVisibility(View.INVISIBLE);
 
-                        insertSteps(snapshot, editedCal.get(Calendar.YEAR), editedCal.get(Calendar.MONTH), c);
+                        insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
 
                         Log.d(TAG, "Inserting steps into database");
 
 
-                        startActivity(editedIntent);
+                        startActivity(intent);
                         finish();
                     }
 
                     @Override
                     public void onCancelled(FirebaseError firebaseError) {
-                        System.out.println("The read failed: " + firebaseError.getMessage());
+                        Log.d(TAG,""+"The read failed: " + firebaseError.getMessage());
                     }
                 });
             }
@@ -604,7 +604,7 @@ public class Home extends MenuActivity {
 
             } else {
                 gridView = (View) convertView;
-                //System.out.println("View not null, loading postion "+position+" out of "+mThumbIds.length);
+                //Log.d(TAG,""+"View not null, loading postion "+position+" out of "+mThumbIds.length);
             }
 
             UserData myData = UserData.getUserData(c);
@@ -881,7 +881,7 @@ public class Home extends MenuActivity {
 
     public Bitmap dailyBitmapFetch(long today){
         boolean localFile = false;
-//        today = trim(today);
+//        today = trim(today); 
         Date currentDay = new Date(today);
         currentDay = trim(currentDay);
         UserData myData = UserData.getUserData(c);

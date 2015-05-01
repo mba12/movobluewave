@@ -297,9 +297,11 @@ public class MyProfile extends MenuActivity {
                 myUserData.setCurWeight(weight);
                 myUserData.setCurGender(gender);
                 myUserData.setCurBirthdate(birth);
+//                myUserData.setCurUsername()
                 myUserData.uploadToFirebase();
 
                 Toast.makeText(c,"Userdata has been saved.",Toast.LENGTH_LONG).show();
+                finish();
 
             }
         });

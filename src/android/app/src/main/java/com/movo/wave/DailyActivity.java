@@ -23,6 +23,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -31,6 +32,8 @@ import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -47,7 +50,7 @@ public class DailyActivity extends ActionBarActivity {
     TextView miles;
     TextView calories;
     TextView steps;
-    TextView back;
+    ImageView back;
     TextView photo;
     TextView tvToday;
     Date today;
@@ -86,15 +89,16 @@ public class DailyActivity extends ActionBarActivity {
                 //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
                 Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
                 photoPickerIntent.setType("image/*");
                 Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
-                chooserIntent.putExtra( Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[] { takePhotoIntent});
+                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                        new Intent[]{takePhotoIntent});
                 startActivityForResult(chooserIntent, SELECT_PHOTO);
             }
         });
 
-        back = (TextView) findViewById(R.id.tvBack);
+        back = (ImageView) findViewById(R.id.tvBack);
         back.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
@@ -196,6 +200,7 @@ public class DailyActivity extends ActionBarActivity {
                 Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
 
                 background.setImageBitmap(bm);
+                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
 //                setContentView(R.layout.activity_daily);
             }
                 Log.d(TAG, "Loading image from firebase");
@@ -386,24 +391,51 @@ public class DailyActivity extends ActionBarActivity {
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
+        //http://dimitar.me/how-to-get-picasa-images-using-the-image-picker-on-android-devices-running-any-os-version/
+
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
+                    if( imageReturnedIntent == null ) {
+                        Log.e( TAG, "NULL image intent result!");
+                    }
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
                     Cursor cursor = getContentResolver().query(
                             selectedImage, filePathColumn, null, null, null);
-                    cursor.moveToFirst();
+                    if( cursor == null || ! cursor.moveToFirst() ) {
+                        final String error = "Cannot resolve URI: " + selectedImage;
+                        Log.e( TAG, error );
+                        Toast.makeText(c, error, Toast.LENGTH_LONG).show();
+                    }
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String filePath = cursor.getString(columnIndex);
+
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    if( columnIndex != -1 ) {
+                        String filePath = cursor.getString(columnIndex);
+
+                        BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
+                    } else {
+                        Log.i( TAG, "Resolving remote uri: " + selectedImage);
+                        try {
+                            final InputStream is = getContentResolver().openInputStream(selectedImage);
+                            BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                        } catch( FileNotFoundException e ) {
+                            baos = null;
+                            final String error = "Cannot resolve URI: " + selectedImage;
+                            Log.e( TAG, error );
+                            Toast.makeText(c, error, Toast.LENGTH_LONG).show();
+                        }
+                    }
                     cursor.close();
 
+                    if( baos == null ) {
+                        break;
+                    }
 
-//                    Bitmap selectedImageToUpload; = BitmapFactory.decodeFile(filePath);
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
@@ -457,7 +489,14 @@ public class DailyActivity extends ActionBarActivity {
                     ref.child(0+"").setValue(encodedImage);
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
+                } else {
+                    final String error = "No photo selected";
+                    Log.e( TAG, error );
+                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
                 }
+                break;
+            default:
+                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
     }
     public static Date trim(Date date) {

@@ -378,10 +378,12 @@ public class WaveAgent {
                         BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
                             @Override
                             protected void onComplete(boolean success, Date date) {
-                                deviceDate = date;
-                                localDate = new Date();
-                                DataSync.lazyLog.i( "Device Time: ", UTC.isoFormat( deviceDate ) );
-                                DataSync.lazyLog.i( "Local Time: ", UTC.isoFormat( localDate ) );
+                                if( success ) {
+                                    deviceDate = date;
+                                    localDate = new Date();
+                                    DataSync.lazyLog.i("Device Time: ", UTC.isoFormat(deviceDate));
+                                    DataSync.lazyLog.i("Local Time: ", UTC.isoFormat(localDate));
+                                }
                                 nextState(success);
                             }
                         });
