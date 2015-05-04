@@ -12,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -70,11 +71,13 @@ public class Home extends MenuActivity {
     RelativeLayout older;
     RelativeLayout newer;
     TextView curMonthDisplay;
-    public enum ChartType{
+
+    public enum ChartType {
         STEPS,
         MILES,
         CALORIES
     }
+
     ChartType curChart = ChartType.STEPS;
     RelativeLayout stepsLayout;
     TextView stepsText;
@@ -140,15 +143,15 @@ public class Home extends MenuActivity {
         //Set up date works for calendar display
 
         String date = intentIncoming.getStringExtra("date");
-        if(date!=null) {
+        if (date != null) {
             timestamp = Long.parseLong(date);
             calendar = Calendar.getInstance();
             calendar.setTimeInMillis(timestamp);
-            if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
+            if ((calendar.get(Calendar.MONTH)) != (Calendar.getInstance().get(Calendar.MONTH))) {
 //                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 //                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
             }
-        }else{
+        } else {
             calendar = Calendar.getInstance();
             timestamp = calendar.getTimeInMillis();
             curDay = calendar.get(Calendar.DAY_OF_MONTH);
@@ -156,32 +159,30 @@ public class Home extends MenuActivity {
 //        curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 
 
-
         curMonth = calendar.get(Calendar.MONTH);
         curYear = calendar.get(Calendar.YEAR);
 
         older = (RelativeLayout) findViewById(R.id.previous);
         newer = (RelativeLayout) findViewById(R.id.next);
-        if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
+        if (calendar.get(Calendar.MONTH) == Calendar.getInstance().get(Calendar.MONTH)) {
             newer.setVisibility(View.GONE);
 
-        }else{
+        } else {
             newer.setVisibility(View.VISIBLE);
         }
 
         curMonthDisplay = (TextView) findViewById(R.id.tvCurMonth);
-        String month_name = calendar.getDisplayName(calendar.MONTH,Calendar.LONG, Locale.US);
-        curMonthDisplay.setText((month_name+"").toUpperCase());
+        String month_name = calendar.getDisplayName(calendar.MONTH, Calendar.LONG, Locale.US);
+        curMonthDisplay.setText((month_name + "").toUpperCase());
 
 
         ContentValues values = new ContentValues();
 
 
-
         UserData myData = UserData.getUserData(c);
 
 
-        gridview= (GridView) findViewById(R.id.gridview);
+        gridview = (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
         syncProgressBar = (ProgressBar) findViewById(R.id.syncProgressBar);
         syncText = (TextView) findViewById(R.id.syncingText);
@@ -205,12 +206,12 @@ public class Home extends MenuActivity {
 //        UserData myUserData = UserData.getUserData(c);
         ArrayList<String> users = new ArrayList<String>();
         users = myData.getUserList();
-        if(!users.isEmpty()) {
-            if(userExists==true) {
+        if (!users.isEmpty()) {
+            if (userExists == true) {
                 setUpCharts(c);
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
                 currentUserTV.setText(myData.getCurrentUsername());
-            }else{
+            } else {
                 String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
                 UserData.getUserData(c).loadNewUser(uid);
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
@@ -219,12 +220,11 @@ public class Home extends MenuActivity {
             }
 
 
-        }else{
+        } else {
 
             Intent intent = new Intent(getApplicationContext(),
                     FirstLaunch.class);
             startActivity(intent);
-
 
 
         }
@@ -269,8 +269,6 @@ public class Home extends MenuActivity {
                         Log.d(TAG, "The read failed: " + firebaseError.getMessage());
                     }
                 });
-
-
             }
         });
         newer.setOnClickListener(new View.OnClickListener() {
@@ -291,11 +289,11 @@ public class Home extends MenuActivity {
                 String lastMonth = (monthForwardMillis) + "";
                 intent.putExtra("date", lastMonth);
                 UserData myData = UserData.getUserData(c);
-                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH)+"/");
+                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH) + "/");
                 ref.addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        Log.d(TAG,""+snapshot.getValue());
+                        Log.d(TAG, "" + snapshot.getValue());
 //                        loginProgress.setVisibility(View.INVISIBLE);
 
                         insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
@@ -309,7 +307,7 @@ public class Home extends MenuActivity {
 
                     @Override
                     public void onCancelled(FirebaseError firebaseError) {
-                        Log.d(TAG,""+"The read failed: " + firebaseError.getMessage());
+                        Log.d(TAG, "" + "The read failed: " + firebaseError.getMessage());
                     }
                 });
             }
@@ -345,12 +343,12 @@ public class Home extends MenuActivity {
 
         Log.d(TAG, "Cur user data: " + myData.getCurUID());
 
-        try{
+        try {
             Bitmap prof = myData.getCurUserPhoto();
-            if(prof!=null){
+            if (prof != null) {
                 profilePic.setImageBitmap(prof);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         stepsLayout.setOnClickListener(new View.OnClickListener() {
@@ -402,21 +400,21 @@ public class Home extends MenuActivity {
         Intent intentIncoming = getIntent();
 //
         String date = intentIncoming.getStringExtra("date");
-        if(date!=null) {
+        if (date != null) {
             Long dateLong = Long.parseLong(date);
             calendar = Calendar.getInstance();
             calendar.setTime(new Date(dateLong));
-            if((calendar.get(Calendar.MONTH))!=(Calendar.getInstance().get(Calendar.MONTH))){
+            if ((calendar.get(Calendar.MONTH)) != (Calendar.getInstance().get(Calendar.MONTH))) {
                 calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
                 curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-            }else{
+            } else {
                 curDay = calendar.get(Calendar.DAY_OF_MONTH);
             }
-        }else {
+        } else {
 //
         }
         try {
-            if(UserData.getUserData(c).getCurUID()!=null) {
+            if (UserData.getUserData(c).getCurUID() != null) {
                 gridview.setAdapter(new GridViewCalendar(Home.this));
                 setUpChart();
                 gridview.invalidate();
@@ -424,7 +422,7 @@ public class Home extends MenuActivity {
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
                 currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -432,56 +430,56 @@ public class Home extends MenuActivity {
     }
 
 
-    private void setUpChart(){
+    private void setUpChart() {
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
         ArrayList<String> xVals = new ArrayList<String>();
 
         numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
         int difference = numberOfDaysTotal - curDay;
         numberOfDaysLeft = numberOfDaysTotal - difference;
-        int totalStepsForMonth= 0;
-        int greatestSteps=0;
-        for(int i=0;i<numberOfDaysLeft;i++){
+        int totalStepsForMonth = 0;
+        int greatestSteps = 0;
+        for (int i = 0; i < numberOfDaysLeft; i++) {
 
             //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
             Calendar monthCal = calendar;
             monthCal.setTimeInMillis(timestamp);
-            monthCal.set(monthCal.get(Calendar.YEAR),monthCal.get(Calendar.MONTH),i,0,0,0);
+            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i, 0, 0, 0);
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(monthCal.get(Calendar.YEAR),monthCal.get(Calendar.MONTH),i,monthCal.getActualMaximum(Calendar.HOUR_OF_DAY),monthCal.getActualMaximum(Calendar.MINUTE),monthCal.getActualMaximum(monthCal.MILLISECOND));
+            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i, monthCal.getActualMaximum(Calendar.HOUR_OF_DAY), monthCal.getActualMaximum(Calendar.MINUTE), monthCal.getActualMaximum(monthCal.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
 
 
             UserData myData = UserData.getUserData(c);
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
 
-            if(curSteps!=null&&curSteps.getCount()!=0){
+            if (curSteps != null && curSteps.getCount() != 0) {
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday+=curSteps.getInt(4);//step count
+                    totalStepsForToday += curSteps.getInt(4);//step count
 
 
                     curSteps.moveToNext();
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
                     //works
                 }
-                if(totalStepsForToday>greatestSteps){
+                if (totalStepsForToday > greatestSteps) {
                     greatestSteps = totalStepsForToday;
                 }
-                totalStepsForMonth+=totalStepsForToday;
+                totalStepsForMonth += totalStepsForToday;
                 curSteps.close();
                 Entry curEntry;
-                if(curChart.equals(ChartType.STEPS)) {
-                    curEntry  = new Entry(totalStepsForToday, i);
-                }else if(curChart.equals(ChartType.CALORIES)){
-                    float cals = (int)calculateTotalCalories(totalStepsForToday);
+                if (curChart.equals(ChartType.STEPS)) {
+                    curEntry = new Entry(totalStepsForToday, i);
+                } else if (curChart.equals(ChartType.CALORIES)) {
+                    float cals = (int) calculateTotalCalories(totalStepsForToday);
                     curEntry = new Entry(cals, i);
-                }else{
-                    float miles = (int)calculateTotalMiles(totalStepsForToday);
+                } else {
+                    float miles = (int) calculateTotalMiles(totalStepsForToday);
                     curEntry = new Entry(miles, i);
                 }
                 valsComp1.add(curEntry);
-            }else{
+            } else {
                 //no steps for this time period.
                 Entry curEntry = new Entry(0, i);
                 valsComp1.add(curEntry);
@@ -489,9 +487,8 @@ public class Home extends MenuActivity {
             }
 
 
-
             //add +1 for the 0 based day compensation.
-            xVals.add((i+1)+"");
+            xVals.add((i + 1) + "");
         }
         Calendar monthCal = calendar;
         monthCal.setTimeInMillis(timestamp);
@@ -502,18 +499,18 @@ public class Home extends MenuActivity {
         TextView milesAve = (TextView) findViewById(R.id.distanceAverage);
         TextView calsTotal = (TextView) findViewById(R.id.caloriesTotal);
         TextView calsAve = (TextView) findViewById(R.id.caloriesAverage);
-        double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, numberOfDaysLeft );
+        double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, numberOfDaysLeft);
         stepsAve.setText(String.format("%.1f", stepsAverageDouble));
         double milesTotalDouble = calculateTotalMiles(totalStepsForMonth);
         milesTotal.setText(String.format("%.1f", milesTotalDouble));
-        double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, numberOfDaysLeft );
-        milesAve.setText(String.format("%.1f",milesAverageDouble));
+        double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, numberOfDaysLeft);
+        milesAve.setText(String.format("%.1f", milesAverageDouble));
         double caloriesDouble = calculateTotalCalories(totalStepsForMonth);
-        calsTotal.setText(String.format("%.1f",caloriesDouble));
+        calsTotal.setText(String.format("%.1f", caloriesDouble));
         double caloriesAverage = calculateAverageCalories(totalStepsForMonth, numberOfDaysLeft);
-        calsAve.setText(String.format("%.1f",caloriesAverage));
+        calsAve.setText(String.format("%.1f", caloriesAverage));
 
-        stepsTotal.setText(totalStepsForMonth+"");
+        stepsTotal.setText(totalStepsForMonth + "");
 //        }
 
 
@@ -527,25 +524,25 @@ public class Home extends MenuActivity {
         LineData data = new LineData(xVals, dataSets);
         YAxis rightAxis = chart.getAxisRight();
         YAxis leftAxis = chart.getAxisLeft();
-        if(curChart.equals(ChartType.STEPS)) {
+        if (curChart.equals(ChartType.STEPS)) {
 
             rightAxis.setStartAtZero(true);
             rightAxis.setAxisMaxValue((float) greatestSteps);
             leftAxis.setStartAtZero(true);
             leftAxis.setAxisMaxValue((float) greatestSteps);
 
-        }else if(curChart.equals(ChartType.CALORIES)){
+        } else if (curChart.equals(ChartType.CALORIES)) {
 
             rightAxis.setStartAtZero(true);
-            rightAxis.setAxisMaxValue((float)calculateTotalCalories(greatestSteps));
+            rightAxis.setAxisMaxValue((float) calculateTotalCalories(greatestSteps));
             leftAxis.setStartAtZero(true);
-            leftAxis.setAxisMaxValue((float)calculateTotalCalories(greatestSteps));
-        }else{
+            leftAxis.setAxisMaxValue((float) calculateTotalCalories(greatestSteps));
+        } else {
 
             rightAxis.setStartAtZero(true);
-            rightAxis.setAxisMaxValue((float)calculateTotalMiles(greatestSteps));
+            rightAxis.setAxisMaxValue((float) calculateTotalMiles(greatestSteps));
             leftAxis.setStartAtZero(true);
-            leftAxis.setAxisMaxValue((float)calculateTotalMiles(greatestSteps));
+            leftAxis.setAxisMaxValue((float) calculateTotalMiles(greatestSteps));
         }
         rightAxis.setDrawLabels(false);
         leftAxis.setDrawLabels(true);
@@ -555,7 +552,6 @@ public class Home extends MenuActivity {
         chart.setData(data);
         chart.invalidate(); // refresh
     }
-
 
 
     public class GridViewCalendar extends BaseAdapter {
@@ -598,9 +594,6 @@ public class Home extends MenuActivity {
                 gridView = inflater.inflate(R.layout.home_calendar_cell, null);
 
 
-
-
-
             } else {
                 gridView = (View) convertView;
                 //Log.d(TAG,""+"View not null, loading postion "+position+" out of "+mThumbIds.length);
@@ -616,52 +609,48 @@ public class Home extends MenuActivity {
             TextView day = (TextView) gridView.findViewById(R.id.day);
 
             calendar.setTimeInMillis(timestamp);
-            if(dayToDisplay == curDay){
-                if(calendar.get(Calendar.MONTH)==Calendar.getInstance().get(Calendar.MONTH)){
+            if (dayToDisplay == curDay) {
+                if (calendar.get(Calendar.MONTH) == Calendar.getInstance().get(Calendar.MONTH)) {
                     day.setText("Today");
-                }else{
-                    day.setText(dayToDisplay+"");
+                } else {
+                    day.setText(dayToDisplay + "");
                 }
 
-            }else {
-                day.setText(dayToDisplay+"");
+            } else {
+                day.setText(dayToDisplay + "");
             }
             TextView steps = (TextView) gridView.findViewById(R.id.steps);
 
 
-
-
             TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
             Calendar today = Calendar.getInstance();
-            today.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
-            String wholeDate = today.getTimeInMillis()+"";
+            today.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
+            String wholeDate = today.getTimeInMillis() + "";
             date.setText(wholeDate);
             //Grab today's data//
             Calendar monthCal = Calendar.getInstance();
 
 
-
-
-            monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,0,0,0);
+            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(2015,calendar.get(Calendar.MONTH),dayToDisplay,calendar.getActualMaximum(Calendar.HOUR_OF_DAY),calendar.getActualMaximum(Calendar.MINUTE),calendar.getActualMaximum(Calendar.MILLISECOND));
+            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, calendar.getActualMaximum(Calendar.HOUR_OF_DAY), calendar.getActualMaximum(Calendar.MINUTE), calendar.getActualMaximum(Calendar.MILLISECOND));
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
             Bitmap bm = null;
             try {
                 bm = dailyBitmapFetch(monthRangeStart);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            if(bm!=null){
+            if (bm != null) {
                 background.setImageBitmap(bm);
             }
-            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID() );
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
 
-            if(curSteps!=null&&curSteps.getCount()!=0){
+            if (curSteps != null && curSteps.getCount() != 0) {
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday+=curSteps.getInt(4);
+                    totalStepsForToday += curSteps.getInt(4);
 
                     curSteps.moveToNext();
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
@@ -669,12 +658,11 @@ public class Home extends MenuActivity {
                 }
 
 
+                steps.setText(totalStepsForToday + "");
 
-                steps.setText(totalStepsForToday+"");
 
-
-            }else{
-                steps.setText(0+"");
+            } else {
+                steps.setText(0 + "");
 
 
             }
@@ -686,50 +674,51 @@ public class Home extends MenuActivity {
     }
 
 
-
-    public void myProfile(){
+    public void myProfile() {
         Intent intent = new Intent(getApplicationContext(),
                 MyProfile.class);
         startActivity(intent);
 
     }
 
-    public void login(){
+    public void login() {
         Intent intent = new Intent(getApplicationContext(),
                 FirstLogin.class);
         startActivity(intent);
     }
-    public void users(){
+
+    public void users() {
         Intent intent = new Intent(getApplicationContext(),
                 UserActivity.class);
         startActivity(intent);
     }
-    public void logout(){
+
+    public void logout() {
         UserData mUD = UserData.getUserData(c);
         boolean status = mUD.logoutCurrentUser();
-        if(!status){
+        if (!status) {
             Intent intent = new Intent(getApplicationContext(),
                     FirstLaunch.class);
             startActivity(intent);
-        }else{
+        } else {
             setContentView(R.layout.activity_home);
         }
 
     }
 
     public void discover() {
-        Intent intent = new Intent( getApplicationContext(), WaveScanActivity.class);
-        startActivity( intent );
+        Intent intent = new Intent(getApplicationContext(), WaveScanActivity.class);
+        startActivity(intent);
     }
 
-    public static void setUpChartsExternalCall(Context c){
+    public static void setUpChartsExternalCall(Context c) {
         Home h = new Home();
 //        h.setUpCharts(c);
     }
 
-    public void setUpCharts(Context c){
+    public void setUpCharts(Context c) {
 //        UserData myData = UserData.getUserData(c);
-        gridview= (GridView) findViewById(R.id.gridview);
+        gridview = (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         gridview.invalidate();
@@ -745,7 +734,7 @@ public class Home extends MenuActivity {
 
     }
 
-    public void refreshCharts(){
+    public void refreshCharts() {
 //        currentUserRef
 //        gridview.deferNotifyDataSetChanged();
         setUpCharts(c);
@@ -754,22 +743,19 @@ public class Home extends MenuActivity {
     }
 
 
+    public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID) {
 
-
-
-    public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID){
-
-        String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ? AND "+Database.StepEntry.USER + " =? ";
+        String selectionSteps = Database.StepEntry.START + " > ? AND " + Database.StepEntry.END + " < ? AND " + Database.StepEntry.USER + " =? ";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                new String[] { Database.StepEntry.SYNC_ID, //blob
+                new String[]{Database.StepEntry.SYNC_ID, //blob
                         Database.StepEntry.START, //int
                         Database.StepEntry.END, //int
                         Database.StepEntry.USER, //string
                         Database.StepEntry.STEPS, //int
-                        Database.StepEntry.DEVICEID }, //blob                          // The columns to return
+                        Database.StepEntry.DEVICEID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[] { monthRangeStart+"", monthRangeStop+"",userID },                            // The values for the WHERE clause
+                new String[]{monthRangeStart + "", monthRangeStop + "", userID},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -780,11 +766,11 @@ public class Home extends MenuActivity {
         return curSteps;
     }
 
-    public  Cursor getStepsForSync(String syncID){
-        String selectionSteps =  Database.StepEntry.SYNC_ID + "=? AND "+Database.StepEntry.IS_PUSHED +"=?";
+    public Cursor getStepsForSync(String syncID) {
+        String selectionSteps = Database.StepEntry.SYNC_ID + "=? AND " + Database.StepEntry.IS_PUSHED + "=?";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                new String[] { Database.StepEntry.SYNC_ID, //blob
+                new String[]{Database.StepEntry.SYNC_ID, //blob
                         Database.StepEntry.START, //int
                         Database.StepEntry.END, //int
                         Database.StepEntry.USER, //string
@@ -792,7 +778,7 @@ public class Home extends MenuActivity {
                         Database.StepEntry.DEVICEID, //blob
                         Database.StepEntry.GUID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[] { syncID, "0" },                            // The values for the WHERE clause
+                new String[]{syncID, "0"},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -812,23 +798,23 @@ public class Home extends MenuActivity {
         UserData myData = UserData.getUserData(c);
         Iterable<DataSnapshot> children = snapshot.getChildren();
 
-        for (DataSnapshot child : children){
+        for (DataSnapshot child : children) {
             String date = child.getKey();
             Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for(DataSnapshot syncsForToday : syncEvents){
+            for (DataSnapshot syncsForToday : syncEvents) {
                 String syncName = syncsForToday.getKey();
                 Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for(DataSnapshot stepChunk : stepEvents){
+                for (DataSnapshot stepChunk : stepEvents) {
                     String stepTime = stepChunk.getKey();
                     Iterable<DataSnapshot> step = syncsForToday.getChildren();
                     Object stepEvent = stepChunk.getValue();
                     Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
                     monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test"+monthMap);
+                    Log.d(TAG, "Monthmap test" + monthMap);
                     Calendar thisCal = Calendar.getInstance();
 //                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = year + "-" +month+ "-" +date+ "" +monthMap.get("starttime").toString();
-                    String dateConcatStop = year + "-" +month+ "-" +date+ "" +monthMap.get("endtime").toString();
+                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
+                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
 
 
                     try {
@@ -840,9 +826,9 @@ public class Home extends MenuActivity {
                         ContentValues values = new ContentValues();
                         values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
                         values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START,curDateStart.getTime());
-                        values.put(Database.StepEntry.END,curDateStop.getTime());
-                        values.put(Database.StepEntry.USER,myData.getCurUID());
+                        values.put(Database.StepEntry.START, curDateStart.getTime());
+                        values.put(Database.StepEntry.END, curDateStop.getTime());
+                        values.put(Database.StepEntry.USER, myData.getCurUID());
                         values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
                         values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
                         values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
@@ -854,12 +840,12 @@ public class Home extends MenuActivity {
                         newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                                 null,
                                 values);
-                        Log.d(TAG, "Database insert result: "+newRowId+" for: "+values);
+                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
 
 
-
-                    }catch(Exception e){
-                        e.printStackTrace();;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ;
                     }
 
                 }
@@ -873,7 +859,7 @@ public class Home extends MenuActivity {
     public static Date trim(Date date) {
         Calendar cal = Calendar.getInstance();
         cal.clear(); // as per BalusC comment.
-        cal.setTime( date );
+        cal.setTime(date);
         cal.set(Calendar.HOUR_OF_DAY, 0);
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
@@ -882,22 +868,23 @@ public class Home extends MenuActivity {
     }
 
 
-    public Bitmap dailyBitmapFetch(long today){
+    public Bitmap dailyBitmapFetch(long today) {
         boolean localFile = false;
 //        today = trim(today); 
         Date currentDay = new Date(today);
+        Bitmap returnBM;
         currentDay = trim(currentDay);
         UserData myData = UserData.getUserData(c);
         String user = myData.getCurUID();
-        String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
+        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
         Cursor curPhoto = db.query(
                 Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-                new String[] {
+                new String[]{
                         Database.StepEntry.USER, //string
                         Database.PhotoStore.DATE, //int
-                        Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
+                        Database.PhotoStore.PHOTOBLOB}, //blob                          // The columns to return
                 photo,                                // The columns for the WHERE clause
-                new String[] { currentDay.getTime()+"", user },                            // The values for the WHERE clause
+                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -906,7 +893,7 @@ public class Home extends MenuActivity {
         curPhoto.moveToFirst();
         localFile = false;
         int uniquePic;
-        if(curPhoto.getCount()!=0){
+        if (curPhoto.getCount() != 0) {
             localFile = true;
             byte[] byteArray = curPhoto.getBlob(2);
 //                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
@@ -914,15 +901,70 @@ public class Home extends MenuActivity {
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = false;
             options.inSampleSize = 10;
-            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
+            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
             Log.d(TAG, "Found photo for today");
             return bm;
 //            background.setImageBitmap(bm);
 //                setContentView(R.layout.activity_daily);
-        }else{
+        } else {
+//            return null;
+
+            Log.d(TAG, "Loading image from firebase");
+            final Calendar monthCal = Calendar.getInstance();
+            monthCal.setTimeInMillis(today);
+            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    //                    System.out.println(snapshot.getValue());
+                    if (snapshot.getChildrenCount() == 1) {
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = false;
+                        options.inSampleSize = 4;
+                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                        byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+
+                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//
+
+
+                        //file doesn't exist on local device
+                        Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                        ContentValues syncValues = new ContentValues();
+                        syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                        syncValues.put(Database.PhotoStore.USER, UserData.getUserData(c).getCurUID());
+                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                        long newRowId;
+                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                null,
+                                syncValues);
+                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                        db.close();
+                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                        returnBM = decodedByte;
+//                        return decodedByte;
+
+                    } else {
+                        //multipart file upload
+
+                    }
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    System.out.println("The read failed: " + firebaseError.getMessage());
+                }
+            });
+
             return null;
         }
     }
+
+
+
+
+
 
     public static double calculateAverageSteps(int steps, int daysInMonth){
         double ave=0;

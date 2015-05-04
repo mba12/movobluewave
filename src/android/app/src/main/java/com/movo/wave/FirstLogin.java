@@ -92,7 +92,7 @@ public class FirstLogin extends Activity {
                     Toast.makeText(c, "Error: Email is empty", Toast.LENGTH_LONG).show();
                 } else {
 
-                    if (!(mEmail.contains("@"))) {
+                    if (false) { //(!(mEmail.contains("@"))
                         Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
                         Firebase child = lookupEmail.child(mEmail);
                         child.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -159,7 +159,7 @@ public class FirstLogin extends Activity {
                 loginProgress.setVisibility(View.VISIBLE);
 //                loginRef.auth
 
-                if (!(mEmail.contains("@"))) {
+                if (false) {//(!(mEmail.contains("@"))
                     Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
                     Firebase child = lookupEmail.child(mEmail);
                     child.addListenerForSingleValueEvent(new ValueEventListener() {

@@ -408,6 +408,7 @@ public class UserData extends Activity{
 
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
 
+            downloadMetadata(UID);
 
         }
 
@@ -555,7 +556,7 @@ public class UserData extends Activity{
 
     public void downloadProfilePic(){
         Log.d(TAG, "Loading image from firebase");
-        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + currentUID + "/metadata/profilepic");
+        Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + currentUID + "/photos/profilepic");
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {

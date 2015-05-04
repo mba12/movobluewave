@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" /> <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
 <!--     Bluetooth LE permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -26,7 +28,8 @@
         android:icon="@drawable/app_icon"
         android:label="Movo Wave"
         android:minSdkVersion="18"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:largeHeap="true">
         <activity
             android:name=".Home"
             android:label="Movo Wave">
