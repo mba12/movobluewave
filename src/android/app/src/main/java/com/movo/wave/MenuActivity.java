@@ -3,6 +3,7 @@ package com.movo.wave;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -49,7 +50,7 @@ public abstract class MenuActivity extends ActionBarActivity {
                 final Intent emailIntent = new Intent( Intent.ACTION_SEND );
                 emailIntent.setType("plain/text");
                 emailIntent.putExtra( Intent.EXTRA_EMAIL,
-                        context.getResources().getStringArray( R.array.contact_email_recipients ) );
+                        context.getResources().getStringArray(R.array.contact_email_recipients) );
                 emailIntent.putExtra( Intent.EXTRA_SUBJECT,
                         context.getString(R.string.contact_email_subject) +
                                 UserData.getUserData(context).getCurrentUsername() );
@@ -186,5 +187,21 @@ public abstract class MenuActivity extends ActionBarActivity {
         //getMenuInflater().inflate(R.menu.menu_home, menu);
 
         return true;
+    }
+
+    /** Make intent to take photo from any app or camera
+     *
+     * @return intent to pass to startActivityForResult()
+     */
+    public static Intent photoPickerIntent() {
+        //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
+        Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                new Intent[]{takePhotoIntent});
+
+        return chooserIntent;
     }
 }

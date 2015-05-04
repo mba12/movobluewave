@@ -74,6 +74,8 @@ public class DailyActivity extends ActionBarActivity {
         );
 
         setContentView(R.layout.activity_daily);
+        Intent intent = getIntent();
+        LaunchAnimation.apply( this, intent );
         c = this.getApplicationContext();
 
         miles = (TextView) findViewById(R.id.tvMiles);
@@ -86,15 +88,8 @@ public class DailyActivity extends ActionBarActivity {
 
         photo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
-                Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
-                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.putExtra(Intent.EXTRA_LOCAL_ONLY, true);
-                photoPickerIntent.setType("image/*");
-                Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
-                chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
-                        new Intent[]{takePhotoIntent});
-                startActivityForResult(chooserIntent, SELECT_PHOTO);
+
+                startActivityForResult( MenuActivity.photoPickerIntent(), SELECT_PHOTO);
             }
         });
 
@@ -108,7 +103,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
 
-        Intent intent = getIntent();
+
         if (null != intent) { //Null Checking
             String date= intent.getStringExtra("date");
             Long dateLong = Long.parseLong(date);
@@ -139,7 +134,7 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
+                    LaunchAnimation.SLIDE_LEFT.setIntent( intent );
                     long timeTarget = today.getTime()+86400000;
                     String tomorrow = timeTarget+"";
                     intent.putExtra("date",tomorrow);
@@ -159,13 +154,12 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
+
+                    LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
                     String tomorrow = (today.getTime()-86400000)+"";
                     intent.putExtra("date",tomorrow);
                     startActivity(intent);
                     finish();
-
-
                 }
             });
 
@@ -402,37 +396,17 @@ public class DailyActivity extends ActionBarActivity {
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    Cursor cursor = getContentResolver().query(
-                            selectedImage, filePathColumn, null, null, null);
-                    if( cursor == null || ! cursor.moveToFirst() ) {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                    Log.i( TAG, "Resolving URI: " + selectedImage);
+                    try {
+                        final InputStream is = getContentResolver().openInputStream(selectedImage);
+                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                    } catch( FileNotFoundException e ) {
+                        baos = null;
                         final String error = "Cannot resolve URI: " + selectedImage;
                         Log.e( TAG, error );
                         Toast.makeText(c, error, Toast.LENGTH_LONG).show();
-                    }
-
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-                    if( columnIndex != -1 ) {
-                        String filePath = cursor.getString(columnIndex);
-
-                        BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
-                    } else {
-                        Log.i( TAG, "Resolving remote uri: " + selectedImage);
-                        try {
-                            final InputStream is = getContentResolver().openInputStream(selectedImage);
-                            BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
-                        } catch( FileNotFoundException e ) {
-                            baos = null;
-                            final String error = "Cannot resolve URI: " + selectedImage;
-                            Log.e( TAG, error );
-                            Toast.makeText(c, error, Toast.LENGTH_LONG).show();
-                        }
-                    }
-                    cursor.close();
-
-                    if( baos == null ) {
                         break;
                     }
 

@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Base64;
@@ -27,32 +26,23 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
-import android.widget.Toast;
-
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
-import com.github.mikephil.charting.charts.Chart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.components.AxisBase;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.movo.wave.comms.BLEAgent;
-import com.movo.wave.comms.WaveAgent;
-import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.Calculator;
-import com.movo.wave.util.UTC;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -71,7 +61,8 @@ public class Home extends MenuActivity {
     int numberOfDaysTotal;
     Calendar calendar;
     static GridView gridview;
-    boolean toggle = true;
+    final static String EXTRA_CHART_VIEW = "com.movo.wave.home.EXTRA_CHART_VIEW";
+    boolean chartVisible;
     private static ProgressBar syncProgressBar;
     private static TextView syncText;
     private CharSequence mTitle;
@@ -103,6 +94,16 @@ public class Home extends MenuActivity {
 
     SQLiteDatabase db;
 
+    protected void setChartVisible( boolean visible ) {
+        if(visible){
+            gridview.setVisibility(View.INVISIBLE);
+            chartView.setVisibility(View.VISIBLE);
+        }else{
+            gridview.setVisibility(View.VISIBLE);
+            chartView.setVisibility(View.INVISIBLE);
+        }
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -113,6 +114,10 @@ public class Home extends MenuActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Intent intentIncoming = getIntent();
+
+        LaunchAnimation.apply( this, intentIncoming );
+
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/gotham-book.otf")
                         .setFontAttrId(R.attr.fontPath)
@@ -129,13 +134,13 @@ public class Home extends MenuActivity {
         // Setup BLE context
         BLEAgent.open(c);
 
+        chartVisible = intentIncoming.getBooleanExtra( EXTRA_CHART_VIEW, false );
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getReadableDatabase();
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
-        Intent intentIncoming = getIntent();
 
         String date = intentIncoming.getStringExtra("date");
         if (date != null) {
@@ -191,18 +196,12 @@ public class Home extends MenuActivity {
 //        chartToggle.setOnClickListener();
         chartToggle.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (toggle) {
-                    gridview.setVisibility(View.INVISIBLE);
-                    chartView.setVisibility(View.VISIBLE);
-                    toggle = false;
-                } else {
-                    gridview.setVisibility(View.VISIBLE);
-                    chartView.setVisibility(View.INVISIBLE);
-                    toggle = true;
-                }
-
+                chartVisible = ! chartVisible;
+                setChartVisible( chartVisible );
             }
         });
+        setChartVisible( chartVisible );
+
 
 //        UserData myUserData = UserData.getUserData(c);
         ArrayList<String> users = new ArrayList<String>();
@@ -238,7 +237,8 @@ public class Home extends MenuActivity {
 
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
-                Bundle extras = new Bundle();
+                LaunchAnimation.SLIDE_RIGHT.setIntent(intent);
+                intent.putExtra( EXTRA_CHART_VIEW, chartVisible );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);
@@ -269,8 +269,6 @@ public class Home extends MenuActivity {
                         Log.d(TAG, "The read failed: " + firebaseError.getMessage());
                     }
                 });
-
-
             }
         });
         newer.setOnClickListener(new View.OnClickListener() {
@@ -280,7 +278,8 @@ public class Home extends MenuActivity {
 
                 final Intent intent = new Intent(getApplicationContext(),
                         Home.class);
-                Bundle extras = new Bundle();
+                LaunchAnimation.SLIDE_LEFT.setIntent( intent );
+                intent.putExtra( EXTRA_CHART_VIEW, chartVisible );
                 final Calendar newCal = Calendar.getInstance();
                 newCal.setTimeInMillis(timestamp);
                 newCal.set(Calendar.DATE, 1);
@@ -726,7 +725,11 @@ public class Home extends MenuActivity {
         setUpChart();
         pbBar.setVisibility(View.GONE);
         if (gridview.getVisibility() == View.GONE && chart.getVisibility() == View.GONE) {
-            gridview.setVisibility(View.VISIBLE);
+            if( chartVisible) {
+                chart.setVisibility( View.VISIBLE );
+            } else {
+                gridview.setVisibility(View.VISIBLE);
+            }
         }
 
     }
