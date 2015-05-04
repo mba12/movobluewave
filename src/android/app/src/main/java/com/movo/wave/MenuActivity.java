@@ -2,6 +2,8 @@ package com.movo.wave;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.provider.MediaStore;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -15,20 +17,46 @@ import android.widget.ListView;
 
 import com.movo.wave.util.LazyLogger;
 
-/**
- * Created by alex on 4/28/2015.
+//Created by Alexander Haase on 4/28/2015.
+
+
+/** Super class for all activities with main program menu. centralizes menu logic.
+ *
+ * use initMenu( bundle ) in the subclass onCreate() to setup menu handling.
  */
 public abstract class MenuActivity extends ActionBarActivity {
     final static LazyLogger lazyLog = new LazyLogger( "MenuActivity");
 
+    /** Menu option enumeration for all activities. Add new menu items here, and subclass select()
+     * as needed.
+     */
     public static enum Option {
         LifeCycle   ("My Life Calendar", Home.class ),
         MyProfile   ("My Profile", com.movo.wave.MyProfile.class ),
-        SyncData  ("Sync Wave", SyncDataActivity.class),
+        DiscoverWave( "Upload Data", WaveScanActivity.class),
 
         User        ("Users", UserActivity.class ),
-        FAQ         ("FAQ", null),
-        Contact     ("Contact", null),
+        FAQ         ("FAQ", null) {
+            @Override
+            public Intent select(Context context) {
+                final Intent uriIntent = new Intent( Intent.ACTION_VIEW,
+                        Uri.parse("http://www.getmovo.com/appfaq"));
+                return uriIntent;
+            }
+        },
+        Contact     ("Contact", null)  {
+            @Override
+            public Intent select(Context context) {
+                final Intent emailIntent = new Intent( Intent.ACTION_SEND );
+                emailIntent.setType("plain/text");
+                emailIntent.putExtra( Intent.EXTRA_EMAIL,
+                        context.getResources().getStringArray(R.array.contact_email_recipients) );
+                emailIntent.putExtra( Intent.EXTRA_SUBJECT,
+                        context.getString(R.string.contact_email_subject) +
+                                UserData.getUserData(context).getCurrentUsername() );
+                return emailIntent;
+            }
+        },
         Logout      ("Logout", null) {
             @Override
             public Intent select(Context context) {
@@ -36,7 +64,6 @@ public abstract class MenuActivity extends ActionBarActivity {
                 return new Intent( context, mUD.logoutCurrentUser() ? Home.class : FirstLaunch.class );
             }
         },
-        DiscoverWave    ( "My Waves", DiscoverWaveActivity.class),
         ;
 
         final public String text;
@@ -47,6 +74,12 @@ public abstract class MenuActivity extends ActionBarActivity {
             this.activity = activity;
         }
 
+        /** Called on menu select, returns an intent for the current activity to start or
+         * null for no action.
+         *
+         * @param context of caller activity
+         * @return Intent to start or null for no change.
+         */
         public Intent select( Context context ) {
             Intent ret = null;
             if( activity != null ) {
@@ -57,8 +90,14 @@ public abstract class MenuActivity extends ActionBarActivity {
             return ret;
         }
 
+        /** Array of human names for menu options. should probably wrap this into initMenu via
+         * R.array.<some name>
+         */
         public static final String[] names;
 
+        /*
+        Build static array of names, not needed when replaced with localized version above.
+         */
         static {
             names = new String[ Option.values().length ];
             for( Option option : Option.values() ) {
@@ -84,7 +123,6 @@ public abstract class MenuActivity extends ActionBarActivity {
                 final Intent intent = option.select(c);
                 if (intent != null) {
                     startActivity(intent);
-                    finish();
                 }
             } else {
                 lazyLog.i( "Already in menu option: ", option );
@@ -92,6 +130,11 @@ public abstract class MenuActivity extends ActionBarActivity {
         }
     }
 
+    /** Call form onCreate in subclass to setup menu. assumes the layout contains the relevant
+     * content. Should set layout before calling.
+     *
+     * @param layout_id
+     */
     protected void initMenu( int layout_id ) {
         c = getApplicationContext();
         setContentView(layout_id);
@@ -144,5 +187,21 @@ public abstract class MenuActivity extends ActionBarActivity {
         //getMenuInflater().inflate(R.menu.menu_home, menu);
 
         return true;
+    }
+
+    /** Make intent to take photo from any app or camera
+     *
+     * @return intent to pass to startActivityForResult()
+     */
+    public static Intent photoPickerIntent() {
+        //http://stackoverflow.com/questions/2708128/single-intent-to-let-user-take-picture-or-pick-image-from-gallery-in-android
+        Intent takePhotoIntent = new Intent( MediaStore.ACTION_IMAGE_CAPTURE );
+        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+        photoPickerIntent.setType("image/*");
+        Intent chooserIntent = Intent.createChooser(photoPickerIntent,"Select Photo With");
+        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS,
+                new Intent[]{takePhotoIntent});
+
+        return chooserIntent;
     }
 }

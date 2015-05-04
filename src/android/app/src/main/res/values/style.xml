@@ -17,5 +17,7 @@
     <style name="TabTextStyle"
            parent="@style/Widget.AppCompat.ActionBar.TabText">
     </style>-->
+
+
 </resources>
 

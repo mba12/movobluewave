@@ -26,7 +26,7 @@ import java.util.HashMap;
  * Created by Alex Haase on 3/23/2015.
  */
 
-public class DiscoverWaveActivity extends MenuActivity {
+public class WaveScanActivity extends MenuActivity {
 
     private HashMap<String,WaveInfo> wavesByMAC = new HashMap<>();
     private SQLiteDatabase db;
@@ -90,10 +90,11 @@ public class DiscoverWaveActivity extends MenuActivity {
         }
 
         scanStatus.setText( resources.getTextArray(R.array.scan_state_enum)[ scanState.ordinal() ] +
-            scanState.terminator);
+                scanState.terminator);
 
         scanButton.setEnabled( scanState.scanEnabled );
     }
+
 
     private final BLEAgent.BLERequestScan scanRequest = new BLEAgent.BLERequestScan(10000) {
 
@@ -172,7 +173,7 @@ public class DiscoverWaveActivity extends MenuActivity {
         }
     };
 
-    public static final LazyLogger lazyLog = new LazyLogger( "Movo Discover Wave",
+    public static final LazyLogger lazyLog = new LazyLogger( "WaveScanActivity",
             MenuActivity.lazyLog );
 
     public boolean startScan() {
@@ -207,7 +208,6 @@ public class DiscoverWaveActivity extends MenuActivity {
         initMenu(R.layout.activity_wave_sync);
         knownWaveList = (ListView) findViewById(R.id.knownWaveList);
         newWaveList = (ListView) findViewById( R.id.newWaveList);
-
         resources = getResources();
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);

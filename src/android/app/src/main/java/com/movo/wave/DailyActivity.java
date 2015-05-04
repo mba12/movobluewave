@@ -23,6 +23,7 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -31,6 +32,8 @@ import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -38,13 +41,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
+import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
+
 public class DailyActivity extends ActionBarActivity {
     Context c;
     String TAG = "Movo DailyActivity";
     TextView miles;
     TextView calories;
     TextView steps;
-    TextView back;
+    ImageView back;
     TextView photo;
     TextView tvToday;
     Date today;
@@ -61,7 +67,15 @@ public class DailyActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         super.onCreate(savedInstanceState);
+        CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
+                        .setDefaultFontPath("fonts/gotham-book.otf")
+                        .setFontAttrId(R.attr.fontPath)
+                        .build()
+        );
+
         setContentView(R.layout.activity_daily);
+        Intent intent = getIntent();
+        LaunchAnimation.apply( this, intent );
         c = this.getApplicationContext();
 
         miles = (TextView) findViewById(R.id.tvMiles);
@@ -74,13 +88,12 @@ public class DailyActivity extends ActionBarActivity {
 
         photo.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                photoPickerIntent.setType("image/*");
-                startActivityForResult(photoPickerIntent, SELECT_PHOTO);
+
+                startActivityForResult( MenuActivity.photoPickerIntent(), SELECT_PHOTO);
             }
         });
 
-        back = (TextView) findViewById(R.id.tvBack);
+        back = (ImageView) findViewById(R.id.tvBack);
         back.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
@@ -90,7 +103,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
 
-        Intent intent = getIntent();
+
         if (null != intent) { //Null Checking
             String date= intent.getStringExtra("date");
             Long dateLong = Long.parseLong(date);
@@ -104,7 +117,7 @@ public class DailyActivity extends ActionBarActivity {
             monthCal.setTime(today);
             SimpleDateFormat month_date = new SimpleDateFormat("MMM");
             String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
-            tvToday.setText(month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH));
+            tvToday.setText((month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH)).toUpperCase());
 //            monthCal.set(2015,calendar.get(today.getMonth()),i+1,0,0,0);
             long monthRangeStart = dateLong;
             long oneDayInMillis = 86400000;
@@ -121,11 +134,19 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
-                    String tomorrow = (today.getTime()+86400000)+"";
+                    LaunchAnimation.SLIDE_LEFT.setIntent( intent );
+                    long timeTarget = today.getTime()+86400000;
+                    String tomorrow = timeTarget+"";
                     intent.putExtra("date",tomorrow);
-                    startActivity(intent);
-                    finish();
+                    Calendar todayTime = Calendar.getInstance();
+//                    todayTime.setTimeInMillis(today.getTime());
+
+                    if(todayTime.getTimeInMillis()<=timeTarget){
+                        //Do not pass go.
+                    }else {
+                        startActivity(intent);
+                        finish();
+                    }
                 }
                 @Override
                 public void onSwipeRight() {
@@ -133,13 +154,12 @@ public class DailyActivity extends ActionBarActivity {
                     //this is forward a day
                     Intent intent = new Intent(getApplicationContext(),
                             DailyActivity.class);
-                    Bundle extras = new Bundle();
+
+                    LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
                     String tomorrow = (today.getTime()-86400000)+"";
                     intent.putExtra("date",tomorrow);
                     startActivity(intent);
                     finish();
-
-
                 }
             });
 
@@ -174,6 +194,7 @@ public class DailyActivity extends ActionBarActivity {
                 Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
 
                 background.setImageBitmap(bm);
+                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
 //                setContentView(R.layout.activity_daily);
             }
                 Log.d(TAG, "Loading image from firebase");
@@ -308,6 +329,12 @@ public class DailyActivity extends ActionBarActivity {
     }
 
 
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+
     public class OnSwipeTouchListener implements View.OnTouchListener {
 
         private final GestureDetector gestureDetector;
@@ -358,24 +385,31 @@ public class DailyActivity extends ActionBarActivity {
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
+        //http://dimitar.me/how-to-get-picasa-images-using-the-image-picker-on-android-devices-running-any-os-version/
+
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
+                    if( imageReturnedIntent == null ) {
+                        Log.e( TAG, "NULL image intent result!");
+                    }
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    Cursor cursor = getContentResolver().query(
-                            selectedImage, filePathColumn, null, null, null);
-                    cursor.moveToFirst();
-
-                    int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-                    String filePath = cursor.getString(columnIndex);
-                    cursor.close();
-
-
-//                    Bitmap selectedImageToUpload; = BitmapFactory.decodeFile(filePath);
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                    BitmapFactory.decodeFile(filePath).compress(Bitmap.CompressFormat.JPEG, 10, baos); //bm is the bitmap object
+
+                    Log.i( TAG, "Resolving URI: " + selectedImage);
+                    try {
+                        final InputStream is = getContentResolver().openInputStream(selectedImage);
+                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
+                    } catch( FileNotFoundException e ) {
+                        baos = null;
+                        final String error = "Cannot resolve URI: " + selectedImage;
+                        Log.e( TAG, error );
+                        Toast.makeText(c, error, Toast.LENGTH_LONG).show();
+                        break;
+                    }
+
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
@@ -429,7 +463,14 @@ public class DailyActivity extends ActionBarActivity {
                     ref.child(0+"").setValue(encodedImage);
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
+                } else {
+                    final String error = "No photo selected";
+                    Log.e( TAG, error );
+                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
                 }
+                break;
+            default:
+                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
     }
     public static Date trim(Date date) {

@@ -2,7 +2,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    tools:ignore="MissingPrefix">
 
     <!--
          As the main content view, the view below consumes the entire
@@ -52,6 +53,10 @@
                 android:id="@+id/profilePic"
                 android:layout_width="50dip"
                 android:layout_height="50dip"
+                android:maxHeight="100dip"
+                android:maxWidth="100dip"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
                 android:background="@android:color/black"/>
@@ -115,28 +120,65 @@
             android:id="@+id/midBarLayout"
             android:layout_width="fill_parent"
             android:layout_height="51dip"
+
             android:layout_below="@id/topBarLayout">
 
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Older"
-                android:id="@+id/tvOlder"
-                android:textColor="@android:color/black"
+            <RelativeLayout
+                android:id="@+id/previous"
+                android:layout_width="150dip"
+                android:layout_height="fill_parent"
                 android:layout_centerVertical="true"
-                android:layout_alignParentStart="true" />
+                android:paddingLeft="10dip"
+                android:layout_alignParentStart="true" >
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                android:text="Newer"
-                android:id="@+id/tvNewer"
-                android:textColor="@android:color/black"
+                <ImageView
+                    android:id="@+id/leftArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/backwards"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:layout_toRightOf="@id/leftArrow"
+                    android:text="Older"
+                    android:id="@+id/tvOlder"
+                    android:textColor="@android:color/black"
+                    android:layout_centerVertical="true" />
+
+
+                </RelativeLayout>
+
+
+            <RelativeLayout
+                android:id="@+id/next"
+                android:layout_width="150dip"
+                android:layout_height="fill_parent"
                 android:layout_centerVertical="true"
-                android:layout_alignParentEnd="true" />
+                android:paddingRight="10dip"
+                android:layout_alignParentRight="true" >
+                <ImageView
+                    android:id="@+id/rightArrow"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:background="@drawable/forward"
+                    android:layout_alignParentEnd="true"
+                    />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:text="Newer"
+                    android:layout_toLeftOf="@id/rightArrow"
+                    android:id="@+id/tvNewer"
+                    android:textColor="@android:color/black"
+                    android:layout_centerVertical="true" />
+                </RelativeLayout>
+
+
 
             <TextView
                 android:layout_width="wrap_content"
@@ -144,6 +186,7 @@
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:text="Cur Month"
                 android:id="@+id/tvCurMonth"
+                fontPath="fonts/gotham-book.otf"
                 android:textColor="@android:color/black"
                 android:layout_centerVertical="true"
                 android:layout_centerHorizontal="true" />
@@ -160,7 +203,7 @@
                 android:id="@+id/chartView"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
-                android:visibility="visible">
+                android:visibility="gone">
 
 
                 <com.github.mikephil.charting.charts.LineChart
@@ -168,6 +211,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="fill_parent"
                     android:visibility="visible"
+                    android:background="@android:color/white"
                     android:layout_above="@+id/weeklyAverages"/>
 
                 <LinearLayout
@@ -177,6 +221,7 @@
                     android:layout_alignParentBottom="true"
                     android:orientation="horizontal">
                     <RelativeLayout
+                        android:id="@+id/stepsLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1">
@@ -186,7 +231,7 @@
                             android:layout_height="40dip"
                             android:text="STEPS"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/redbtn_lg"/>
                         <TextView
@@ -219,6 +264,7 @@
                         android:layout_height="fill_parent"
                         android:background="@android:color/darker_gray"/>
                     <RelativeLayout
+                        android:id="@+id/milesLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1">
@@ -228,7 +274,7 @@
                             android:layout_height="40dip"
                             android:text="MILES"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/tabbarselected"/>
                         <TextView
@@ -261,18 +307,19 @@
                         android:layout_height="fill_parent"
                         android:background="@android:color/darker_gray"/>
                     <RelativeLayout
+                        android:id="@+id/caloriesLayout"
                         android:layout_width="0px"
                         android:layout_height="fill_parent"
                         android:layout_weight="1"
                         >
 
                         <TextView
-                            android:id="@+id/titleBlockc"
+                            android:id="@+id/titleBlockC"
                             android:layout_width="fill_parent"
                             android:layout_height="40dip"
                             android:text="CALORIES"
                             android:textColor="@android:color/white"
-                            android:textSize="25sp"
+                            android:textSize="20sp"
                             android:gravity="center"
                             android:background="@drawable/tabbarselected"/>
                         <TextView
@@ -282,7 +329,7 @@
                             android:text="0"
                             android:gravity="center"
                             android:textColor="@android:color/black"
-                            android:layout_below="@+id/titleBlockc"/>
+                            android:layout_below="@+id/titleBlockC"/>
                         <TextView
                             android:id="@+id/caloriesAverage"
                             android:layout_width="fill_parent"
@@ -319,7 +366,7 @@
                 android:numColumns="3"
                 android:stretchMode="columnWidth"
                 android:padding="10dip"
-                android:visibility="gone"/>
+                android:visibility="visible"/>
 
             <ProgressBar
                 android:layout_width="wrap_content"

@@ -191,6 +191,14 @@ public class WaveAgent {
         private SyncState state = SyncState.DISCOVERY;
         private float requestProgress = 0;
 
+        /** Public state getter
+         *
+         * @return current state
+         */
+        public SyncState getState() {
+            return state;
+        }
+
 
         /**
          * Discovery: 1 (maybe)
@@ -409,10 +417,12 @@ public class WaveAgent {
                         BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
                             @Override
                             protected void onComplete(boolean success, Date date) {
-                                deviceDate = date;
-                                localDate = new Date();
-                                DataSync.lazyLog.i( "Device Time: ", UTC.isoFormat( deviceDate ) );
-                                DataSync.lazyLog.i( "Local Time: ", UTC.isoFormat( localDate ) );
+                                if( success ) {
+                                    deviceDate = date;
+                                    localDate = new Date();
+                                    DataSync.lazyLog.i("Device Time: ", UTC.isoFormat(deviceDate));
+                                    DataSync.lazyLog.i("Local Time: ", UTC.isoFormat(localDate));
+                                }
                                 nextState(success);
                             }
                         });
