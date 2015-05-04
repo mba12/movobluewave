@@ -113,7 +113,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
 
-          monthCal = Calendar.getInstance();
+            monthCal = Calendar.getInstance();
             monthCal.setTime(today);
             SimpleDateFormat month_date = new SimpleDateFormat("MMM");
             String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
@@ -197,44 +197,26 @@ public class DailyActivity extends ActionBarActivity {
                 background.setScaleType(ImageView.ScaleType.FIT_CENTER);
 //                setContentView(R.layout.activity_daily);
             }
-                Log.d(TAG, "Loading image from firebase");
-                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
-                ref.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-    //                    System.out.println(snapshot.getValue());
-                        if(snapshot.getChildrenCount()==1){
-                            final BitmapFactory.Options options = new BitmapFactory.Options();
-                            options.inJustDecodeBounds = false;
-                            options.inSampleSize = 4;
-                            ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
-                            byte[] decodedString = Base64.decode(result.get( 0 ), Base64.DEFAULT);
+            Log.d(TAG, "Loading image from firebase");
+            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    //                    System.out.println(snapshot.getValue());
+                    if(snapshot.getChildrenCount()==1){
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inJustDecodeBounds = false;
+                        options.inSampleSize = 4;
+                        ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
+                        byte[] decodedString = Base64.decode(result.get( 0 ), Base64.DEFAULT);
 
-                            DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
 //
-                            if(localFile) {
-                                int comparePic = decodedString.length;
-                                if(uniquePic!=comparePic){
-                                    //file from cloud is different than local, save to device
-                                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                                    ContentValues syncValues = new ContentValues();
-                                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                                    syncValues.put(Database.PhotoStore.USER, user);
-                                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                                    long newRowId;
-                                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                            null,
-                                            syncValues);
-                                    Log.d(TAG, "Photo database add from firebase: "+newRowId);
-                                    db.close();
-                                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
-                                    background.setImageBitmap(decodedByte);
-
-                                }
-
-                            }else{
-                                //file doesn't exist on local device
+                        if(localFile) {
+                            int comparePic = decodedString.length;
+                            if(uniquePic!=comparePic){
+                                //file from cloud is different than local, save to device
                                 Date curDay = trim(new Date(monthCal.getTimeInMillis()));
                                 ContentValues syncValues = new ContentValues();
                                 syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
@@ -248,19 +230,37 @@ public class DailyActivity extends ActionBarActivity {
                                 db.close();
                                 Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
                                 background.setImageBitmap(decodedByte);
+
                             }
 
-
                         }else{
-                            //multipart file upload
-
+                            //file doesn't exist on local device
+                            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                            ContentValues syncValues = new ContentValues();
+                            syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                            syncValues.put(Database.PhotoStore.USER, user);
+                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                            long newRowId;
+                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                    null,
+                                    syncValues);
+                            Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                            db.close();
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+                            background.setImageBitmap(decodedByte);
                         }
+
+
+                    }else{
+                        //multipart file upload
+
                     }
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-                        System.out.println("The read failed: " + firebaseError.getMessage());
-                    }
-                });
+                }
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    System.out.println("The read failed: " + firebaseError.getMessage());
+                }
+            });
 
 
 //            }
@@ -393,16 +393,24 @@ public class DailyActivity extends ActionBarActivity {
                     if( imageReturnedIntent == null ) {
                         Log.e( TAG, "NULL image intent result!");
                     }
-                    Uri selectedImage = imageReturnedIntent.getData();
-                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ByteArrayOutputStream baos;
+                    Uri selectedImage=null;
 
-                    Log.i( TAG, "Resolving URI: " + selectedImage);
                     try {
+                        selectedImage = imageReturnedIntent.getData();
+                        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                        baos = new ByteArrayOutputStream();
+
+                        Log.i( TAG, "Resolving URI: " + selectedImage);
+
                         final InputStream is = getContentResolver().openInputStream(selectedImage);
-                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
-                    } catch( FileNotFoundException e ) {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inSampleSize = 8;
+
+                        BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
+                    } catch( Exception e ) {
                         baos = null;
                         final String error = "Cannot resolve URI: " + selectedImage;
                         Log.e( TAG, error );
@@ -445,18 +453,18 @@ public class DailyActivity extends ActionBarActivity {
 
 
                         Log.d(TAG, "Starting image upload " + ref);
-                    for(int i = 0;i<strings.size();i++){
-                        ref.child(""+i).setValue(strings.get(i), new Firebase.CompletionListener() {
-                            @Override
-                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                if (firebaseError != null) {
-                                    Log.i(firebaseError.toString(), firebaseError.toString());
+                        for(int i = 0;i<strings.size();i++){
+                            ref.child(""+i).setValue(strings.get(i), new Firebase.CompletionListener() {
+                                @Override
+                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                    if (firebaseError != null) {
+                                        Log.i(firebaseError.toString(), firebaseError.toString());
+                                    }
                                 }
-                            }
 
-                        });
-                        Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
-                    }
+                            });
+                            Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
+                        }
                     }else{
 
                     }

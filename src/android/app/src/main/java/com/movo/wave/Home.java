@@ -151,6 +151,27 @@ public class Home extends MenuActivity {
 //                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 //                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
             }
+            UserData myData = UserData.getUserData(c);
+            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
+            ref.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    Log.d(TAG, "" + snapshot.getValue());
+//                        loginProgress.setVisibility(View.INVISIBLE);
+
+                    insertSteps(snapshot, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), c);
+
+                    Log.d(TAG, "Inserting steps into database");
+
+
+
+                }
+
+                @Override
+                public void onCancelled(FirebaseError firebaseError) {
+                    Log.d(TAG, "The read failed: " + firebaseError.getMessage());
+                }
+            });
         } else {
             calendar = Calendar.getInstance();
             timestamp = calendar.getTimeInMillis();
@@ -248,27 +269,9 @@ public class Home extends MenuActivity {
                 String lastMonth = (monthForwardMillis) + "";
                 intent.putExtra("date", lastMonth);
                 UserData myData = UserData.getUserData(c);
-                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH));
-                ref.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        Log.d(TAG, "" + snapshot.getValue());
-//                        loginProgress.setVisibility(View.INVISIBLE);
+                startActivity(intent);
+                finish();
 
-                        insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
-
-                        Log.d(TAG, "Inserting steps into database");
-
-
-                        startActivity(intent);
-                        finish();
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-                        Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-                    }
-                });
             }
         });
         newer.setOnClickListener(new View.OnClickListener() {
@@ -288,28 +291,29 @@ public class Home extends MenuActivity {
                 long monthForwardMillis = newCal.getTimeInMillis();
                 String lastMonth = (monthForwardMillis) + "";
                 intent.putExtra("date", lastMonth);
-                UserData myData = UserData.getUserData(c);
-                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH) + "/");
-                ref.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        Log.d(TAG, "" + snapshot.getValue());
-//                        loginProgress.setVisibility(View.INVISIBLE);
-
-                        insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
-
-                        Log.d(TAG, "Inserting steps into database");
-
-
-                        startActivity(intent);
-                        finish();
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-                        Log.d(TAG, "" + "The read failed: " + firebaseError.getMessage());
-                    }
-                });
+                startActivity(intent);
+                finish();
+//                UserData myData = UserData.getUserData(c);
+//                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH) + "/");
+//                ref.addValueEventListener(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot snapshot) {
+//                        Log.d(TAG, "" + snapshot.getValue());
+////                        loginProgress.setVisibility(View.INVISIBLE);
+//
+//                        insertSteps(snapshot, newCal.get(Calendar.YEAR), newCal.get(Calendar.MONTH), c);
+//
+//                        Log.d(TAG, "Inserting steps into database");
+//
+//
+//
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(FirebaseError firebaseError) {
+//                        Log.d(TAG, "" + "The read failed: " + firebaseError.getMessage());
+//                    }
+//                });
             }
         });
 
@@ -581,10 +585,10 @@ public class Home extends MenuActivity {
 
         // create a new ImageView for each item referenced by the Adapter
         public View getView(int position, View convertView, ViewGroup parent) {
-
+            View gridView;
             LayoutInflater inflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-            View gridView;
+
 
             if (convertView == null) {
 
@@ -631,9 +635,9 @@ public class Home extends MenuActivity {
             Calendar monthCal = Calendar.getInstance();
 
 
-            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
+            monthCal = today;
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, calendar.getActualMaximum(Calendar.HOUR_OF_DAY), calendar.getActualMaximum(Calendar.MINUTE), calendar.getActualMaximum(Calendar.MILLISECOND));
+            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, calendar.getActualMaximum(Calendar.HOUR_OF_DAY), calendar.getActualMaximum(Calendar.MINUTE), 0);
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
             Bitmap bm = null;
@@ -872,7 +876,7 @@ public class Home extends MenuActivity {
         boolean localFile = false;
 //        today = trim(today); 
         Date currentDay = new Date(today);
-        Bitmap returnBM;
+        Bitmap returnBM=null;
         currentDay = trim(currentDay);
         UserData myData = UserData.getUserData(c);
         String user = myData.getCurUID();
@@ -903,7 +907,11 @@ public class Home extends MenuActivity {
             options.inSampleSize = 10;
             Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
             Log.d(TAG, "Found photo for today");
-            return bm;
+            if(bm!=null){
+                returnBM=bm;
+            }else{
+                return null;
+            }
 //            background.setImageBitmap(bm);
 //                setContentView(R.layout.activity_daily);
         } else {
@@ -941,7 +949,7 @@ public class Home extends MenuActivity {
                                 syncValues);
                         Log.d(TAG, "Photo database add from firebase: " + newRowId);
                         db.close();
-                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
 //                        returnBM = decodedByte;
 //                        return decodedByte;
 
@@ -957,8 +965,9 @@ public class Home extends MenuActivity {
                 }
             });
 
-            return null;
+
         }
+        return returnBM;
     }
 
 

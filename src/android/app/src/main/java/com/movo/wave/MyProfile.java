@@ -271,10 +271,14 @@ public class MyProfile extends MenuActivity {
 
                             }
                         }, mYear, mMonth, mDay);
-                if(!birth.equals("Error")) {
+                if(!birth.equals("Error")&&(!birth.equals("Null"))) {
                     Calendar birthCal = Calendar.getInstance();
-                    birthCal.setTimeInMillis(Long.parseLong(birth));
-                    dpd.updateDate(birthCal.get(Calendar.YEAR), birthCal.get(Calendar.MONTH), birthCal.get(Calendar.DAY_OF_MONTH));
+                    try {
+                        birthCal.setTimeInMillis(Long.parseLong(birth));
+                        dpd.updateDate(birthCal.get(Calendar.YEAR), birthCal.get(Calendar.MONTH), birthCal.get(Calendar.DAY_OF_MONTH));
+                    }catch (Exception e){
+                        dpd.updateDate(1980,0,0);
+                    }
                 }else{
                     dpd.updateDate(1980,0,0);
                 }

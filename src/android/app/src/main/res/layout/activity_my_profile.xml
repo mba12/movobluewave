@@ -16,7 +16,8 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:background="@android:color/white">
 
         <ImageView
             android:layout_width="wrap_content"
@@ -59,20 +60,24 @@
 
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0px"
                     android:layout_height="fill_parent"
+                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Full Name"
-                    android:layout_weight="0.5"
+                    android:layout_weight="1"
                     android:id="@+id/tvName" />
 
                 <EditText
-                    android:layout_width="200dip"
-                    android:layout_weight="0.5"
+                    android:layout_width="0px"
+                    android:layout_weight="2"
                     android:singleLine="true"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
                     android:textColorHint="@android:color/holo_red_light"
-                    android:layout_height="wrap_content"
+                    android:layout_height="35dip"
                     android:id="@+id/edName"
                     android:hint="Full Name" />
 
@@ -92,9 +97,10 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="90dip"
+                    android:layout_width="0px"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.5"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Birthday"
@@ -105,12 +111,13 @@
                 <Button
                     android:id="@+id/birthday"
                     android:text="Birth"
-                    android:gravity="left|center"
+                    android:background="#d3d3d3"
 
-                    android:background="@android:color/white"
-                    android:layout_width="200dip"
-                    android:layout_weight="0.5"
-                    android:layout_height="wrap_content" />
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:layout_height="35dip"/>
 
             </LinearLayout>
             <View
@@ -127,27 +134,34 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="70dip"
+                    android:layout_width="0px"
                     android:layout_height="wrap_content"
-                    android:layout_weight="0.3"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Height"
+                    android:layout_marginLeft="20dip"
                     android:id="@+id/tvHeight"
                     android:layout_centerVertical="true"
                     android:layout_alignStart="@+id/textView" />
-
+<LinearLayout
+    android:layout_width="0px"
+    android:layout_height="fill_parent"
+    android:layout_weight="2">
                 <Spinner
                     android:layout_width="50dip"
-                    android:layout_weight="0.1"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_weight="0.2"
                     android:textColorHint="@android:color/holo_red_light"
                     android:layout_height="wrap_content"
+                    android:background="#d3d3d3"
                     android:id="@+id/spHeight"
                     android:hint="Height"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.3"
+                    android:layout_weight="0.1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center"
                     android:text="ft."
@@ -155,18 +169,22 @@
 
                 <Spinner
                     android:layout_width="50dip"
-                    android:layout_weight="0.1"
+                    android:layout_weight="0.2"
                     android:textColorHint="@android:color/holo_red_light"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
                     android:layout_height="wrap_content"
                     android:id="@+id/spHeight2"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.3"
+                    android:layout_weight="0.1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center"
                     android:text="in."
                     android:layout_centerVertical="true"/>
+</LinearLayout>
 
             </LinearLayout>
             <View
@@ -183,32 +201,39 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="90dip"
+                    android:layout_width="0px"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.5"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Weight"
                     android:id="@+id/tvWeight"
                     android:layout_below="@+id/textView2"
                     android:layout_alignStart="@+id/textView2" />
-
+<LinearLayout
+    android:layout_width="0px"
+    android:layout_height="fill_parent"
+    android:layout_weight="2">
                 <Spinner
-                    android:layout_width="200dip"
-                    android:layout_weight="0.5"
+                    android:layout_width="0px"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:textColorHint="@android:color/holo_red_light"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
                     android:id="@+id/spWeight"
                     android:hint="Weight"/>
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0px"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.3"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center"
                     android:text="lbs"
                     android:layout_centerVertical="true"/>
-
+</LinearLayout>
             </LinearLayout>
             <View
                 android:layout_width="fill_parent"
@@ -224,19 +249,23 @@
                 android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0px"
                     android:layout_height="fill_parent"
-                    android:layout_weight="0.5"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Gender"
+                    android:layout_marginLeft="20dip"
                     android:id="@+id/tvGender"
                     android:layout_below="@+id/textView3"
                     android:layout_alignStart="@+id/textView3" />
 
                 <Spinner
-                    android:layout_width="200dip"
-                    android:layout_weight="0.5"
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
                     android:layout_height="wrap_content"
                     android:id="@+id/spGender"
                     />
