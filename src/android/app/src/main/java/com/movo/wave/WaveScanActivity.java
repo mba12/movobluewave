@@ -40,9 +40,12 @@ public class WaveScanActivity extends MenuActivity {
         return pendingRequests -= 1;
     }
 
-    ArrayList<WaveInfo> waves;
-    ArrayAdapter<WaveInfo> arrayAdapter;
-    ListView waveList;
+    ArrayList<WaveInfo> knownWaves;
+    ArrayList<WaveInfo> newWaves;
+    ArrayAdapter<WaveInfo> knownWaveAdapter;
+    ArrayAdapter<WaveInfo> newWaveAdapter;
+    ListView knownWaveList;
+    ListView newWaveList;
 
     enum ScanState {
         WAITING,
@@ -120,8 +123,7 @@ public class WaveScanActivity extends MenuActivity {
                 wavesByMAC.put( mac, info );
 
                 if( info.complete() ) {
-                    waves.add(info);
-                    arrayAdapter.notifyDataSetChanged();
+                    addInfo( info );
                     lazyLog.d( "Loading sql-cached wave device", info );
                 } else {
                     acquire();
@@ -147,8 +149,7 @@ public class WaveScanActivity extends MenuActivity {
                                 info.serial = serial;
                                 info.queried = new Date();
                                 info.store( db );
-                                waves.add( info );
-                                arrayAdapter.notifyDataSetChanged();
+                                addInfo( info );
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
@@ -185,11 +186,27 @@ public class WaveScanActivity extends MenuActivity {
         return true;
     }
 
+    /** Use to add a *new* waveinfo instance.
+     *
+     * @param info
+     */
+    private void addInfo( WaveInfo info ) {
+        if( UserData.getUserData(c).getCurUID().equals(info.user) ) {
+            //TODO: Sort by date.
+            knownWaves.add(info);
+            knownWaveAdapter.notifyDataSetChanged();
+        } else {
+            newWaves.add(info);
+            newWaveAdapter.notifyDataSetChanged();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_wave_sync);
-        waveList = (ListView) findViewById(R.id.waveList);
+        knownWaveList = (ListView) findViewById(R.id.knownWaveList);
+        newWaveList = (ListView) findViewById( R.id.newWaveList);
 
         resources = getResources();
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
@@ -207,32 +224,55 @@ public class WaveScanActivity extends MenuActivity {
 
         db = mDbHelper.getWritableDatabase();
 
-        waves = new ArrayList<>();
+        knownWaves = new ArrayList<>();
+        newWaves = new ArrayList<>();
 
         // Create The Adapter with passing ArrayList as 3rd parameter
-        arrayAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, waves);
+        knownWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, knownWaves);
 
         // Set The Adapter
-        waveList.setAdapter(arrayAdapter);
+        knownWaveList.setAdapter(knownWaveAdapter);
 
-        arrayAdapter.setNotifyOnChange( true );
+        knownWaveAdapter.setNotifyOnChange(true);
 
-        waveList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        knownWaveList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             // argument position gives the index of item which is clicked
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
-                lazyLog.d("Clicked " + position);
 
+                final WaveInfo info = knownWaves.get(position);
+                // start sync activity
+                Intent intent = new Intent(c, SyncDataActivity.class);
+                intent.putExtra("MAC", info.mac);
+                startActivity(intent);
+            }
+        });
+
+        newWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, newWaves);
+
+        newWaveList.setAdapter(newWaveAdapter);
+
+        newWaveAdapter.setNotifyOnChange(true);
+
+        newWaveList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            // argument position gives the index of item which is clicked
+            public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
                 // change association of wave to current user
-                final WaveInfo info = waves.get( position );
+                final WaveInfo info = newWaves.get(position);
                 String currentUser = UserData.getUserData(c).getCurUID();
-                lazyLog.i( "Setting user for device ", info, " from ", info.user, " to ", currentUser );
+                lazyLog.i("Setting user for device ", info, " from ", info.user, " to ", currentUser);
                 info.user = currentUser;
-                info.store( db );
+                info.store(db);
 
                 // start sync activity
-                Intent intent = new Intent( c, SyncDataActivity.class );
-                intent.putExtra( "MAC", info.mac );
-                startActivity( intent );
+                Intent intent = new Intent(c, SyncDataActivity.class);
+                intent.putExtra("MAC", info.mac);
+                startActivity(intent);
+
+                // Move entry from new to known
+                newWaves.remove( position );
+                newWaveAdapter.notifyDataSetChanged();
+                addInfo( info );
             }
         });
     }

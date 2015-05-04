@@ -115,7 +115,7 @@ public class BLEAgent {
 
     private static Context context;
 
-    private static Handler UIHandler;
+    protected static Handler UIHandler;
     private static Semaphore mutex = new Semaphore( 1 );
 
     /** Singleton initializer for framework;

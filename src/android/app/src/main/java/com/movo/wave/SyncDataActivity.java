@@ -89,10 +89,25 @@ public class SyncDataActivity extends MenuActivity {
         return curSteps;
     }
 
+    /*
+    Note: We could parametrize DataSync to accept a max-delta comment
+     */
+    static long MAX_TIME_DELTA = 100*60*60*24*7;
+
     protected void onSyncComplete( WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
         final String syncUniqueID = UUID.randomUUID().toString();
         final String currentUserId = sync.info.user;
-        if (data != null) {
+
+        final Long timeDelta;
+        if( sync.localDate != null && sync.deviceDate != null ) {
+            timeDelta = sync.localDate.getTime() - sync.deviceDate.getTime();
+        } else {
+            timeDelta = null;
+        }
+
+        if( timeDelta != null && ( timeDelta ) > MAX_TIME_DELTA ) {
+            lazyLog.w("Time delta ", timeDelta, " exceeds ", MAX_TIME_DELTA, " Ignoring data!");
+        } else if (data != null) {
 
             final int result = insertPoints(db, syncUniqueID, currentUserId, data, sync.device.device.getAddress());
 
