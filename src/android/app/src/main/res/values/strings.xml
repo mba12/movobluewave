@@ -27,6 +27,8 @@
         <item>Uploading Data</item>
         <item>Setting Time</item>
         <item>Complete</item>
+        <item>Error</item>
+        <item>Aborting</item>
     </string-array>
     <string name="sync_sql_save">Saving Data&#8230;</string>
     <string name="sync_serial_label">Wave Serial:&#160;</string>
@@ -35,6 +37,9 @@
         <item>Scanning</item>
         <item>Complete</item>
     </string-array>
+    <string name="scan_button_text">Scan</string>
+    <string name="scan_known_waves_label">Previous Devices:</string>
+    <string name="scan_new_waves_label">New Devices:</string>
     <string name="contact_email_subject">Contact from&#160;</string>
     <string-array name="contact_email_recipients">
         <item>info@getmovo.com</item>
