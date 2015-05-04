@@ -215,14 +215,47 @@ public class WaveAgent {
             REQUEST_DATA,
             SET_DATE,
             COMPLETE {
+                /** Don't advance beyond complete!
+                 *
+                 * @return ERROR enum
+                 */
                 @Override
                 public SyncState next() {
-                    return null;
+                    return ERROR;
+                }
+            },
+            ERROR {
+                /** Once in ERROR, always in ERROR
+                 *
+                 * @return ERROR enum
+                 */
+                @Override
+                public SyncState next() {
+                    return this;
+                }
+            },
+            ABORT {
+                /** Stop issuing requests, just go to completion state.
+                 *
+                 * @return COMPLETE
+                 */
+                @Override
+                public SyncState next() {
+                    return COMPLETE;
                 }
             };
 
             public SyncState next() {
                 return values()[ordinal() + 1];
+            }
+        }
+
+        public boolean abort() {
+            if( inNotify && state != SyncState.COMPLETE && state != SyncState.ERROR ) {
+                state = SyncState.ABORT;
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -336,13 +369,18 @@ public class WaveAgent {
             nextState( true );
         }
 
+        private boolean inNotify = false;
+
         /** central state machine logic.
          *
          * @param success indication of current state success.
          */
         private void nextState( boolean success ) {
             progress();
+
+            inNotify = true;
             callback.notify( this, state, success );
+            inNotify = false;
 
             lazyLog.v( this.toString(), "\tState was: ", state, " (", success, ")" );
 
@@ -366,6 +404,7 @@ public class WaveAgent {
                             }
                         });
                         break;
+
                     case GET_DATE:
                         BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
                             @Override
@@ -378,9 +417,11 @@ public class WaveAgent {
                             }
                         });
                         break;
+
                     case REQUEST_DATA:
                         dispatchData();
                         break;
+
                     case SET_DATE:
                         BLEAgent.handle( new WaveRequest.SetDate( device, timeout ) {
                             @Override
@@ -389,9 +430,24 @@ public class WaveAgent {
                             }
                         });
                         break;
+
                     case COMPLETE:
                         callback.complete( this, data );
                         break;
+
+                    case ERROR:
+                        lazyLog.e( "Error ", this);
+                    case ABORT:
+                        //Note: We may want to post delayed on the UI thread to avoid nesting stacks.
+                        lazyLog.i( "Aborting ", this );
+                        BLEAgent.UIHandler.post( new Runnable() {
+                            @Override
+                            public void run() {
+                                nextState(false);
+                            }
+                        });
+                        break;
+
                     default:
                         lazyLog.e( "Unexpected state: ", state);
                         break;

@@ -1,16 +1,13 @@
 package com.movo.wave;
 
-import android.content.Intent;
-import android.content.res.Resources;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
@@ -19,6 +16,7 @@ import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.LazyLogger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -30,15 +28,6 @@ public class DiscoverWaveActivity extends MenuActivity {
 
     private HashMap<String,WaveInfo> wavesByMAC = new HashMap<>();
     private SQLiteDatabase db;
-    private int pendingRequests = 0;
-
-    private int acquire() {
-        return pendingRequests += 1;
-    }
-
-    private int release() {
-        return pendingRequests -= 1;
-    }
 
     ArrayList<WaveInfo> knownWaves;
     ArrayList<WaveInfo> newWaves;
@@ -47,63 +36,7 @@ public class DiscoverWaveActivity extends MenuActivity {
     ListView knownWaveList;
     ListView newWaveList;
 
-    enum ScanState {
-        WAITING,
-        SCANNING,
-        COMPLETE ("!", true)
-        ;
-
-        final public String terminator;
-        final boolean scanEnabled;
-
-        private ScanState() {
-            terminator = "\u2026";
-            scanEnabled = false;
-        }
-
-        private ScanState( String terminator,  boolean scanEnabled ) {
-            this.terminator = terminator;
-            this.scanEnabled = scanEnabled;
-        }
-
-        public ScanState next() {
-            if( this.ordinal() + 1 == values().length ) {
-                return values()[ 0 ];
-            } else {
-                return values()[ordinal() + 1];
-            }
-        }
-    }
-
-    Resources resources;
-    ScanState scanState = ScanState.COMPLETE;
-    ProgressBar scanProgress;
-    TextView scanStatus;
-    Button scanButton;
-
-    private void nextState() {
-        scanState = scanState.next();
-        if( scanState.scanEnabled ) {
-            scanProgress.setVisibility( View.INVISIBLE );
-        } else {
-            scanProgress.setVisibility( View.VISIBLE );
-        }
-
-        scanStatus.setText( resources.getTextArray(R.array.scan_state_enum)[ scanState.ordinal() ] +
-            scanState.terminator);
-
-        scanButton.setEnabled( scanState.scanEnabled );
-    }
-
     private final BLEAgent.BLERequestScan scanRequest = new BLEAgent.BLERequestScan(10000) {
-
-        @Override
-        public boolean dispatch(BLEAgent agent) {
-            acquire();
-            nextState();
-            return super.dispatch(agent);
-        }
-
         @Override
         public boolean filter(BLEAgent.BLEDevice device) {
             do {
@@ -123,10 +56,19 @@ public class DiscoverWaveActivity extends MenuActivity {
                 wavesByMAC.put( mac, info );
 
                 if( info.complete() ) {
+<<<<<<< Updated upstream:src/android/app/src/main/java/com/movo/wave/DiscoverWaveActivity.java
+                    // don't show devices already associated with user.
+                    if( ! UserData.getUserData(c).getCurUID().equals(info.user)) {
+                        waves.add(info);
+                        arrayAdapter.notifyDataSetChanged();
+                    } else {
+                        lazyLog.d( "skipping associated device ", info );
+                    }
+=======
                     addInfo( info );
                     lazyLog.d( "Loading sql-cached wave device", info );
+>>>>>>> Stashed changes:src/android/app/src/main/java/com/movo/wave/WaveScanActivity.java
                 } else {
-                    acquire();
                     // query device serial && gatt attributes
                     BLEAgent.handle(new WaveRequest.ReadSerial(device, 10000) {
 
@@ -153,9 +95,6 @@ public class DiscoverWaveActivity extends MenuActivity {
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
-                            if( release() == 0 ) {
-                                nextState();
-                            }
                         }
                     });
                 }
@@ -165,9 +104,6 @@ public class DiscoverWaveActivity extends MenuActivity {
 
         @Override
         public void onComplete(BLEAgent.BLEDevice device) {
-            if( release() == 0 ) {
-                nextState();
-            }
             lazyLog.i( "Wave discovery complete" );
         }
     };
@@ -175,6 +111,13 @@ public class DiscoverWaveActivity extends MenuActivity {
     public static final LazyLogger lazyLog = new LazyLogger( "Movo Discover Wave",
             MenuActivity.lazyLog );
 
+<<<<<<< Updated upstream:src/android/app/src/main/java/com/movo/wave/DiscoverWaveActivity.java
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        initMenu(R.layout.activity_discover_wave);
+        waveList = (ListView) findViewById(R.id.waveList);
+=======
     public boolean startScan() {
         if( scanState != ScanState.COMPLETE ) {
             lazyLog.e( "Call to startScan() while scan in progress!");
@@ -220,6 +163,7 @@ public class DiscoverWaveActivity extends MenuActivity {
             }
         });
 
+>>>>>>> Stashed changes:src/android/app/src/main/java/com/movo/wave/WaveScanActivity.java
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
 
         db = mDbHelper.getWritableDatabase();
@@ -264,6 +208,11 @@ public class DiscoverWaveActivity extends MenuActivity {
                 info.user = currentUser;
                 info.store(db);
 
+<<<<<<< Updated upstream:src/android/app/src/main/java/com/movo/wave/DiscoverWaveActivity.java
+                // remove as option
+                waves.remove( position );
+                arrayAdapter.notifyDataSetChanged();
+=======
                 // start sync activity
                 Intent intent = new Intent(c, SyncDataActivity.class);
                 intent.putExtra("MAC", info.mac);
@@ -273,16 +222,11 @@ public class DiscoverWaveActivity extends MenuActivity {
                 newWaves.remove( position );
                 newWaveAdapter.notifyDataSetChanged();
                 addInfo( info );
+>>>>>>> Stashed changes:src/android/app/src/main/java/com/movo/wave/WaveScanActivity.java
             }
         });
-    }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if( scanState == ScanState.COMPLETE ) {
-            startScan();
-        }
+        BLEAgent.handle( scanRequest );
     }
 
     @Override
