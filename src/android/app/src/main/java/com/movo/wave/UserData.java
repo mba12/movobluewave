@@ -408,6 +408,7 @@ public class UserData extends Activity{
 
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
 
+            downloadMetadata(UID);
 
         }
 
