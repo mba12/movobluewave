@@ -35,6 +35,8 @@
 
         <RelativeLayout
             android:layout_width="fill_parent"
+            android:layout_marginRight="20dip"
+            android:layout_marginLeft="20dip"
             android:layout_height="fill_parent"
 
             android:layout_marginTop="20dp"
@@ -62,7 +64,6 @@
                 <TextView
                     android:layout_width="0px"
                     android:layout_height="fill_parent"
-                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Full Name"
@@ -76,6 +77,7 @@
                     android:background="#d3d3d3"
                     android:gravity="center_vertical|left"
                     android:paddingLeft="10dip"
+                    android:textColor="@android:color/holo_red_light"
                     android:textColorHint="@android:color/holo_red_light"
                     android:layout_height="35dip"
                     android:id="@+id/edName"
@@ -100,7 +102,6 @@
                     android:layout_width="0px"
                     android:layout_height="fill_parent"
                     android:layout_weight="1"
-                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Birthday"
@@ -113,6 +114,7 @@
                     android:text="Birth"
                     android:background="#d3d3d3"
 
+                    android:textColor="@android:color/holo_red_light"
                     android:gravity="center_vertical|left"
                     android:paddingLeft="10dip"
                     android:layout_width="0px"
@@ -135,12 +137,11 @@
 
                 <TextView
                     android:layout_width="0px"
-                    android:layout_height="wrap_content"
+                    android:layout_height="fill_parent"
                     android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Height"
-                    android:layout_marginLeft="20dip"
                     android:id="@+id/tvHeight"
                     android:layout_centerVertical="true"
                     android:layout_alignStart="@+id/textView" />
@@ -204,7 +205,6 @@
                     android:layout_width="0px"
                     android:layout_height="fill_parent"
                     android:layout_weight="1"
-                    android:layout_marginLeft="20dip"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Weight"
@@ -255,7 +255,6 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:gravity="center_vertical"
                     android:text="Gender"
-                    android:layout_marginLeft="20dip"
                     android:id="@+id/tvGender"
                     android:layout_below="@+id/textView3"
                     android:layout_alignStart="@+id/textView3" />

@@ -6,10 +6,13 @@ package com.movo.wave;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -32,6 +35,7 @@ import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -72,7 +76,7 @@ public class DailyActivity extends ActionBarActivity {
                         .setFontAttrId(R.attr.fontPath)
                         .build()
         );
-
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_daily);
         Intent intent = getIntent();
         LaunchAnimation.apply( this, intent );
@@ -185,16 +189,48 @@ public class DailyActivity extends ActionBarActivity {
             localFile = false;
             if(curPhoto.getCount()!=0){
                 localFile = true;
-                byte[] byteArray = curPhoto.getBlob(2);
-//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-                uniquePic = byteArray.length;
-                final BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = false;
-                options.inSampleSize = 4;
-                Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
+                String wholePhoto = "";
 
-                background.setImageBitmap(bm);
-                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                if(curPhoto.getCount()>1){
+                    while (curPhoto.isAfterLast() == false) {
+                        wholePhoto += curPhoto.getBlob(2);
+                        curPhoto.moveToNext();
+                    }
+                    try {
+                        byte[] byteArray = wholePhoto.getBytes();
+                        curPhoto.close();
+                        uniquePic = byteArray.length;
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+
+                        background.setImageBitmap(bm);
+                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }else{
+                    try {
+                        byte[] byteArray = curPhoto.getBlob(2);
+                        uniquePic = byteArray.length;
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+
+                        background.setImageBitmap(bm);
+                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        curPhoto.close();
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+
+                }
+
+
+//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+
 //                setContentView(R.layout.activity_daily);
             }
             Log.d(TAG, "Loading image from firebase");
@@ -203,38 +239,80 @@ public class DailyActivity extends ActionBarActivity {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
                     //                    System.out.println(snapshot.getValue());
-                    if(snapshot.getChildrenCount()==1){
+                    if(snapshot.getChildrenCount()==2) {
                         final BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inJustDecodeBounds = false;
-                        options.inSampleSize = 4;
-                        ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
-                        byte[] decodedString = Base64.decode(result.get( 0 ), Base64.DEFAULT);
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                        if(result.get(0).equals("1")) {
+                            try {
+                                byte[] decodedString = Base64.decode(result.get(1), Base64.DEFAULT);
 
+                                DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//                              //This could be better, but for a simple uniqueness check this works.
+//                              //TODO: Change later to be specific to date upload or something else
+                                if (localFile) {
+                                    int comparePic = decodedString.length;
+                                    if (uniquePic != comparePic) {
+                                        //file from cloud is different than local, save to device
+                                        Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                        ContentValues syncValues = new ContentValues();
+                                        syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                        syncValues.put(Database.PhotoStore.USER, user);
+                                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                        long newRowId;
+                                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                                null,
+                                                syncValues);
+                                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                                        db.close();
+                                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                                        background.setImageBitmap(decodedByte);
+                                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                    }
+
+                                } else {
+                                    //file doesn't exist on local device
+                                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                    ContentValues syncValues = new ContentValues();
+                                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                    syncValues.put(Database.PhotoStore.USER, user);
+                                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                    long newRowId;
+                                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                            null,
+                                            syncValues);
+                                    Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                                    db.close();
+                                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                                    background.setImageBitmap(decodedByte);
+                                    background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                    }else if(snapshot.getChildrenCount()>=2){
+                        //multipart file upload
                         DatabaseHelper mDbHelper = new DatabaseHelper(c);
                         SQLiteDatabase db = mDbHelper.getWritableDatabase();
-//
-                        if(localFile) {
-                            int comparePic = decodedString.length;
-                            if(uniquePic!=comparePic){
-                                //file from cloud is different than local, save to device
-                                Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                                ContentValues syncValues = new ContentValues();
-                                syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                                syncValues.put(Database.PhotoStore.USER, user);
-                                syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                                long newRowId;
-                                newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                        null,
-                                        syncValues);
-                                Log.d(TAG, "Photo database add from firebase: "+newRowId);
-                                db.close();
-                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
-                                background.setImageBitmap(decodedByte);
+                        final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                        try {
+                            String wholeString = "";
+                            for(int i =1;i<result.size();i++){
+                                wholeString += result.get(i);
+
 
                             }
-
-                        }else{
-                            //file doesn't exist on local device
+                            byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
+                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+                            background.setImageBitmap(decodedByte);
+                            background.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             Date curDay = trim(new Date(monthCal.getTimeInMillis()));
                             ContentValues syncValues = new ContentValues();
                             syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
@@ -244,17 +322,16 @@ public class DailyActivity extends ActionBarActivity {
                             newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
                                     null,
                                     syncValues);
-                            Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                            Log.d(TAG, "Photo database add from firebase: " + newRowId);
                             db.close();
-                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
-                            background.setImageBitmap(decodedByte);
+
+
+                        }catch(Exception e){
+                            e.printStackTrace();
                         }
 
-
-                    }else{
-                        //multipart file upload
-
                     }
+
                 }
                 @Override
                 public void onCancelled(FirebaseError firebaseError) {
@@ -397,8 +474,11 @@ public class DailyActivity extends ActionBarActivity {
                     ByteArrayOutputStream baos;
                     Uri selectedImage=null;
 
+
+
                     try {
                         selectedImage = imageReturnedIntent.getData();
+
                         String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
                         baos = new ByteArrayOutputStream();
@@ -406,10 +486,26 @@ public class DailyActivity extends ActionBarActivity {
                         Log.i( TAG, "Resolving URI: " + selectedImage);
 
                         final InputStream is = getContentResolver().openInputStream(selectedImage);
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inSampleSize = 8;
+                        //check image size
 
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+
+//                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
                         BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
+
+
+//                        int imageWidth = options.outWidth;
+//                        int imageHeight = options.outHeight;
+//
+//                        if(imageWidth>1980){
+//                            options.
+//                        }
+
+//                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 100, baos);
+
+
+
                     } catch( Exception e ) {
                         baos = null;
                         final String error = "Cannot resolve URI: " + selectedImage;
@@ -453,8 +549,9 @@ public class DailyActivity extends ActionBarActivity {
 
 
                         Log.d(TAG, "Starting image upload " + ref);
+                        ref.child(""+0).setValue(strings.size()+"");
                         for(int i = 0;i<strings.size();i++){
-                            ref.child(""+i).setValue(strings.get(i), new Firebase.CompletionListener() {
+                            ref.child(""+(i+1)).setValue(strings.get(i), new Firebase.CompletionListener() {
                                 @Override
                                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                                     if (firebaseError != null) {
@@ -466,9 +563,10 @@ public class DailyActivity extends ActionBarActivity {
                             Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
                         }
                     }else{
-
+                        ref.child(""+0).setValue(1+"");
+                        ref.child(1+"").setValue(encodedImage);
                     }
-                    ref.child(0+"").setValue(encodedImage);
+
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
                 } else {

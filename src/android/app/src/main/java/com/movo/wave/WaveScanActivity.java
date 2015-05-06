@@ -228,7 +228,7 @@ public class WaveScanActivity extends MenuActivity {
         newWaves = new ArrayList<>();
 
         // Create The Adapter with passing ArrayList as 3rd parameter
-        knownWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, knownWaves);
+        knownWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item_scan, knownWaves);
 
         // Set The Adapter
         knownWaveList.setAdapter(knownWaveAdapter);
@@ -247,7 +247,7 @@ public class WaveScanActivity extends MenuActivity {
             }
         });
 
-        newWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, newWaves);
+        newWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item_scan, newWaves);
 
         newWaveList.setAdapter(newWaveAdapter);
 
