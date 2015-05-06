@@ -102,12 +102,15 @@ public class MyProfile extends MenuActivity {
                 " "+gender+
                 " "+birth);
 
-
-        if(!fullName.equals("Error")){
-            edName.setText(fullName);
+        try {
+            if (!fullName.equals("Error")) {
+                edName.setText(fullName);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
         }
         Bitmap prof = myUserData.getCurUserPhoto();
-        if(prof!=null){
+        if (prof != null) {
             profilePic.setImageBitmap(prof);
         }
 
@@ -148,10 +151,14 @@ public class MyProfile extends MenuActivity {
         ArrayAdapter<String> adapterWeight = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,weightOptions);
         mSpinnerWeight.setAdapter(adapterWeight);
 
-
-        if(!gender.equals("Error")){
-            mSpinner.setSelection(options.indexOf(gender));//set selected value in spinner
-        }else{
+        try {
+            if (!gender.equals("Error")) {
+                mSpinner.setSelection(options.indexOf(gender));//set selected value in spinner
+            } else {
+                mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
             mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
         }
         mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -168,11 +175,17 @@ public class MyProfile extends MenuActivity {
             }
 
         });
-        if(!height1.equals("Error")){
-            mSpinnerHeight1.setSelection(height1Options.indexOf(height1));//set selected value in spinner
-        }else{
+        try{
+            if(!height1.equals("Error")){
+                mSpinnerHeight1.setSelection(height1Options.indexOf(height1));//set selected value in spinner
+            }else{
+                mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
             mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
         }
+
 //        mSpinnerHeight1.setSelection(options.indexOf("Gender"));//set selected value in spinner
         mSpinnerHeight1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -188,9 +201,14 @@ public class MyProfile extends MenuActivity {
             }
 
         });
-        if(!height2.equals("Error")){
-            mSpinnerHeight2.setSelection(height2Options.indexOf(height2));//set selected value in spinner
-        }else{
+        try{
+            if(!height2.equals("Error")){
+                mSpinnerHeight2.setSelection(height2Options.indexOf(height2));//set selected value in spinner
+            }else{
+                mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
             mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
         }
 //        mSpinnerHeight2.setSelection(options.indexOf("Gender"));//set selected value in spinner
@@ -208,10 +226,14 @@ public class MyProfile extends MenuActivity {
             }
 
         });
-
-        if(!weight.equals("Error")){
-            mSpinnerWeight.setSelection(weightOptions.indexOf(weight));//set selected value in spinner
-        }else{
+        try{
+            if(!weight.equals("Error")){
+                mSpinnerWeight.setSelection(weightOptions.indexOf(weight));//set selected value in spinner
+            }else{
+                mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
             mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
         }
 //        mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
@@ -234,12 +256,16 @@ public class MyProfile extends MenuActivity {
         //---------------Set up Arraylists------------//
 
         birthdateButton = (Button) findViewById(R.id.birthday);
+        try{
+            if(!birth.equals("Error")&&(!birth.equals("null"))){
+                Calendar birthCal = Calendar.getInstance();
+                birthCal.setTimeInMillis(Long.parseLong(birth));
+                String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.MONTH)+1)+"-"+birthCal.get(Calendar.YEAR);
+                birthdateButton.setText(birthDisplay);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
 
-        if(!birth.equals("Error")&&(!birth.equals("null"))){
-            Calendar birthCal = Calendar.getInstance();
-            birthCal.setTimeInMillis(Long.parseLong(birth));
-            String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.MONTH)+1)+"-"+birthCal.get(Calendar.YEAR);
-            birthdateButton.setText(birthDisplay);
         }
 
         birthdateButton.setOnClickListener(new View.OnClickListener() {
@@ -381,8 +407,9 @@ public class MyProfile extends MenuActivity {
 
 
                         Log.d(TAG, "Starting image upload " + ref);
+                        ref.child(""+0).setValue(strings.size() + "");
                         for(int i = 0;i<strings.size();i++){
-                            ref.child(""+i).setValue(strings.get(i), new Firebase.CompletionListener() {
+                            ref.child(""+(i+1)).setValue(strings.get(i), new Firebase.CompletionListener() {
                                 @Override
                                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                                     if (firebaseError != null) {
@@ -394,9 +421,9 @@ public class MyProfile extends MenuActivity {
                             Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
                         }
                     }else{
-
+                        ref.child(""+0).setValue(1+"");
+                        ref.child(1+"").setValue(encodedImage);
                     }
-                    ref.child(0+"").setValue(encodedImage);
                     Log.d(TAG, "End image upload "+ref);
                     Bitmap prof =UserData.getUserData(c).getCurUserPhoto();
 //                     myUserData.getCurUserPhoto(c);

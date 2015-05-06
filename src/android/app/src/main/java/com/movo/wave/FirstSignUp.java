@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.StrictMode;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
@@ -23,6 +24,20 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
 import java.security.Policy;
 import java.util.Calendar;
 import java.util.Map;
@@ -168,9 +183,44 @@ public class FirstSignUp extends Activity {
                                                         myData.setCurrentUserRef(currentUserRef);
                                                         myData.addCurUserTolist();
 
+                                                        //username lookup table
                                                         Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
                                                         Firebase thisUser = usernameEmailTies.child(mUsername);
                                                         thisUser.setValue(mEmail);
+
+//                                                        https://devorders.getmovo.com/verify/user-signup?fullname=Phil%20Gandy&email=philip.gandy@gmail.com
+//                                                        try {
+//                                                            URL url = new URL("https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail);
+//
+//                                                            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+//                                                            urlConnection.disconnect();
+//                                                        }catch (Exception e){
+//                                                            e.printStackTrace();
+//                                                        }
+//                                                        URL url;
+                                                        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                                                        StrictMode.setThreadPolicy(policy);
+                                                        try {
+                                                            HttpClient httpclient = new DefaultHttpClient();
+                                                            String http = "https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail;
+                                                            HttpGet request = new HttpGet();
+                                                            URI website = new URI(http);
+                                                            request.setURI(website);
+                                                            HttpResponse response = httpclient.execute(request);
+                                                            BufferedReader in = new BufferedReader(new InputStreamReader(
+                                                                    response.getEntity().getContent()));
+
+//                                                            // NEW CODE
+//                                                            String line = in.readLine();
+//                                                            textv.append(" First line: " + line);
+//                                                            // END OF NEW CODE
+
+//                                                            textv.append(" Connected ");
+                                                        } catch (Exception e) {
+                                                            // TODO Auto-generated catch block
+                                                            e.printStackTrace();
+                                                        }
+
 
                                                         loginProgress.setVisibility(View.GONE);
 

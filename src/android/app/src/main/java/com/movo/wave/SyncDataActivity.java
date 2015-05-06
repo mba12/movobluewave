@@ -1,14 +1,22 @@
 package com.movo.wave;
 
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,6 +25,7 @@ import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
 import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.LazyLogger;
+import com.movo.wave.util.NotificationPublisher;
 import com.movo.wave.util.UTC;
 
 import java.util.ArrayList;
@@ -27,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by alex on 4/30/2015.
@@ -61,9 +71,37 @@ public class SyncDataActivity extends MenuActivity {
             updateSyncProgress( 1.0f );
             db.close();
             db = null;
+//            data=null;
             if( ! destroyed ) {
+                if(data==null){
+                    //sync failed
+                    setContentView(R.layout.sync_finish);
+                    RelativeLayout failed = (RelativeLayout) findViewById(R.id.movoBluetoothFailed);
+                    failed.setVisibility(View.VISIBLE);
+                    RelativeLayout succeed = (RelativeLayout) findViewById(R.id.movoBluetoothToggle);
+                    succeed.setVisibility(View.GONE);
+                    Button ok = (Button) findViewById(R.id.btnOk);
+                    ok.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            finish();
+                        }
+                    });
+                }else{
+                    //sync succeed
+
+                    setContentView(R.layout.sync_finish);
+                    Button ok = (Button) findViewById(R.id.btnOk);
+                    ok.setOnClickListener(new View.OnClickListener() {
+                        public void onClick(View v) {
+                            finish();
+                        }
+                    });
+                }
+
+
+
                 //startActivity( new Intent( c, Home.class ));
-                finish();
+//
             }
         }
     };
@@ -115,6 +153,8 @@ public class SyncDataActivity extends MenuActivity {
 
 
             Date stop = new Date();
+
+            scheduleSyncReminders();
 
             ContentValues syncValues = new ContentValues();
             syncValues.put(Database.SyncEntry.GUID, syncUniqueID);
@@ -420,5 +460,47 @@ public class SyncDataActivity extends MenuActivity {
     protected void onDestroy() {
         super.onDestroy();
         destroyed = true;
+    }
+
+    public void scheduleSyncReminders(){
+       long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
+
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Sync your Wave to find out how far you've come"), 5000,0 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Don't forget to sync and update your Movo calendar."), 10000,1 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Where have your steps taken you? Sync your Wave now"), 15000,2 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"You will lose data if you do not sync at least once a week."), 20000,3 );
+//        NotificationCompat.Builder mBuilder =
+//                new NotificationCompat.Builder(this)
+//                        .setSmallIcon(R.drawable.app_icon)
+//                        .setContentTitle("Sync a fool")
+//                        .setContentText("Don't forget to sync! kthnx");
+//        int mNotificationId = 002;
+//// Gets an instance of the NotificationManager service
+//        NotificationManager mNotifyMgr =
+//                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//// Builds the notification and issues it.
+//        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+
+
+    }
+    private void scheduleNotification(Notification notification, int delay, int id) {
+
+        Intent notificationIntent = new Intent(this, NotificationPublisher.class);
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, id);
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION, notification);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, id, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        long futureInMillis = SystemClock.elapsedRealtime() + delay;
+        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, pendingIntent);
+    }
+
+    private Notification getNotification(String title, String content) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setContentTitle(title);
+        builder.setContentText("Please Sync");
+        builder.setStyle(new NotificationCompat.BigTextStyle().bigText(content));
+        builder.setSmallIcon(R.drawable.app_icon);
+        return builder.build();
     }
 }

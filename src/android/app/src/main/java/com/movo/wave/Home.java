@@ -2,6 +2,10 @@ package com.movo.wave;
 /**
  * Created by PhilG on 3/23/2015.
  */
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -11,7 +15,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.StrictMode;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,7 +44,16 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.util.Calculator;
+import com.movo.wave.util.NotificationPublisher;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -46,6 +62,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
@@ -117,6 +134,8 @@ public class Home extends MenuActivity {
         Intent intentIncoming = getIntent();
 
         LaunchAnimation.apply( this, intentIncoming );
+
+
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/gotham-book.otf")
@@ -228,17 +247,17 @@ public class Home extends MenuActivity {
         ArrayList<String> users = new ArrayList<String>();
         users = myData.getUserList();
         if (!users.isEmpty()) {
-            if (userExists == true) {
-                setUpCharts(c);
-                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(myData.getCurrentUsername());
-            } else {
-                String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
-                UserData.getUserData(c).loadNewUser(uid);
-                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(myData.getCurrentUsername());
-                setUpCharts(c);
-            }
+//            if (userExists == true) {
+//                setUpCharts(c);
+//                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+//                currentUserTV.setText(myData.getCurrentUsername());
+//            } else {
+            String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
+            UserData.getUserData(c).loadNewUser(uid);
+            TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+            currentUserTV.setText(myData.getCurrentUsername());
+            setUpCharts(c);
+//            }
 
 
         } else {
@@ -385,9 +404,52 @@ public class Home extends MenuActivity {
             }
         });
 
+//scheduleSyncReminders();
+
+
 //        upload();
     }
+    public void scheduleSyncReminders(){
+        long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
 
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Sync your Wave to find out how far you've come"), 5000,0 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Don't forget to sync and update your Movo calendar."), 10000,1 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Where have your steps taken you? Sync your Wave now"), 15000,2 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"You will lose data if you do not sync at least once a week."), 20000,3 );
+//        NotificationCompat.Builder mBuilder =
+//                new NotificationCompat.Builder(this)
+//                        .setSmallIcon(R.drawable.app_icon)
+//                        .setContentTitle("Sync a fool")
+//                        .setContentText("Don't forget to sync! kthnx");
+//        int mNotificationId = 002;
+//// Gets an instance of the NotificationManager service
+//        NotificationManager mNotifyMgr =
+//                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+//// Builds the notification and issues it.
+//        mNotifyMgr.notify(mNotificationId, mBuilder.build());
+
+
+    }
+    private void scheduleNotification(Notification notification, int delay, int id) {
+
+        Intent notificationIntent = new Intent(this, NotificationPublisher.class);
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION_ID, id);
+        notificationIntent.putExtra(NotificationPublisher.NOTIFICATION, notification);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, id, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        long futureInMillis = SystemClock.elapsedRealtime() + delay;
+        AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, futureInMillis, pendingIntent);
+    }
+
+    private Notification getNotification(String title, String content) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setContentTitle(title);
+        builder.setContentText("Please Sync");
+        builder.setStyle(new NotificationCompat.BigTextStyle().bigText(content));
+        builder.setSmallIcon(R.drawable.app_icon);
+        return builder.build();
+    }
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
@@ -643,11 +705,12 @@ public class Home extends MenuActivity {
             Bitmap bm = null;
             try {
                 bm = dailyBitmapFetch(monthRangeStart);
+
+                if (bm != null) {
+                    background.setImageBitmap(bm);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-            }
-            if (bm != null) {
-                background.setImageBitmap(bm);
             }
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
 
@@ -893,79 +956,137 @@ public class Home extends MenuActivity {
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
         );
-
-        curPhoto.moveToFirst();
-        localFile = false;
-        int uniquePic;
-        if (curPhoto.getCount() != 0) {
-            localFile = true;
-            byte[] byteArray = curPhoto.getBlob(2);
+        try{
+            curPhoto.moveToFirst();
+            localFile = false;
+//        localFile = true;
+//        awefawef
+//        String wholePhoto = "";
+//        byte[] byteArray;
+//        if(curPhoto.getCount()>1){
+//            while (curPhoto.isAfterLast() == false) {
+//                wholePhoto += curPhoto.getBlob(2);
+//                curPhoto.moveToNext();
+//            }
+//            byteArray = wholePhoto.getBytes();
+//            curPhoto.close();
+//        }else{
+//            byteArray = curPhoto.getBlob(2);
+//            curPhoto.close();
+//        }
+            int uniquePic;
+            if (curPhoto.getCount() != 0) {
+                localFile = true;
+                byte[] byteArray = curPhoto.getBlob(2);
 //                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-            uniquePic = byteArray.length;
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = 10;
-            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
-            Log.d(TAG, "Found photo for today");
-            if(bm!=null){
-                returnBM=bm;
-            }else{
-                return null;
-            }
+                uniquePic = byteArray.length;
+                final BitmapFactory.Options options = new BitmapFactory.Options();
+//            options.inJustDecodeBounds = false;
+//            options.inSampleSize = 10;
+                Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+                Log.d(TAG, "Found photo for today");
+                if (bm != null) {
+                    returnBM = bm;
+                } else {
+                    return null;
+                }
+
 //            background.setImageBitmap(bm);
 //                setContentView(R.layout.activity_daily);
-        } else {
+            } else {
 //            return null;
 
-            Log.d(TAG, "Loading image from firebase");
-            final Calendar monthCal = Calendar.getInstance();
-            monthCal.setTimeInMillis(today);
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
-            ref.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    //                    System.out.println(snapshot.getValue());
-                    if (snapshot.getChildrenCount() == 1) {
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inJustDecodeBounds = false;
-                        options.inSampleSize = 4;
-                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
-                        byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
-
-                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                Log.d(TAG, "Loading image from firebase");
+                final Calendar monthCal = Calendar.getInstance();
+                monthCal.setTimeInMillis(today);
+                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                ref.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot snapshot) {
+                        //                    System.out.println(snapshot.getValue());
+                        if (snapshot.getChildrenCount() == 2) {
+                            final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                            ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                            try {
+                                byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+                                DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                                SQLiteDatabase db = mDbHelper.getWritableDatabase();
 //
 
 
-                        //file doesn't exist on local device
-                        Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                        ContentValues syncValues = new ContentValues();
-                        syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                        syncValues.put(Database.PhotoStore.USER, UserData.getUserData(c).getCurUID());
-                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                        long newRowId;
-                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                null,
-                                syncValues);
-                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
-                        db.close();
-//                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-//                        returnBM = decodedByte;
-//                        return decodedByte;
+                                //file doesn't exist on local device
+                                Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                ContentValues syncValues = new ContentValues();
+                                syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                syncValues.put(Database.PhotoStore.USER, UserData.getUserData(c).getCurUID());
+                                syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                long newRowId;
+                                newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                        null,
+                                        syncValues);
+                                Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                                db.close();
 
-                    } else {
-                        //multipart file upload
+                            }catch(Exception e){
+                                e.printStackTrace();
+                            }
 
+//
+
+                        } else if(snapshot.getChildrenCount()>=2){
+                            Log.d(TAG, "Photo multipart");
+                            //multipart file upload
+                            DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                            final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                            ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                            try {
+                                String wholeString = "";
+                                for(int i =1;i<result.size();i++){
+                                    wholeString += result.get(i);
+
+
+                                }
+                                byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
+                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                                background.setImageBitmap(decodedByte);
+//                                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+                                ContentValues syncValues = new ContentValues();
+                                syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                                syncValues.put(Database.PhotoStore.USER, UserData.getUserData(c).getCurUID());
+                                syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                                long newRowId;
+                                newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                        null,
+                                        syncValues);
+                                Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                                db.close();
+
+
+                            }catch(Exception e){
+                                e.printStackTrace();
+                            }
+
+
+
+                        }
                     }
-                }
 
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    System.out.println("The read failed: " + firebaseError.getMessage());
-                }
-            });
+                    @Override
+                    public void onCancelled(FirebaseError firebaseError) {
+                        System.out.println("The read failed: " + firebaseError.getMessage());
+                    }
+                });
 
 
+            }
+        }finally{
+            curPhoto.close();
         }
         return returnBM;
     }
@@ -1040,5 +1161,10 @@ public class Home extends MenuActivity {
 
         return caloriesUsed;
     }
+
+
+
+
+
 
 }

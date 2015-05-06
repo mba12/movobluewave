@@ -13,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -221,6 +222,7 @@ public class UserData extends Activity{
                 setCurEmail(email);
                 setCurPW(pw);
                 setCurToken(authData.getToken());
+                downloadMetadata(authData.getUid());
 
                 currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
                 //TODO: pull user info like name from server
@@ -327,9 +329,8 @@ public class UserData extends Activity{
             prefs.edit().putBoolean("userExists", true);
             return true;
         }else{
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
-            prefs.edit().putBoolean("userExists", false);
-            instance = null;
+            resetUserList();
+
             return false;
 
         }
@@ -359,7 +360,7 @@ public class UserData extends Activity{
 //            currentGender = prefs.getString("currentGender", "Error");
 //            currentFullName = prefs.getString("currentFullName", "Error");
 
-//        uploadToFirebase();
+        uploadToFirebase();
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
         SharedPreferences.Editor userDataEditor = userData.edit();
@@ -412,13 +413,13 @@ public class UserData extends Activity{
 
         }
 
-
-        return true;
+        return prefs.getBoolean("userExists",false);
+//        return true;
 
     }
 
     public String getCurrentUserEmail(){
-       return currentEmail;
+        return currentEmail;
     }
 
     public ArrayList<String> getUserList(){
@@ -432,6 +433,21 @@ public class UserData extends Activity{
             allUsersReturn.add(entry.getValue().toString());
         }
         return allUsersReturn;
+    }
+
+    public void resetUserList(){
+        //this resets the user list to insure data deletion.
+        SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+        SharedPreferences.Editor allUsersEditor = allUsers.edit();
+
+
+            allUsersEditor.clear();
+
+        allUsersEditor.commit();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
+        prefs.edit().putBoolean("userExists", false);
+        instance = null;
+//        return allUsersReturn;
     }
 
     public String getUIDByEmail(String email){
@@ -494,7 +510,7 @@ public class UserData extends Activity{
 
     public void uploadToFirebase(){
         Map<String, String> userDataString = new HashMap<String, String>();
-//        userDataString.put("currentUID", currentUID);
+        userDataString.put("currentUID", currentUID);
 //        userDataString.put("currentToken", currentToken);
         userDataString.put("currentEmail", currentEmail);
 //        userDataString.put("currentPW", currentPW);
@@ -539,17 +555,15 @@ public class UserData extends Activity{
         if(curPhoto.getCount()!=0){
             localFile = true;
             byte[] byteArray = curPhoto.getBlob(2);
-//                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-//            uniquePic = byteArray.length;
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = false;
             options.inSampleSize = 4;
             Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
             curPhoto.close();
-             return bm;
+            return bm;
 
         }else{
-            curPhoto.close(); 
+            curPhoto.close();
             return null;
         }
     }
@@ -561,34 +575,68 @@ public class UserData extends Activity{
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //                    System.out.println(snapshot.getValue());
-                if(snapshot.getChildrenCount()==1){
+                if(snapshot.getChildrenCount()==2){
                     final BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inJustDecodeBounds = false;
-                    options.inSampleSize = 4;
                     ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
-                    byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+                    byte[] decodedString = Base64.decode(result.get(1), Base64.DEFAULT);
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
 //
 
-                            //file from cloud is different than local, save to device
-                            Calendar profile = Calendar.getInstance();
-                            profile.setTimeInMillis(0);
-                            ContentValues syncValues = new ContentValues();
-                            syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
-                            syncValues.put(Database.PhotoStore.USER, currentUID);
-                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                            long newRowId;
-                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                    null,
-                                    syncValues);
-                            Log.d(TAG, "Photo database add from firebase: "+newRowId);
-                            db.close();
-                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
+                    //file from cloud is different than local, save to device
+                    Calendar profile = Calendar.getInstance();
+                    profile.setTimeInMillis(0);
+                    ContentValues syncValues = new ContentValues();
+                    syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
+                    syncValues.put(Database.PhotoStore.USER, currentUID);
+                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                    long newRowId;
+                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                            null,
+                            syncValues);
+                    Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                    db.close();
+                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
 //                            background.setImageBitmap(decodedByte);
 
+                }else if(snapshot.getChildrenCount()>=2){
+                    //multipart file upload
+                    DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+                    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                    final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = false;
+//                        options.inSampleSize = 4;
+                    ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                    try {
+                        Calendar profile = Calendar.getInstance();
+                        profile.setTimeInMillis(0);
+                        String wholeString = "";
+                        for(int i =1;i<result.size();i++){
+                            wholeString += result.get(i);
+
+
                         }
+                        byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
+//                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+
+                        ContentValues syncValues = new ContentValues();
+                        syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
+                        syncValues.put(Database.PhotoStore.USER, currentUID);
+                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                        long newRowId;
+                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                null,
+                                syncValues);
+                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                        db.close();
+
+
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
+
+                }
 
 
             }
@@ -636,29 +684,29 @@ public class UserData extends Activity{
     }
     public void downloadMetadata(String useruid){
         setCurUID(useruid);
-                Firebase child = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+currentUID+"/metadata");
-                child.addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot snapshot) {
-                        Log.d(TAG,""+snapshot.getValue());
+        Firebase child = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+currentUID+"/metadata");
+        child.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Log.d(TAG,""+snapshot.getValue());
 
-                        setCurEmail(snapshot.child("currentEmail").getValue(String.class));
-                        setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
-                        setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
-                        setCurWeight(snapshot.child("currentWeight").getValue(String.class));
-                        setCurGender(snapshot.child("currentGender").getValue(String.class));
-                        setCurName(snapshot.child("currentFullName").getValue(String.class));
-                        setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
-                        setCurUsername(snapshot.child("currentUsername").getValue(String.class));
-
-                    }
-
-                    @Override
-                    public void onCancelled(FirebaseError firebaseError) {
-
-                    }
-                });
+                setCurEmail(snapshot.child("currentEmail").getValue(String.class));
+                setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
+                setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
+                setCurWeight(snapshot.child("currentWeight").getValue(String.class));
+                setCurGender(snapshot.child("currentGender").getValue(String.class));
+                setCurName(snapshot.child("currentFullName").getValue(String.class));
+                setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+                setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+                addCurUserTolist();
             }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+
+            }
+        });
+    }
 
 
 
