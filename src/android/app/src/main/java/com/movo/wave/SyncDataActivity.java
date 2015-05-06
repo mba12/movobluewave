@@ -463,12 +463,14 @@ public class SyncDataActivity extends MenuActivity {
     }
 
     public void scheduleSyncReminders(){
-       long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
-
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Sync your Wave to find out how far you've come"), 5000,0 );
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Don't forget to sync and update your Movo calendar."), 10000,1 );
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Where have your steps taken you? Sync your Wave now"), 15000,2 );
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"You will lose data if you do not sync at least once a week."), 20000,3 );
+       long twoDay = TimeUnit.DAYS.toMillis(2);     // 1 day to milliseconds.
+        long fourDay = twoDay * 2;
+        long sixDay = twoDay * 3;
+        long sevenDay = TimeUnit.DAYS.toMillis(7);
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Sync your Wave to find out how far you've come"), (int)twoDay,0 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Don't forget to sync and update your Movo calendar."), (int)fourDay,1 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Where have your steps taken you? Sync your Wave now"), (int)sixDay,2 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"You will lose data if you do not sync at least once a week."), (int)sevenDay,3 );
 //        NotificationCompat.Builder mBuilder =
 //                new NotificationCompat.Builder(this)
 //                        .setSmallIcon(R.drawable.app_icon)
@@ -498,7 +500,7 @@ public class SyncDataActivity extends MenuActivity {
     private Notification getNotification(String title, String content) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setContentTitle(title);
-        builder.setContentText("Please Sync");
+        builder.setContentText("Remember to Sync.");
         builder.setStyle(new NotificationCompat.BigTextStyle().bigText(content));
         builder.setSmallIcon(R.drawable.app_icon);
         return builder.build();
