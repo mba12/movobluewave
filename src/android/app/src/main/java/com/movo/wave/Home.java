@@ -169,6 +169,9 @@ public class Home extends MenuActivity {
             if ((calendar.get(Calendar.MONTH)) != (Calendar.getInstance().get(Calendar.MONTH))) {
 //                    calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
 //                    curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            }else{
+                calendar.set(Calendar.DATE,Calendar.getInstance().get(Calendar.DATE));
+                timestamp = calendar.getTimeInMillis();
             }
             UserData myData = UserData.getUserData(c);
             Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
@@ -474,6 +477,7 @@ public class Home extends MenuActivity {
                 calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
                 curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
             } else {
+                calendar = Calendar.getInstance();
                 curDay = calendar.get(Calendar.DAY_OF_MONTH);
             }
         } else {
