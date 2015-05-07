@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4A103A3D1AD4106400DC952D /* MainStoryboard_iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CD1AD173900055C771 /* AppDelegate.swift */; };
 		4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */; };
@@ -21,6 +20,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4A2701911AFBB47500848DCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4A27018D1AFBB47500848DCB /* Charts.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 5BA8EC401A9D14DC00CE82E1;
+			remoteInfo = Charts;
+		};
+		4A2701931AFBB4A700848DCB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4A27018D1AFBB47500848DCB /* Charts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5BA8EC3F1A9D14DC00CE82E1;
+			remoteInfo = Charts;
+		};
 		4AEEA9E11AD173900055C771 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4AEEA9C01AD173900055C771 /* Project object */;
@@ -31,8 +44,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		4A103A3C1AD4106400DC952D /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
+		4A27018D1AFBB47500848DCB /* Charts.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Charts.xcodeproj; path = "../../../../Downloads/ios-charts-master/Charts/Charts.xcodeproj"; sourceTree = "<group>"; };
 		4AEEA9C81AD173900055C771 /* Wave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9CC1AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9CD1AD173900055C771 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -66,12 +79,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4A27018E1AFBB47500848DCB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4A2701921AFBB47500848DCB /* Charts.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		4AEEA9BF1AD173900055C771 = {
 			isa = PBXGroup;
 			children = (
 				4AEEA9CA1AD173900055C771 /* Wave */,
 				4AEEA9E31AD173900055C771 /* WaveTests */,
 				4AEEA9C91AD173900055C771 /* Products */,
+				4A27018D1AFBB47500848DCB /* Charts.xcodeproj */,
 			);
 			sourceTree = "<group>";
 		};
@@ -91,7 +113,6 @@
 				4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */,
 				4AEEA9D21AD173900055C771 /* ViewController.swift */,
 				4AEEA9D41AD173900055C771 /* Main.storyboard */,
-				4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */,
 				4AEEA9D71AD173900055C771 /* Images.xcassets */,
 				4AEEA9D91AD173900055C771 /* LaunchScreen.xib */,
 				4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */,
@@ -141,6 +162,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				4A2701941AFBB4A700848DCB /* PBXTargetDependency */,
 			);
 			name = Wave;
 			productName = Wave;
@@ -194,6 +216,12 @@
 			mainGroup = 4AEEA9BF1AD173900055C771;
 			productRefGroup = 4AEEA9C91AD173900055C771 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4A27018E1AFBB47500848DCB /* Products */;
+					ProjectRef = 4A27018D1AFBB47500848DCB /* Charts.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				4AEEA9C71AD173900055C771 /* Wave */,
@@ -202,6 +230,16 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		4A2701921AFBB47500848DCB /* Charts.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = Charts.framework;
+			remoteRef = 4A2701911AFBB47500848DCB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXResourcesBuildPhase section */
 		4AEEA9C61AD173900055C771 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -209,7 +247,6 @@
 			files = (
 				4AEEA9D61AD173900055C771 /* Main.storyboard in Resources */,
 				4AEEA9DB1AD173900055C771 /* LaunchScreen.xib in Resources */,
-				4A103A3D1AD4106400DC952D /* MainStoryboard_iPhone.storyboard in Resources */,
 				4AEEA9D81AD173900055C771 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -248,6 +285,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4A2701941AFBB4A700848DCB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Charts;
+			targetProxy = 4A2701931AFBB4A700848DCB /* PBXContainerItemProxy */;
+		};
 		4AEEA9E21AD173900055C771 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4AEEA9C71AD173900055C771 /* Wave */;
@@ -256,14 +298,6 @@
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		4A103A3B1AD4106400DC952D /* MainStoryboard_iPhone.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				4A103A3C1AD4106400DC952D /* Base */,
-			);
-			name = MainStoryboard_iPhone.storyboard;
-			sourceTree = "<group>";
-		};
 		4AEEA9D41AD173900055C771 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
