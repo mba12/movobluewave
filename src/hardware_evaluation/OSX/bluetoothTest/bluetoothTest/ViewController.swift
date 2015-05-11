@@ -46,26 +46,55 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
         deviceId = id
     }
     
-    func connectedWaveDeviceSerial(id: NSString, serial: NSString) {
+    func connectedWaveDeviceSerial(id: NSString, serial: [UInt8]) {
         //do nothing yet
-
+        println("Got Serial!")
+        outputData.stringValue = " ".join(serial.map{ String($0, radix: 16, uppercase: false)})
         
     }
     
     func disconnectedWaveDevice(id: NSString) {
         connectedLabel.stringValue = ""
+        waveController.requestConnection()
     }
     
     func requestComplete(error: NSError!) {
         //do nothing yet
     }
-    func receivedMessage(message: NSObject, id: NSString) {
-        
+    func receivedMessage(message: WaveMessageResponse, id: NSString) {
+        /*
         var data:NSData! = message as! NSData
         var count = data.length
         var array = [UInt8](count: count, repeatedValue: 0)
         data.getBytes(&array, length: count)
         outputData.stringValue = " ".join(array.map{ String($0, radix: 16, uppercase: false)})
+        */
+        if (message.code == WaveCommandResponseCodes.GetTimeSuccess) {
+            if let timestamp = message.data![0] as? WaveYMDHMSDOW {
+                outputData.stringValue = String(waveYMDHMSDOWGMTToNSDate(timestamp).description)
+                                    
+            }
+            
+            
+        } else if (message.code == WaveCommandResponseCodes.GetChartSuccess) {
+            var dateFormatter = NSDateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+            var stepcount = 0
+            if (message.data!.count > 0) {
+            for x in message.data! as! [WaveStep] {
+                stepcount += x.steps
+            }
+            var firstStep = (message.data! as! [WaveStep])[0].start
+            var finalStep = (message.data! as! [WaveStep]).last?.end
+            outputData.stringValue = "Counted "+String(stepcount)+" steps from: "+dateFormatter.stringFromDate(firstStep)+" to "+dateFormatter.stringFromDate(finalStep!)
+                
+            } else {
+                outputData.stringValue = "Successful chart, but no step data for requested period"
+            }
+            
+            
+        }
+        println("Received Message")
 
     }
     
@@ -89,7 +118,7 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
     
     @IBOutlet weak var sendGetChart: NSButton!
     @IBAction func getChartClick(sender: AnyObject) {
-        waveController.getChart(id: deviceId)
+        waveController.getChart(id: deviceId, Year: 15, Month: 5, Day: 7)
     }
     
     @IBOutlet weak var sendGetSerial: NSButton!
