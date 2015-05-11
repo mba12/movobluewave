@@ -569,6 +569,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         writeCharacteristics = NSMutableDictionary()
         notifyCharacteristics = NSMutableDictionary()
         connectingPeripherals = NSMutableDictionary()
+        connectedSerials = NSMutableDictionary()
         outputBuffer = NSMutableData()
         operationQueue = {
             var queue = NSOperationQueue()
@@ -663,7 +664,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
             return nil
         }
         var xor : UInt8 = UInt8(Year) ^ UInt8(Month) ^ UInt8(Day) ^ UInt8(Hours) ^ UInt8(Minutes) ^ UInt8(Seconds) ^ UInt8(DOW)
-        var rawArray:[UInt8] = [0x29, 0x07, UInt8(Year), UInt8(Month), UInt8(Day), UInt8(Hours), UInt8(Minutes), UInt8(Seconds), UInt8(DOW), xor]
+        var rawArray:[UInt8] = [0xC2, 0x07, UInt8(Year), UInt8(Month), UInt8(Day), UInt8(Hours), UInt8(Minutes), UInt8(Seconds), UInt8(DOW), xor]
         let command = NSData(bytes: &rawArray, length: rawArray.count)
         return sendCommand(id, command: command)
         
@@ -1403,7 +1404,7 @@ func nSDateToWaveYMDHMSDOWGMT(dateIn: NSDate) -> WaveYMDHMSDOW {
     calendar.timeZone = NSTimeZone(forSecondsFromGMT: 0)
     var day = calendar.component(NSCalendarUnit.CalendarUnitDay, fromDate: dateIn)
     var month = calendar.component(NSCalendarUnit.CalendarUnitMonth, fromDate: dateIn)
-    var year = calendar.component(NSCalendarUnit.CalendarUnitYear, fromDate: dateIn)
+    var year = calendar.component(NSCalendarUnit.CalendarUnitYear, fromDate: dateIn)-2000
     var dow = calendar.component(NSCalendarUnit.CalendarUnitWeekday, fromDate: dateIn)
     //adjust to Monday = 1 rather than Sunday = 1
     dow = dow - 1
