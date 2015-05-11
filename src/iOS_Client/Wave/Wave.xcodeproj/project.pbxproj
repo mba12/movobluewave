@@ -9,6 +9,14 @@
 /* Begin PBXBuildFile section */
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701951AFD401600848DCB /* MenuViewController.swift */; };
+		4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701971B00DE3800848DCB /* MyProfileViewController.swift */; };
+		4A27019A1B00E34E00848DCB /* UploadDataViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701991B00E34E00848DCB /* UploadDataViewController.swift */; };
+		4A27019C1B00E3E900848DCB /* UserViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A27019B1B00E3E900848DCB /* UserViewController.swift */; };
+		4A27019E1B00E48400848DCB /* LandingScreenViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A27019D1B00E48400848DCB /* LandingScreenViewController.swift */; };
+		4A2701A01B00E51D00848DCB /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A27019F1B00E51D00848DCB /* LoginViewController.swift */; };
+		4A2701A41B00E59600848DCB /* RegisterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701A31B00E59600848DCB /* RegisterViewController.swift */; };
+		4A2701A61B00E68900848DCB /* MyLifeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701A51B00E68900848DCB /* MyLifeViewController.swift */; };
+		4A2701A81B01045000848DCB /* CollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701A71B01045000848DCB /* CollectionViewCell.swift */; };
 		4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CD1AD173900055C771 /* AppDelegate.swift */; };
 		4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */; };
 		4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D21AD173900055C771 /* ViewController.swift */; };
@@ -48,6 +56,14 @@
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4A27018D1AFBB47500848DCB /* Charts.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Charts.xcodeproj; path = "../../../../Downloads/ios-charts-master/Charts/Charts.xcodeproj"; sourceTree = "<group>"; };
 		4A2701951AFD401600848DCB /* MenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
+		4A2701971B00DE3800848DCB /* MyProfileViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyProfileViewController.swift; sourceTree = "<group>"; };
+		4A2701991B00E34E00848DCB /* UploadDataViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UploadDataViewController.swift; sourceTree = "<group>"; };
+		4A27019B1B00E3E900848DCB /* UserViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserViewController.swift; sourceTree = "<group>"; };
+		4A27019D1B00E48400848DCB /* LandingScreenViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LandingScreenViewController.swift; sourceTree = "<group>"; };
+		4A27019F1B00E51D00848DCB /* LoginViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		4A2701A31B00E59600848DCB /* RegisterViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RegisterViewController.swift; sourceTree = "<group>"; };
+		4A2701A51B00E68900848DCB /* MyLifeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyLifeViewController.swift; sourceTree = "<group>"; };
+		4A2701A71B01045000848DCB /* CollectionViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CollectionViewCell.swift; sourceTree = "<group>"; };
 		4AEEA9C81AD173900055C771 /* Wave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9CC1AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9CD1AD173900055C771 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -122,6 +138,14 @@
 				4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */,
 				4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */,
 				4A2701951AFD401600848DCB /* MenuViewController.swift */,
+				4A2701971B00DE3800848DCB /* MyProfileViewController.swift */,
+				4A2701991B00E34E00848DCB /* UploadDataViewController.swift */,
+				4A27019B1B00E3E900848DCB /* UserViewController.swift */,
+				4A27019D1B00E48400848DCB /* LandingScreenViewController.swift */,
+				4A27019F1B00E51D00848DCB /* LoginViewController.swift */,
+				4A2701A31B00E59600848DCB /* RegisterViewController.swift */,
+				4A2701A51B00E68900848DCB /* MyLifeViewController.swift */,
+				4A2701A71B01045000848DCB /* CollectionViewCell.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -268,12 +292,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4A2701A01B00E51D00848DCB /* LoginViewController.swift in Sources */,
 				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
+				4A27019C1B00E3E900848DCB /* UserViewController.swift in Sources */,
+				4A27019A1B00E34E00848DCB /* UploadDataViewController.swift in Sources */,
 				4AEEA9F11AD1751E0055C771 /* WaveDataModel.swift in Sources */,
+				4A2701A81B01045000848DCB /* CollectionViewCell.swift in Sources */,
 				4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */,
+				4A2701A61B00E68900848DCB /* MyLifeViewController.swift in Sources */,
 				4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */,
 				4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */,
 				4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */,
+				4A27019E1B00E48400848DCB /* LandingScreenViewController.swift in Sources */,
+				4A2701A41B00E59600848DCB /* RegisterViewController.swift in Sources */,
+				4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */,
 				4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

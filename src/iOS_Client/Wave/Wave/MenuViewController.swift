@@ -55,6 +55,12 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
         let row = indexPath.row
+        
+        performSegueWithIdentifier(menu[row], sender:self)
+        
+        
+//        dismissViewControllerAnimated(true, completion: nil)
+        
         println(menu[row])
     }
     

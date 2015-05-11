@@ -103,7 +103,7 @@
         <!--My Life-->
         <scene sceneID="Qcv-eg-83d">
             <objects>
-                <viewController id="xPq-rx-jam" sceneMemberID="viewController">
+                <viewController id="xPq-rx-jam" customClass="MyLifeViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="5Bo-Nl-dbF"/>
                         <viewControllerLayoutGuide type="bottom" id="ePA-gs-kjE"/>
@@ -115,11 +115,14 @@
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="lWW-IJ-Bas">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </imageView>
-                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MPh-ZF-ZaB">
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" alwaysBounceVertical="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MPh-ZF-ZaB">
                                 <rect key="frame" x="0.0" y="197" width="600" height="354"/>
                                 <subviews>
-                                    <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="DfX-a5-M43">
+                                    <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="DfX-a5-M43">
                                         <rect key="frame" x="0.0" y="0.0" width="600" height="354"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="354" id="yQB-an-VeW"/>
+                                        </constraints>
                                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="JvP-fV-vtU">
                                             <size key="itemSize" width="50" height="50"/>
                                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -127,7 +130,7 @@
                                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                                         </collectionViewFlowLayout>
                                         <cells>
-                                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="fva-by-al3">
+                                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="CollectionViewCell" id="fva-by-al3" customClass="CollectionViewCell" customModule="Wave" customModuleProvider="target">
                                                 <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
                                                 <autoresizingMask key="autoresizingMask"/>
                                                 <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
@@ -137,6 +140,10 @@
                                                 </view>
                                             </collectionViewCell>
                                         </cells>
+                                        <connections>
+                                            <outlet property="dataSource" destination="xPq-rx-jam" id="NBV-5e-hFC"/>
+                                            <outlet property="delegate" destination="xPq-rx-jam" id="jHb-th-eeG"/>
+                                        </connections>
                                     </collectionView>
                                 </subviews>
                                 <constraints>
@@ -157,27 +164,33 @@
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstAttribute="centerX" secondItem="lWW-IJ-Bas" secondAttribute="centerX" id="32V-Da-lji"/>
+                            <constraint firstItem="DfX-a5-M43" firstAttribute="top" secondItem="YTR-kN-WCm" secondAttribute="bottom" constant="35" id="3Pf-At-QLM"/>
+                            <constraint firstItem="DfX-a5-M43" firstAttribute="bottom" secondItem="YTR-kN-WCm" secondAttribute="top" constant="389" id="5QK-x5-Vjv"/>
                             <constraint firstItem="YTR-kN-WCm" firstAttribute="top" secondItem="5Bo-Nl-dbF" secondAttribute="bottom" constant="14" id="Cb9-N6-jcZ"/>
                             <constraint firstAttribute="centerY" secondItem="lWW-IJ-Bas" secondAttribute="centerY" id="G2F-4g-dno"/>
                             <constraint firstItem="MPh-ZF-ZaB" firstAttribute="top" secondItem="lWW-IJ-Bas" secondAttribute="bottom" constant="-403" id="Ol9-jq-ek3"/>
                             <constraint firstAttribute="width" secondItem="MPh-ZF-ZaB" secondAttribute="width" id="aw1-hF-qz2"/>
                             <constraint firstAttribute="centerX" secondItem="YTR-kN-WCm" secondAttribute="centerX" id="bVg-11-a30"/>
                             <constraint firstAttribute="width" secondItem="lWW-IJ-Bas" secondAttribute="width" id="dfZ-ez-rBG"/>
+                            <constraint firstItem="MPh-ZF-ZaB" firstAttribute="top" secondItem="YTR-kN-WCm" secondAttribute="bottom" constant="35" id="i3q-Cx-oro"/>
                             <constraint firstAttribute="centerX" secondItem="MPh-ZF-ZaB" secondAttribute="centerX" id="lDH-09-6IU"/>
                             <constraint firstAttribute="height" secondItem="lWW-IJ-Bas" secondAttribute="height" id="oli-cK-23K"/>
                             <constraint firstItem="YTR-kN-WCm" firstAttribute="width" secondItem="goD-HN-Itg" secondAttribute="width" id="zhc-lv-VkM"/>
                         </constraints>
                     </view>
                     <tabBarItem key="tabBarItem" title="My Life" image="calendartab_unselected2" selectedImage="calendartab_selected2" id="F9c-2r-keJ"/>
+                    <connections>
+                        <outlet property="collectionView" destination="DfX-a5-M43" id="hUf-jD-9xp"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NXd-q2-twR" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="371" y="529"/>
+            <point key="canvasLocation" x="331" y="529"/>
         </scene>
         <!--Login-->
         <scene sceneID="l02-qu-xXr">
             <objects>
-                <viewController title="Login" id="Psc-5G-02Q" sceneMemberID="viewController">
+                <viewController title="Login" id="Psc-5G-02Q" customClass="LoginViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="pFU-iy-id4"/>
                         <viewControllerLayoutGuide type="bottom" id="Ulc-Kv-24a"/>
@@ -191,6 +204,9 @@
                                 <state key="normal" title="LOG IN" backgroundImage="red_button">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="cancel:" destination="Psc-5G-02Q" eventType="touchUpInside" id="0Pd-3v-Q1h"/>
+                                </connections>
                             </button>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Password" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="gq1-Hq-xO8">
                                 <rect key="frame" x="252" y="321" width="97" height="30"/>
@@ -213,7 +229,7 @@
         <!--Register-->
         <scene sceneID="zhv-tb-v2I">
             <objects>
-                <viewController title="Register" id="msH-tK-Ndd" sceneMemberID="viewController">
+                <viewController title="Register" id="msH-tK-Ndd" customClass="RegisterViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="f2L-17-6oA"/>
                         <viewControllerLayoutGuide type="bottom" id="cH4-Cq-DVd"/>
@@ -247,12 +263,6 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gQH-Aq-r7K">
-                                <rect key="frame" x="124" y="468" width="352" height="33"/>
-                                <state key="normal" title="LOG IN" backgroundImage="red_button">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                            </button>
                             <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" text="By proceeding, you also agree to Movo's Terms of Service and Privacy Policy." textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="4Bk-HO-y3V">
                                 <rect key="frame" x="180" y="509" width="240" height="63"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -260,6 +270,15 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gQH-Aq-r7K">
+                                <rect key="frame" x="124" y="468" width="352" height="33"/>
+                                <state key="normal" title="LOG IN" backgroundImage="red_button">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="cancel:" destination="msH-tK-Ndd" eventType="touchUpInside" id="hBR-fQ-twT"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
@@ -310,7 +329,7 @@
                             <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="277-3e-pEZ">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="551"/>
                             </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="My Profile,Upload Data, Users, FAQ, Contact, Logout" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bd5-O7-YjM">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Menu" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bd5-O7-YjM">
                                 <rect key="frame" x="96" y="45" width="409" height="63"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
@@ -373,10 +392,10 @@
                     <tabBarItem key="tabBarItem" title="Menu" image="activity_norm" selectedImage="activity_sel" id="Mpg-Ed-D3C"/>
                     <connections>
                         <outlet property="tableView" destination="i3u-9O-NiG" id="8Oh-C9-OA9"/>
-                        <segue destination="0Lf-Ys-XJY" kind="push" identifier="landing" id="qVh-tw-zPR"/>
-                        <segue destination="ris-T2-JXb" kind="push" identifier="myProfile" id="8NQ-DC-l8W"/>
-                        <segue destination="ISY-vb-BJr" kind="push" identifier="uploadData" id="Btz-gO-Vqc"/>
-                        <segue destination="Ugp-2m-Nep" kind="push" identifier="users" id="hFr-Og-YUJ"/>
+                        <segue destination="0Lf-Ys-XJY" kind="show" identifier="Logout" id="qVh-tw-zPR"/>
+                        <segue destination="ris-T2-JXb" kind="show" identifier="My Profile" id="8NQ-DC-l8W"/>
+                        <segue destination="ISY-vb-BJr" kind="show" identifier="Upload Data" id="Btz-gO-Vqc"/>
+                        <segue destination="Ugp-2m-Nep" kind="show" identifier="Users" id="hFr-Og-YUJ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iaF-2I-kZt" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -386,7 +405,7 @@
         <!--Landing Screen-->
         <scene sceneID="pgY-4R-55W">
             <objects>
-                <viewController title="Landing Screen" id="0Lf-Ys-XJY" sceneMemberID="viewController">
+                <viewController title="Landing Screen" id="0Lf-Ys-XJY" customClass="LandingScreenViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="94b-Zg-ze5"/>
                         <viewControllerLayoutGuide type="bottom" id="hiv-HV-h1j"/>
@@ -417,7 +436,8 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
-                                    <segue destination="msH-tK-Ndd" kind="show" id="SkA-EI-D8g"/>
+                                    <action selector="signup:" destination="0Lf-Ys-XJY" eventType="touchUpInside" id="h41-Mk-reH"/>
+                                    <segue destination="msH-tK-Ndd" kind="show" identifier="SIGN UP" id="SkA-EI-D8g"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4T5-4Z-8wZ">
@@ -426,6 +446,7 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
+                                    <action selector="login:" destination="0Lf-Ys-XJY" eventType="touchUpInside" id="GEB-fT-10v"/>
                                     <segue destination="Psc-5G-02Q" kind="show" id="EOb-yC-gxJ"/>
                                 </connections>
                             </button>
@@ -441,7 +462,7 @@
         <!--My Profile-->
         <scene sceneID="WyM-FR-SWQ">
             <objects>
-                <viewController storyboardIdentifier="My Profile" title="My Profile" id="ris-T2-JXb" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="My Profile" title="My Profile" id="ris-T2-JXb" customClass="MyProfileViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="fOY-Wr-Kg3"/>
                         <viewControllerLayoutGuide type="bottom" id="FwL-Ap-WNX"/>
@@ -512,6 +533,11 @@
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="89a-bt-YCh">
+                                <rect key="frame" x="415" y="328" width="97" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pi9-c1-a99">
                                 <rect key="frame" x="253" y="508" width="116" height="30"/>
                                 <state key="normal" title="SAVE CHANGES">
@@ -523,16 +549,17 @@
                                 <state key="normal" title="CANCEL">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
+                                <connections>
+                                    <action selector="cancel:" destination="ris-T2-JXb" eventType="touchUpInside" id="LBV-bX-xIy"/>
+                                </connections>
                             </button>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="89a-bt-YCh">
-                                <rect key="frame" x="415" y="328" width="97" height="30"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits"/>
-                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" id="nU4-nf-e4Y"/>
+                    <connections>
+                        <outlet property="cancel" destination="xx0-wa-zUc" id="OW7-PU-JHE"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="JNN-PS-yfR" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -541,7 +568,7 @@
         <!--Upload Data-->
         <scene sceneID="0Bz-MK-Y3y">
             <objects>
-                <viewController title="Upload Data" id="ISY-vb-BJr" sceneMemberID="viewController">
+                <viewController title="Upload Data" id="ISY-vb-BJr" customClass="UploadDataViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="dZP-zl-6JO"/>
                         <viewControllerLayoutGuide type="bottom" id="YHf-Fo-H1x"/>
@@ -549,6 +576,18 @@
                     <view key="view" contentMode="scaleToFill" id="opM-Jy-1Mp">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FXh-uf-pDg">
+                                <rect key="frame" x="270" y="491" width="61" height="30"/>
+                                <state key="normal" title="CANCEL">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="cancel:" destination="ris-T2-JXb" eventType="touchUpInside" id="AZb-z1-nz7"/>
+                                    <action selector="cancel:" destination="ISY-vb-BJr" eventType="touchUpInside" id="kT0-cL-vxG"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" id="iPQ-2j-2Cm"/>
@@ -560,7 +599,7 @@
         <!--Users-->
         <scene sceneID="vU4-Qd-B7g">
             <objects>
-                <viewController title="Users" id="Ugp-2m-Nep" sceneMemberID="viewController">
+                <viewController title="Users" id="Ugp-2m-Nep" customClass="UserViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="60D-ca-3fB"/>
                         <viewControllerLayoutGuide type="bottom" id="SFl-BY-zJF"/>
@@ -568,6 +607,18 @@
                     <view key="view" contentMode="scaleToFill" id="6tq-HS-Bip">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZsI-mH-xZO">
+                                <rect key="frame" x="270" y="450" width="61" height="30"/>
+                                <state key="normal" title="CANCEL">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="cancel:" destination="Ugp-2m-Nep" eventType="touchUpInside" id="872-Vy-0B6"/>
+                                    <action selector="cancel:" destination="ris-T2-JXb" eventType="touchUpInside" id="v3v-kr-O2z"/>
+                                </connections>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <navigationItem key="navigationItem" id="esI-We-w3d"/>
@@ -640,6 +691,6 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="5Rn-yN-IPh"/>
+        <segue reference="Ld4-Fc-WJ2"/>
     </inferredMetricsTieBreakers>
 </document>
