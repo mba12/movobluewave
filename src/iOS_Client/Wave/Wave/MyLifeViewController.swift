@@ -13,6 +13,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     @IBOutlet var collectionView: UICollectionView?
     
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -25,6 +27,16 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView!.backgroundColor = UIColor.whiteColor()
         self.view.addSubview(collectionView!)
+    
+        // Create a reference to a Firebase location
+        var myRootRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/testing")
+        // Write data to Firebase
+        myRootRef.setValue("Do you have data? You'll love Firebase.")
+    
+    
+    
+    
+    
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
