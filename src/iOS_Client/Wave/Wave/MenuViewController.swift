@@ -27,6 +27,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         tableView.delegate = self
         tableView.dataSource = self
+        tableView.tableFooterView = UIView(frame: CGRect.zeroRect)
     }
     
     // MARK:  UITextFieldDelegate Methods
@@ -43,7 +44,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         cell.textLabel?.text = menu[row]
-        
+        cell.backgroundColor = UIColor.clearColor()
         
         
         
@@ -56,7 +57,9 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         
-        performSegueWithIdentifier(menu[row], sender:self)
+        if (menu[row] != "Upload Data" && menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
+            performSegueWithIdentifier(menu[row], sender:self)
+        }
         
         
         //        dismissViewControllerAnimated(true, completion: nil)
