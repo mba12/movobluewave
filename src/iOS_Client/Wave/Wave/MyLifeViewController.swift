@@ -31,10 +31,17 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         // Create a reference to a Firebase location
         var myRootRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/testing")
         // Write data to Firebase
-        myRootRef.setValue("Do you have data? You'll love Firebase.")
+        //myRootRef.setValue("Do you have data? You'll love Firebase.")
     
     
-    
+        let date = NSDate()
+        let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
+        let days = cal.rangeOfUnit(.CalendarUnitDay,
+            inUnit: .CalendarUnitMonth,
+            forDate: date)
+        
+        
+        NSLog("Days: ",days.length)
     
     
     }
