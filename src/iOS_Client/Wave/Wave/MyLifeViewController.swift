@@ -10,21 +10,30 @@ import Foundation
 import UIKit
 
 class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
-    
-    @IBOutlet var collectionView: UICollectionView?
-    
+
+    @IBOutlet weak var collectionViewHost: UIView!
+
+    @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        /*
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         layout.sectionInset = UIEdgeInsets(top: 20, left: 10, bottom: 10, right: 10)
-        layout.itemSize = CGSize(width: 90, height: 90)
-        collectionView = UICollectionView(frame: self.view.frame, collectionViewLayout: layout)
+        
+        collectionView = UICollectionView(frame: collectionViewHost.frame, collectionViewLayout: layout)
+
         collectionView!.dataSource = self
         collectionView!.delegate = self
-        collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        collectionView!.backgroundColor = UIColor.whiteColor()
+
+        
+
+
         self.view.addSubview(collectionView!)
+*/
+        collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        collectionView!.backgroundColor = UIColor.clearColor()
+        collectionViewHost.backgroundColor = UIColor.clearColor()
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
