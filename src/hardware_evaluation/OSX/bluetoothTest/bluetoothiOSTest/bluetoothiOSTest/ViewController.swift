@@ -22,7 +22,7 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
         // Do any additional setup after loading the view, typically from a nib.
         
         
-        waveController.requestConnection()
+        waveController!.requestConnection()
     }
 
     override func didReceiveMemoryWarning() {
@@ -30,14 +30,14 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
         // Dispose of any resources that can be recreated.
     }
     
-    let waveController:waveControlAndSync!
+    var waveController:waveControlAndSync?
     var deviceId:NSString!
     
     
     
     func connectedWaveDevice(id: NSString) {
-        peripheralText.text = id
-        waveController.cancelScan()
+        peripheralText.text = id as String
+        waveController!.cancelScan()
         deviceId = id
     }
     
@@ -54,9 +54,10 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
     func requestComplete(error: NSError!) {
         //do nothing yet
     }
+    @IBOutlet weak var scanStatusLabel: NSTextField!
     func receivedMessage(message: NSObject, id: NSString) {
         
-        var data:NSData! = message as NSData
+        var data:NSData! = message as! NSData
         var count = data.length
         var array = [UInt8](count: count, repeatedValue: 0)
         data.getBytes(&array, length: count)
@@ -67,7 +68,7 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
     func bluetoothManagerStateChange(state: CBCentralManagerState) {
         println(state)
         if (state == CBCentralManagerState.PoweredOn) {
-            waveController.requestConnection()
+            waveController!.requestConnection()
         }
     }
     
@@ -80,16 +81,16 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
     @IBOutlet weak var characteristicText: UITextField!
     @IBOutlet weak var peripheralText: UITextField!
     @IBAction func getTimeClick(sender: AnyObject) {
-        waveController.getTime(id: deviceId)
+        waveController!.getTime(id: deviceId)
     }
     @IBAction func getStepsClick(sender: AnyObject) {
-        waveController.getSteps(id: deviceId)
+        waveController!.getSteps(id: deviceId)
     }
     @IBAction func getChartClick(sender: AnyObject) {
-        waveController.getChart(id: deviceId)
+        waveController!.getChart(id: deviceId)
     }
     @IBAction func getSerialClick(sender: AnyObject) {
-        waveController.getSerial(id: deviceId)
+        waveController!.getSerial(id: deviceId)
     }
 
 }
