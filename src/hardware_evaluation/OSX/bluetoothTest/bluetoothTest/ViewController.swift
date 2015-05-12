@@ -54,6 +54,7 @@ class ViewController: NSViewController,  waveControlAndSyncDelegate {
     }
     
     func disconnectedWaveDevice(id: NSString) {
+        @IBOutlet weak var scanStatusLable: NSTextField!
         connectedLabel.stringValue = ""
         waveController.requestConnection()
     }
