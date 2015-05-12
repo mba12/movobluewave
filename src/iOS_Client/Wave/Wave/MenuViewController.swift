@@ -15,8 +15,8 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @IBOutlet weak var tableView: UITableView!
     
+    //var calendar = [NSCalendar .currentCalendar()]
     
-    var items: [String] = ["We", "Heart", "Swift"]
     
     let textCellIdentifier = "TextCell"
     
@@ -60,7 +60,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         performSegueWithIdentifier(menu[row], sender:self)
         
         
-//        dismissViewControllerAnimated(true, completion: nil)
+        //        dismissViewControllerAnimated(true, completion: nil)
         
         println(menu[row])
     }
@@ -69,13 +69,13 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     // MARK: - Navigation
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-            if segue.identifier == segueIdentifier {
+        if segue.identifier == segueIdentifier {
             if let destination = segue.destinationViewController as? MenuViewController {
-            if let blogIndex = tableView.indexPathForSelectedRow()?.row {
-            //destination.blogName = menu[blogIndex]
+                if let blogIndex = tableView.indexPathForSelectedRow()?.row {
+                    //destination.blogName = menu[blogIndex]
+                }
             }
-            }
-            }
+        }
     }
     
     
