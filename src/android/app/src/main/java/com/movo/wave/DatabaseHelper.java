@@ -32,7 +32,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.GUID + BLOB_TYPE +COMMA_SEP +
-                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT IGNORE" +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT REPLACE" +
                     " )";
     //Create table with unique key being the sync GUID
     private static final String SQL_CREATE_ENTRIES_SYNC =
@@ -54,6 +54,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.KnownWaves.QUERIED + INTEGER_TYPE  + COMMA_SEP +
                     Database.KnownWaves.SERIAL + TEXT_TYPE + COMMA_SEP +
                     Database.KnownWaves.USER + TEXT_TYPE + ")";
+
+    private static final String SQL_CREATE_PHOTOS_STORAGE =
+            "CREATE TABLE " + Database.PhotoStore.PHOTO_TABLE_NAME + " (" +
+                    Database.PhotoStore._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
+                    Database.PhotoStore.DATE + INTEGER_TYPE  + COMMA_SEP +
+                    Database.PhotoStore.USER + TEXT_TYPE + COMMA_SEP +
+                    Database.PhotoStore.PHOTOBLOB + BLOB_TYPE + COMMA_SEP +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.PhotoStore.DATE+","+Database.PhotoStore.USER +" ) ON CONFLICT REPLACE" +
+                    " )";
 
 
     private static final String SQL_DELETE_ENTRIES =
@@ -79,6 +88,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         Log.d(TAG, "Creating wave table: "+ SQL_CREATE_KNOWN_WAVES);
         db.execSQL(SQL_CREATE_KNOWN_WAVES);
+
+        Log.d(TAG, "Creating wave table: "+ SQL_CREATE_PHOTOS_STORAGE);
+        db.execSQL(SQL_CREATE_PHOTOS_STORAGE);
+
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is

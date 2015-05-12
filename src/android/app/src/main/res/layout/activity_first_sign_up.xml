@@ -23,7 +23,7 @@
             android:id="@+id/password"
             android:layout_width="250dip"
             android:layout_height="40dip"
-            android:layout_below="@+id/username"
+            android:layout_below="@+id/usernameCust"
             android:gravity="center"
             android:layout_marginTop="20dip"
             android:layout_alignLeft="@+id/username"
@@ -47,44 +47,56 @@
             android:singleLine="true"
             android:hint="Confirm Password"/>
 
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="I Verify That I Am 13 Years Of Age Or Older"
-            android:id="@+id/cbAge"
+
+        <EditText
+            android:id="@+id/usernameCust"
+            android:layout_width="250dip"
+            android:layout_height="40dip"
+            android:layout_below="@+id/username"
+            android:gravity="center"
+            android:layout_marginTop="20dip"
+            android:textColor="@android:color/black"
+            android:layout_alignLeft="@+id/username"
+            android:background="@android:color/white"
+            android:singleLine="true"
+            android:hint="Username"/>
+        <!--
+                <CheckBox
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="I Verify That I Am 13 Years Of Age Or Older"
+                    android:id="@+id/cbAge"
+                    android:gravity="center"
+                    android:layout_below="@+id/password2"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginTop="38dp"
+                    android:checked="false" />
+                    -->
+        <Button
+            android:layout_width="250dip"
+            android:layout_height="40dip"
+            android:text="Birthdate"
+            android:id="@+id/birthdate"
+            android:textColor="@android:color/black"
+            android:background="@android:color/white"
+            android:layout_alignLeft="@+id/username"
             android:gravity="center"
             android:layout_below="@+id/password2"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="38dp"
-            android:checked="false" />
+            android:layout_marginTop="20dp"/>
 
-        <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceMedium"
-        android:text="Terms of Service"
-        android:id="@+id/tvTerms"
-        android:layout_alignParentBottom="true"
-        android:layout_alignStart="@+id/cbAge" />
+
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Privacy Policy"
-            android:id="@+id/tvPrivacy"
-            android:layout_alignParentBottom="true"
-            android:layout_alignEnd="@+id/cbAge" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="By proceeding, you also agree to Movo's Terms of Service and Privacy Policy."
-            android:id="@+id/textView"
+            android:id="@+id/tvTermsWhole"
             android:gravity="center"
-            android:layout_above="@+id/tvTerms"
-            android:layout_marginBottom="10dip"
+            android:textColor="@android:color/white"
+            android:text="fjeiowafjewo;aikfjds;lfijekws"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="30dip"
             android:layout_centerHorizontal="true" />
 
     </RelativeLayout>

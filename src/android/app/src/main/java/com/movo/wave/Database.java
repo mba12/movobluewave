@@ -47,4 +47,12 @@ public final class Database {
         public static final String USER = "user";
     }
 
+    public static abstract class PhotoStore implements BaseColumns {
+        public static final String PHOTO_TABLE_NAME = "photos";
+        public static final String DATE = "date";
+        public static final String USER = "user";
+        public static final String PHOTOBLOB = "blob";
+
+    }
+
 }

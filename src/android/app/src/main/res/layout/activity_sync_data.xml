@@ -1,0 +1,185 @@
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <!--
+         As the main content view, the view below consumes the entire
+         space available using match_parent in both dimensions.
+    -->
+
+    <FrameLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/mainview"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        >
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="@string/sync_flavor_text"
+            android:textStyle="bold"
+            android:padding="5pt"
+            android:id="@+id/syncTitle"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@+id/syncPercent" />
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:padding="5pt"
+            android:text="syncserial"
+            android:id="@+id/syncSerial"
+            android:layout_below="@+id/syncTitle"
+            android:visibility="gone"
+            android:layout_alignParentStart="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5pt"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="italic"
+            android:text="syncstate"
+            android:textAlignment="center"
+            android:id="@+id/syncState"
+            android:layout_below="@+id/syncSerial"
+            android:layout_alignParentStart="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5pt"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:textStyle="italic"
+            android:text="syncpercent"
+            android:textAlignment="center"
+            android:id="@+id/syncPercent"
+            android:layout_below="@+id/syncSerial"
+            android:layout_alignParentEnd="true" />
+
+
+<RelativeLayout
+    android:id="@+id/syncRel"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_below="@+id/syncState">
+
+        <RelativeLayout
+            android:id="@+id/movoBluetoothToggle"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:visibility="gone"
+            >
+            <TextView
+                android:id="@+id/movoText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:text="Turn Wave Bluetooth ON:\nHold the button for 3 seconds until a blue light flashes."/>
+            <ImageView
+                android:id="@+id/movoButton"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/movoText"
+                android:layout_width="140dip"
+                android:layout_height="200dip"
+                android:src="@drawable/first_sync_4"/>
+
+
+
+
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/movoTransfer"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            >
+            <TextView
+                android:id="@+id/movoTransferText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:gravity="center"
+                android:textSize="20sp"
+                android:text="Downloading data.\nPlease wait."/>
+            <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@+id/movoTransferText">
+                <ImageView
+                    android:id="@+id/wrist"
+                    android:layout_centerHorizontal="true"
+                    android:layout_toLeftOf="@+id/arrow"
+                    android:layout_width="200dip"
+                    android:layout_height="200dip"
+                    android:layout_marginRight="20dip"
+                    android:src="@drawable/firstsync_wave"/>
+                <ImageView
+                    android:id="@+id/arrow"
+                    android:layout_centerHorizontal="true"
+                    android:layout_centerInParent="true"
+                    android:layout_width="70dip"
+
+                    android:layout_marginRight="20dip"
+                    android:layout_height="200dip"
+                    android:src="@drawable/firstsync_rightarrow"/>
+                <ImageView
+                    android:id="@+id/phone"
+                    android:layout_centerHorizontal="true"
+                    android:layout_toRightOf="@+id/arrow"
+                    android:layout_width="200dip"
+                    android:layout_height="200dip"
+                    android:src="@drawable/firstsync_phone"/>
+
+
+            </RelativeLayout>
+        </RelativeLayout>
+
+
+
+
+
+        </RelativeLayout>
+        <ProgressBar
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/syncProgress"
+            android:layout_marginTop="20dip"
+            android:layout_marginLeft="20dip"
+            android:layout_marginRight="20dip"
+            android:layout_below="@+id/syncRel"
+            android:padding="5pt"
+            android:layout_alignParentStart="true" />
+
+
+
+
+    </RelativeLayout>
+
+
+
+    <ListView
+        android:id="@+id/left_drawer"
+        android:layout_width="240dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="left"
+        android:background="#111"
+        android:choiceMode="singleChoice"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp" />
+</android.support.v4.widget.DrawerLayout>

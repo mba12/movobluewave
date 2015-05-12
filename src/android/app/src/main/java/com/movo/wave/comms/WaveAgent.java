@@ -179,15 +179,25 @@ public class WaveAgent {
         }
 
         public BLEAgent.BLEDevice device = null;
+        public WaveInfo info;
         final public int timeout = 10000;
         public Date deviceDate = null;
         public Date localDate = null;
+        private int dataTotal = 0;
         private int dataSuccess = 0;
         private int dataFailure = 0;
         final public Callback callback;
         final private List<WaveRequest.WaveDataPoint> data = new LinkedList<>();
         private SyncState state = SyncState.DISCOVERY;
         private float requestProgress = 0;
+
+        /** Public state getter
+         *
+         * @return current state
+         */
+        public SyncState getState() {
+            return state;
+        }
 
 
         /**
@@ -213,14 +223,47 @@ public class WaveAgent {
             REQUEST_DATA,
             SET_DATE,
             COMPLETE {
+                /** Don't advance beyond complete!
+                 *
+                 * @return ERROR enum
+                 */
                 @Override
                 public SyncState next() {
-                    return null;
+                    return ERROR;
+                }
+            },
+            ERROR {
+                /** Once in ERROR, always in ERROR
+                 *
+                 * @return ERROR enum
+                 */
+                @Override
+                public SyncState next() {
+                    return this;
+                }
+            },
+            ABORT {
+                /** Stop issuing requests, just go to completion state.
+                 *
+                 * @return COMPLETE
+                 */
+                @Override
+                public SyncState next() {
+                    return COMPLETE;
                 }
             };
 
             public SyncState next() {
                 return values()[ordinal() + 1];
+            }
+        }
+
+        public boolean abort() {
+            if( inNotify && state != SyncState.COMPLETE && state != SyncState.ERROR ) {
+                state = SyncState.ABORT;
+                return true;
+            } else {
+                return false;
             }
         }
 
@@ -293,6 +336,36 @@ public class WaveAgent {
             return ret;
         }
 
+        /** Constructor for finding device by WaveInfo
+         *
+         * Since double string overload is a no-no.
+         *
+         * NOTE: may be very slow......
+         *
+         * @param timeout discovery timeout in seconds.
+         * @param info WaveInfo object for target device.
+         * @param callback notification callback.
+         * @return DataSync object for operation.
+         */
+        public static DataSync byInfo( final int timeout,
+                                       final WaveInfo info,
+                                       final Callback callback) {
+            DataSync ret = null;
+            if( info.mac != null ) {
+                ret = byAddress( timeout, info.mac, callback );
+            } else if( info.serial != null ) {
+                ret = bySerial( timeout, info.serial, callback );
+            } else {
+                lazyLog.a( info.mac != null || info.serial != null,
+                        " At least one of mac and serial must be not-null!");
+            }
+
+            if( ret != null ) {
+                ret.info = info;
+            }
+            return ret;
+        }
+
         /** Sync constructor for known device.
          *
          * @param device communications target.
@@ -304,13 +377,18 @@ public class WaveAgent {
             nextState( true );
         }
 
+        private boolean inNotify = false;
+
         /** central state machine logic.
          *
          * @param success indication of current state success.
          */
         private void nextState( boolean success ) {
             progress();
+
+            inNotify = true;
             callback.notify( this, state, success );
+            inNotify = false;
 
             lazyLog.v( this.toString(), "\tState was: ", state, " (", success, ")" );
 
@@ -334,21 +412,26 @@ public class WaveAgent {
                             }
                         });
                         break;
+
                     case GET_DATE:
                         BLEAgent.handle(new WaveRequest.GetDate(device, timeout) {
                             @Override
                             protected void onComplete(boolean success, Date date) {
-                                deviceDate = date;
-                                localDate = new Date();
-                                DataSync.lazyLog.i( "Device Time: ", UTC.isoFormat( deviceDate ) );
-                                DataSync.lazyLog.i( "Local Time: ", UTC.isoFormat( localDate ) );
+                                if( success ) {
+                                    deviceDate = date;
+                                    localDate = new Date();
+                                    DataSync.lazyLog.i("Device Time: ", UTC.isoFormat(deviceDate));
+                                    DataSync.lazyLog.i("Local Time: ", UTC.isoFormat(localDate));
+                                }
                                 nextState(success);
                             }
                         });
                         break;
+
                     case REQUEST_DATA:
                         dispatchData();
                         break;
+
                     case SET_DATE:
                         BLEAgent.handle( new WaveRequest.SetDate( device, timeout ) {
                             @Override
@@ -357,9 +440,24 @@ public class WaveAgent {
                             }
                         });
                         break;
+
                     case COMPLETE:
                         callback.complete( this, data );
                         break;
+
+                    case ERROR:
+                        lazyLog.e( "Error ", this);
+                    case ABORT:
+                        //Note: We may want to post delayed on the UI thread to avoid nesting stacks.
+                        lazyLog.i( "Aborting ", this );
+                        BLEAgent.UIHandler.post( new Runnable() {
+                            @Override
+                            public void run() {
+                                nextState(false);
+                            }
+                        });
+                        break;
+
                     default:
                         lazyLog.e( "Unexpected state: ", state);
                         break;
@@ -380,6 +478,7 @@ public class WaveAgent {
             cal.set( Calendar.MILLISECOND, 0 );
 
             for( int day = 0; day < 7; day += 2 ) {
+                dataTotal += 1;
                 BLEAgent.handle(new WaveRequest.ReadData(device, timeout,
                         cal.get( Calendar.YEAR ),
                         cal.get( Calendar.MONTH),
@@ -432,7 +531,7 @@ public class WaveAgent {
                 lazyLog.w("FAILED data: ",UTC.isoFormat(cal) );
             }
 
-            if( dataSuccess + dataFailure == 7 * 24 / 3 ) {
+            if( dataSuccess + dataFailure == dataTotal ) {
                 nextState( true );
             }
         }

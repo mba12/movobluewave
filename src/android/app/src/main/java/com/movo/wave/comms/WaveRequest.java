@@ -103,6 +103,7 @@ public class WaveRequest {
         //support for multi-part responses
         final private byte[] response = new byte[ 256 ];
         private int responseSize = 0;
+        private int messageSize;
 
         /** Check for response completion, concatenate multipart-response.
          *
@@ -110,13 +111,17 @@ public class WaveRequest {
          * @return indication of completion--response byte array completed for parsing.
          */
         private boolean buildResponse( final byte[] responsePart ) {
-            if( responseSize == 0 && MarshalByte.OP.parse( responsePart ) == 0x00 ) {
-                lazyLog.w( "Skipping bad preamble" );
-                return false;
+            if( responseSize == 0 ) {
+                final int code = MarshalByte.OP.parse( responsePart );
+                if( code != op.FAILURE && code != op.SUCCESS ) {
+                    lazyLog.w("Skipping bad preamble");
+                    return false;
+                }
+                messageSize = MarshalByte.SIZE.parse( responsePart ) + 3;
             }
             System.arraycopy( responsePart, 0, response, responseSize, responsePart.length );
             responseSize += responsePart.length;
-            return responseSize >= MarshalByte.SIZE.parse( response );
+            return responseSize >= messageSize;
         }
 
         /** Public constructor for banging out a message by hand. Recommend subclass instead.
@@ -274,7 +279,16 @@ public class WaveRequest {
                     success = false;
                 }
 
-                onComplete(success, response);
+                final byte[] message;
+
+                if( success ) {
+                    message = new byte[ messageSize ];
+                    System.arraycopy( response, 0, message, 0, messageSize);
+                } else {
+                    message = null;
+                }
+
+                onComplete( success, message );
 
                 return true;
 

@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" /> <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
 <!--     Bluetooth LE permissions -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -26,9 +28,11 @@
         android:icon="@drawable/app_icon"
         android:label="Movo Wave"
         android:minSdkVersion="18"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme"
+        android:largeHeap="true">
         <activity
             android:name=".Home"
+            android:screenOrientation="portrait"
             android:label="Movo Wave">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +42,7 @@
         </activity>
         <activity
             android:name=".LoginActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleInstance"
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="adjustResize|stateHidden" >
@@ -49,32 +54,47 @@
 
         <activity
             android:name=".UserActivity"
+            android:screenOrientation="portrait"
             android:launchMode="singleInstance"
-            android:label="User Select" >
+            android:label="User Select"
+            android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".DailyActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.NoActionBar"
-            android:label="Daily Activity" >
+            android:label="Daily Activity"
+            android:parentActivityName=".Home">
         </activity>
         <activity
             android:name=".FirstLaunch"
+            android:screenOrientation="portrait"
             android:launchMode="singleInstance"
             android:label="@string/title_activity_first_launch" >
         </activity>
         <activity
             android:name=".MyProfile"
-            android:launchMode="singleInstance"
-            android:label="My Profile" >
+            android:screenOrientation="portrait"
+            android:launchMode="singleTop"
+            android:label="My Profile"
+            android:parentActivityName=".Home">
         </activity>
         <activity
-            android:name=".DiscoverWaveActivity"
-            android:label="Discover Wave"
+            android:name=".WaveScanActivity"
+            android:screenOrientation="portrait"
+            android:label="Select Wave to Start Sync"
             android:launchMode="singleInstance"
             android:parentActivityName=".Home">
         </activity>
         <activity
+            android:name=".SyncDataActivity"
+            android:screenOrientation="portrait"
+            android:label="Syncing Data with Wave"
+            android:parentActivityName=".WaveScanActivity">
+        </activity>
+        <activity
             android:name=".FirstLogin"
+            android:screenOrientation="portrait"
             android:launchMode="singleInstance"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="@string/title_activity_first_login"
@@ -86,6 +106,7 @@
         </activity>
         <activity
             android:name=".FirstSignUp"
+            android:screenOrientation="portrait"
             android:launchMode="singleInstance"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:label="Sign Up"
@@ -95,6 +116,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.movo.wave.FirstLaunch" />
         </activity>
+        <receiver android:name=".util.NotificationPublisher" >
+        </receiver>
     </application>
 
 </manifest>

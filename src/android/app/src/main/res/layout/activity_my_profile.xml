@@ -16,123 +16,293 @@
 
     <RelativeLayout
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
+        android:layout_height="fill_parent"
+        android:background="@android:color/white">
 
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:maxHeight="100dip"
+            android:maxWidth="100dip"
+            android:scaleType="fitXY"
             android:id="@+id/profilePic"
             android:src="@drawable/default_user_icon"
+            android:adjustViewBounds="true"
             android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
             android:layout_marginStart="20dp"
             android:layout_marginTop="20dp" />
 
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_marginRight="20dip"
+            android:layout_marginLeft="20dip"
+            android:layout_height="fill_parent"
+
+            android:layout_marginTop="20dp"
+            android:layout_below="@id/profilePic">
         <LinearLayout
             android:id="@+id/masterLinear"
-            android:orientation="horizontal"
-            android:layout_below="@id/profilePic"
-            android:layout_marginTop="20dp"
+            android:orientation="vertical"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:weightSum="1">
-
+            android:weightSum="4.5">
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
             <LinearLayout
 
-                android:id="@+id/leftLayout"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:orientation="vertical"
+                android:id="@+id/nameLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
                 android:background="@android:color/white"
                 android:layout_weight="0.5">
 
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
                     android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center_vertical"
                     android:text="Full Name"
+                    android:layout_weight="1"
                     android:id="@+id/tvName" />
 
+                <EditText
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:singleLine="true"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:textColor="@android:color/holo_red_light"
+                    android:textColorHint="@android:color/holo_red_light"
+                    android:layout_height="35dip"
+                    android:id="@+id/edName"
+                    android:hint="Full Name" />
+
+
+            </LinearLayout>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+            <LinearLayout
+
+                android:id="@+id/birthdayLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center_vertical"
                     android:text="Birthday"
                     android:id="@+id/tvBirth"
                     android:layout_below="@+id/editText"
                     android:layout_alignStart="@+id/tvName" />
 
+                <Button
+                    android:id="@+id/birthday"
+                    android:text="Birth"
+                    android:background="#d3d3d3"
+
+                    android:textColor="@android:color/holo_red_light"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:layout_height="35dip"/>
+
+            </LinearLayout>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+            <LinearLayout
+
+                android:id="@+id/HeightLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:layout_weight="0.5">
+
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center_vertical"
                     android:text="Height"
                     android:id="@+id/tvHeight"
                     android:layout_centerVertical="true"
                     android:layout_alignStart="@+id/textView" />
-
+<LinearLayout
+    android:layout_width="0px"
+    android:layout_height="fill_parent"
+    android:layout_weight="2">
+                <Spinner
+                    android:layout_width="50dip"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_weight="0.2"
+                    android:textColorHint="@android:color/holo_red_light"
+                    android:layout_height="wrap_content"
+                    android:background="#d3d3d3"
+                    android:id="@+id/spHeight"
+                    android:hint="Height"/>
                 <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="0.1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center"
+                    android:text="ft."
+                     android:layout_centerVertical="true"/>
+
+                <Spinner
+                    android:layout_width="50dip"
+                    android:layout_weight="0.2"
+                    android:textColorHint="@android:color/holo_red_light"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spHeight2"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="0.1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center"
+                    android:text="in."
+                    android:layout_centerVertical="true"/>
+</LinearLayout>
+
+            </LinearLayout>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+            <LinearLayout
+
+                android:id="@+id/weightLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:layout_weight="0.5">
+
+                <TextView
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center_vertical"
                     android:text="Weight"
                     android:id="@+id/tvWeight"
                     android:layout_below="@+id/textView2"
                     android:layout_alignStart="@+id/textView2" />
+<LinearLayout
+    android:layout_width="0px"
+    android:layout_height="fill_parent"
+    android:layout_weight="2">
+                <Spinner
+                    android:layout_width="0px"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:textColorHint="@android:color/holo_red_light"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:id="@+id/spWeight"
+                    android:hint="Weight"/>
+                <TextView
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center"
+                    android:text="lbs"
+                    android:layout_centerVertical="true"/>
+</LinearLayout>
+            </LinearLayout>
+            <View
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:background="@android:color/darker_gray"/>
+            <LinearLayout
+
+                android:id="@+id/genderLayout"
+                android:layout_width="fill_parent"
+                android:layout_height="0dp"
+                android:orientation="horizontal"
+                android:background="@android:color/white"
+                android:layout_weight="0.5">
 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0px"
+                    android:layout_height="fill_parent"
+                    android:layout_weight="1"
                     android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:gravity="center_vertical"
                     android:text="Gender"
                     android:id="@+id/tvGender"
                     android:layout_below="@+id/textView3"
                     android:layout_alignStart="@+id/textView3" />
+
+                <Spinner
+                    android:layout_width="0px"
+                    android:layout_weight="2"
+                    android:background="#d3d3d3"
+                    android:gravity="center_vertical|left"
+                    android:paddingLeft="10dip"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/spGender"
+                    />
+
             </LinearLayout>
 
 
-            <LinearLayout
-                android:id="@+id/rightLayout"
-                android:orientation="vertical"
-                android:layout_width="0dp"
-                android:layout_height="fill_parent"
-                android:layout_weight="0.5"
-                >
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edName"
-                    android:hint="Full Name" />
 
-                <DatePicker
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edBirth"
-                    android:hint="Birthday"/>
 
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edHeight"
-                    android:hint="Height"/>
-
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edWeight"
-                    android:hint="Weight"/>
-
-                <EditText
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/edGender"
-                    android:hint="Gender" />
-
-            </LinearLayout>
 
         </LinearLayout>
+
+            <Button
+                android:layout_width="200dip"
+                android:layout_height="50dip"
+                android:layout_centerHorizontal="true"
+                android:text="Save Changes"
+                android:textColor="@android:color/white"
+                android:layout_above="@+id/profileCancel"
+                android:background="@drawable/red_button"
+                android:layout_marginBottom="10dip"
+                android:id="@+id/profileSave" />
+            <Button
+                android:layout_width="200dip"
+                android:layout_height="50dip"
+                android:textColor="@android:color/white"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"
+                android:text="Cancel"
+                android:background="@drawable/sign_up_button"
+                android:layout_marginBottom="25dip"
+                android:id="@+id/profileCancel" />
+        </RelativeLayout>
+
+
+
+
+
 
     </RelativeLayout>
     <ListView
