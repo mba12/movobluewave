@@ -163,12 +163,13 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 let cellCount = collectionView.numberOfItemsInSection(0)
                 let cellDateNumber = abs(indexPath.row - cellCount)
                 cell.textLabel?.text = "\(cellDateNumber)"
-                if let fetchResults2 = self.managedObjectContext!.executeFetchRequest(fetchRequest2, error: nil) as? [StepEntry] {
+                let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+                if let fetchResults2 = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
 //                    NSLog("CoreData: %@",fetchResults[0].count)
 //                    cell.textLabel2?.text = fetchResults[0].count
-            }else{
-            cell.textLabel2?.text = "0"
-                    }
+                } else {
+                    cell.textLabel2?.text = "0"
+                }
             
                 
                 cell.imageView?.image = UIImage(named: "datebgwide")
