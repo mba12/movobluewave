@@ -12,7 +12,28 @@ import UIKit
 class LoginViewController: UIViewController{
     
     
-    @IBAction func cancel(sender: UIButton){
+    
+    
+    @IBAction func login(sender: UIButton){
+        
+        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+        //auth with email and pass that are in the input UI
+        
+        ref.authUser("philg@sensorstar.com", password: "t",
+            withCompletionBlock: { error, authData in
+                
+                if error != nil {
+                    // There was an error logging in to this account
+                    NSLog("Login failed")
+                } else {
+                    // We are now logged in
+                    NSLog("We logged in as philg: %@",authData.uid)
+//                    self.userID = authData.uid
+                    
+                }
+        })
+
+        
         dismissViewControllerAnimated(true, completion: nil)
         
     }

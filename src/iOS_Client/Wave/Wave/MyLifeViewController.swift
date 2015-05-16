@@ -8,74 +8,177 @@
 
 import Foundation
 import UIKit
+import CoreData
+
+
+//@objc(StepEntry)
 
 class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
-
+    let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
+    var userID = ""
+    
     @IBOutlet weak var collectionViewHost: UIView!
-
+    // Retreive the managedObjectContext from AppDelegate
+    let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
+    
+    
+    
     @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        /*
-        let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
-        layout.sectionInset = UIEdgeInsets(top: 20, left: 10, bottom: 10, right: 10)
-        
-        collectionView = UICollectionView(frame: collectionViewHost.frame, collectionViewLayout: layout)
-
-        collectionView!.dataSource = self
-        collectionView!.delegate = self
-
-        
-
-
-        self.view.addSubview(collectionView!)
-*/
-        collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        collectionView!.backgroundColor = UIColor.clearColor()
-        collectionViewHost.backgroundColor = UIColor.clearColor()
-
-        /*
-        // Create a reference to a Firebase location
-        var myRootRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/testing")
-        // Write data to Firebase
-        myRootRef.setValue("Do you have data? You'll love Firebase.")
-    */
-    
-    
         let date = NSDate()
-        let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
+        //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
         let days = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
             forDate: date)
+        // let todayDate = cal.ordinalityOfUnit(.CalendarUnitDay, inUnit: .CalendarUnitDay, forDate: date)
+        let todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        let todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        let todayYear = cal.component(.CalendarUnitYear , fromDate: date)
         
         
-        NSLog("Days: ",days.length)
-    
-    
+        collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        collectionView!.backgroundColor = UIColor.clearColor()
+        collectionViewHost.backgroundColor = UIColor.clearColor()
+        
+        //Firebase calls
+        
+        //        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/"
+        //        urlString += String(todayYear) + "/"
+        //        urlString += String(todayMonth) + "/"
+        //        //urlString += String(todayDate)
+        //        urlString += "12"
+        //        NSLog("%@",urlString)
+        //        var myRootRef = Firebase(url:urlString )
+        //        // Read data and react to changes
+        //        myRootRef.observeEventType(.Value, withBlock: {
+        //            snapshot in
+        //            println("\(snapshot.key) -> \(snapshot.value)")
+        //            })
+        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+        ref.authUser("philg@sensorstar.com", password: "t",
+            withCompletionBlock: { error, authData in
+            
+            if error != nil {
+            // There was an error logging in to this account
+            NSLog("Login failed")
+        } else {
+            // We are now logged in
+            NSLog("We logged in as philg: %@",authData.uid)
+            self.userID = authData.uid
+            
+            //            var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
+            //            // Attach a closure to read the data at our posts reference
+            //            todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+            //                println(snapshot.value)
+            //            }, withCancelBlock: { error in
+            //                println(error.description)
+            //                })
+            
+            
+            
+            }
+            })
+        println(managedObjectContext)
+        //get coredata item
+        //        var newItem = NSEntityDescription.insertNe wObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+        //        newItem.count = 50
+        //        newItem.guid = "aaaaAaaaa"
+        //
+        
+        // Create a new fetch request using the LogItem entity
+        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        
+                //end firebase calls//
+        
+        var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
+        // Attach a closure to read the data at our posts reference
+        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+                //        println(snapshot.value)
+                
+                var itr = snapshot.children
+                while let rest = itr.nextObject() as? FDataSnapshot {
+                //                    println(rest.value)
+                var itr2 = rest.children
+                while let rest2 = itr2.nextObject() as? FDataSnapshot{
+            //                    println(rest2.value)
+            
+            
+            var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+            println(stepsChild.value)
+            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+            //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
+            newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+            
+            //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
+            newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+            newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
+            newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
+//            println(newItem.count)
+            if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+              NSLog("CoreData: %@",fetchResults[0].count)
+            }
+            
+                }
+                }
+                
+                
+                //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
+                //                cell.textLabel2?.text = valueStr
+                //                println(valueStr)
+                }, withCancelBlock: { error in
+                    println(error.description)
+                })
+        
+        
+        
+        
+        
     }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return 1
+                return 1
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 31
+                let date = NSDate()
+                //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
+                let days = cal.rangeOfUnit(.CalendarUnitDay,
+                inUnit: .CalendarUnitMonth,
+                forDate: date)
+                let todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+                
+                
+                
+                return todayDate
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
-        cell.backgroundColor = UIColor.blackColor()
-        //cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
-        cell.textLabel?.text = "\(indexPath.row)"
-        cell.imageView?.image = UIImage(named: "datebgwide")
-        return cell
+                let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
+                cell.backgroundColor = UIColor(patternImage: UIImage(named:"splash.png")!)
+                //cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
+                
+                //cell.textLabel?.text = "\(indexPath.row)"
+                //Do calculations for reverse calendar
+                let cellCount = collectionView.numberOfItemsInSection(0)
+                let cellDateNumber = abs(indexPath.row - cellCount)
+                cell.textLabel?.text = "\(cellDateNumber)"
+                if let fetchResults2 = self.managedObjectContext!.executeFetchRequest(fetchRequest2, error: nil) as? [StepEntry] {
+//                    NSLog("CoreData: %@",fetchResults[0].count)
+//                    cell.textLabel2?.text = fetchResults[0].count
+            }else{
+            cell.textLabel2?.text = "0"
+                    }
+            
+                
+                cell.imageView?.image = UIImage(named: "datebgwide")
+                return cell
     }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-
+    
+    
 }

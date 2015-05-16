@@ -16,6 +16,7 @@ class CollectionViewCell: UICollectionViewCell {
     }
     
     var textLabel: UILabel!
+    var textLabel2: UILabel!
     var imageView: UIImageView!
     
     override init(frame: CGRect) {
@@ -30,5 +31,12 @@ class CollectionViewCell: UICollectionViewCell {
         textLabel.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
         textLabel.textAlignment = .Center
         contentView.addSubview(textLabel)
+        
+        
+        let textFrame2 = CGRect(x: 0, y: 60, width: frame.size.width, height: frame.size.height/3)
+        textLabel2 = UILabel(frame: textFrame2)
+        textLabel2.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
+        textLabel2.textAlignment = .Center
+        contentView.addSubview(textLabel2)
     }
 }
