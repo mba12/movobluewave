@@ -1,4 +1,39 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model name="Test1.xcdatamodel" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
-    <elements/>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="7549" systemVersion="14D136" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="KnownWaves" representedClassName="KnownWaves" syncable="YES">
+        <attribute name="mac" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="queried" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="serial" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="PhotoStorage" representedClassName="PhotoStorage" syncable="YES">
+        <attribute name="date" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="photoblob" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="StepEntry" representedClassName="StepEntry" syncable="YES">
+        <attribute name="count" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="deviceid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="endtime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="guid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="ispushed" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="starttime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="syncid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="workout_type" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <entity name="SyncEntry" representedClassName="SyncEntry" syncable="YES">
+        <attribute name="endtime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="guid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="starttime" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="status" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="syncid" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="StepEntry" positionX="-63" positionY="-18" width="128" height="180"/>
+        <element name="SyncEntry" positionX="-54" positionY="63" width="128" height="135"/>
+        <element name="KnownWaves" positionX="-36" positionY="99" width="128" height="105"/>
+        <element name="PhotoStorage" positionX="-18" positionY="108" width="128" height="90"/>
+    </elements>
 </model>
