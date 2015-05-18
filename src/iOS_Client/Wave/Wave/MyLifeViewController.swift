@@ -17,6 +17,14 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     var userID = ""
     
+    
+    //singleton experiment. Can't resolve variable?
+    
+//    let UD = UserData.sharedInstance
+//    var aeiou = UD.getAValue
+    
+    
+    
     @IBOutlet weak var collectionViewHost: UIView!
     // Retreive the managedObjectContext from AppDelegate
     let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
@@ -87,7 +95,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //
         
         // Create a new fetch request using the LogItem entity
-        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        
         
                 //end firebase calls//
         
@@ -115,6 +123,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
             newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
 //            println(newItem.count)
+                    
+                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
             if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
               NSLog("CoreData: %@",fetchResults[0].count)
             }
@@ -163,10 +173,12 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 let cellCount = collectionView.numberOfItemsInSection(0)
                 let cellDateNumber = abs(indexPath.row - cellCount)
                 cell.textLabel?.text = "\(cellDateNumber)"
-                let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-                if let fetchResults2 = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-//                    NSLog("CoreData: %@",fetchResults[0].count)
-//                    cell.textLabel2?.text = fetchResults[0].count
+        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+       
+
+                    NSLog("CoreData: %@",fetchResults[0].count)
+                    cell.textLabel2?.text = fetchResults[0].count
                 } else {
                     cell.textLabel2?.text = "0"
                 }
