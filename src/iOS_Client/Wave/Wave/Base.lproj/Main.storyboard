@@ -105,7 +105,7 @@
         <!--My Life-->
         <scene sceneID="Qcv-eg-83d">
             <objects>
-                <viewController id="xPq-rx-jam" customClass="MyLifeViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="MyLifeViewController" id="xPq-rx-jam" customClass="MyLifeViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="5Bo-Nl-dbF"/>
                         <viewControllerLayoutGuide type="bottom" id="ePA-gs-kjE"/>
@@ -242,6 +242,10 @@
                             <constraint firstAttribute="centerY" secondItem="gq1-Hq-xO8" secondAttribute="centerY" constant="-36" id="iVx-8y-DtJ"/>
                         </constraints>
                     </view>
+                    <connections>
+                        <outlet property="emailText" destination="oWB-D2-Ncv" id="YWj-6L-zcf"/>
+                        <outlet property="passText" destination="gq1-Hq-xO8" id="NVT-v0-Fnr"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hcE-Ck-C3W" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -304,11 +308,12 @@
                             </textView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gQH-Aq-r7K">
                                 <rect key="frame" x="155" y="410" width="291" height="33"/>
-                                <state key="normal" title="LOG IN" backgroundImage="red_button">
+                                <state key="normal" title="REGISTER" backgroundImage="red_button">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
                                     <action selector="cancel:" destination="msH-tK-Ndd" eventType="touchUpInside" id="hBR-fQ-twT"/>
+                                    <action selector="register:" destination="msH-tK-Ndd" eventType="touchUpInside" id="fUC-hY-O1A"/>
                                 </connections>
                             </button>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Comf Pass" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="WYH-nb-GsG">
@@ -344,6 +349,13 @@
                             </mask>
                         </variation>
                     </view>
+                    <connections>
+                        <outlet property="Register" destination="gQH-Aq-r7K" id="vJc-aO-NcA"/>
+                        <outlet property="comfPassText" destination="WYH-nb-GsG" id="wxL-qa-Eps"/>
+                        <outlet property="emailText" destination="KAE-G1-guG" id="0Dd-dI-Ttd"/>
+                        <outlet property="passText" destination="kVp-8B-WB5" id="d1f-Mu-Bl9"/>
+                        <outlet property="usernameText" destination="M7k-u1-WUP" id="7jD-fP-iSU"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XXc-c6-i8I" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -352,7 +364,7 @@
         <!--Tab Bar Controller-->
         <scene sceneID="g9u-85-4eT">
             <objects>
-                <tabBarController id="EIb-5E-vMu" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="TabBarController" id="EIb-5E-vMu" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" id="3Po-VK-H6c"/>
                     <nil key="simulatedBottomBarMetrics"/>
                     <tabBar key="tabBar" contentMode="scaleToFill" id="Tgj-zE-kHf">
