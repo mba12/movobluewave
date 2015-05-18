@@ -54,7 +54,7 @@ class ViewController: UIViewController, waveControlAndSyncDelegate {
     func requestComplete(error: NSError!) {
         //do nothing yet
     }
-    @IBOutlet weak var scanStatusLabel: NSTextField!
+
     func receivedMessage(message: NSObject, id: NSString) {
         
         var data:NSData! = message as! NSData
