@@ -46,6 +46,13 @@ class LoginViewController: UIViewController{
                         self.presentViewController(alertController, animated: true, completion: nil)
                         
                     } else {
+                        UserData.getOrCreateUserData().setCurrentUID(String: authData.uid)
+                        UserData.getOrCreateUserData().setCurrentEmail(String: email)
+                        UserData.getOrCreateUserData().setCurrentPW(String: password)
+                        var stringRef = "https://ss-movo-wave-v2.firebaseio.com/users/"
+                        stringRef = stringRef + authData.uid
+                        
+                        UserData.getOrCreateUserData().setCurrentUserRef(String: stringRef)
                         NSLog("We logged in as %@: %@",email, authData.uid)
                         var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
                         

@@ -7,41 +7,6 @@
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
-        <!--Collection View Controller-->
-        <scene sceneID="7cx-ib-hdS">
-            <objects>
-                <collectionViewController id="Y4Z-7b-8Lx" sceneMemberID="viewController">
-                    <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" id="4fA-Sc-n1x">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="fPN-kg-yYv">
-                            <size key="itemSize" width="50" height="50"/>
-                            <size key="headerReferenceSize" width="0.0" height="0.0"/>
-                            <size key="footerReferenceSize" width="0.0" height="0.0"/>
-                            <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
-                        </collectionViewFlowLayout>
-                        <cells>
-                            <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="xmv-Wb-tKF">
-                                <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                <autoresizingMask key="autoresizingMask"/>
-                                <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center">
-                                    <rect key="frame" x="0.0" y="0.0" width="50" height="50"/>
-                                    <autoresizingMask key="autoresizingMask"/>
-                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                                </view>
-                            </collectionViewCell>
-                        </cells>
-                        <connections>
-                            <outlet property="dataSource" destination="Y4Z-7b-8Lx" id="w6g-dl-qJ0"/>
-                            <outlet property="delegate" destination="Y4Z-7b-8Lx" id="BfJ-8f-mi4"/>
-                        </connections>
-                    </collectionView>
-                    <navigationItem key="navigationItem" id="f8K-oa-OYp"/>
-                </collectionViewController>
-                <placeholder placeholderIdentifier="IBFirstResponder" id="ZSW-mh-vNm" userLabel="First Responder" sceneMemberID="firstResponder"/>
-            </objects>
-            <point key="canvasLocation" x="1844" y="-82"/>
-        </scene>
         <!--Stats-->
         <scene sceneID="PDe-tV-5Sh">
             <objects>
@@ -249,12 +214,12 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hcE-Ck-C3W" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="22" y="-1304"/>
+            <point key="canvasLocation" x="-2256" y="522"/>
         </scene>
         <!--Register-->
         <scene sceneID="zhv-tb-v2I">
             <objects>
-                <viewController title="Register" id="msH-tK-Ndd" customClass="RegisterViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Register" id="msH-tK-Ndd" customClass="RegisterViewController" customModule="Wave" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="f2L-17-6oA"/>
                         <viewControllerLayoutGuide type="bottom" id="cH4-Cq-DVd"/>
@@ -263,8 +228,9 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Email" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="KAE-G1-guG">
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="KAE-G1-guG">
                                 <rect key="frame" x="201" y="156" width="200" height="30"/>
+                                <accessibility key="accessibilityConfiguration" hint="Email" label="Email"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="200" id="T3u-p2-X7j"/>
                                 </constraints>
@@ -312,8 +278,7 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
-                                    <action selector="cancel:" destination="msH-tK-Ndd" eventType="touchUpInside" id="hBR-fQ-twT"/>
-                                    <action selector="register:" destination="msH-tK-Ndd" eventType="touchUpInside" id="fUC-hY-O1A"/>
+                                    <action selector="register:" destination="msH-tK-Ndd" eventType="touchUpInside" id="eLd-sr-38q"/>
                                 </connections>
                             </button>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" text="Comf Pass" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="WYH-nb-GsG">
@@ -350,7 +315,6 @@
                         </variation>
                     </view>
                     <connections>
-                        <outlet property="Register" destination="gQH-Aq-r7K" id="vJc-aO-NcA"/>
                         <outlet property="comfPassText" destination="WYH-nb-GsG" id="wxL-qa-Eps"/>
                         <outlet property="emailText" destination="KAE-G1-guG" id="0Dd-dI-Ttd"/>
                         <outlet property="passText" destination="kVp-8B-WB5" id="d1f-Mu-Bl9"/>
@@ -359,7 +323,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XXc-c6-i8I" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1880" y="80"/>
+            <point key="canvasLocation" x="-2028" y="1264"/>
         </scene>
         <!--Tab Bar Controller-->
         <scene sceneID="g9u-85-4eT">
@@ -472,7 +436,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iaF-2I-kZt" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-336" y="529"/>
+            <point key="canvasLocation" x="-374" y="529"/>
         </scene>
         <!--Landing Screen-->
         <scene sceneID="pgY-4R-55W">
@@ -509,7 +473,7 @@
                                 </state>
                                 <connections>
                                     <action selector="signup:" destination="0Lf-Ys-XJY" eventType="touchUpInside" id="h41-Mk-reH"/>
-                                    <segue destination="msH-tK-Ndd" kind="show" identifier="SIGN UP" id="SkA-EI-D8g"/>
+                                    <segue destination="msH-tK-Ndd" kind="show" id="tMX-ya-yzf"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4T5-4Z-8wZ">
@@ -541,7 +505,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dM2-BU-rG5" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1026" y="-617"/>
+            <point key="canvasLocation" x="-1498" y="517"/>
         </scene>
         <!--My Profile-->
         <scene sceneID="WyM-FR-SWQ">
@@ -723,7 +687,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="JNN-PS-yfR" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1248" y="707"/>
+            <point key="canvasLocation" x="-1174" y="1944"/>
         </scene>
         <!--Upload Data-->
         <scene sceneID="0Bz-MK-Y3y">
@@ -754,7 +718,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="8Eu-6K-bfe" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1189" y="1429"/>
+            <point key="canvasLocation" x="-547" y="1944"/>
         </scene>
         <!--Users-->
         <scene sceneID="vU4-Qd-B7g">
@@ -785,7 +749,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qYU-BA-djU" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-420" y="1382"/>
+            <point key="canvasLocation" x="80" y="1944"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="Yvk-Zt-Bfe">
@@ -858,6 +822,6 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="Ld4-Fc-WJ2"/>
+        <segue reference="5Rn-yN-IPh"/>
     </inferredMetricsTieBreakers>
 </document>

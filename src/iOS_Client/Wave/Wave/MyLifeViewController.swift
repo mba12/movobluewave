@@ -19,11 +19,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     
     //singleton experiment. Can't resolve variable?
-    
-    //    let UD = UserData.sharedInstance
-    //    var aeiou = UD.getAValue
-    
-    
+
     
     @IBOutlet weak var collectionViewHost: UIView!
     // Retreive the managedObjectContext from AppDelegate
@@ -63,30 +59,30 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //            snapshot in
         //            println("\(snapshot.key) -> \(snapshot.value)")
         //            })
-        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-        ref.authUser("philg@sensorstar.com", password: "t",
-            withCompletionBlock: { error, authData in
-                
-                if error != nil {
-                    // There was an error logging in to this account
-                    NSLog("Login failed")
-                } else {
-                    // We are now logged in
-                    NSLog("We logged in as philg: %@",authData.uid)
-                    self.userID = authData.uid
-                    
-                    //            var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
-                    //            // Attach a closure to read the data at our posts reference
-                    //            todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-                    //                println(snapshot.value)
-                    //            }, withCancelBlock: { error in
-                    //                println(error.description)
-                    //                })
-                    
-                    
-                    
-                }
-        })
+//        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+//        ref.authUser("philg@sensorstar.com", password: "t",
+//            withCompletionBlock: { error, authData in
+//                
+//                if error != nil {
+//                    // There was an error logging in to this account
+//                    NSLog("Login failed")
+//                } else {
+//                    // We are now logged in
+//                    NSLog("We logged in as philg: %@",authData.uid)
+//                    self.userID = authData.uid
+//                    
+//                    //            var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
+//                    //            // Attach a closure to read the data at our posts reference
+//                    //            todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+//                    //                println(snapshot.value)
+//                    //            }, withCancelBlock: { error in
+//                    //                println(error.description)
+//                    //                })
+//                    
+//                    
+//                    
+//                }
+//        })
         println(managedObjectContext)
         //get coredata item
         //        var newItem = NSEntityDescription.insertNe wObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
@@ -96,48 +92,103 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         // Create a new fetch request using the LogItem entity
         
-        
-        
-        var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
-        // Attach a closure to read the data at our posts reference
-        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-            //        println(snapshot.value)
-            
-            var itr = snapshot.children
-            while let rest = itr.nextObject() as? FDataSnapshot {
-                //                    println(rest.value)
-                var itr2 = rest.children
-                while let rest2 = itr2.nextObject() as? FDataSnapshot{
-                    //                    println(rest2.value)
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+            if(fbUserRef=="Error"){
+                
+            }else{
+                fbUserRef = fbUserRef + "/steps/2015/4/15"
+                var fb = Firebase(url:fbUserRef)
+                fb.observeEventType(.Value, withBlock: { snapshot in
+                    NSLog("FBRef %@",fbUserRef)
                     
                     
-                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
-                    println(stepsChild.value)
-                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-                    //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
-                    newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+                      var itr = snapshot.children
+                            while let rest = itr.nextObject() as? FDataSnapshot {
+                                //                    println(rest.value)
+                                var itr2 = rest.children
+                                while let rest2 = itr2.nextObject() as? FDataSnapshot{
+                                    //                    println(rest2.value)
+                                    
+                                    
+                                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+                                    println(stepsChild.value)
+                                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+                                    //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
+                                    newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+                                    
+                                    //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
+                                    newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+                                    newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
+                                    newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
+                                    //            println(newItem.count)
+                                    
+                                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+                                    if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+                                        //              NSLog("CoreData: %@",fetchResults[0].count)
+                                    }
+                                    
+                                }
+                            }
+                            
+                            
                     
-                    //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
-                    newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
-                    newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
-                    newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-                    //            println(newItem.count)
                     
-                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-                    if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-                        //              NSLog("CoreData: %@",fetchResults[0].count)
-                    }
                     
-                }
+                    }, withCancelBlock: { error in
+                        println(error.description)
+                })
+                
+                
             }
             
             
-            //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
-            //                cell.textLabel2?.text = valueStr
-            //                println(valueStr)
-            }, withCancelBlock: { error in
-                println(error.description)
-        })
+            
+        }else{
+            //firebase ref is null from coredata
+        }
+       
+        
+        //this is an example of pulling data from a single day
+//        var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
+//        // Attach a closure to read the data at our posts reference
+//        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+//            //        println(snapshot.value)
+//            
+//            var itr = snapshot.children
+//            while let rest = itr.nextObject() as? FDataSnapshot {
+//                //                    println(rest.value)
+//                var itr2 = rest.children
+//                while let rest2 = itr2.nextObject() as? FDataSnapshot{
+//                    //                    println(rest2.value)
+//                    
+//                    
+//                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+//                    println(stepsChild.value)
+//                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+//                    //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
+//                    newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+//                    
+//                    //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
+//                    newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+//                    newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
+//                    newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
+//                    //            println(newItem.count)
+//                    
+//                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+//                    if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+//                        //              NSLog("CoreData: %@",fetchResults[0].count)
+//                    }
+//                    
+//                }
+//            }
+//            
+//            
+//            //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
+//            //                cell.textLabel2?.text = valueStr
+//            //                println(valueStr)
+//            }, withCancelBlock: { error in
+//                println(error.description)
+//        })
         
         
         
@@ -172,50 +223,57 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
-//        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-//        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-//            
-//            
-//            //                    NSLog("CoreData: %@",fetchResults[0].count)
-//            //                    cell.textLabel2?.text = fetchResults[0].count
-//        } else {
-//            cell.textLabel2?.text = "0"
-//        }
-        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/"
-        urlString = urlString + String(cellDateNumber)
-        var todayFirebaseRef = Firebase(url:urlString)
-        // Attach a closure to read the data at our posts reference
-        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-            
-            let children = snapshot.hasChildren()
-            if(children){
-            var itr = snapshot.children
-            while let rest = itr.nextObject() as? FDataSnapshot {
-                //                    println(rest.value)
-                var itr2 = rest.children
-                while let rest2 = itr2.nextObject() as? FDataSnapshot{
-                    //                    println(rest2.value)
-                    
-                    
-                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
-                    println(stepsChild.value)
-               
-                    var todaysSteps = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
-                    cell.textLabel2?.text = todaysSteps
-                    
-                }
-            }
+        
+        //this block should pull data from coredata instead of doing live firebase calls
+        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+            if(fetchResults.count > 0){
+                            NSLog("Fetch Results length: %i result: %@", fetchResults.count, fetchResults)
+                                NSLog("CoreData: %@",fetchResults[0].count)
+                                cell.textLabel2?.text = fetchResults[0].count
             }else{
                 cell.textLabel2?.text = "0"
             }
-            
+        } else {
+            cell.textLabel2?.text = "0"
+        }
+        
+        //this will pull steps for a day in april and display them.
+//        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/"
+//        urlString = urlString + String(cellDateNumber)
+//        var todayFirebaseRef = Firebase(url:urlString)
+//        // Attach a closure to read the data at our posts reference
+//        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+//            
+//            let children = snapshot.hasChildren()
+//            if(children){
+//            var itr = snapshot.children
+//            while let rest = itr.nextObject() as? FDataSnapshot {
+//                //                    println(rest.value)
+//                var itr2 = rest.children
+//                while let rest2 = itr2.nextObject() as? FDataSnapshot{
+//                    //                    println(rest2.value)
+//                    
+//                    
+//                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+//                    println(stepsChild.value)
+//               
+//                    var todaysSteps = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+//                    cell.textLabel2?.text = todaysSteps
+//                    
+//                }
+//            }
+//            }else{
+//                cell.textLabel2?.text = "0"
+//            }
+        
             
             //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
             //                cell.textLabel2?.text = valueStr
             //                println(valueStr)
-            }, withCancelBlock: { error in
-                println(error.description)
-        })
+//            }, withCancelBlock: { error in
+//                println(error.description)
+//        })
 
 
                     

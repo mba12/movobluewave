@@ -23,7 +23,7 @@ class RegisterViewController: UIViewController{
     
     
     @IBAction func register(sender: UIButton){
-//        dismissViewControllerAnimated(true, completion: nil)
+        //        dismissViewControllerAnimated(true, completion: nil)
         let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
         //auth with email and pass that are in the input UI
         
@@ -43,42 +43,55 @@ class RegisterViewController: UIViewController{
         if(password == passComf){
             passComfCheck = true
         }
-//        ref.createUser(<#email: String!#>, password: <#String!#>, withCompletionBlock: <#((NSError!) -> Void)!##(NSError!) -> Void#>)
+        ref.createUser(email, password: password,
+            withValueCompletionBlock: { error, user in
+                
+                if (error != nil) {
+                    // There was an error creating the account
+                    // There was an error logging in to this account
+                    NSLog("User Creation failed")
+                    let alertController = UIAlertController(title: "Error", message:
+                        "Create failed, Please Try Again", preferredStyle: UIAlertControllerStyle.Alert)
+                    alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+                    
+                    self.presentViewController(alertController, animated: true, completion: nil)
+                    
+                } else {
+                    // We created a new user account
+                    
+                    ref.authUser(email, password: password,
+                        withCompletionBlock: { error, authData in
+                            
+                            if error != nil {
+                                // There was an error logging in to this account
+                                NSLog("Login failed")
+                                let alertController = UIAlertController(title: "Error", message:
+                                    "Login failed, Please Try Again", preferredStyle: UIAlertControllerStyle.Alert)
+                                alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+                                
+                                self.presentViewController(alertController, animated: true, completion: nil)
+                                
+                            } else {
+                                NSLog("We logged in as %@: %@",email, authData.uid)
+                                var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
+                                
+                                self.presentViewController(vc, animated: true, completion: nil)
+                                
+                                
+                            }
+                    })
+                }
+        })
         
-//        if(emailCheck && passCheck && passComfCheck){
-//            ref.createUser(email, password: password,
-//                withCompletionBlock: { error, authData in
-//                    
-//                    if error != nil {
-//                        // There was an error logging in to this account
-//                        NSLog("User Creation failed")
-//                        let alertController = UIAlertController(title: "Error", message:
-//                            "Create failed, Please Try Again", preferredStyle: UIAlertControllerStyle.Alert)
-//                        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
-//                        
-//                        self.presentViewController(alertController, animated: true, completion: nil)
-//                        
-//                    } else {
-//                        NSLog("We logged in as %@: %@",email, authData.uid)
-//                        var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
-//                        
-//                        self.presentViewController(vc, animated: true, completion: nil)
-//                        
-//                        
-//                    }
-//            })
         
-            
-            
-//        }
-        
-        
-        
-//    }
-
         
         
     }
+    
+    
+    
+    
+    
     
     
     

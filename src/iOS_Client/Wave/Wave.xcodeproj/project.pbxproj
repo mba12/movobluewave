@@ -28,6 +28,7 @@
 		4A2701D41B063CFB00848DCB /* PhotoStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701D31B063CFB00848DCB /* PhotoStorage.swift */; };
 		4A2701D61B063CFB00848DCB /* StepEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701D51B063CFB00848DCB /* StepEntry.swift */; };
 		4AAD687B1B09696600A6A761 /* UserData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAD687A1B09696600A6A761 /* UserData.swift */; };
+		4AAD68881B0A81CC00A6A761 /* UserEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAD68871B0A81CC00A6A761 /* UserEntry.swift */; };
 		4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CD1AD173900055C771 /* AppDelegate.swift */; };
 		4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */; };
 		4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D21AD173900055C771 /* ViewController.swift */; };
@@ -80,6 +81,7 @@
 		4A2701D31B063CFB00848DCB /* PhotoStorage.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoStorage.swift; sourceTree = "<group>"; };
 		4A2701D51B063CFB00848DCB /* StepEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StepEntry.swift; path = Wave/StepEntry.swift; sourceTree = SOURCE_ROOT; };
 		4AAD687A1B09696600A6A761 /* UserData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserData.swift; sourceTree = "<group>"; };
+		4AAD68871B0A81CC00A6A761 /* UserEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserEntry.swift; sourceTree = "<group>"; };
 		4AEEA9C81AD173900055C771 /* Wave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9CC1AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9CD1AD173900055C771 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -180,6 +182,7 @@
 				4A2701A71B01045000848DCB /* CollectionViewCell.swift */,
 				4A2701AE1B02372C00848DCB /* Wave-Bridging-Header.h */,
 				4AAD687A1B09696600A6A761 /* UserData.swift */,
+				4AAD68871B0A81CC00A6A761 /* UserEntry.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -337,6 +340,7 @@
 				4A2701A61B00E68900848DCB /* MyLifeViewController.swift in Sources */,
 				4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */,
 				4A2701D21B063CFB00848DCB /* KnownWaves.swift in Sources */,
+				4AAD68881B0A81CC00A6A761 /* UserEntry.swift in Sources */,
 				4A2701D01B063CFA00848DCB /* SyncEntry.swift in Sources */,
 				4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */,
 				4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */,
