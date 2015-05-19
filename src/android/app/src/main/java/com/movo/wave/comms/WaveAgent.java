@@ -477,12 +477,14 @@ public class WaveAgent {
             cal.set( Calendar.SECOND, 0 );
             cal.set( Calendar.MILLISECOND, 0 );
 
+            cal.add( Calendar.DATE, -1 );
+
             for( int day = 0; day < 7; day += 2 ) {
                 dataTotal += 1;
                 BLEAgent.handle(new WaveRequest.ReadData(device, timeout,
                         cal.get( Calendar.YEAR ),
                         cal.get( Calendar.MONTH),
-                        day + 1) {
+                        cal.get( Calendar.DATE )) {
                     @Override
                     protected void onComplete(boolean success,
                                               WaveRequest.WaveDataPoint[] data) {
