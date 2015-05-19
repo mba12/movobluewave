@@ -743,16 +743,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FXh-uf-pDg">
-                                <rect key="frame" x="270" y="491" width="61" height="30"/>
-                                <state key="normal" title="CANCEL">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <action selector="cancel:" destination="ris-T2-JXb" eventType="touchUpInside" id="AZb-z1-nz7"/>
-                                    <action selector="cancel:" destination="ISY-vb-BJr" eventType="touchUpInside" id="kT0-cL-vxG"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="A2L-qU-Z4V">
                                 <rect key="frame" x="509" y="28" width="75" height="30"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
@@ -768,7 +758,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6eu-sI-vdx">
-                                <rect key="frame" x="16" y="43" width="473" height="0.0"/>
+                                <rect key="frame" x="16" y="118" width="0.0" height="0.0"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -787,22 +777,35 @@
                                     <action selector="syncButtonPress:" destination="ISY-vb-BJr" eventType="touchUpInside" id="coZ-qa-G5D"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FXh-uf-pDg">
+                                <rect key="frame" x="523" y="513" width="61" height="30"/>
+                                <state key="normal" title="CANCEL">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="cancel:" destination="ris-T2-JXb" eventType="touchUpInside" id="AZb-z1-nz7"/>
+                                    <action selector="cancel:" destination="ISY-vb-BJr" eventType="touchUpInside" id="kT0-cL-vxG"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="A2L-qU-Z4V" firstAttribute="leading" secondItem="6eu-sI-vdx" secondAttribute="trailing" constant="20" id="1we-nA-cbJ"/>
+                            <constraint firstItem="FXh-uf-pDg" firstAttribute="trailing" secondItem="opM-Jy-1Mp" secondAttribute="trailingMargin" id="5CS-kN-B47"/>
                             <constraint firstItem="axX-22-HS2" firstAttribute="top" secondItem="A2L-qU-Z4V" secondAttribute="bottom" constant="8" id="QjO-YX-aaD"/>
                             <constraint firstItem="6eu-sI-vdx" firstAttribute="leading" secondItem="opM-Jy-1Mp" secondAttribute="leadingMargin" id="X0M-Y7-fDc"/>
                             <constraint firstItem="A2L-qU-Z4V" firstAttribute="trailing" secondItem="opM-Jy-1Mp" secondAttribute="trailingMargin" id="aWk-bK-95b"/>
                             <constraint firstItem="A2L-qU-Z4V" firstAttribute="top" secondItem="dZP-zl-6JO" secondAttribute="bottom" constant="8" id="hhc-tz-WGc"/>
                             <constraint firstItem="axX-22-HS2" firstAttribute="width" secondItem="A2L-qU-Z4V" secondAttribute="width" id="lgf-Qf-JW4"/>
-                            <constraint firstItem="6eu-sI-vdx" firstAttribute="centerY" secondItem="A2L-qU-Z4V" secondAttribute="centerY" id="qyB-mj-ya7"/>
+                            <constraint firstItem="YHf-Fo-H1x" firstAttribute="top" secondItem="FXh-uf-pDg" secondAttribute="bottom" constant="8" id="qMp-ad-87Q"/>
+                            <constraint firstItem="6eu-sI-vdx" firstAttribute="centerY" secondItem="A2L-qU-Z4V" secondAttribute="centerY" constant="75" id="qyB-mj-ya7"/>
                             <constraint firstItem="axX-22-HS2" firstAttribute="trailing" secondItem="opM-Jy-1Mp" secondAttribute="trailingMargin" id="rcp-8X-Uxl"/>
                             <constraint firstItem="6eu-sI-vdx" firstAttribute="centerY" secondItem="A2L-qU-Z4V" secondAttribute="centerY" constant="-12.5" id="wWN-Aj-B8f"/>
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
                                 <exclude reference="wWN-Aj-B8f"/>
+                                <exclude reference="1we-nA-cbJ"/>
                             </mask>
                         </variation>
                     </view>
