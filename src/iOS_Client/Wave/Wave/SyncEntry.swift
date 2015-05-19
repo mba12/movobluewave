@@ -11,8 +11,8 @@ import CoreData
 class SyncEntry: NSManagedObject {
 
     @NSManaged var syncid: String
-    @NSManaged var starttime: String
-    @NSManaged var endtime: String
+    @NSManaged var starttime: NSDate
+    @NSManaged var endtime: NSDate
     @NSManaged var user: String
     @NSManaged var status: String
     @NSManaged var guid: String
