@@ -39,7 +39,7 @@
 		02E570A71AE55DAA00BCCB32 /* bluetoothiOSTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bluetoothiOSTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		02E570AC1AE55DAA00BCCB32 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		02E570AD1AE55DAA00BCCB32 /* bluetoothiOSTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bluetoothiOSTestTests.swift; sourceTree = "<group>"; };
-		02E570C01AE55DC600BCCB32 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = waveControlAndSync.swift; sourceTree = "<group>"; };
+		02E570C01AE55DC600BCCB32 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -419,6 +419,7 @@
 				02E570B31AE55DAA00BCCB32 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		02E570B41AE55DAA00BCCB32 /* Build configuration list for PBXNativeTarget "bluetoothiOSTestTests" */ = {
 			isa = XCConfigurationList;
@@ -427,6 +428,7 @@
 				02E570B61AE55DAA00BCCB32 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

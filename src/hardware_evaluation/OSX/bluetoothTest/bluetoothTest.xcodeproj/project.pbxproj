@@ -23,6 +23,34 @@
 			remoteGlobalIDString = 0204259C1AC1E91A00272B95;
 			remoteInfo = bluetoothTest;
 		};
+		020942B31B01069200691C1F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0209428A1B01069100691C1F;
+			remoteInfo = bluetoothSyncTest;
+		};
+		020942B51B01069200691C1F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0209429C1B01069100691C1F;
+			remoteInfo = bluetoothSyncTestTests;
+		};
+		0212A8121B0A8E4C00FFBC2F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0212A7E11B0A8E4B00FFBC2F;
+			remoteInfo = waveSynciOSTest;
+		};
+		0212A8141B0A8E4C00FFBC2F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 0212A7F91B0A8E4B00FFBC2F;
+			remoteInfo = waveSynciOSTestTests;
+		};
 		02E570BC1AE55DAE00BCCB32 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */;
@@ -49,8 +77,10 @@
 		020425AF1AC1E91A00272B95 /* bluetoothTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bluetoothTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		020425B41AC1E91A00272B95 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		020425B51AC1E91A00272B95 /* bluetoothTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bluetoothTestTests.swift; sourceTree = "<group>"; };
+		020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = bluetoothSyncTest.xcodeproj; path = bluetoothSyncTest/bluetoothSyncTest.xcodeproj; sourceTree = "<group>"; };
+		0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = waveSynciOSTest.xcodeproj; path = waveSynciOSTest/waveSynciOSTest.xcodeproj; sourceTree = "<group>"; };
 		02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = bluetoothiOSTest.xcodeproj; path = bluetoothiOSTest/bluetoothiOSTest.xcodeproj; sourceTree = "<group>"; };
-		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = waveControlAndSync.swift; sourceTree = "<group>"; };
+		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -74,6 +104,8 @@
 		020425941AC1E91A00272B95 = {
 			isa = PBXGroup;
 			children = (
+				0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */,
+				020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */,
 				02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */,
 				0204259F1AC1E91A00272B95 /* bluetoothTest */,
 				020425B21AC1E91A00272B95 /* bluetoothTestTests */,
@@ -126,6 +158,24 @@
 				020425B41AC1E91A00272B95 /* Info.plist */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		020942AD1B01069100691C1F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				020942B41B01069200691C1F /* bluetoothSyncTest.app */,
+				020942B61B01069200691C1F /* bluetoothSyncTestTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0212A80A1B0A8E4B00FFBC2F /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0212A8131B0A8E4C00FFBC2F /* waveSynciOSTest.app */,
+				0212A8151B0A8E4C00FFBC2F /* waveSynciOSTestTests.xctest */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		02E570B81AE55DAA00BCCB32 /* Products */ = {
@@ -209,6 +259,14 @@
 					ProductGroup = 02E570B81AE55DAA00BCCB32 /* Products */;
 					ProjectRef = 02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */;
 				},
+				{
+					ProductGroup = 020942AD1B01069100691C1F /* Products */;
+					ProjectRef = 020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */;
+				},
+				{
+					ProductGroup = 0212A80A1B0A8E4B00FFBC2F /* Products */;
+					ProjectRef = 0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
@@ -219,6 +277,34 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		020942B41B01069200691C1F /* bluetoothSyncTest.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = bluetoothSyncTest.app;
+			remoteRef = 020942B31B01069200691C1F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		020942B61B01069200691C1F /* bluetoothSyncTestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = bluetoothSyncTestTests.xctest;
+			remoteRef = 020942B51B01069200691C1F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0212A8131B0A8E4C00FFBC2F /* waveSynciOSTest.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = waveSynciOSTest.app;
+			remoteRef = 0212A8121B0A8E4C00FFBC2F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0212A8151B0A8E4C00FFBC2F /* waveSynciOSTestTests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = waveSynciOSTestTests.xctest;
+			remoteRef = 0212A8141B0A8E4C00FFBC2F /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		02E570BD1AE55DAE00BCCB32 /* bluetoothiOSTest.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
