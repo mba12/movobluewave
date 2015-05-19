@@ -411,12 +411,20 @@ class waveSyncOperation : NSOperation {
                         syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
                         syncManager.reportedTimeDelta(delta)
                         
-                        
-                        self.status = WaveSyncStatus.SettingDate
-                        syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
-                        
-                        var currentTime : WaveYMDHMSDOW = nSDateToWaveYMDHMSDOWGMT(NSDate())
-                        syncManager.waveController?.setTime(id: deviceId, Year: currentTime.Year, Month: currentTime.Month, Day: currentTime.Day, Hours: currentTime.Hours, Minutes: currentTime.Minutes, Seconds: currentTime.Seconds, DOW: currentTime.DOW)
+                        println("Time delta: " + delta.description)
+                        if (delta > 30*60) {
+                            //if delta is greater than 30 minutes
+                            self.status = WaveSyncStatus.SettingDate
+                            syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
+                            
+                            var currentTime : WaveYMDHMSDOW = nSDateToWaveYMDHMSDOWGMT(NSDate())
+                            syncManager.waveController?.setTime(id: deviceId, Year: currentTime.Year, Month: currentTime.Month, Day: currentTime.Day, Hours: currentTime.Hours, Minutes: currentTime.Minutes, Seconds: currentTime.Seconds, DOW: currentTime.DOW)
+                        } else {
+                            self.status = WaveSyncStatus.DownloadingData
+                            syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 0.0)
+                            syncDay = 0; //start 7 days back and roll to present
+                            requestDataForDay(syncDay)
+                        }
 
                     } else {
                         self.status = WaveSyncStatus.Fail

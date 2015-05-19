@@ -3,7 +3,6 @@
 //  Wave
 //
 //  Created by Phil Gandy on 4/1/15.
-//  Copyright (c) 2015 Phil Gandy. All rights reserved.
 //
 
 import UIKit
