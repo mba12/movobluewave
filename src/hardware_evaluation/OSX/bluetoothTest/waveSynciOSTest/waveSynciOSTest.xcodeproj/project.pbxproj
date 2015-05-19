@@ -39,7 +39,7 @@
 		0212A7F91B0A8E4B00FFBC2F /* waveSynciOSTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = waveSynciOSTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0212A7FE1B0A8E4B00FFBC2F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0212A7FF1B0A8E4B00FFBC2F /* waveSynciOSTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = waveSynciOSTestTests.swift; sourceTree = "<group>"; };
-		0212A8161B0A941C00FFBC2F /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
+		0212A8161B0A941C00FFBC2F /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -421,6 +421,7 @@
 				0212A8051B0A8E4B00FFBC2F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		0212A8061B0A8E4B00FFBC2F /* Build configuration list for PBXNativeTarget "waveSynciOSTestTests" */ = {
 			isa = XCConfigurationList;
@@ -429,6 +430,7 @@
 				0212A8081B0A8E4B00FFBC2F /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 

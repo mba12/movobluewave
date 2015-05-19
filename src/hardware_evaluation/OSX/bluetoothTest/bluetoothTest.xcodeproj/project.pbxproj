@@ -80,7 +80,7 @@
 		020942AC1B01069100691C1F /* bluetoothSyncTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = bluetoothSyncTest.xcodeproj; path = bluetoothSyncTest/bluetoothSyncTest.xcodeproj; sourceTree = "<group>"; };
 		0212A8091B0A8E4B00FFBC2F /* waveSynciOSTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = waveSynciOSTest.xcodeproj; path = waveSynciOSTest/waveSynciOSTest.xcodeproj; sourceTree = "<group>"; };
 		02E570B71AE55DAA00BCCB32 /* bluetoothiOSTest.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = bluetoothiOSTest.xcodeproj; path = bluetoothiOSTest/bluetoothiOSTest.xcodeproj; sourceTree = "<group>"; };
-		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = waveControlAndSync/waveControlAndSync.swift; sourceTree = SOURCE_ROOT; };
+		02EF55571AD2D36C00440C41 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

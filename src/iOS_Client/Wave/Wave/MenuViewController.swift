@@ -3,7 +3,6 @@
 //  Wave
 //
 //  Created by Phil Gandy on 5/8/15.
-//  Copyright (c) 2015 Phil Gandy. All rights reserved.
 //
 
 import Foundation
@@ -57,7 +56,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         
-        if (menu[row] != "Upload Data" && menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
+        if (menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
             performSegueWithIdentifier(menu[row], sender:self)
         }
         

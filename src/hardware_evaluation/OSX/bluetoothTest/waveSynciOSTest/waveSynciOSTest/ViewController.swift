@@ -62,10 +62,12 @@ class waveSynciOSTestVC: UIViewController, waveSyncManagerDelegate {
     @IBOutlet weak var deviceStatus: UITextField!
     //returns updates indicating the listed device is ready - or not ready (i.e. disconnected)
     func deviceReady(id: NSString, serial: Array<UInt8>?, ready: Bool) {
-        println("Device Ready" + (id as String))
-        dispatch_sync(dispatch_get_main_queue(), {
-            self.deviceStatus.text = "Device Ready: "+(id as String)
-        })
+        if (ready) {
+            println("Device Ready " + (id as String))
+            dispatch_sync(dispatch_get_main_queue(), {
+                self.deviceStatus.text = "Device Ready: "+(id as String)
+            })
+        }
     }
     
     @IBOutlet weak var scanButton: UIButton!
