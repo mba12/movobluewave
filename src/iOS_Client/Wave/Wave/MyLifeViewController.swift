@@ -59,7 +59,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             if(fbUserRef=="Error"){
                 NSLog("No user logged in, logging in as philg@sensorstar.com")
                 let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-                ref.authUser("philg@sensorstar.com", password: "t",
+                ref.authUser("0@0.com", password: "0",
                     withCompletionBlock: { error, authData in
                         
                         if error != nil {
@@ -72,7 +72,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                             var ref = "https://ss-movo-wave-v2.firebaseio.com"
                             ref = ref + "/users/"
                             ref = ref + authData.uid
-                            UserData.getOrCreateUserData().createUser(String: authData.uid, String: "philg@sensorstar.com", String: "t", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
+                            UserData.getOrCreateUserData().createUser(String: authData.uid, String: "0@0.com", String: "0", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
                             
                             self.retrieveData()
                             
@@ -238,26 +238,36 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         iso8601String = iso8601String + month
         iso8601String = iso8601String + "-"
 
-        var isoStartString = iso8601String + String(cellCount)
+        var isoStartString = iso8601String + String(cellDateNumber)
         isoStartString = isoStartString + "T"
         isoStartString = isoStartString + "00:00:00Z"
-        var isoStopString = iso8601String + String(cellCount)
+        var isoStopString = iso8601String + String(cellDateNumber)
         isoStopString = isoStopString + "T"
         isoStopString = isoStopString + "23:59:59Z"
         
         var dateStart = createDateFromString(String: isoStartString)
         var dateStop = createDateFromString(String: isoStopString)
         
-        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime", dateStart, dateStop)
+        if(cellDateNumber==17){
+        println("what")
+        }
         
-        
-//        let predicate = NSPredicate(format: "date BETWEEN %@",)
+        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime", dateStop, dateStart)
+
         let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        fetchRequest.predicate = predicate
         if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+            
+            var totalStepsForToday = 0
             if(fetchResults.count > 0){
-                NSLog("Fetch Results length: %i result: %@", fetchResults.count, fetchResults)
-                //                                NSLog("CoreData: %@",fetchResults[0].count)
-                var countString = String(fetchResults[0].count)
+                println("Count %i",fetchResults.count)
+                var resultsCount = fetchResults.count
+                for(var i=0;i<(resultsCount-1);i++){
+                    println("Adding steps up for today %i",Int(fetchResults[i].count))
+                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
+                }
+                
+                var countString = String(totalStepsForToday)
                 cell.textLabel2?.text = countString
             }else{
                 cell.textLabel2?.text = "0"
@@ -314,7 +324,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     func createDateFromString(String isoString:String) -> NSDate{
         let form = NSDateFormatter()
         form.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
-        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+//        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         form.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         form.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         
