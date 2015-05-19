@@ -110,6 +110,7 @@ public class WaveScanActivity extends MenuActivity {
             do {
                 // ignore cursorily non-wave devices
                 if (!"Wave".equals(device.device.getName())) {
+                    lazyLog.e( "IGNORING", device.device.getAddress(), device.device.getName() );
                     break;
                 }
 

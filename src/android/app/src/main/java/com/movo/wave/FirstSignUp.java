@@ -69,7 +69,7 @@ public class FirstSignUp extends Activity {
     boolean is13;
     Context c;
 //    CheckBox age;
-    String TAG = "Movo.FirstLogin";
+    String TAG = "Movo.FirstSignup";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

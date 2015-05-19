@@ -147,7 +147,7 @@ public class SyncDataActivity extends MenuActivity {
             lazyLog.w("Time delta ", timeDelta, " exceeds ", MAX_TIME_DELTA, " Ignoring data!");
         } else if (data != null) {
 
-            final int result = insertPoints(db, syncUniqueID, currentUserId, data, sync.device.device.getAddress());
+            final int result = insertPoints(db, syncUniqueID, currentUserId, data, sync.info.serial );
 
             lazyLog.d("Database insertion status: " + result);
 
@@ -247,7 +247,8 @@ public class SyncDataActivity extends MenuActivity {
                         oldDate = date;
                         Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0)); //to modify child node
                         refStep2.setValue(minuteMap);
-
+                        Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                        refSyncSteps.setValue(minuteMap);
 
                         minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
                         Map<String, String> stepData = new HashMap<String, String>();
@@ -315,6 +316,9 @@ public class SyncDataActivity extends MenuActivity {
 
                 Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                 refStep2.setValue(minuteMap);
+                Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                refSyncSteps.setValue(minuteMap);
+
 //                    refStep.setValue(list);
             } catch (Exception e) {
                 e.printStackTrace();

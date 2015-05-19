@@ -412,7 +412,7 @@ class waveSyncOperation : NSOperation {
                         syncManager.reportedTimeDelta(delta)
                         
                         println("Time delta: " + delta.description)
-                        if (delta > 30*60) {
+                        if (abs(delta) > 30*60) {
                             //if delta is greater than 30 minutes
                             self.status = WaveSyncStatus.SettingDate
                             syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
@@ -823,8 +823,8 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                         //it is unclear how the firmware operates: we know 0xFF in MSB
                         //indicates no data for that byte, but we don't know if 0xFF in 
                         //LSB also indicates no data
-                        var low = (chartData[i+1] != 0xFF) ? Int(chartData[i+1]):0
-                        var high = (chartData[i] != 0xFF) ? Int(chartData[i]):0
+                        var low = (chartData[i] != 0xFF) ? Int(chartData[i]):0
+                        var high = (chartData[i+1] != 0xFF) ? Int(chartData[i+1]):0
                         var count = low | (high<<8)
                         if (count > 0) {
                             chartArray.append(WaveStep(start: startTime, end: endTime, steps: count))
