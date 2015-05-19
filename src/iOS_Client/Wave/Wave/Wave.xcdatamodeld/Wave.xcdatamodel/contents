@@ -34,24 +34,25 @@
         <attribute name="syncid" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
-    <entity name="UserEntry" syncable="YES">
+    <entity name="UserEntry" representedClassName="Wave.UserEntry" syncable="YES">
         <attribute name="birthdate" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="email" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="fullname" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="gender" optional="YES" attributeType="String" syncable="YES"/>
-        <attribute name="height1" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
-        <attribute name="height2" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="heightfeet" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <attribute name="heightinches" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="id" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="pw" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="reference" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="username" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="weight" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
     </entity>
     <elements>
+        <element name="CurrentUser" positionX="-27" positionY="81" width="128" height="75"/>
         <element name="KnownWaves" positionX="-36" positionY="99" width="128" height="105"/>
         <element name="PhotoStorage" positionX="-18" positionY="108" width="128" height="90"/>
         <element name="StepEntry" positionX="-63" positionY="-18" width="128" height="180"/>
         <element name="SyncEntry" positionX="-54" positionY="63" width="128" height="135"/>
-        <element name="UserEntry" positionX="-36" positionY="72" width="128" height="195"/>
-        <element name="CurrentUser" positionX="-27" positionY="81" width="128" height="75"/>
+        <element name="UserEntry" positionX="-36" positionY="72" width="128" height="210"/>
     </elements>
 </model>

@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import UIKit
 
 private var _UserData:UserData? = nil
 
@@ -16,9 +17,9 @@ class UserData {
     var currentUID:String? = nil
     var currentEmail:String? = nil
     var currentPW:String? = nil
-    var currentBirthDate:String? = nil
-    var currentHeight1:Int? = nil
-    var currentHeight2:Int? = nil
+    var currentBirthDate:NSDate? = nil
+    var currentHeightFeet:Int? = nil
+    var currentHeightInches:Int? = nil
     var currentWeight:Int? = nil
     var currentGender:String? = nil
     var currentFullName:String? = nil
@@ -31,9 +32,9 @@ class UserData {
         currentUID = "Error"
         currentEmail = "Error"
         currentPW = "Error"
-        currentBirthDate = "Error"
-        currentHeight1 = 0
-        currentHeight2 = 0
+        currentBirthDate = nil
+        currentHeightFeet = 0
+        currentHeightInches = 0
         currentWeight = 0
         currentGender = "Error"
         currentFullName = "Error"
@@ -60,13 +61,44 @@ class UserData {
     }
     
     
+    func createUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let managedContext = appDelegate.managedObjectContext
+        var newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! UserEntry
+        
+        newItem.id = uid
+        newItem.email = email
+        newItem.pw = pw
+        newItem.birthdate = birth
+        newItem.heightfeet = Int16(height1)
+        newItem.heightinches = Int16(height2)
+        newItem.weight = Int16(weight)
+        newItem.gender = gender
+        newItem.fullname = fullName
+        newItem.username = user
+        newItem.reference = ref
+
+        setCurrentUID(String: uid)
+        setCurrentEmail(String: email)
+        setCurrentPW(String: pw)
+        setCurrentBirthdate(NSDate: birth)
+        setCurrentHeightFeet(Int: height1)
+        setCurrentHeightInches(Int: height2)
+        setCurrentWeight(Int: weight)
+        setCurrentGender(String: gender)
+        setCurrentName(String: fullName)
+        setCurrentUsername(String: user)
+        setCurrentUserRef(String: ref)
+        
+        
+        
+    }
+    
     func getCurrentUID() -> String{
         return currentUID!
     }
     func setCurrentUID(String newUID:String){
-//        var newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: self.managedObjectContext!) as! UserEntry
-//        //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
-//        newItem.id = newUID
+        
         currentUID = newUID
     }
     
@@ -83,23 +115,23 @@ class UserData {
         currentPW = newPW
     }
     //date object
-//    func getCurrentBirthdate() -> String{
-//        return currentUID!
-//    }
-//    func setCurrentBirthdate(String newUID:String){
-//        currentUID = newUID
-//    }
-    func getCurrentHeight1() -> Int{
-        return currentHeight1!
+    func getCurrentBirthdate() -> NSDate{
+        return currentBirthDate!
     }
-    func setCurrentHeight1(Int newHeight:Int){
-        currentHeight1 = newHeight
+    func setCurrentBirthdate(NSDate newDate:NSDate){
+        currentBirthDate = newDate
     }
-    func getCurrentHeight2() -> Int{
-        return currentHeight1!
+    func getCurrentHeightFeet() -> Int{
+        return currentHeightFeet!
     }
-    func setCurrentHeight2(Int newHeight:Int){
-        currentHeight1 = newHeight
+    func setCurrentHeightFeet(Int newHeight:Int){
+        currentHeightFeet = newHeight
+    }
+    func getCurrentHeightInches() -> Int{
+        return currentHeightInches!
+    }
+    func setCurrentHeightInches(Int newHeight:Int){
+        currentHeightInches = newHeight
     }
     func getCurrentWeight() -> Int{
         return currentWeight!

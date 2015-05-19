@@ -15,19 +15,21 @@ import CoreData
 
 class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
-    var userID = ""
+//    var userID = ""
     
     
     //singleton experiment. Can't resolve variable?
 
     
     @IBOutlet weak var collectionViewHost: UIView!
+    
+    @IBOutlet weak var collectionView: UICollectionView!
     // Retreive the managedObjectContext from AppDelegate
     let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
     
     
+ 
     
-    @IBOutlet weak var collectionView: UICollectionView!
     override func viewDidLoad() {
         super.viewDidLoad()
         let date = NSDate()
@@ -41,157 +43,101 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let todayYear = cal.component(.CalendarUnitYear , fromDate: date)
         
         
-        collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
-        collectionView!.backgroundColor = UIColor.clearColor()
-        collectionViewHost.backgroundColor = UIColor.clearColor()
-        
-        //Firebase calls
-        
-        //        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/"
-        //        urlString += String(todayYear) + "/"
-        //        urlString += String(todayMonth) + "/"
-        //        //urlString += String(todayDate)
-        //        urlString += "12"
-        //        NSLog("%@",urlString)
-        //        var myRootRef = Firebase(url:urlString )
-        //        // Read data and react to changes
-        //        myRootRef.observeEventType(.Value, withBlock: {
-        //            snapshot in
-        //            println("\(snapshot.key) -> \(snapshot.value)")
-        //            })
-//        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-//        ref.authUser("philg@sensorstar.com", password: "t",
-//            withCompletionBlock: { error, authData in
-//                
-//                if error != nil {
-//                    // There was an error logging in to this account
-//                    NSLog("Login failed")
-//                } else {
-//                    // We are now logged in
-//                    NSLog("We logged in as philg: %@",authData.uid)
-//                    self.userID = authData.uid
-//                    
-//                    //            var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
-//                    //            // Attach a closure to read the data at our posts reference
-//                    //            todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-//                    //                println(snapshot.value)
-//                    //            }, withCancelBlock: { error in
-//                    //                println(error.description)
-//                    //                })
-//                    
-//                    
-//                    
-//                }
-//        })
+        self.collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        self.collectionView!.backgroundColor = UIColor.clearColor()
+        self.collectionViewHost.backgroundColor = UIColor.clearColor()
+
         println(managedObjectContext)
-        //get coredata item
-        //        var newItem = NSEntityDescription.insertNe wObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-        //        newItem.count = 50
-        //        newItem.guid = "aaaaAaaaa"
-        //
         
         // Create a new fetch request using the LogItem entity
-        
         if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+
             if(fbUserRef=="Error"){
-                
-            }else{
-                fbUserRef = fbUserRef + "/steps/2015/4/15"
-                var fb = Firebase(url:fbUserRef)
-                fb.observeEventType(.Value, withBlock: { snapshot in
-                    NSLog("FBRef %@",fbUserRef)
-                    
-                    
-                      var itr = snapshot.children
-                            while let rest = itr.nextObject() as? FDataSnapshot {
-                                //                    println(rest.value)
-                                var itr2 = rest.children
-                                while let rest2 = itr2.nextObject() as? FDataSnapshot{
-                                    //                    println(rest2.value)
-                                    
-                                    
-                                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
-                                    println(stepsChild.value)
-                                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-                                    //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
-                                    newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
-                                    
-                                    //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
-                                    newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
-                                    newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
-                                    newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-                                    //            println(newItem.count)
-                                    
-                                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-                                    if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-                                        //              NSLog("CoreData: %@",fetchResults[0].count)
-                                    }
-                                    
-                                }
-                            }
+                NSLog("No user logged in, logging in as philg@sensorstar.com")
+                let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+                ref.authUser("philg@sensorstar.com", password: "t",
+                    withCompletionBlock: { error, authData in
+                        
+                        if error != nil {
+                            // There was an error logging in to this account
+                            NSLog("Login failed")
+                        } else {
+                            // We are now logged in
+                            NSLog("We logged in as philg: %@",authData.uid)
+                            //                                    self.userID = authData.uid
+                            var ref = "https://ss-movo-wave-v2.firebaseio.com"
+                            ref = ref + "/users/"
+                            ref = ref + authData.uid
+                            UserData.getOrCreateUserData().createUser(String: authData.uid, String: "philg@sensorstar.com", String: "t", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
+                            
+                            self.retrieveData()
                             
                             
-                    
-                    
-                    
-                    }, withCancelBlock: { error in
-                        println(error.description)
+                        }
                 })
-                
-                
+
+            } else {
+                    retrieveData()
+            
             }
-            
-            
-            
-        }else{
+        } else {
             //firebase ref is null from coredata
+            NSLog("MyLife we shuldn't enter this block, coredata should never be null")
         }
        
+
+    }
         
-        //this is an example of pulling data from a single day
-//        var todayFirebaseRef = Firebase(url:"https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/15/")
-//        // Attach a closure to read the data at our posts reference
-//        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-//            //        println(snapshot.value)
-//            
-//            var itr = snapshot.children
-//            while let rest = itr.nextObject() as? FDataSnapshot {
-//                //                    println(rest.value)
-//                var itr2 = rest.children
-//                while let rest2 = itr2.nextObject() as? FDataSnapshot{
-//                    //                    println(rest2.value)
-//                    
-//                    
-//                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
-//                    println(stepsChild.value)
-//                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-//                    //            var countInt = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSNumber
-//                    newItem.count = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
-//                    
-//                    //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
-//                    newItem.deviceid = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
-//                    newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
-//                    newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-//                    //            println(newItem.count)
-//                    
-//                    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-//                    if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-//                        //              NSLog("CoreData: %@",fetchResults[0].count)
-//                    }
-//                    
-//                }
-//            }
-//            
-//            
-//            //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
-//            //                cell.textLabel2?.text = valueStr
-//            //                println(valueStr)
-//            }, withCancelBlock: { error in
-//                println(error.description)
-//        })
-        
-        
-        
+    
+    func retrieveData() {
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+            
+            fbUserRef = fbUserRef + "/steps/2015/4/15"
+            var fb = Firebase(url:fbUserRef)
+            fb.observeEventType(.Value, withBlock: { snapshot in
+                NSLog("FBRef %@",fbUserRef)
+                
+                
+                var itr = snapshot.children
+                while let rest = itr.nextObject() as? FDataSnapshot {
+                    //                    println(rest.value)
+                    var itr2 = rest.children
+                    while let rest2 = itr2.nextObject() as? FDataSnapshot{
+                        //                    println(rest2.value)
+                        
+                        
+                        var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+                        println(stepsChild.value)
+                        var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+                                    var countString = rest2.childSnapshotForPath("count").valueInExportFormat() as? NSString
+                        var countInt:Int16 = Int16(countString!.integerValue)
+                        newItem.count = countInt
+                        newItem.user = UserData.getOrCreateUserData().getCurrentUID()
+                        //                    newItem.syncid = (rest2.childSnapshotForPath("syncid").valueInExportFormat() as? String)!
+                        
+                        newItem.serialnumber = (rest2.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+//                        newItem.starttime = (rest2.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
+//                        newItem.endtime = (rest2.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
+                        //            println(newItem.count)
+                        
+                        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+                        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+                            //              NSLog("CoreData: %@",fetchResults[0].count)
+                        }
+                        
+                    }
+                }
+                
+                
+                
+                
+                
+                }, withCancelBlock: { error in
+                    println(error.description)
+            })
+            
+            
+        }
         
         
     }
@@ -230,7 +176,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             if(fetchResults.count > 0){
                             NSLog("Fetch Results length: %i result: %@", fetchResults.count, fetchResults)
                                 NSLog("CoreData: %@",fetchResults[0].count)
-                                cell.textLabel2?.text = fetchResults[0].count
+                var countString = String(fetchResults[0].count)
+                cell.textLabel2?.text = countString
             }else{
                 cell.textLabel2?.text = "0"
             }

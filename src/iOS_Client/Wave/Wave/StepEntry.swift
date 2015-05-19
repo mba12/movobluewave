@@ -13,12 +13,12 @@ import CoreData
 class StepEntry: NSManagedObject {
 
     @NSManaged var syncid: String
-    @NSManaged var starttime: String
-    @NSManaged var endtime: String
+    @NSManaged var starttime: NSDate
+    @NSManaged var endtime: NSDate
     @NSManaged var user: String
-    @NSManaged var count: String
+    @NSManaged var count: Int16
     @NSManaged var ispushed: String
-    @NSManaged var deviceid: String
+    @NSManaged var serialnumber: String
     @NSManaged var workout_type: String
     @NSManaged var guid: String
 

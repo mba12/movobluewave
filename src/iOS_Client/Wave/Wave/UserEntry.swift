@@ -3,14 +3,13 @@
 //  Wave
 //
 //  Created by Phil Gandy on 5/18/15.
-//  Copyright (c) 2015 Phil Gandy. All rights reserved.
 //
 
 import Foundation
-import Foundation
+
 import CoreData
 
-@objc(UserEntry)
+
 class UserEntry: NSManagedObject {
     
     @NSManaged var id: String
@@ -20,8 +19,10 @@ class UserEntry: NSManagedObject {
     @NSManaged var pw: String
     @NSManaged var username: String
     @NSManaged var birthdate: NSDate
-    @NSManaged var height1: Int
-    @NSManaged var height2: Int
-    @NSManaged var weight: Int
+    @NSManaged var heightfeet: Int16
+    @NSManaged var heightinches: Int16
+    @NSManaged var weight: Int16
+    @NSManaged var reference: String
+    
     
 }
