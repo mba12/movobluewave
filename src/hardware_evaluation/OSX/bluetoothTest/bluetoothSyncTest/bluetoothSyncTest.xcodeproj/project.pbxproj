@@ -35,7 +35,7 @@
 		0209429C1B01069100691C1F /* bluetoothSyncTestTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = bluetoothSyncTestTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		020942A11B01069100691C1F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		020942A21B01069100691C1F /* bluetoothSyncTestTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = bluetoothSyncTestTests.swift; sourceTree = "<group>"; };
-		020942B71B0106B600691C1F /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
+		020942B71B0106B600691C1F /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */

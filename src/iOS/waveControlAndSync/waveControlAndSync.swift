@@ -462,6 +462,7 @@ class waveSyncOperation : NSOperation {
                         if (newdata.count > 0) {
                             for x in newdata {
                                 stepcount += x.steps
+                                //println(String(x.steps) + " new steps")
                             }
                             var firstStep = (message.data! as! [WaveStep])[0].start
                             var finalStep = (message.data! as! [WaveStep]).last?.end
@@ -810,7 +811,10 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                         // Right now we are at fixed 30 minute time stamps
                     for (var i = 3; i < (chartData.count-1); i += 2) {
                         var endTime = startTime.dateByAddingTimeInterval(NSTimeInterval(60*30))
-                        
+                        //NOTE: this excludes 0xFF in either LSB or MSB
+                        //it is unclear how the firmware operates: we know 0xFF in MSB
+                        //indicates no data for that byte, but we don't know if 0xFF in 
+                        //LSB also indicates no data
                         var low = (chartData[i+1] != 0xFF) ? Int(chartData[i+1]):0
                         var high = (chartData[i] != 0xFF) ? Int(chartData[i]):0
                         var count = low | (high<<8)
@@ -818,7 +822,13 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                             chartArray.append(WaveStep(start: startTime, end: endTime, steps: count))
                         }
                         startTime = endTime
-                        
+                        if (NSDate().compare(startTime) == NSComparisonResult.OrderedAscending) {
+                            //then startTime is in the future
+                            //we can ignore the rest of steps in the time 
+                            //set
+                            break;
+                            
+                        }
                     }
                     self.callbackDelegate.receivedMessage(WaveMessageResponse(code: WaveCommandResponseCodes.GetChartSuccess, data: chartArray, mode: nil) , id: id)
                     success = true
