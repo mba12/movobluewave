@@ -151,7 +151,6 @@ public class Home extends MenuActivity {
         milesText = (TextView) findViewById(R.id.titleBlockB);
         caloriesText = (TextView) findViewById(R.id.titleBlockC);
         // Setup BLE context
-        BLEAgent.open(c);
 
         chartVisible = intentIncoming.getBooleanExtra( EXTRA_CHART_VIEW, false );
 

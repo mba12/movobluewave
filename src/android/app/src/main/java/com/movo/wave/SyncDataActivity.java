@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
+import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
 import com.movo.wave.comms.WaveRequest;
@@ -97,9 +98,7 @@ public class SyncDataActivity extends MenuActivity {
                         }
                     });
                 }
-
-
-
+                BLEAgent.close();
                 //startActivity( new Intent( c, Home.class ));
 //
             }
@@ -433,6 +432,9 @@ public class SyncDataActivity extends MenuActivity {
         syncPercent = (TextView) findViewById(R.id.syncPercent);
         TextView syncSerial = (TextView) findViewById( R.id.syncSerial );
 
+
+        final boolean status = BLEAgent.open(c);
+        lazyLog.i( "Opened BLE agent with status ", status);
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getWritableDatabase();
