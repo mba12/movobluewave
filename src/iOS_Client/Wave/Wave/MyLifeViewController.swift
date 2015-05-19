@@ -238,8 +238,11 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         iso8601String = iso8601String + month
         iso8601String = iso8601String + "-"
 
-//        isoStart = iso8601String + String(cellCount)
-        
+//        var isoStartString = iso8601String + String(cellCount)
+//        isoStartString = isoStartString + "T"
+//        isoStartString = isoStartString + "00:00:00Z"
+//        var isoStopString = iso8601String + String(cellCount)
+//        isoStopString
         
         
         
