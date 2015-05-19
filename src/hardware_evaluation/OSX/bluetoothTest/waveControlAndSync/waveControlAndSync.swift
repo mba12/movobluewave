@@ -346,7 +346,7 @@ class waveSyncOperation : NSOperation {
             //because NSTimer doesn't play well with NSOperations
             NSThread.sleepForTimeInterval(0.01)
             if (NSDate().compare(timeoutDate) == NSComparisonResult.OrderedDescending) {
-                println("TIMEOUT")
+                println("SYNC TIMEOUT")
                 cancel()
             }
         }
