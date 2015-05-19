@@ -238,12 +238,17 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         iso8601String = iso8601String + month
         iso8601String = iso8601String + "-"
 
-//        var isoStartString = iso8601String + String(cellCount)
-//        isoStartString = isoStartString + "T"
-//        isoStartString = isoStartString + "00:00:00Z"
-//        var isoStopString = iso8601String + String(cellCount)
-//        isoStopString
+        var isoStartString = iso8601String + String(cellCount)
+        isoStartString = isoStartString + "T"
+        isoStartString = isoStartString + "00:00:00Z"
+        var isoStopString = iso8601String + String(cellCount)
+        isoStopString = isoStopString + "T"
+        isoStopString = isoStopString + "23:59:59Z"
         
+        var dateStart = createDateFromString(String: isoStartString)
+        var dateStop = createDateFromString(String: isoStopString)
+        
+        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime", dateStart, dateStop)
         
         
 //        let predicate = NSPredicate(format: "date BETWEEN %@",)
