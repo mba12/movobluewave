@@ -8,12 +8,14 @@
 import Foundation
 import UIKit
 
-class UploadDataViewController: UIViewController, waveSyncManagerDelegate {
+class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITableViewDelegate, UITableViewDataSource {
     var waveSync : waveSyncManager!
     
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var syncButton: UIButton!
     @IBOutlet weak var statusLabel: UILabel!
+    @IBOutlet weak var waveDeviceTableView: UITableView!
+    
     
     @IBAction func cancel(sender: UIButton){
         dismissViewControllerAnimated(true, completion: nil)
@@ -85,6 +87,10 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate {
                 self.statusLabel.text = "Device Ready: "+(id as String)
             })
         }
+        dispatch_async(dispatch_get_main_queue(), {
+            self.waveDeviceTableView.reloadData()
+        })
+
     }
 
     
@@ -95,7 +101,66 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate {
         waveSync.attemptSync(deviceId: nil)
     }
 
+    //UITableViewDelegateMethods
+    func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if (section == 0) {
+            return "Recognized Devices"
+        } else {
+            return "Unknown Devices"
+        }
+        
+    }
     
+    func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+        return 2
+    }
+    
+    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if (section==0) {
+            return waveSync.waveController!.connectedSerials.count
+        } else {
+            return 0
+        }
+    }
+    
+    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCellWithIdentifier("WaveTableCell") as! WaveTableCell
+        let row = indexPath.row
+        if (row < waveSync.waveController!.connectedSerials.count) {
+            var Name = "Unknown"
+            if let data  = waveSync.waveController!.connectedSerials.allValues[row] as? NSData {
+                var count = data.length
+                var array = [UInt8](count: count, repeatedValue: 0)
+                data.getBytes(&array, length: count)
+                Name = "".join(array.map{ String($0, radix: 16, uppercase: true)})
+            }
+            cell.NameLabel.text = Name
+        }
+        cell.backgroundColor = UIColor.clearColor()
+        return cell
+    }
+    
+    
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        
+        let row = indexPath.row
+        if (row < waveSync.waveController!.connectedSerials.count) {
+            if let id = waveSync.waveController!.connectedSerials.allKeys[row] as? String {
+                waveSync.attemptSync(deviceId: id)
+            }
+        }
+    }
     
     
 }
+
+
+class WaveTableCell : UITableViewCell {
+    
+    @IBOutlet weak var NameLabel: UILabel!
+    
+    
+}
+
+

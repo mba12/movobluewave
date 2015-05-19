@@ -935,7 +935,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                 //checksum valid
                 //therefore serial is
                 var serial = Array(array[2..<(Int(array[1]+2))])
-                self.connectedSerials.setObject(NSData(bytes: serial, length: serial.count*sizeof(UInt32)), forKey: id)
+                self.connectedSerials.setObject(NSData(bytes: serial, length: serial.count*sizeof(UInt8)), forKey: id)
                 self.callbackDelegate.connectedWaveDeviceSerial(id, serial: serial)
                 self.callbackDelegate.receivedMessage(WaveMessageResponse(code: WaveCommandResponseCodes.GetSerialSuccess, data: [NSData(bytes: &serial, length: serial.count)], mode: nil) , id: id)
                 success = true
