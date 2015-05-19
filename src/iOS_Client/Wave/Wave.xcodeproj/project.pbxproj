@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701951AFD401600848DCB /* MenuViewController.swift */; };
 		4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701971B00DE3800848DCB /* MyProfileViewController.swift */; };
@@ -35,7 +36,6 @@
 		4AEEA9D81AD173900055C771 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D71AD173900055C771 /* Images.xcassets */; };
 		4AEEA9DB1AD173900055C771 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D91AD173900055C771 /* LaunchScreen.xib */; };
 		4AEEA9E71AD173900055C771 /* WaveTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9E61AD173900055C771 /* WaveTests.swift */; };
-		4AEEA9F11AD1751E0055C771 /* WaveDataModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */; };
 		4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -57,6 +57,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4A2701951AFD401600848DCB /* MenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		4A2701971B00DE3800848DCB /* MyProfileViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyProfileViewController.swift; sourceTree = "<group>"; };
@@ -91,7 +92,6 @@
 		4AEEA9E01AD173900055C771 /* WaveTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WaveTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9E51AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9E61AD173900055C771 /* WaveTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveTests.swift; sourceTree = "<group>"; };
-		4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveDataModel.swift; sourceTree = "<group>"; };
 		4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CalendarViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -155,6 +155,7 @@
 		4AEEA9CA1AD173900055C771 /* Wave */ = {
 			isa = PBXGroup;
 			children = (
+				02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */,
 				4AEEA9CD1AD173900055C771 /* AppDelegate.swift */,
 				4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */,
 				4AEEA9D21AD173900055C771 /* ViewController.swift */,
@@ -163,7 +164,6 @@
 				4AEEA9D91AD173900055C771 /* LaunchScreen.xib */,
 				4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */,
 				4AEEA9CB1AD173900055C771 /* Supporting Files */,
-				4AEEA9F01AD1751E0055C771 /* WaveDataModel.swift */,
 				4AEEA9F21AD17C710055C771 /* CalendarViewController.swift */,
 				4A2701951AFD401600848DCB /* MenuViewController.swift */,
 				4A2701971B00DE3800848DCB /* MyProfileViewController.swift */,
@@ -329,9 +329,9 @@
 				4A2701A01B00E51D00848DCB /* LoginViewController.swift in Sources */,
 				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
 				4A27019C1B00E3E900848DCB /* UserViewController.swift in Sources */,
+				02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */,
 				4A27019A1B00E34E00848DCB /* UploadDataViewController.swift in Sources */,
 				4A2701D61B063CFB00848DCB /* StepEntry.swift in Sources */,
-				4AEEA9F11AD1751E0055C771 /* WaveDataModel.swift in Sources */,
 				4A2701A81B01045000848DCB /* CollectionViewCell.swift in Sources */,
 				4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */,
 				4A2701A61B00E68900848DCB /* MyLifeViewController.swift in Sources */,

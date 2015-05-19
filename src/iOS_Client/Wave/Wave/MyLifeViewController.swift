@@ -219,7 +219,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 
 
                     
-        cell.imageView?.image = UIImage(named: "datebgwide")
+        cell.imageView?.image = UIImage(named: "datebgwide.png")
         return cell
     }
     

@@ -57,7 +57,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         
-        if (menu[row] != "Upload Data" && menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
+        if (menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
             performSegueWithIdentifier(menu[row], sender:self)
         }
         
