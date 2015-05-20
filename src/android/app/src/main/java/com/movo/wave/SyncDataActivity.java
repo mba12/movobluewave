@@ -263,23 +263,29 @@ public class SyncDataActivity extends MenuActivity {
 
                         date = curDate.getDate();
 
+                    //this else block is the 1st case scenario, init minutemap and move on
                     } else {
-                        oldDate = date;
-                        String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                        String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-                        Map<String, String> stepData = new HashMap<String, String>();
-                        stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                        stepData.put(Database.StepEntry.START, startTime);
-                        stepData.put(Database.StepEntry.END, endTime);
-//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-                        stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-                        stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+                        //if steps is not 0 add to map
 
                         if (Integer.parseInt(curSteps.getString(4)) != 0) {
+                            oldDate = date;
+                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            Map<String, String> stepData = new HashMap<String, String>();
+    //                        stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+    //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+
+
+
                             minuteMap.put(startTime, stepData);
+                            date = curDate.getDate();
                         }
 
-                        date = curDate.getDate();
+
                     }
                 }
 
@@ -336,9 +342,9 @@ public class SyncDataActivity extends MenuActivity {
                                         final WaveRequest.WaveDataPoint point,
                                         final String deviceAddress) {
 
-        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
+        long THIRTY_MINUTES_IN_MILLIS =1800000;//millisecs
         long endLong = point.date.getTime();
-        endLong = endLong + TWO_MINUTES_IN_MILLIS;
+        endLong = endLong + THIRTY_MINUTES_IN_MILLIS;
 
         ContentValues values = new ContentValues();
         values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());

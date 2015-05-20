@@ -29,7 +29,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.StepEntry.STEPS + INTEGER_TYPE + COMMA_SEP +
                     Database.StepEntry.USER + TEXT_TYPE + COMMA_SEP +
                     Database.StepEntry.IS_PUSHED + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
+                    Database.StepEntry.DEVICEID + TEXT_TYPE + COMMA_SEP +
                     Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.GUID + BLOB_TYPE +COMMA_SEP +
                     " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT REPLACE" +
@@ -44,7 +44,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.SyncEntry.USER + TEXT_TYPE + COMMA_SEP +
                     Database.SyncEntry.STATUS + INTEGER_TYPE + COMMA_SEP +
                     Database.SyncEntry.GUID + BLOB_TYPE +COMMA_SEP +
-                    Database.StepEntry.DEVICEID + BLOB_TYPE + COMMA_SEP +
+                    Database.StepEntry.DEVICEID + TEXT_TYPE + COMMA_SEP +
                     " UNIQUE ( "+Database.SyncEntry.GUID+" ) ON CONFLICT REPLACE" +
                     " )";
 

@@ -390,14 +390,14 @@ public class FirstLogin extends Activity {
                         myData.setCurUsername(usernameCust);
                     }
                     Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
-                    child.addValueEventListener(new ValueEventListener() {
+                    child.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot snapshot) {
                             Log.d(TAG,""+snapshot.getValue());
 
 
                             insertSteps(snapshot);
-
+//                            child.removeEventListener(currentUserRef);
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
 
                             loginProgress.setVisibility(View.INVISIBLE);
