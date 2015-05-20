@@ -126,9 +126,18 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         if (menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
             performSegueWithIdentifier(menu[row], sender:self)
+        } else if (menu[row] == "FAQ") {
+            UIApplication.sharedApplication().openURL(NSURL(string: "http://www.getmovo.com/appfaq")!)
+            
+        } else if (menu[row] == "Contact") {
+            var UID = ""
+            if let curUID : String = UserData.getOrCreateUserData().currentUID {
+                UID = curUID
+            }
+            var urlstring = "subject=Contact from "+UID
+            urlstring = "mailto:info@getmovo.com?"+urlstring.stringByAddingPercentEncodingWithAllowedCharacters(.URLPathAllowedCharacterSet())!
+            UIApplication.sharedApplication().openURL(NSURL(string: urlstring)!)
         }
-        
-        
         //        dismissViewControllerAnimated(true, completion: nil)
         
         println(menu[row])
