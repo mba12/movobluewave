@@ -7,10 +7,11 @@
 
 import Foundation
 import UIKit
+import CoreData
 
 class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITableViewDelegate, UITableViewDataSource {
     var waveSync : waveSyncManager!
-    
+    var syncUid:String = "Error"
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var syncButton: UIButton!
     @IBOutlet weak var waveDeviceTableView: UITableView!
@@ -31,6 +32,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        //default value, not initialized.
+//        syncUid = "Error"
         
         // Do any additional setup after loading the view, typically from a nib.
         waveDeviceTableView.tableFooterView = UIView(frame: CGRect.zeroRect)
@@ -66,12 +69,39 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         println("Completed Sync")
         var count = 0
         
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let managedContext = appDelegate.managedObjectContext
+
+        
         
         ///HANDLE DATA HERE
         for step in data {
             count += step.steps
+            
+            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! StepEntry
+            newItem.count = Int16(step.steps)
+            newItem.user = UserData.getOrCreateUserData().getCurrentUID()
+            newItem.syncid = syncUid
+            newItem.starttime = step.start
+            newItem.endtime = step.end
+            newItem.serialnumber = String(deviceId!)
+
+            
             println("step: "+String(step.steps))
         }
+        appDelegate.managedObjectContext!.save(nil)
+
+//        class WaveStep : NSObject {
+//            let start : NSDate
+//            let end : NSDate
+//            let steps : Int
+//            init (start: NSDate, end: NSDate, steps: Int) {
+//                self.start = start
+//                self.end = end
+//                self.steps = steps
+//            }
+//        }
+       
         
         ///END HANDLE DATA
         
@@ -113,6 +143,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveSync.scan(true)
     }
     @IBAction func syncButtonPress(sender: AnyObject) {
+        var uuid = NSUUID().UUIDString
+        syncUid = uuid
         waveSync.attemptSync(deviceId: nil)
     }
 

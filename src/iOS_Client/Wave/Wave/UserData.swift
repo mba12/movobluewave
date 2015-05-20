@@ -77,6 +77,8 @@ class UserData {
         newItem.fullname = fullName
         newItem.username = user
         newItem.reference = ref
+        
+        appDelegate.managedObjectContext!.save(nil)
 
         setCurrentUID(String: uid)
         setCurrentEmail(String: email)
