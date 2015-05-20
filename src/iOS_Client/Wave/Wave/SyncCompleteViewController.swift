@@ -11,7 +11,6 @@ import UIKit
 
 class SyncCompleteViewController : UIViewController {
     
-    @IBOutlet weak var ackButton: UIButton!
     var syncStatusVC : SyncStatusViewController?
     
     @IBAction func ackButtonPress(sender: AnyObject) {
