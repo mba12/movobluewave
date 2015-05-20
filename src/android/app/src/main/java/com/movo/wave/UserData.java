@@ -71,7 +71,7 @@ public class UserData extends Activity{
         loginRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
-        //TODO: Make this compatible with multiple users
+
         if (userExists) {
             currentUID = prefs.getString("currentUID", "Error");
             currentToken = prefs.getString("currentToken", "Error");
@@ -225,18 +225,19 @@ public class UserData extends Activity{
                 downloadMetadata(authData.getUid());
 
                 currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/"+authData.getUid());
-                //TODO: pull user info like name from server
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
                 prefs.edit().putBoolean("userExists", true);
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
                 updateHomePage();
                 status = true;
+                downloadMetadata(authData.getUid());
             }
 
             @Override
             public void onAuthenticationError(FirebaseError firebaseError) {
                 Log.d(TAG, "Error logging in " + firebaseError.getDetails());
                 status = false;
+//                prefs.edit().putBoolean("userExists",false)
             }
         });
         return status;
@@ -307,7 +308,7 @@ public class UserData extends Activity{
 
 
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
-        ArrayList<String> allUsersReturn = new ArrayList<>();
+//        ArrayList<String> allUsersReturn = new ArrayList<>();
 
 
         SharedPreferences.Editor allUsersEditor = allUsers.edit();
@@ -315,7 +316,16 @@ public class UserData extends Activity{
 
         allUsersEditor.commit();
 
-        allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
+//        ArrayList<String> allUsersReturn = new ArrayList<>();
+//        Map<String,?> keys = allUsers.getAll();
+//        for(Map.Entry<String,?> entry : keys.entrySet()){
+//            if(entry.getKey().equals(currentUID)){
+//                keys.remove(entry);
+//            }
+//        }
+
+
+
 
 
         ArrayList<String> users = new ArrayList<String>();
@@ -360,7 +370,7 @@ public class UserData extends Activity{
 //            currentGender = prefs.getString("currentGender", "Error");
 //            currentFullName = prefs.getString("currentFullName", "Error");
 
-        uploadToFirebase();
+//        uploadToFirebase();
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);
         SharedPreferences.Editor userDataEditor = userData.edit();
@@ -407,13 +417,13 @@ public class UserData extends Activity{
 
 
 
-            prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
+           reAuthenticate(currentEmail, currentPW);
+            return true;
 
-            downloadMetadata(UID);
 
         }
 
-        return prefs.getBoolean("userExists",false);
+        return false;
 //        return true;
 
     }
@@ -437,11 +447,24 @@ public class UserData extends Activity{
 
     public void resetUserList(){
         //this resets the user list to insure data deletion.
+          currentUID = "Error";
+          currentToken = "Error";
+          currentEmail = "Error";
+          currentPW = "Error";
+          currentBirthdate = "Error";
+          currentHeight1 = "Error";
+          currentHeight2 = "Error";
+          currentWeight = "Error";
+          currentGender = "Error";
+          currentFullName = "Error";
+          currentUsername = "Error";
+
+
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
         SharedPreferences.Editor allUsersEditor = allUsers.edit();
 
 
-            allUsersEditor.clear();
+        allUsersEditor.clear();
 
         allUsersEditor.commit();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
