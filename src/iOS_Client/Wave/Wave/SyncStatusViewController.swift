@@ -11,6 +11,9 @@ import UIKit
 class SyncStatusViewController : UIViewController {
     var uploadDataVC : UploadDataViewController?
     var syncCompleteVC : SyncCompleteViewController?
+    @IBOutlet weak var syncStatusLabel: UILabel!
+    @IBOutlet weak var syncStatusProgress: UIProgressView!
+    
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if (segue.identifier == "SyncComplete") {
@@ -18,4 +21,12 @@ class SyncStatusViewController : UIViewController {
             syncCompleteVC?.syncStatusVC = self
         }
     }
+    
+    @IBAction func cancelButtonPress(sender: AnyObject) {
+        //canceling a sync in progress
+        //should mean that we call our parents complete to reset the devices connected
+        uploadDataVC?.complete(sender)
+        self.navigationController?.popViewControllerAnimated(true)
+    }
+    
 }

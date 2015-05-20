@@ -743,23 +743,86 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qjY-Ov-nmL">
-                                <rect key="frame" x="9" y="101" width="568" height="42"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Status" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="i6M-t5-kRc">
+                                <rect key="frame" x="16" y="72" width="49.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="firstsync_rightarrow" translatesAutoresizingMaskIntoConstraints="NO" id="Vgk-et-kcI">
+                                <rect key="frame" x="244" y="273" width="111" height="54"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Downloading data." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UhB-MV-OFc">
+                                <rect key="frame" x="228" y="100" width="144.5" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LdS-8d-GNL">
+                                <rect key="frame" x="254" y="129" width="92.5" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vhS-2R-ZTV">
+                                <rect key="frame" x="41" y="496" width="518" height="10"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="10" id="TGw-XO-B4Z"/>
+                                </constraints>
+                            </progressView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="firstsync_phone" translatesAutoresizingMaskIntoConstraints="NO" id="whD-6N-Ko2">
+                                <rect key="frame" x="363" y="196" width="221" height="208"/>
+                            </imageView>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" verticalHuggingPriority="251" image="firstsync_wave" translatesAutoresizingMaskIntoConstraints="NO" id="7N7-Dw-Xbg">
+                                <rect key="frame" x="16" y="228" width="220.5" height="143"/>
+                            </imageView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="centerY" secondItem="7N7-Dw-Xbg" secondAttribute="centerY" id="0uq-cX-kLZ"/>
+                            <constraint firstAttribute="centerX" secondItem="vhS-2R-ZTV" secondAttribute="centerX" id="1U8-FG-7LN"/>
+                            <constraint firstAttribute="centerY" secondItem="whD-6N-Ko2" secondAttribute="centerY" id="2l8-pH-kE3"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="vhS-2R-ZTV" secondAttribute="trailing" constant="25" id="AJf-2n-kJk"/>
+                            <constraint firstItem="LdS-8d-GNL" firstAttribute="top" secondItem="UhB-MV-OFc" secondAttribute="bottom" constant="8" id="Bul-gf-UQJ"/>
+                            <constraint firstItem="Vgk-et-kcI" firstAttribute="top" relation="greaterThanOrEqual" secondItem="LdS-8d-GNL" secondAttribute="bottom" constant="8" id="DWs-mm-RON"/>
+                            <constraint firstItem="7N7-Dw-Xbg" firstAttribute="leading" secondItem="Dn5-AH-OCk" secondAttribute="leadingMargin" id="F49-WR-RnU"/>
+                            <constraint firstItem="Vgk-et-kcI" firstAttribute="leading" secondItem="7N7-Dw-Xbg" secondAttribute="trailing" constant="8" id="F5r-NR-VOt"/>
+                            <constraint firstAttribute="centerY" secondItem="Vgk-et-kcI" secondAttribute="centerY" id="IPh-Y9-9lR"/>
+                            <constraint firstItem="UhB-MV-OFc" firstAttribute="top" secondItem="i6M-t5-kRc" secondAttribute="bottom" constant="8" id="OkR-mV-ODb"/>
+                            <constraint firstItem="whD-6N-Ko2" firstAttribute="leading" secondItem="Vgk-et-kcI" secondAttribute="trailing" constant="8" id="Rt1-UJ-WyN"/>
+                            <constraint firstItem="whD-6N-Ko2" firstAttribute="trailing" secondItem="Dn5-AH-OCk" secondAttribute="trailingMargin" id="VCh-Xn-SJF"/>
+                            <constraint firstAttribute="centerX" secondItem="Vgk-et-kcI" secondAttribute="centerX" id="ehS-H8-wCF"/>
+                            <constraint firstItem="Mt4-Ui-uvh" firstAttribute="top" secondItem="vhS-2R-ZTV" secondAttribute="bottom" constant="50" id="f8h-de-acM"/>
+                            <constraint firstAttribute="centerX" secondItem="LdS-8d-GNL" secondAttribute="centerX" id="gpx-fs-UvJ"/>
+                            <constraint firstItem="i6M-t5-kRc" firstAttribute="top" secondItem="bsd-Ik-OJY" secondAttribute="bottom" constant="8" id="kNM-pz-GB0"/>
+                            <constraint firstAttribute="centerX" secondItem="i6M-t5-kRc" secondAttribute="centerX" id="uOT-ER-Rro"/>
+                            <constraint firstAttribute="centerX" secondItem="UhB-MV-OFc" secondAttribute="centerX" id="uyB-dE-JtI"/>
+                            <constraint firstItem="i6M-t5-kRc" firstAttribute="leading" secondItem="Dn5-AH-OCk" secondAttribute="leadingMargin" id="v11-AN-714"/>
+                        </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="uOT-ER-Rro"/>
+                            </mask>
+                        </variation>
                     </view>
-                    <navigationItem key="navigationItem" title="Syncing Data with Wave" id="YiC-JQ-HjC"/>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="Syncing Data with Wave" id="YiC-JQ-HjC">
+                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="Rau-zj-OCz">
+                            <connections>
+                                <action selector="cancelButtonPress:" destination="TxX-LN-3sz" id="2gO-uT-Vqc"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
+                        <outlet property="syncStatusLabel" destination="i6M-t5-kRc" id="DnH-Zr-DvN"/>
+                        <outlet property="syncStatusProgress" destination="vhS-2R-ZTV" id="jZx-5Z-5Xx"/>
                         <segue destination="q00-fc-g9F" kind="show" identifier="SyncComplete" id="RHl-r4-KUR"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3dK-o7-Z18" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-2778" y="2523"/>
+            <point key="canvasLocation" x="-2788" y="2505"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="kmw-Mt-ijs">
@@ -877,11 +940,7 @@
                         </variation>
                     </view>
                     <navigationItem key="navigationItem" title="Select Wave to Start Sync" id="iPQ-2j-2Cm">
-                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="KyM-rp-rFD">
-                            <connections>
-                                <action selector="cancel:" destination="ISY-vb-BJr" id="B3q-69-aqV"/>
-                            </connections>
-                        </barButtonItem>
+                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="KyM-rp-rFD"/>
                     </navigationItem>
                     <connections>
                         <outlet property="waveDeviceTableView" destination="p7g-g3-69Y" id="kQ4-Yo-chk"/>
@@ -903,22 +962,17 @@
                     <view key="view" contentMode="scaleToFill" id="xhf-pm-S0e">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="JKN-gs-g2y">
-                                <rect key="frame" x="16" y="72" width="46" height="30"/>
-                                <state key="normal" title="Button">
-                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
-                                </state>
-                                <connections>
-                                    <action selector="ackButtonPress:" destination="q00-fc-g9F" eventType="touchUpInside" id="tTz-J6-NGD"/>
-                                </connections>
-                            </button>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
-                    <navigationItem key="navigationItem" title="Syncing Data with Wave" id="wiY-Rl-cOO"/>
+                    <toolbarItems/>
+                    <navigationItem key="navigationItem" title="Syncing Data with Wave" id="wiY-Rl-cOO">
+                        <barButtonItem key="leftBarButtonItem" title="OK" id="ekc-y7-wWh">
+                            <connections>
+                                <action selector="ackButtonPress:" destination="q00-fc-g9F" id="xih-9O-802"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
-                        <outlet property="ackButton" destination="JKN-gs-g2y" id="xhf-bf-ahh"/>
                         <segue destination="EIb-5E-vMu" kind="showDetail" identifier="UploadComplete" id="lVa-zE-MYI"/>
                     </connections>
                 </viewController>
@@ -1025,6 +1079,9 @@
         <image name="calendartab_unselected2" width="152" height="90"/>
         <image name="default_user_icon" width="96" height="96"/>
         <image name="first_sync_4" width="227" height="374"/>
+        <image name="firstsync_phone" width="121" height="208"/>
+        <image name="firstsync_rightarrow" width="111" height="54"/>
+        <image name="firstsync_wave" width="160" height="143"/>
         <image name="global_bg" width="480" height="852"/>
         <image name="logored" width="292" height="165"/>
         <image name="red_button" width="291" height="33"/>

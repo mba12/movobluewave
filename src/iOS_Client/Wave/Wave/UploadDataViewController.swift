@@ -57,6 +57,23 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         println("Sync status update " + String(status.rawValue))
         dispatch_sync(dispatch_get_main_queue(), {
 //            self.statusLabel.text = "Sync status update " + String(status.rawValue) + "," + String(Int(completeRatio*100)) + "%"
+            
+            if (status == WaveSyncStatus.Idle || status == WaveSyncStatus.Start) {
+                self.syncStatusVC?.syncStatusLabel.text = "Connecting..."
+                self.syncStatusVC?.syncStatusProgress.setProgress(0.0, animated: true)
+            } else if (status == WaveSyncStatus.VerifingDate || status == WaveSyncStatus.SettingDate) {
+                self.syncStatusVC?.syncStatusLabel.text = "Verifying Device..."
+                self.syncStatusVC?.syncStatusProgress.setProgress(0.1, animated: true)
+            } else if (status == WaveSyncStatus.DownloadingData) {
+                self.syncStatusVC?.syncStatusLabel.text = "Downloading Data, "+String(Int(completeRatio*100))+"%"
+                self.syncStatusVC?.syncStatusProgress.setProgress( (completeRatio+0.1)/1.1, animated: true)
+            } else if (status == WaveSyncStatus.Fail) {
+                self.syncStatusVC?.syncStatusLabel.text = "Error..."
+            } else if (status == WaveSyncStatus.Finished) {
+                self.syncStatusVC?.syncStatusLabel.text = "Complete!"
+                self.syncStatusVC?.syncStatusProgress.setProgress(1.0, animated: true)
+            }
+            
         })
     }
     
