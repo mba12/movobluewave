@@ -271,7 +271,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         var dateStart = createDateFromString(String: isoStartString)
         var dateStop = createDateFromString(String: isoStopString)
         
-//        if(cellDateNumber==17){
+//        if(cellDateNumber==19){
 //        println("what")
 //        }
         
@@ -285,8 +285,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             if(fetchResults.count > 0){
                 println("Count %i",fetchResults.count)
                 var resultsCount = fetchResults.count
-                for(var i=0;i<(resultsCount-1);i++){
-                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
+                for(var i=0;i<(resultsCount);i++){
+//                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
                     totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
                 }
                 
