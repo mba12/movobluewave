@@ -228,7 +228,15 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
         operationQueue.addOperation(waveSync)
     }
 
-    
+    func connectedWaveDeviceSerialString(id: NSString) -> NSString? {
+        if let data : NSData = waveController!.connectedSerials.valueForKey(id as String) as? NSData {
+            var count = data.length
+            var array = [UInt8](count: count, repeatedValue: 0)
+            data.getBytes(&array, length: count)
+            return "".join(array.map{ String($0, radix: 16, uppercase: true)})
+        }
+        return nil
+    }
     
 /* Delegate Methods */
     
@@ -245,7 +253,7 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
         
         
     }
-    
+
     func disconnectedWaveDevice(id: NSString) {
         //A device is immediately no longer "ready" when it disconnects
         //so deviceReady should be called with "nil"

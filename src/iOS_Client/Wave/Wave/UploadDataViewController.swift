@@ -80,6 +80,29 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         })
     }
     
+    func duplicateCheck(waveStep: WaveStep, serial:String )->Bool{
+        
+        
+        var isDuplicate = false
+        
+        let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", waveStep.start, waveStep.end, serial)
+        let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
+        fetchRequestDupeCheck.predicate = predicate
+        
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let managedContext = appDelegate.managedObjectContext
+        
+        if let fetchResults = appDelegate.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
+            if(fetchResults.count > 0){
+                NSLog("Duplicate found")
+                
+                return true;
+                
+            }
+        }
+        return false;
+    }
+    
     
     //returns an array of WaveSteps with all of the data from a sync operation
     func syncComplete(deviceId: NSString?, data: [WaveStep]) {
@@ -88,46 +111,48 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext
-
-        
-        
-        ///HANDLE DATA HERE
-        for step in data {
-            count += step.steps
+        if let serial = waveSync?.connectedWaveDeviceSerialString(deviceId!) as? String{
             
-            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! StepEntry
-            newItem.count = Int16(step.steps)
-            newItem.user = UserData.getOrCreateUserData().getCurrentUID()
-            newItem.syncid = syncUid
-            newItem.starttime = step.start
-            newItem.endtime = step.end
-            newItem.serialnumber = String(deviceId!)
-
             
-            println("step: "+String(step.steps))
+            
+            
+            ///HANDLE DATA HERE
+            for step in data {
+                count += step.steps
+                if(!duplicateCheck(step,  serial: serial)){
+                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! StepEntry
+                    newItem.count = Int16(step.steps)
+                    newItem.user = UserData.getOrCreateUserData().getCurrentUID()
+                    newItem.syncid = syncUid
+                    newItem.starttime = step.start
+                    newItem.endtime = step.end
+                    newItem.serialnumber = String(serial)
+                }
+                
+                println("step: "+String(step.steps))
+            }
+            appDelegate.managedObjectContext!.save(nil)
+            
+            //        class WaveStep : NSObject {
+            //            let start : NSDate
+            //            let end : NSDate
+            //            let steps : Int
+            //            init (start: NSDate, end: NSDate, steps: Int) {
+            //                self.start = start
+            //                self.end = end
+            //                self.steps = steps
+            //            }
+            //        }
+            
+            
+            ///END HANDLE DATA
+            
+            dispatch_sync(dispatch_get_main_queue(), {
+                //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
+                //self.dismissViewControllerAnimated(false, completion: nil)
+                self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
+            })
         }
-        appDelegate.managedObjectContext!.save(nil)
-
-//        class WaveStep : NSObject {
-//            let start : NSDate
-//            let end : NSDate
-//            let steps : Int
-//            init (start: NSDate, end: NSDate, steps: Int) {
-//                self.start = start
-//                self.end = end
-//                self.steps = steps
-//            }
-//        }
-       
-        
-        ///END HANDLE DATA
-        
-        dispatch_sync(dispatch_get_main_queue(), {
-//            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
-            //self.dismissViewControllerAnimated(false, completion: nil)
-            self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
-        })
-        
     }
     
     //final failure call from a sync attempt.  Sync should not be considered
