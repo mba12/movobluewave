@@ -13,23 +13,27 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var syncButton: UIButton!
-    @IBOutlet weak var statusLabel: UILabel!
     @IBOutlet weak var waveDeviceTableView: UITableView!
     
+    var syncStatusVC : SyncStatusViewController?
     
-    @IBAction func cancel(sender: UIButton){
+    @IBAction func cancel(sender: AnyObject?){
         dismissViewControllerAnimated(true, completion: nil)
         waveSync.scan(false)
         waveSync.waveController?.disconnectWaveDevices()
+        
     }
     
-    
+    func complete(sender: AnyObject?) {
+        waveSync.scan(false)
+        waveSync.waveController?.disconnectWaveDevices()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Do any additional setup after loading the view, typically from a nib.
-        
+        waveDeviceTableView.tableFooterView = UIView(frame: CGRect.zeroRect)
         
     }
     
@@ -52,7 +56,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func syncStatusUpdate(status: WaveSyncStatus, deviceId: NSString?,  completeRatio: Float) {
         println("Sync status update " + String(status.rawValue))
         dispatch_sync(dispatch_get_main_queue(), {
-            self.statusLabel.text = "Sync status update " + String(status.rawValue) + "," + String(Int(completeRatio*100)) + "%"
+//            self.statusLabel.text = "Sync status update " + String(status.rawValue) + "," + String(Int(completeRatio*100)) + "%"
         })
     }
     
@@ -61,12 +65,20 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func syncComplete(deviceId: NSString?, data: [WaveStep]) {
         println("Completed Sync")
         var count = 0
+        
+        
+        ///HANDLE DATA HERE
         for step in data {
             count += step.steps
             println("step: "+String(step.steps))
         }
+        
+        ///END HANDLE DATA
+        
         dispatch_sync(dispatch_get_main_queue(), {
-            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
+//            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
+            //self.dismissViewControllerAnimated(false, completion: nil)
+            self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
         })
         
     }
@@ -76,7 +88,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func syncFailure(deviceId: NSString?) {
         println("Failed Sync")
         dispatch_sync(dispatch_get_main_queue(), {
-            self.statusLabel.text = "Sync attempt failed"
+//            self.statusLabel.text = "Sync attempt failed"
+            //self.dismissViewControllerAnimated(false, completion: nil)
+            self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
         })
     }
     
@@ -85,7 +99,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         if (ready) {
             println("Device Ready " + (id as String))
             dispatch_sync(dispatch_get_main_queue(), {
-                self.statusLabel.text = "Device Ready: "+(id as String)
+//                self.statusLabel.text = "Device Ready: "+(id as String)
             })
         }
         dispatch_async(dispatch_get_main_queue(), {
@@ -149,11 +163,17 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         if (row < waveSync.waveController!.connectedSerials.count) {
             if let id = waveSync.waveController!.connectedSerials.allKeys[row] as? String {
                 waveSync.attemptSync(deviceId: id)
+                performSegueWithIdentifier("SyncStatus", sender: self)
             }
         }
     }
     
-    
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if (segue.identifier == "SyncStatus") {
+            syncStatusVC = segue.destinationViewController as? SyncStatusViewController
+            syncStatusVC?.uploadDataVC = self
+        }
+    }
 }
 
 

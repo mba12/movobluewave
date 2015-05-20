@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02678D561B0CDBBB008113D4 /* SyncStatusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */; };
+		02678D591B0CEACC008113D4 /* SyncCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */; };
 		02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701951AFD401600848DCB /* MenuViewController.swift */; };
@@ -58,6 +60,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncStatusViewController.swift; sourceTree = "<group>"; };
+		02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncCompleteViewController.swift; sourceTree = "<group>"; };
 		02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4A2701951AFD401600848DCB /* MenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
@@ -183,6 +187,8 @@
 				4A2701AE1B02372C00848DCB /* Wave-Bridging-Header.h */,
 				4AAD687A1B09696600A6A761 /* UserData.swift */,
 				4AAD68871B0A81CC00A6A761 /* UserEntry.swift */,
+				02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */,
+				02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -257,7 +263,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0610;
-				ORGANIZATIONNAME = "Phil Gandy";
+				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					4AEEA9C71AD173900055C771 = {
 						CreatedOnToolsVersion = 6.1.1;
@@ -333,6 +339,7 @@
 				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
 				4A27019C1B00E3E900848DCB /* UserViewController.swift in Sources */,
 				02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */,
+				02678D561B0CDBBB008113D4 /* SyncStatusViewController.swift in Sources */,
 				4A27019A1B00E34E00848DCB /* UploadDataViewController.swift in Sources */,
 				4A2701D61B063CFB00848DCB /* StepEntry.swift in Sources */,
 				4A2701A81B01045000848DCB /* CollectionViewCell.swift in Sources */,
@@ -345,6 +352,7 @@
 				4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */,
 				4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */,
 				4A27019E1B00E48400848DCB /* LandingScreenViewController.swift in Sources */,
+				02678D591B0CEACC008113D4 /* SyncCompleteViewController.swift in Sources */,
 				4A2701A41B00E59600848DCB /* RegisterViewController.swift in Sources */,
 				4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */,
 				4AAD687B1B09696600A6A761 /* UserData.swift in Sources */,
