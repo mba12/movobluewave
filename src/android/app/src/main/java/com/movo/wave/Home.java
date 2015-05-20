@@ -79,6 +79,7 @@ public class Home extends MenuActivity {
     Calendar calendar;
     static GridView gridview;
     final static String EXTRA_CHART_VIEW = "com.movo.wave.home.EXTRA_CHART_VIEW";
+    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
     boolean chartVisible;
     private static ProgressBar syncProgressBar;
     private static TextView syncText;
@@ -133,7 +134,7 @@ public class Home extends MenuActivity {
         super.onCreate(savedInstanceState);
         Intent intentIncoming = getIntent();
 
-        LaunchAnimation.apply( this, intentIncoming );
+        LaunchAnimation.apply(this, intentIncoming);
 
 
 
@@ -173,7 +174,7 @@ public class Home extends MenuActivity {
                 timestamp = calendar.getTimeInMillis();
             }
             UserData myData = UserData.getUserData(c);
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
+            Firebase ref = new Firebase(Home.firebase_url + "users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -315,7 +316,7 @@ public class Home extends MenuActivity {
                 startActivity(intent);
                 finish();
 //                UserData myData = UserData.getUserData(c);
-//                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH) + "/");
+//                Firebase ref = new Firebase(firebase_url + "/users/" + myData.getCurUID() + "/steps/" + newCal.get(Calendar.YEAR) + "/" + newCal.get(Calendar.MONTH) + "/");
 //                ref.addValueEventListener(new ValueEventListener() {
 //                    @Override
 //                    public void onDataChange(DataSnapshot snapshot) {
@@ -1002,18 +1003,37 @@ public class Home extends MenuActivity {
                 Log.d(TAG, "Loading image from firebase");
                 final Calendar monthCal = Calendar.getInstance();
                 monthCal.setTimeInMillis(today);
-                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                Firebase ref = new Firebase(firebase_url + "/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
-                        //                    System.out.println(snapshot.getValue());
+
+                        // TODO: Discuss changes below with Phil -- comment from Michael
+
+                        Object obj = snapshot.getValue();
+                        if (obj == null) {
+                            Log.d(TAG, "MBA: Value from FB is null.");
+                            return;
+                        }
+
+                        Log.d(TAG, snapshot.getValue().toString());
                         if (snapshot.getChildrenCount() == 2) {
                             final BitmapFactory.Options options = new BitmapFactory.Options();
 //                        options.inJustDecodeBounds = false;
 //                        options.inSampleSize = 4;
                             ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+
+//                            Object pictureObject = result.get(0);
+                            Object pictureObject = result.get(1);
+                            String pictureString = String.valueOf(pictureObject);
+
+                            String className = pictureObject.getClass().getName();
+                            Log.d(TAG, "MBA object from arraylist is: " + className);
+                            Log.d(TAG, "MBA object value: " + pictureString);
+
                             try {
-                                byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+                                // byte[] decodedString = Base64.decode(result.get(0), Base64.DEFAULT);
+                                byte[] decodedString = Base64.decode(pictureString, Base64.DEFAULT);
                                 DatabaseHelper mDbHelper = new DatabaseHelper(c);
                                 SQLiteDatabase db = mDbHelper.getWritableDatabase();
 //

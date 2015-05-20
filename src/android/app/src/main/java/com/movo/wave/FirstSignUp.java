@@ -80,7 +80,7 @@ public class FirstSignUp extends Activity {
         forgot = (Button) findViewById(R.id.forgotPass);
         loginProgress = (ProgressBar) findViewById(R.id.progressBarLogin);
         Firebase.setAndroidContext(c);
-        loginRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
+        loginRef = new Firebase(Home.firebase_url);
         birthdateButton = (Button) findViewById(R.id.birthdate);
         terms = (TextView) findViewById(R.id.tvTermsWhole);
 //        privacy = (TextView) findViewById(R.id.tvPrivacy);
@@ -148,7 +148,7 @@ public class FirstSignUp extends Activity {
                 if (!(username.getText().equals("")) && !(pass.getText().equals("")) && !(usernameCust.getText().equals(""))) {
                     if (is13) {
 
-                        Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                        Firebase lookupEmail = new Firebase(Home.firebase_url + "emailtable/");
                         Firebase child = lookupEmail.child(usernameCust.getText().toString());
                         child.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -178,13 +178,13 @@ public class FirstSignUp extends Activity {
                                                         myData.setCurPW(mPassword);
                                                         myData.setCurBirthdate(birthdateInput + "");
                                                         myData.setCurUsername(mUsername);
-                                                        Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+                                                        Firebase currentUserRef = new Firebase(Home.firebase_url + "users/" + authData.getUid());
 
                                                         myData.setCurrentUserRef(currentUserRef);
                                                         myData.addCurUserTolist();
 
                                                         //username lookup table
-                                                        Firebase usernameEmailTies = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable");
+                                                        Firebase usernameEmailTies = new Firebase(Home.firebase_url + "emailtable");
                                                         Firebase thisUser = usernameEmailTies.child(mUsername);
                                                         thisUser.setValue(mEmail);
 

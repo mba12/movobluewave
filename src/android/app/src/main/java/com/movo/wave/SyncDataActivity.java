@@ -195,7 +195,7 @@ public class SyncDataActivity extends MenuActivity {
             //firebase upload sync
 //                    UserData myData = UserData.getUserData(c);
             //sync ref
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + cur.getString(3) + "/sync/" + cur.getString(0));
+            Firebase ref = new Firebase(Home.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
 
 
             Map<String, Object> syncData = new HashMap<String, Object>();
@@ -244,9 +244,9 @@ public class SyncDataActivity extends MenuActivity {
                         String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
                         String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                         oldDate = date;
-                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0)); //to modify child node
+                        Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0)); //to modify child node
                         refStep2.setValue(minuteMap);
-                        Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                        Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                         refSyncSteps.setValue(minuteMap);
 
                         minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
@@ -263,23 +263,29 @@ public class SyncDataActivity extends MenuActivity {
 
                         date = curDate.getDate();
 
+                    //this else block is the 1st case scenario, init minutemap and move on
                     } else {
-                        oldDate = date;
-                        String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-                        String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-                        Map<String, String> stepData = new HashMap<String, String>();
-                        stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                        stepData.put(Database.StepEntry.START, startTime);
-                        stepData.put(Database.StepEntry.END, endTime);
-//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-                        stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-                        stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+                        //if steps is not 0 add to map
 
                         if (Integer.parseInt(curSteps.getString(4)) != 0) {
+                            oldDate = date;
+                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
+                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
+                            Map<String, String> stepData = new HashMap<String, String>();
+    //                        stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
+                            stepData.put(Database.StepEntry.START, startTime);
+                            stepData.put(Database.StepEntry.END, endTime);
+    //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
+                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
+                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
+
+
+
                             minuteMap.put(startTime, stepData);
+                            date = curDate.getDate();
                         }
 
-                        date = curDate.getDate();
+
                     }
                 }
 
@@ -313,9 +319,9 @@ public class SyncDataActivity extends MenuActivity {
                 String dayMinute = (curDate.getMinutes() + (curDate.getHours() * 60)) + "";
 
 
-                Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                 refStep2.setValue(minuteMap);
-                Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                 refSyncSteps.setValue(minuteMap);
 
 //                    refStep.setValue(list);
@@ -336,9 +342,9 @@ public class SyncDataActivity extends MenuActivity {
                                         final WaveRequest.WaveDataPoint point,
                                         final String deviceAddress) {
 
-        long TWO_MINUTES_IN_MILLIS=120000;//millisecs
+        long THIRTY_MINUTES_IN_MILLIS =1800000;//millisecs
         long endLong = point.date.getTime();
-        endLong = endLong + TWO_MINUTES_IN_MILLIS;
+        endLong = endLong + THIRTY_MINUTES_IN_MILLIS;
 
         ContentValues values = new ContentValues();
         values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
