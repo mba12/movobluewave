@@ -658,9 +658,9 @@ public class WaveRequest {
         public WaveDataPoint( final byte[] message, int offset, final Date date ) {
             this.mode = getMode( message[ offset ]);
             // shave off
-            int tmp = message[ offset ] & 0x3F;
+            int tmp = message[ offset + 1 ] & 0x3F;
             tmp <<= 8;
-            tmp += 0xFF & (int) message[ offset + 1 ];
+            tmp += 0xFF & (int) message[ offset ];
             this.value = tmp;
             this.date = date;
         }

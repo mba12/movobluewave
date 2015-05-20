@@ -183,6 +183,13 @@ public class WaveScanActivity extends MenuActivity {
             return false;
         }
 
+        BLEAgent.clear();
+        knownWaves.clear();
+        knownWaveAdapter.notifyDataSetChanged();
+        newWaves.clear();
+        newWaveAdapter.notifyDataSetChanged();
+        wavesByMAC.clear();
+
         nextState();
         BLEAgent.handle( scanRequest );
         return true;
@@ -213,6 +220,9 @@ public class WaveScanActivity extends MenuActivity {
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);
         scanButton = (Button) findViewById(R.id.waveScanButton);
+
+        final boolean status = BLEAgent.open(c);
+        lazyLog.i( "Opened BLE agent with status ", status);
 
         scanButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -295,5 +305,6 @@ public class WaveScanActivity extends MenuActivity {
     protected void onDestroy() {
         super.onDestroy();
         db.close();
+        BLEAgent.close();
     }
 }

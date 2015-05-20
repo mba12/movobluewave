@@ -52,7 +52,7 @@ public class BLEAgent {
     /** Logger
      *
      */
-    private final static LazyLogger lazyLog = new LazyLogger( "BLEAgent", false );
+    private final static LazyLogger lazyLog = new LazyLogger( "BLEAgent", true );
 
     /**
      * bytesToHex method
@@ -116,6 +116,7 @@ public class BLEAgent {
     private static Context context;
 
     protected static Handler UIHandler;
+    private static int refCount = 0;
     private static Semaphore mutex = new Semaphore( 1 );
 
     /** Singleton initializer for framework;
@@ -136,14 +137,19 @@ public class BLEAgent {
 
                 if( self.adapter == null || !self.adapter.isEnabled() ) {
                     lazyLog.e( "Bluetooth not enabled!");
+                    ret = false;
                 } else {
                     lazyLog.d("Initialized" );
                 }
 
             } else if (ctx != context) {
-                lazyLog.e( "Error, BLEAgent already open! (and context references differ): ",
+                lazyLog.e( "BLEAgent already open! (and context references differ): ",
                         context, " != ", ctx);
-                ret = false;
+                ret = true;
+            }
+            if( ret ) {
+                refCount += 1;
+                lazyLog.i( "BLEAgent ref count ", refCount );
             }
             mutex.release();
         } catch ( InterruptedException e ) {
@@ -503,24 +509,39 @@ public class BLEAgent {
     public static void close() {
         try {
             mutex.acquire();
-            if (UIHandler != null) {
+            refCount -= 1;
+            if( refCount > 0) {
+                lazyLog.i("BLEAgent already open ", refCount);
+            } else if( refCount < 0 ) {
+                lazyLog.e( "Negative ref count!!!!!!!", refCount );
+            } else {
+                lazyLog.i("sending task to close BLEAgent");
+                if (UIHandler != null) {
 
-                UIHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (BLEDevice device : deviceMap.values()) {
-                            device.close();
+                    UIHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            clear();
+                            context = null;
+                            UIHandler = null;
+                            self.adapter = null;
+                            lazyLog.i( "Closed BLEAgent");
                         }
-                        deviceMap.clear();
-                        context = null;
-                        UIHandler = null;
-                    }
-                });
+                    });
+                }
             }
             mutex.release();
         } catch ( InterruptedException e ) {
             lazyLog.e( "Unexpected interrupt in close()" );
         }
+    }
+
+    public static void clear() {
+        for (BLEDevice device : deviceMap.values()) {
+            device.close();
+        }
+        deviceMap.clear();
+        self.currentDevice = null;
     }
 
     private BluetoothAdapter adapter = null;
