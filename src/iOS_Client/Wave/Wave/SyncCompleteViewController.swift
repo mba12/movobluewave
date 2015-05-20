@@ -18,4 +18,8 @@ class SyncCompleteViewController : UIViewController {
         performSegueWithIdentifier("UploadComplete", sender: self)
     }
     
+    @IBAction func retryButtonPress(sender: AnyObject) {
+        syncStatusVC?.uploadDataVC?.complete(sender)
+        performSegueWithIdentifier("Upload Data", sender: self)
+    }
 }

@@ -147,10 +147,18 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             
             ///END HANDLE DATA
             
+            ///success
             dispatch_sync(dispatch_get_main_queue(), {
                 //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
                 //self.dismissViewControllerAnimated(false, completion: nil)
                 self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
+            })
+        } else {
+            //failure
+            dispatch_sync(dispatch_get_main_queue(), {
+                //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
+                //self.dismissViewControllerAnimated(false, completion: nil)
+                self.syncStatusVC?.performSegueWithIdentifier("SyncFailure", sender: self)
             })
         }
     }
@@ -159,10 +167,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     //to be in a fatal failure until this message is returned
     func syncFailure(deviceId: NSString?) {
         println("Failed Sync")
+        //failure
         dispatch_sync(dispatch_get_main_queue(), {
-//            self.statusLabel.text = "Sync attempt failed"
+            //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
             //self.dismissViewControllerAnimated(false, completion: nil)
-            self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
+            self.syncStatusVC?.performSegueWithIdentifier("SyncFailure", sender: self)
         })
     }
     
