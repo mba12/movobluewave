@@ -807,7 +807,7 @@
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Syncing Data with Wave" id="YiC-JQ-HjC">
-                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="Rau-zj-OCz">
+                        <barButtonItem key="leftBarButtonItem" title="Cancel" style="done" id="Rau-zj-OCz">
                             <connections>
                                 <action selector="cancelButtonPress:" destination="TxX-LN-3sz" id="2gO-uT-Vqc"/>
                             </connections>
@@ -940,7 +940,7 @@
                         </variation>
                     </view>
                     <navigationItem key="navigationItem" title="Select Wave to Start Sync" id="iPQ-2j-2Cm">
-                        <barButtonItem key="leftBarButtonItem" title="Cancel" id="KyM-rp-rFD"/>
+                        <barButtonItem key="leftBarButtonItem" title="Cancel" style="done" id="KyM-rp-rFD"/>
                     </navigationItem>
                     <connections>
                         <outlet property="waveDeviceTableView" destination="p7g-g3-69Y" id="kQ4-Yo-chk"/>
@@ -962,11 +962,46 @@
                     <view key="view" contentMode="scaleToFill" id="xhf-pm-S0e">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hold the button for 3 seconds until a red" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sg3-PM-mgE">
+                                <rect key="frame" x="145" y="260" width="310" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Turn Wave Bluetooth OFF:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2r3-pk-er2">
+                                <rect key="frame" x="199" y="232" width="202" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="light flashes" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U5D-wE-tdw">
+                                <rect key="frame" x="254" y="289" width="91.5" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="1st_sync_4" translatesAutoresizingMaskIntoConstraints="NO" id="vMd-C2-CMf">
+                                <rect key="frame" x="0.0" y="324.5" width="600" height="231.5"/>
+                            </imageView>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="centerX" secondItem="sg3-PM-mgE" secondAttribute="centerX" id="2Ub-gd-ABf"/>
+                            <constraint firstAttribute="centerX" secondItem="2r3-pk-er2" secondAttribute="centerX" id="Dwr-7L-NvT"/>
+                            <constraint firstItem="sg3-PM-mgE" firstAttribute="top" secondItem="2r3-pk-er2" secondAttribute="bottom" constant="8" id="GUV-lS-P9b"/>
+                            <constraint firstAttribute="width" secondItem="vMd-C2-CMf" secondAttribute="width" id="OlX-Ay-mbu"/>
+                            <constraint firstAttribute="centerY" secondItem="U5D-wE-tdw" secondAttribute="centerY" constant="0.5" id="cZl-5S-YJs"/>
+                            <constraint firstItem="vMd-C2-CMf" firstAttribute="top" secondItem="U5D-wE-tdw" secondAttribute="bottom" constant="15" id="gNd-UY-XQD"/>
+                            <constraint firstItem="U5D-wE-tdw" firstAttribute="top" secondItem="sg3-PM-mgE" secondAttribute="bottom" constant="8" id="kPA-ES-l0h"/>
+                            <constraint firstAttribute="centerX" secondItem="vMd-C2-CMf" secondAttribute="centerX" id="wyc-Hi-BL1"/>
+                            <constraint firstAttribute="centerX" secondItem="U5D-wE-tdw" secondAttribute="centerX" id="ytK-mx-ENH"/>
+                            <constraint firstItem="trb-Md-Ims" firstAttribute="top" secondItem="vMd-C2-CMf" secondAttribute="bottom" id="zIK-ds-Hy3"/>
+                        </constraints>
                     </view>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" title="Syncing Data with Wave" id="wiY-Rl-cOO">
-                        <barButtonItem key="leftBarButtonItem" title="OK" id="ekc-y7-wWh">
+                        <barButtonItem key="leftBarButtonItem" title="OK" style="done" id="ekc-y7-wWh">
                             <connections>
                                 <action selector="ackButtonPress:" destination="q00-fc-g9F" id="xih-9O-802"/>
                             </connections>
@@ -1071,6 +1106,7 @@
         </scene>
     </scenes>
     <resources>
+        <image name="1st_sync_4" width="227" height="374"/>
         <image name="activity_norm" width="152" height="90"/>
         <image name="activity_sel" width="152" height="90"/>
         <image name="buttonBlack" width="381" height="65"/>
