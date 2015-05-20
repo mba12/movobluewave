@@ -75,7 +75,7 @@ public class FirstLogin extends Activity {
         login = (Button) findViewById(R.id.loginButton);
         forgot = (Button) findViewById(R.id.forgotPass);
         Firebase.setAndroidContext(c);
-        loginRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/");
+        loginRef = new Firebase(Home.firebase_url);
 
 
         username = (EditText) findViewById(R.id.username);
@@ -93,7 +93,7 @@ public class FirstLogin extends Activity {
                 } else {
 
                     if (false) { //(!(mEmail.contains("@"))
-                        Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                        Firebase lookupEmail = new Firebase(Home.firebase_url + "emailtable/");
                         Firebase child = lookupEmail.child(mEmail);
                         child.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
@@ -160,7 +160,7 @@ public class FirstLogin extends Activity {
 //                loginRef.auth
 
                 if (false) {//(!(mEmail.contains("@"))
-                    Firebase lookupEmail = new Firebase("https://ss-movo-wave-v2.firebaseio.com/emailtable/");
+                    Firebase lookupEmail = new Firebase(Home.firebase_url + "emailtable/");
                     Firebase child = lookupEmail.child(mEmail);
                     child.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -268,7 +268,7 @@ public class FirstLogin extends Activity {
                 myData.setCurEmail(mEmail);
                 myData.setCurPW(mPassword);
 
-                final Firebase currentUserRef = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + authData.getUid());
+                final Firebase currentUserRef = new Firebase(Home.firebase_url + "users/" + authData.getUid());
                 myData.setCurrentUserRef(currentUserRef);
                 Firebase metadataChild = currentUserRef.child("metadata");
 
@@ -304,7 +304,7 @@ public class FirstLogin extends Activity {
                             if (resetPass1.equals(resetPass2)) {
                                 ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
                                 pb2.setVisibility(View.VISIBLE);
-                                Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/");
+                                Firebase ref = new Firebase(Home.firebase_url + "users/");
                                 ref.changePassword(mEmail, mPassword, resetPass1, new Firebase.ResultHandler() {
                                     @Override
                                     public void onSuccess() {

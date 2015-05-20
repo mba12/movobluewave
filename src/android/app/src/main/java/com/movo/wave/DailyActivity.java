@@ -234,7 +234,7 @@ public class DailyActivity extends ActionBarActivity {
 //                setContentView(R.layout.activity_daily);
             }
             Log.d(TAG, "Loading image from firebase");
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+            Firebase ref = new Firebase(Home.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -520,7 +520,7 @@ public class DailyActivity extends ActionBarActivity {
                     UserData myData = UserData.getUserData(c);
                     String user = myData.getCurUID();
 
-                    Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                    Firebase ref = new Firebase(Home.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();

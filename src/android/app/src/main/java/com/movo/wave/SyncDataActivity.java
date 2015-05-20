@@ -195,7 +195,7 @@ public class SyncDataActivity extends MenuActivity {
             //firebase upload sync
 //                    UserData myData = UserData.getUserData(c);
             //sync ref
-            Firebase ref = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + cur.getString(3) + "/sync/" + cur.getString(0));
+            Firebase ref = new Firebase(Home.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
 
 
             Map<String, Object> syncData = new HashMap<String, Object>();
@@ -244,9 +244,9 @@ public class SyncDataActivity extends MenuActivity {
                         String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
                         String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
                         oldDate = date;
-                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0)); //to modify child node
+                        Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0)); //to modify child node
                         refStep2.setValue(minuteMap);
-                        Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                        Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                         refSyncSteps.setValue(minuteMap);
 
                         minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
@@ -313,9 +313,9 @@ public class SyncDataActivity extends MenuActivity {
                 String dayMinute = (curDate.getMinutes() + (curDate.getHours() * 60)) + "";
 
 
-                Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                 refStep2.setValue(minuteMap);
-                Firebase refSyncSteps =  new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
+                Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (curDate.getYear() + 1900) + "/" + (curDate.getMonth() + 1) + "/" + oldDate).child(curSteps.getString(0));
                 refSyncSteps.setValue(minuteMap);
 
 //                    refStep.setValue(list);
