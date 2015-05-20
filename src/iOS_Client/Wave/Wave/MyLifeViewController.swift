@@ -59,7 +59,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             if(fbUserRef=="Error"){
                 NSLog("No user logged in, logging in as philg@sensorstar.com")
                 let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-                ref.authUser("0@0.com", password: "0",
+                ref.authUser("9@9.com", password: "9",
                     withCompletionBlock: { error, authData in
                         
                         if error != nil {
@@ -67,12 +67,12 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                             NSLog("Login failed")
                         } else {
                             // We are now logged in
-                            NSLog("We logged in as philg: %@",authData.uid)
+                            NSLog("We logged in as 9: %@",authData.uid)
                             //                                    self.userID = authData.uid
                             var ref = "https://ss-movo-wave-v2.firebaseio.com"
                             ref = ref + "/users/"
                             ref = ref + authData.uid
-                            UserData.getOrCreateUserData().createUser(String: authData.uid, String: "0@0.com", String: "0", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
+                            UserData.getOrCreateUserData().createUser(String: authData.uid, String: "9@9.com", String: "9", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
                             
                             self.retrieveData()
                             
@@ -101,28 +101,51 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         var countInt:Int16 = Int16(countString!.integerValue)
         var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
         var isoStop:String = isoDate + (daySnapshot.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-        
+        var serialnumber:String = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
         var startTime = createDateFromString(String: isoStart)
         var stopTime = createDateFromString(String: isoStop)
         
+        var isDuplicate = false
         
+        let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", startTime, stopTime, serialnumber)
         
-        var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-        newItem.count = countInt
-        newItem.user = UserData.getOrCreateUserData().getCurrentUID()
-        newItem.syncid = syncId
-        newItem.starttime = startTime
-        newItem.endtime = stopTime
-        newItem.serialnumber = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
-       
-        
-        
-        
-        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-            //              NSLog("CoreData: %@",fetchResults[0].count)
-        }
+        let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
+        fetchRequestDupeCheck.predicate = predicate
+        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
+            if(fetchResults.count > 0){
+                NSLog("Duplicate found")
 
+                for(var i = 0 ; i < fetchResults.count ; i++){
+                    NSLog("Duplicate %i",fetchResults[i].count)
+                    
+                }
+                isDuplicate = true
+                
+            }
+        }
+        
+        if(!isDuplicate){
+            NSLog("Unique entry found, adding to coredata")
+            NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serialnumber,startTime,stopTime)
+            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
+            newItem.count = countInt
+            newItem.user = UserData.getOrCreateUserData().getCurrentUID()
+            newItem.syncid = syncId
+            newItem.starttime = startTime
+            newItem.endtime = stopTime
+            newItem.serialnumber = serialnumber
+            
+            
+            
+            
+//            let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+//            if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+//                //              NSLog("CoreData: %@",fetchResults[0].count)
+//            }
+        }else{
+            NSLog("Duplicate entry found, not adding to coredata")
+        }
+        
         
     }
     
@@ -248,11 +271,11 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         var dateStart = createDateFromString(String: isoStartString)
         var dateStop = createDateFromString(String: isoStopString)
         
-        if(cellDateNumber==17){
-        println("what")
-        }
+//        if(cellDateNumber==17){
+//        println("what")
+//        }
         
-        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime", dateStop, dateStart)
+        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
 
         let fetchRequest = NSFetchRequest(entityName: "StepEntry")
         fetchRequest.predicate = predicate
@@ -263,7 +286,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 println("Count %i",fetchResults.count)
                 var resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount-1);i++){
-                    println("Adding steps up for today %i",Int(fetchResults[i].count))
+                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
                     totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
                 }
                 
