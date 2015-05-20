@@ -63,6 +63,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         var count = 0
         for step in data {
             count += step.steps
+            println("step: "+String(step.steps))
         }
         dispatch_sync(dispatch_get_main_queue(), {
             self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
