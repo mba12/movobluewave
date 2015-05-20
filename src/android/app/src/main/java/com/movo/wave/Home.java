@@ -1007,6 +1007,9 @@ public class Home extends MenuActivity {
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
+
+                        // TODO: Discuss changes below with Phil -- comment from Michael
+
                         Object obj = snapshot.getValue();
                         if (obj == null) {
                             Log.d(TAG, "MBA: Value from FB is null.");
