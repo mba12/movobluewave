@@ -3,36 +3,34 @@
 //  Wave
 //
 //  Created by Michael Ahern on 5/1/15.
-//  Copyright (c) 2015 Phil Gandy. All rights reserved.
 //
 
 import Foundation
 
 public class Calculator {
     
-    let MALE_BMR_WEIGHT:Double = 13.75;
-    let MALE_BMR_WEIGHT:Double = 13.75;
-    let MALE_BMR_AGE:Double = 6.76;
-    let MALE_BMR_HEIGHT:Double = 5.00;
-    let MALE_BMR_CONST:Double = 66.00;
-    let FEMALE_BMR_WEIGHT:Double = 9.56;
-    let FEMALE_BMR_HEIGHT:Double = 1.85;
-    let FEMALE_BMR_AGE:Double = 4.68;
-    let FEMALE_BMR_CONST:Double = 655;
-    let LB_TO_KG:Double = 0.4536;
-    let IN_TO_CM:Double = 2.54;
-    let ROUND_FACTOR:Double = 0.5;
-    let MET_HEIGHT_DIVISOR:Double = 60
-    let MET_MILE_CONSTANT:Double = 3.92;
-    let MALE = "Male";
+    static let MALE_BMR_WEIGHT:Double = 13.75;
+    static let MALE_BMR_AGE:Double = 6.76;
+    static let MALE_BMR_HEIGHT:Double = 5.00;
+    static let MALE_BMR_CONST:Double = 66.00;
+    static let FEMALE_BMR_WEIGHT:Double = 9.56;
+    static let FEMALE_BMR_HEIGHT:Double = 1.85;
+    static let FEMALE_BMR_AGE:Double = 4.68;
+    static let FEMALE_BMR_CONST:Double = 655;
+    static let LB_TO_KG:Double = 0.4536;
+    static let IN_TO_CM:Double = 2.54;
+    static let ROUND_FACTOR:Double = 0.5;
+    static let MET_HEIGHT_DIVISOR:Double = 60
+    static let MET_MILE_CONSTANT:Double = 3.92;
+    static let MALE = "Male";
     //this is a lookup-table in order to get the MET values calculated by Michael.
-    var MET_TABLE = [2.0, 2.5, 3.0, 3.3, 3.8, 5.0, 6.3, 8.0];
+    static let MET_TABLE = [2.0, 2.5, 3.0, 3.3, 3.8, 5.0, 6.3, 8.0];
     
     /*
     * steps integer
     * height in inches
     */
-    public func calculate_distance(steps:Int, height:Int) -> Double {
+    public static func calculate_distance(steps:Int, height:Int) -> Double {
         
         // below is the explanation for the math done to calculate the MET
         // milesper10k = (height / 60) * 3.92
@@ -43,11 +41,11 @@ public class Calculator {
         return miles;
     }
     
-    public func simple_calculate_calories(int steps:Int) -> Double {
+    public static func simple_calculate_calories(int steps:Int) -> Double {
         return Double(steps) * 0.045;
     }
     
-    public func calculate_calories(steps:Int, height:Int, weight:Int, gender:String,
+    public static func calculate_calories(steps:Int, height:Int, weight:Int, gender:String,
                                      birthYear:Int, minutes:Int) -> Double {
         var calories:Double = 0;
         var cm:Double = convert_inches_to_cm(Double(height));
@@ -91,15 +89,15 @@ public class Calculator {
         return calories;
     }
     
-    public func convert_inches_to_cm(inches:Double) -> Double {
+    public static func convert_inches_to_cm(inches:Double) -> Double {
         return inches * 2.54;
     }
     
-    public func convert_lbs_to_kgs(double pounds:Double) -> Double {
+    public static func convert_lbs_to_kgs(double pounds:Double) -> Double {
         return (pounds / 2.2046);
     }
     
-    public func calculate_bmr(weight_kg:Double, height_cm:Double, age:Double, gender:String) -> Double {
+    public static func calculate_bmr(weight_kg:Double, height_cm:Double, age:Double, gender:String) -> Double {
     
         var bmr:Double = 0.00;
         // NOTE: watch out for case sensitivity in this compare
@@ -111,18 +109,18 @@ public class Calculator {
         return bmr;
     }
     
-    public func calculate_met(distance:Double, minutes:Double, steps:Double, cm:Double) -> Double {
+    public static func calculate_met(distance:Double, minutes:Double, steps:Double, cm:Double) -> Double {
     
         // Would be preferable to have hour by hour data on steps to better know walking intensity.
         var avg_speed:Double = distance / minutes / 60.0;
         
         var value:Double = Double(round(  (  (steps / 10000.00) * (cm / MET_HEIGHT_DIVISOR) * MET_MILE_CONSTANT) / 0.50  )) * ROUND_FACTOR * 2.0 - 3.0;
     
-        var met:Double = clamp(value, min: 0, max: 7);
+        var met:Double = clamp(value, min: 0.0, max: 7);
         return met;
     }
     
-    internal func clamp(val:Double, min:Double, max:Double) -> Double {
+    static internal func clamp(val:Double, min:Double, max:Double) -> Double {
         if (val < min) { return min; }
         else if(val > max) { return max; }
         else { return  val; }
