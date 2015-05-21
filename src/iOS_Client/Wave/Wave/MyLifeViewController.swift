@@ -85,7 +85,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         
         var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
-        println(stepsChild.value)
+//        println(stepsChild.value)
         var countString = daySnapshot.childSnapshotForPath("count").valueInExportFormat() as? NSString
         var countInt:Int16 = Int16(countString!.integerValue)
         var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
@@ -102,10 +102,10 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         fetchRequestDupeCheck.predicate = predicate
         if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
             if(fetchResults.count > 0){
-                NSLog("Duplicate found")
+//                NSLog("Duplicate found")
 
                 for(var i = 0 ; i < fetchResults.count ; i++){
-                    NSLog("Duplicate %i",fetchResults[i].count)
+//                    NSLog("Duplicate %i",fetchResults[i].count)
                     
                 }
                 isDuplicate = true
@@ -127,12 +127,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
             
             
-//            let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-//            if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-//                //              NSLog("CoreData: %@",fetchResults[0].count)
-//            }
+
         }else{
-            NSLog("Duplicate entry found, not adding to coredata")
+//            NSLog("Duplicate entry found, not adding to coredata")
         }
         self.managedObjectContext!.save(nil)
 
@@ -306,7 +303,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
             var totalStepsForToday = 0
             if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
+//                println("Count %i",fetchResults.count)
                 var resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount);i++){
 //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
@@ -371,7 +368,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     func createDateFromString(String isoString:String) -> NSDate{
         let form = NSDateFormatter()
         form.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
-//        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         form.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         form.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         
