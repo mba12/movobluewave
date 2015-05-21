@@ -31,6 +31,10 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 //    var days:Int? = nil
     var date = NSDate()
     
+    //for passing context to daily view
+    var selectedDay:Int = 0
+    var selectedMonth:Int = 0
+    var selectedYear:Int = 0
     
     
     
@@ -287,9 +291,35 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //Do calculations for reverse calendar
         
         
+        //This won't work//
+        //This doesn't account for local time or GMT // end of month
+        /*
+        let cellCount = collectionView.numberOfItemsInSection(0)
+        let cellDateNumber = abs(indexPath.row - cellCount)
+        
+        var year:String = String(todayYear)
+        var month:String = String(todayMonth)
+        var iso8601String:String = year
+        iso8601String = iso8601String + "-"
+        iso8601String = iso8601String + month
+        iso8601String = iso8601String + "-"
+
+        var isoStartString = iso8601String + String(cellDateNumber)
+        isoStartString = isoStartString + "T"
+        isoStartString = isoStartString + "00:00:00Z"
+        var isoStopString = iso8601String + String(cellDateNumber)
+        isoStopString = isoStopString + "T"
+        isoStopString = isoStopString + "23:59:59Z"
+        
+        var dateStart = createDateFromString(String: isoStartString)
+        var dateStop = createDateFromString(String: isoStopString)
+        */
+        
         //This display should be built from LOCAL TIME
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
+        cell.textLabel?.text = "\(cellDateNumber)"
+
         var calendar = NSCalendar.currentCalendar()
         calendar.timeZone = NSTimeZone.localTimeZone()
         var startTimeComponents = NSDateComponents()
@@ -402,8 +432,41 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        selectedDay =  collectionView.numberOfItemsInSection(0) - indexPath.row
+        
+        //temporary
+        selectedMonth = todayMonth
+        selectedYear = todayYear
+        
+        //perform segue
         performSegueWithIdentifier("ShowDailyView", sender: self)
+
     }
     
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        if let name = segue.identifier {
+            if (name == "ShowDailyView") {
+                if let dailyVC = segue.destinationViewController as? DailyViewController {   
+                    dailyVC.currentDate = YMDLocalToNSDate(selectedYear, selectedMonth, selectedDay)
+                }
+                
+            }
+        }
+    }
     
+}
+
+
+func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
+    var calendar = NSCalendar.currentCalendar()
+    calendar.timeZone = NSTimeZone.localTimeZone()
+    var startTimeComponents = NSDateComponents()
+    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.CalendarUnitDay)
+    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.CalendarUnitYear)
+    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.CalendarUnitMonth)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
+    
+    return calendar.dateFromComponents(startTimeComponents)
 }
