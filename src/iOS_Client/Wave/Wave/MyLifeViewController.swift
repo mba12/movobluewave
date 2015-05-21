@@ -166,7 +166,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
             
             var fbMonth = Firebase(url:fbMonthRef)
-            fbMonth.observeEventType(.Value, withBlock: { snapshot in
+            fbMonth.observeSingleEventOfType(.Value, withBlock: { snapshot in
                 var monthItr = snapshot.children
                 while let monthSnap = monthItr.nextObject() as? FDataSnapshot{
                     //monthSnap grabs the individual days, calling .key on it will return the day #
@@ -182,7 +182,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         while let daySnap = itr2.nextObject() as? FDataSnapshot{
                             //this steps into the node title and gets the objects
 //                            isoDate = isoDate + daySnap.key
-                            self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            if(daySnap.hasChildren()){
+                                self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            }
                             
                         }
                     }
