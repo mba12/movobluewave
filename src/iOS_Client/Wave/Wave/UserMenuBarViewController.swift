@@ -12,6 +12,9 @@ import UIKit
 class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
     
     @IBOutlet weak var statsButton: UIButton!
+    @IBOutlet weak var profilePictureButton: UIButton!
+    @IBOutlet weak var userNameLabel: UILabel!
+
     
     override func viewDidLoad() {
     }
@@ -61,5 +64,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
             }
         }
     }
+    
+    
     
 }
