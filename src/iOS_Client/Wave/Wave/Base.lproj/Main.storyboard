@@ -36,7 +36,7 @@
                                     <constraint firstAttribute="height" constant="128" id="M83-4Z-thW"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="" id="5Rn-yN-IPh"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="5Rn-yN-IPh"/>
                                 </connections>
                             </containerView>
                         </subviews>
@@ -64,6 +64,7 @@
                     <tabBarItem key="tabBarItem" title="Stats" image="stats" selectedImage="stats" id="yah-2t-xvV"/>
                     <connections>
                         <outlet property="chartView" destination="QkU-8E-6IT" id="T4g-V1-8dY"/>
+                        <outlet property="containerView" destination="SIT-Db-3yl" id="pwk-wX-6pe"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BL6-FD-00U" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -129,7 +130,7 @@
                                     <constraint firstAttribute="height" constant="128" id="WyB-af-s9V"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="" id="Ld4-Fc-WJ2"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="Ld4-Fc-WJ2"/>
                                 </connections>
                             </containerView>
                         </subviews>
@@ -159,6 +160,7 @@
                     <connections>
                         <outlet property="collectionView" destination="DfX-a5-M43" id="hXf-Qc-5b5"/>
                         <outlet property="collectionViewHost" destination="4Hi-LU-hbn" id="75B-ox-KB7"/>
+                        <outlet property="containerView" destination="YTR-kN-WCm" id="yOg-5F-O0o"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NXd-q2-twR" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -715,7 +717,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Status" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="i6M-t5-kRc">
-                                <rect key="frame" x="16" y="28" width="50" height="21"/>
+                                <rect key="frame" x="16" y="28" width="49.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -724,13 +726,13 @@
                                 <rect key="frame" x="244" y="273" width="111" height="54"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Downloading data." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UhB-MV-OFc">
-                                <rect key="frame" x="228" y="56" width="145" height="21"/>
+                                <rect key="frame" x="228" y="56" width="144.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Please wait." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LdS-8d-GNL">
-                                <rect key="frame" x="255" y="85" width="93" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LdS-8d-GNL">
+                                <rect key="frame" x="254" y="85" width="92.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -1078,6 +1080,9 @@
                         </variation>
                     </view>
                     <toolbarItems/>
+                    <connections>
+                        <outlet property="statsButton" destination="4WT-YW-I8F" id="koy-Nz-cbP"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wbl-xU-JA6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -1101,7 +1106,7 @@
                                     <constraint firstAttribute="height" constant="128" id="h2v-Hu-aaU"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" id="BIB-PS-duY"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="BIB-PS-duY"/>
                                 </connections>
                             </containerView>
                         </subviews>

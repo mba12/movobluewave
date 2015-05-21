@@ -19,6 +19,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     //singleton experiment. Can't resolve variable?
     
+    @IBOutlet weak var containerView: UIView!
     
     @IBOutlet weak var collectionViewHost: UIView!
     
@@ -125,7 +126,6 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 //            //firebase ref is null from coredata
 //            NSLog("MyLife we shuldn't enter this block, coredata should never be null")
 //        }
-        
         
     }
     
