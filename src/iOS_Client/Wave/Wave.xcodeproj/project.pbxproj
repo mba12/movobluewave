@@ -33,6 +33,8 @@
 		4A2701D61B063CFB00848DCB /* StepEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701D51B063CFB00848DCB /* StepEntry.swift */; };
 		4AAD687B1B09696600A6A761 /* UserData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAD687A1B09696600A6A761 /* UserData.swift */; };
 		4AAD68881B0A81CC00A6A761 /* UserEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AAD68871B0A81CC00A6A761 /* UserEntry.swift */; };
+		4AB3BF2A1B0E0E69004EA08B /* StatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AB3BF291B0E0E69004EA08B /* StatsViewController.swift */; };
+		4AB3BF2E1B0E173F004EA08B /* Charts.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4A2701C71B02424F00848DCB /* Charts.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4AEEA9CE1AD173900055C771 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CD1AD173900055C771 /* AppDelegate.swift */; };
 		4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */; };
 		4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AEEA9D21AD173900055C771 /* ViewController.swift */; };
@@ -51,6 +53,13 @@
 			remoteGlobalIDString = 5BA8EC401A9D14DC00CE82E1;
 			remoteInfo = Charts;
 		};
+		4AB3BF2F1B0E173F004EA08B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4A2701C21B02424E00848DCB /* Charts.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 5BA8EC3F1A9D14DC00CE82E1;
+			remoteInfo = Charts;
+		};
 		4AEEA9E11AD173900055C771 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4AEEA9C01AD173900055C771 /* Project object */;
@@ -59,6 +68,20 @@
 			remoteInfo = Wave;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4AB3BF311B0E173F004EA08B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4AB3BF2E1B0E173F004EA08B /* Charts.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		02314C781B0D46C900AB888E /* DailyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DailyViewController.swift; sourceTree = "<group>"; };
@@ -89,6 +112,7 @@
 		4A2701D51B063CFB00848DCB /* StepEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = StepEntry.swift; path = Wave/StepEntry.swift; sourceTree = SOURCE_ROOT; };
 		4AAD687A1B09696600A6A761 /* UserData.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserData.swift; sourceTree = "<group>"; };
 		4AAD68871B0A81CC00A6A761 /* UserEntry.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserEntry.swift; sourceTree = "<group>"; };
+		4AB3BF291B0E0E69004EA08B /* StatsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StatsViewController.swift; sourceTree = "<group>"; };
 		4AEEA9C81AD173900055C771 /* Wave.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Wave.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4AEEA9CC1AD173900055C771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4AEEA9CD1AD173900055C771 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -192,6 +216,7 @@
 				02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */,
 				02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */,
 				02314C781B0D46C900AB888E /* DailyViewController.swift */,
+				4AB3BF291B0E0E69004EA08B /* StatsViewController.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -231,10 +256,12 @@
 				4AEEA9C41AD173900055C771 /* Sources */,
 				4AEEA9C51AD173900055C771 /* Frameworks */,
 				4AEEA9C61AD173900055C771 /* Resources */,
+				4AB3BF311B0E173F004EA08B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				4AB3BF301B0E173F004EA08B /* PBXTargetDependency */,
 			);
 			name = Wave;
 			productName = Wave;
@@ -355,6 +382,7 @@
 				4A2701D01B063CFA00848DCB /* SyncEntry.swift in Sources */,
 				4AEEA9F31AD17C710055C771 /* CalendarViewController.swift in Sources */,
 				4AEEA9D11AD173900055C771 /* Wave.xcdatamodeld in Sources */,
+				4AB3BF2A1B0E0E69004EA08B /* StatsViewController.swift in Sources */,
 				4A27019E1B00E48400848DCB /* LandingScreenViewController.swift in Sources */,
 				02678D591B0CEACC008113D4 /* SyncCompleteViewController.swift in Sources */,
 				4A2701A41B00E59600848DCB /* RegisterViewController.swift in Sources */,
@@ -375,6 +403,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4AB3BF301B0E173F004EA08B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = Charts;
+			targetProxy = 4AB3BF2F1B0E173F004EA08B /* PBXContainerItemProxy */;
+		};
 		4AEEA9E21AD173900055C771 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4AEEA9C71AD173900055C771 /* Wave */;
