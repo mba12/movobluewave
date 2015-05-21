@@ -172,7 +172,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func dateFormatFBRootNode( dateIn:NSDate)->String{
         var dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "yyyy/MM/dd"
-        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         var dateStringOut = dateFormatter.stringFromDate(dateIn)
@@ -182,7 +182,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func dateFormatFBTimeNode( dateIn:NSDate)->String{
         var dateFormatter = NSDateFormatter()
         dateFormatter.dateFormat = "'T'HH:mm:ss'Z"
-        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         var dateStringOut = dateFormatter.stringFromDate(dateIn)
@@ -191,8 +191,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     func dateToStringFormat( dateIn:NSDate)->String{
         var dateFormatter = NSDateFormatter()
-        dateFormatter.dateFormat = "yyyy/MM/dd'T'HH:mm:ss'Z"
-        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
+        dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         var dateStringOut = dateFormatter.stringFromDate(dateIn)
@@ -253,8 +253,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     
                     var count = ["count": String(fetchResults[i].count)]
                     var deviceid = ["deviceid": String(fetchResults[i].serialnumber)]
-                    var starttime = ["endtime": dateFormatFBTimeNode(fetchResults[i].starttime)]
-                    var endtime = ["starttime": dateFormatFBTimeNode(fetchResults[i].endtime)]
+                    var starttime = ["endtime": dateFormatFBTimeNode(fetchResults[i].endtime)]
+                    var endtime = ["starttime": dateFormatFBTimeNode(fetchResults[i].starttime)]
                     
                     dayRef.updateChildValues(count)
                     dayRef.updateChildValues(deviceid)
