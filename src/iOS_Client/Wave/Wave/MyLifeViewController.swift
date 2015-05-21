@@ -57,75 +57,27 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         self.collectionViewHost.backgroundColor = UIColor.clearColor()
         
         
-        // Create a new fetch request using the LogItem entity
-//        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
-//            
-//            if(fbUserRef=="Error"){
-//                NSLog("No user logged in, logging in as philg@sensorstar.com")
-//                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
-//                
-//                let fetchRequest = NSFetchRequest(entityName: "UserEntry")
-//                //                fetchRequest.predicate = predicate
-//                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
-//                    
-//                    if(fetchResults.count > 0){
-//                        UserData.getOrCreateUserData().createUser(
-//                            String: fetchResults[0].id,
-//                            String: fetchResults[0].email,
-//                            String: fetchResults[0].pw,
-//                            NSDate: fetchResults[0].birthdate,
-//                            Int: Int(fetchResults[0].heightfeet),
-//                            Int: Int(fetchResults[0].heightinches),
-//                            Int: Int(fetchResults[0].weight),
-//                            String: fetchResults[0].gender,
-//                            String: fetchResults[0].fullname,
-//                            String: fetchResults[0].username,
-//                            String: fetchResults[0].reference)
-////                        UserData.getOrCreateUserData().createUser(String: fetchResults[0].id, String: fetchResults[0].email, String: fetchResults[0].pw, NSDate:fetchResults[0].birthdate, Int: fetchResults[0].heightinches, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: "")
-//                        
-////                        CreateUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){
-//                        
-//                    }else{
-//                        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-//                        ref.authUser("9@9.com", password: "9",
-//                            withCompletionBlock: { error, authData in
-//                                
-//                                if error != nil {
-//                                    // There was an error logging in to this account
-//                                    NSLog("Login failed")
-//                                } else {
-//                                    // We are now logged in
-//                                    NSLog("We logged in as 9: %@",authData.uid)
-//                                    //                                    self.userID = authData.uid
-//                                    var ref = "https://ss-movo-wave-v2.firebaseio.com"
-//                                    ref = ref + "/users/"
-//                                    ref = ref + authData.uid
-//                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "9@9.com", String: "9", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
-//                                    
-//                                    //                            self.retrieveData()
-//                                    
-//                                    
-//                                }
-//                        })
-//
-//                    }
-//                } else {
-//                    
-//                }
-//
-//                
-//                
-//                
-//                
-//                
-//            } else {
-////                retrieveData()
-//                
-//            }
-//        } else {
-//            //firebase ref is null from coredata
-//            NSLog("MyLife we shuldn't enter this block, coredata should never be null")
-//        }
+        
+    }
+    
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+//         Create a new fetch request using the LogItem entity
+                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+        
+                    if(fbUserRef=="Error"){
+                        //no user is logged in
+                        NSLog("No user logged in")
+                    } else {
+                        NSLog("Grabbing user steps from firebase")
+                        retrieveData()
+                        
+                    }
+                } else {
+                    //firebase ref is null from coredata
+                    NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+                }
         
     }
     
@@ -133,7 +85,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         
         var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
-        println(stepsChild.value)
+//        println(stepsChild.value)
         var countString = daySnapshot.childSnapshotForPath("count").valueInExportFormat() as? NSString
         var countInt:Int16 = Int16(countString!.integerValue)
         var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
@@ -150,10 +102,10 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         fetchRequestDupeCheck.predicate = predicate
         if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
             if(fetchResults.count > 0){
-                NSLog("Duplicate found")
+//                NSLog("Duplicate found")
 
                 for(var i = 0 ; i < fetchResults.count ; i++){
-                    NSLog("Duplicate %i",fetchResults[i].count)
+//                    NSLog("Duplicate %i",fetchResults[i].count)
                     
                 }
                 isDuplicate = true
@@ -175,12 +127,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
             
             
-//            let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-//            if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-//                //              NSLog("CoreData: %@",fetchResults[0].count)
-//            }
+
         }else{
-            NSLog("Duplicate entry found, not adding to coredata")
+//            NSLog("Duplicate entry found, not adding to coredata")
         }
         self.managedObjectContext!.save(nil)
 
@@ -192,7 +141,15 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     func retrieveData() {
         if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
             var year:String = String(todayYear)
-            var month:String = String(todayMonth)
+            var month:String = ""
+            if(todayMonth<10){
+                month = "0" + (String(todayMonth))
+            }else{
+                month = String(todayMonth)
+            }
+ 
+            
+
             
             var fbMonthRef = fbUserRef + "/steps/"
             fbMonthRef = fbMonthRef + year
@@ -206,7 +163,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
             
             var fbMonth = Firebase(url:fbMonthRef)
-            fbMonth.observeEventType(.Value, withBlock: { snapshot in
+            fbMonth.observeSingleEventOfType(.Value, withBlock: { snapshot in
                 var monthItr = snapshot.children
                 while let monthSnap = monthItr.nextObject() as? FDataSnapshot{
                     //monthSnap grabs the individual days, calling .key on it will return the day #
@@ -222,7 +179,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         while let daySnap = itr2.nextObject() as? FDataSnapshot{
                             //this steps into the node title and gets the objects
 //                            isoDate = isoDate + daySnap.key
-                            self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            if(daySnap.hasChildren()){
+                                self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            }
                             
                         }
                     }
@@ -297,7 +256,32 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 
         if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
         
-            cell.textLabel2?.text = String(stepsForDayStarting(dateStart))
+        var dateStart : NSDate = calendar.dateFromComponents(startTimeComponents)!
+        
+        var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
+        
+        
+        
+        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
+
+        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        fetchRequest.predicate = predicate
+        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+            
+            var totalStepsForToday = 0
+            if(fetchResults.count > 0){
+//                println("Count %i",fetchResults.count)
+                var resultsCount = fetchResults.count
+                for(var i=0;i<(resultsCount);i++){
+//                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
+                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
+                }
+                
+                var countString = String(totalStepsForToday)
+                cell.textLabel2?.text = countString
+            }else{
+                cell.textLabel2?.text = "0"
+            }
         } else {
             cell.textLabel2?.text = String(0)
         }

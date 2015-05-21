@@ -54,6 +54,7 @@ public class UserData extends Activity{
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
+    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
 
 
 
@@ -68,7 +69,7 @@ public class UserData extends Activity{
     private UserData(Context c) {
         appContext = c;
         Firebase.setAndroidContext(appContext);
-        loginRef = new Firebase(Home.firebase_url);
+        loginRef = new Firebase(UserData.firebase_url);
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
         boolean userExists = prefs.getBoolean("userExists", false);
 
@@ -212,7 +213,7 @@ public class UserData extends Activity{
     private boolean reAuthenticate(final String email, final String pw) {
         Log.d(TAG, "Re-authenticating with user "+email+" and pass "+pw);
 
-        Firebase ref = new Firebase(Home.firebase_url);
+        Firebase ref = new Firebase(UserData.firebase_url);
         ref.authWithPassword(email, pw, new Firebase.AuthResultHandler() {
             @Override
             public void onAuthenticated(AuthData authData) {
@@ -224,7 +225,7 @@ public class UserData extends Activity{
                 setCurToken(authData.getToken());
                 downloadMetadata(authData.getUid());
 
-                currentUserRef = new Firebase(Home.firebase_url + "users/"+authData.getUid());
+                currentUserRef = new Firebase(UserData.firebase_url + "users/"+authData.getUid());
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
                 prefs.edit().putBoolean("userExists", true);
                 Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
@@ -546,7 +547,7 @@ public class UserData extends Activity{
         userDataString.put("currentUsername", currentUsername);
 
 
-        Firebase ref = new Firebase(Home.firebase_url + "users/" +getCurUID() + "/metadata/");
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" +getCurUID() + "/metadata/");
         ref.setValue(userDataString);
 
 
@@ -593,7 +594,7 @@ public class UserData extends Activity{
 
     public void downloadProfilePic(){
         Log.d(TAG, "Loading image from firebase");
-        Firebase ref = new Firebase(Home.firebase_url + "users/" + currentUID + "/photos/profilepic");
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" + currentUID + "/photos/profilepic");
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -707,7 +708,7 @@ public class UserData extends Activity{
     }
     public void downloadMetadata(String useruid){
         setCurUID(useruid);
-        Firebase child = new Firebase(Home.firebase_url + "users/"+currentUID+"/metadata");
+        Firebase child = new Firebase(UserData.firebase_url + "users/"+currentUID+"/metadata");
         child.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
