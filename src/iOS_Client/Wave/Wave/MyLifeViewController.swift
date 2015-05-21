@@ -281,11 +281,16 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
-        cell.backgroundColor = UIColor(patternImage: UIImage(named:"splash.png")!)
-        //cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
+        cell.backgroundColor = UIColor(patternImage: UIImage(named:"splash")!)
+        cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
         
-        //cell.textLabel?.text = "\(indexPath.row)"
+        cell.textLabel?.text = "\(indexPath.row)"
         //Do calculations for reverse calendar
+        
+        
+        //This won't work//
+        //This doesn't account for local time or GMT
+        /*
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
@@ -306,12 +311,28 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         var dateStart = createDateFromString(String: isoStartString)
         var dateStop = createDateFromString(String: isoStopString)
+        */
         
-//        if(cellDateNumber==19){
-//        println("what")
-//        }
+        //This display should be built from LOCAL TIME
+        let cellCount = collectionView.numberOfItemsInSection(0)
+        let cellDateNumber = abs(indexPath.row - cellCount)
+        var calendar = NSCalendar.currentCalendar()
+        calendar.timeZone = NSTimeZone.localTimeZone()
+        var startTimeComponents = NSDateComponents()
+        startTimeComponents.setValue(cellDateNumber, forComponent: NSCalendarUnit.CalendarUnitDay)
+        startTimeComponents.setValue(todayYear, forComponent: NSCalendarUnit.CalendarUnitYear)
+        startTimeComponents.setValue(todayMonth, forComponent: NSCalendarUnit.CalendarUnitMonth)
+        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
+        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
+        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
         
-        let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
+        var dateStart : NSDate = calendar.dateFromComponents(startTimeComponents)!
+        
+        var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
+        
+        
+        
+        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
 
         let fetchRequest = NSFetchRequest(entityName: "StepEntry")
         fetchRequest.predicate = predicate
@@ -375,6 +396,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         
         cell.imageView?.image = UIImage(named: "datebgwide")
+        
         return cell
     }
     
