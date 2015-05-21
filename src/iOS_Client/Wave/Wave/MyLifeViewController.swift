@@ -71,7 +71,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         NSLog("No user logged in")
                     } else {
                         NSLog("Grabbing user steps from firebase")
-                        retrieveData()
+                        retrieveFBDataForYMD(todayYear, todayMonth, todayDate)
                         
                     }
                 } else {
@@ -81,148 +81,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
     }
     
-    func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String){
-        
-        
-        var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
-//        println(stepsChild.value)
-        var countString = daySnapshot.childSnapshotForPath("count").valueInExportFormat() as? NSString
-        var countInt:Int16 = Int16(countString!.integerValue)
-        var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
-        var isoStop:String = isoDate + (daySnapshot.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-        var serialnumber:String = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
-        var startTime = createDateFromString(String: isoStart)
-        var stopTime = createDateFromString(String: isoStop)
-        
-        var isDuplicate = false
-        
-        let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", startTime, stopTime, serialnumber)
-        
-        let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
-        fetchRequestDupeCheck.predicate = predicate
-        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
-            if(fetchResults.count > 0){
-//                NSLog("Duplicate found")
 
-                for(var i = 0 ; i < fetchResults.count ; i++){
-//                    NSLog("Duplicate %i",fetchResults[i].count)
-                    
-                }
-                isDuplicate = true
-                
-            }
-        }
-        
-        if(!isDuplicate){
-            NSLog("Unique entry found, adding to coredata")
-            NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serialnumber,startTime,stopTime)
-            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: self.managedObjectContext!) as! StepEntry
-            newItem.count = countInt
-            newItem.user = UserData.getOrCreateUserData().getCurrentUID()
-            newItem.syncid = syncId
-            newItem.starttime = startTime
-            newItem.endtime = stopTime
-            newItem.serialnumber = serialnumber
-            
-            
-            
-            
-
-        }else{
-//            NSLog("Duplicate entry found, not adding to coredata")
-        }
-        self.managedObjectContext!.save(nil)
-
-        
-        
-    }
     
-    
-    func retrieveData() {
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
-            var year:String = String(todayYear)
-            var month:String = ""
-            if(todayMonth<10){
-                month = "0" + (String(todayMonth))
-            }else{
-                month = String(todayMonth)
-            }
- 
-            
 
-            
-            var fbMonthRef = fbUserRef + "/steps/"
-            fbMonthRef = fbMonthRef + year
-            fbMonthRef = fbMonthRef + "/"
-            fbMonthRef = fbMonthRef + month
-            fbMonthRef = fbMonthRef + "/"
-            var iso8601String:String = year
-            iso8601String = iso8601String + "-"
-            iso8601String = iso8601String + month
-            iso8601String = iso8601String + "-"
-            
-            
-            var fbMonth = Firebase(url:fbMonthRef)
-            fbMonth.observeSingleEventOfType(.Value, withBlock: { snapshot in
-                var monthItr = snapshot.children
-                while let monthSnap = monthItr.nextObject() as? FDataSnapshot{
-                    //monthSnap grabs the individual days, calling .key on it will return the day #
-                    var isoDate = iso8601String
-                    isoDate = isoDate + monthSnap.key
-                    var dayItr = monthSnap.children
-                    while let rest = dayItr.nextObject() as? FDataSnapshot {
-                        
-                        //this is the root node for a steps object
-                        var syncId = rest.key
-                        //                    NSLog("Syncid is %@",syncId!)
-                        var itr2 = rest.children
-                        while let daySnap = itr2.nextObject() as? FDataSnapshot{
-                            //this steps into the node title and gets the objects
-//                            isoDate = isoDate + daySnap.key
-                            if(daySnap.hasChildren()){
-                                self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
-                            }
-                            
-                        }
-                    }
-
-                }
-                
-                
-                }, withCancelBlock: { error in
-                    println(error.description)
-            })
-
-        
-        
-            
-            
-            
-//            fbUserRef = fbUserRef + "/steps/2015/4/15"
-//            var fb = Firebase(url:fbUserRef)
-//            fb.observeEventType(.Value, withBlock: { snapshot in
-//                NSLog("FBRef %@",fbUserRef)
-//                
-//                
-//                var itr = snapshot.children
-//                while let rest = itr.nextObject() as? FDataSnapshot {
-//                    //this is the root node for a steps object
-//                    var syncId = rest.key
-////                    NSLog("Syncid is %@",syncId!)
-//                    var itr2 = rest.children
-//                    while let daySnap = itr2.nextObject() as? FDataSnapshot{
-//                        //this steps into the node title and gets the objects
-//                        self.insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId)
-//                        
-//                    }
-//                }
-//                }, withCancelBlock: { error in
-//                    println(error.description)
-//            })
-            
-        }
-        
-    }
     
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return 1
@@ -255,35 +116,11 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         cell.textLabel?.text = "\(cellDateNumber)"
 
         if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
-        
-        var dateStart : NSDate = calendar.dateFromComponents(startTimeComponents)!
-        
-        var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-        
-        
-        
-        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
-
-        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-        fetchRequest.predicate = predicate
-        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+            cell.textLabel2?.text = String(stepsForDayStarting(dateStart))
             
-            var totalStepsForToday = 0
-            if(fetchResults.count > 0){
-//                println("Count %i",fetchResults.count)
-                var resultsCount = fetchResults.count
-                for(var i=0;i<(resultsCount);i++){
-//                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
-                }
-                
-                var countString = String(totalStepsForToday)
-                cell.textLabel2?.text = countString
-            }else{
-                cell.textLabel2?.text = "0"
-            }
         } else {
-            cell.textLabel2?.text = String(0)
+            cell.textLabel2?.text = "0"
+            
         }
         
         
@@ -293,19 +130,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     }
     
     
-    
-    func createDateFromString(String isoString:String) -> NSDate{
-        let form = NSDateFormatter()
-        form.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
-        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
-        form.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
-        form.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-        
-        var dateReturn = form.dateFromString(isoString)
-        return dateReturn!
-        
-        
-    }
+
 
     override func viewDidAppear(animated: Bool) {
         dispatch_async(dispatch_get_main_queue(), {
