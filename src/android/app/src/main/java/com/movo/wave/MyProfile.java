@@ -377,7 +377,7 @@ public class MyProfile extends MenuActivity {
                     UserData myData = UserData.getUserData(c);
                     String user = myData.getCurUID();
 
-                    Firebase ref = new Firebase(Home.firebase_url + "users/" + user + "/photos/profilepic");
+                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
