@@ -334,10 +334,10 @@
             </objects>
             <point key="canvasLocation" x="-1632" y="128"/>
         </scene>
-        <!--Tab Bar Controller-->
+        <!--Wave Tab Bar View Controller-->
         <scene sceneID="g9u-85-4eT">
             <objects>
-                <tabBarController storyboardIdentifier="TabBarController" id="EIb-5E-vMu" sceneMemberID="viewController">
+                <tabBarController storyboardIdentifier="TabBarController" id="EIb-5E-vMu" customClass="WaveTabBarViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <navigationItem key="navigationItem" id="3Po-VK-H6c"/>
                     <nil key="simulatedBottomBarMetrics"/>
                     <tabBar key="tabBar" contentMode="scaleToFill" id="Tgj-zE-kHf">
@@ -367,11 +367,11 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="global_bg" translatesAutoresizingMaskIntoConstraints="NO" id="277-3e-pEZ">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="277-3e-pEZ">
+                                <rect key="frame" x="0.0" y="-49" width="600" height="600"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Menu" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bd5-O7-YjM">
-                                <rect key="frame" x="278" y="45" width="44" height="21"/>
+                                <rect key="frame" x="278" y="45" width="43.5" height="20.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -382,6 +382,7 @@
                                     <constraint firstAttribute="width" priority="200" constant="200" id="Wp8-UP-pkq"/>
                                     <constraint firstAttribute="height" priority="200" constant="400" id="fb0-VN-2KC"/>
                                 </constraints>
+                                <color key="separatorColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                 <prototypes>
                                     <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="TextCell" textLabel="IeW-kl-gKS" style="IBUITableViewCellStyleDefault" id="VGN-iO-gfq">
                                         <rect key="frame" x="0.0" y="0.0" width="501" height="44"/>
@@ -1330,9 +1331,9 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="m7l-kc-Wzc"/>
+        <segue reference="60l-AC-Hvq"/>
         <segue reference="Ge0-sS-8AU"/>
-        <segue reference="QFb-do-jEW"/>
+        <segue reference="8NQ-DC-l8W"/>
         <segue reference="BIB-PS-duY"/>
     </inferredMetricsTieBreakers>
 </document>

@@ -201,42 +201,23 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
     var countInt:Int16 = Int16(countString!.integerValue)
     var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
     var isoStop:String = isoDate + (daySnapshot.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-    var serialnumber:String = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+    var serial:String = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
     var startTime = createDateFromString(String: isoStart)
     var stopTime = createDateFromString(String: isoStop)
     
-    var isDuplicate = false
-    
-    let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", startTime, stopTime, serialnumber)
-    
-    let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
-    fetchRequestDupeCheck.predicate = predicate
-    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
-        if(fetchResults.count > 0){
-            //                NSLog("Duplicate found")
-            
-            for(var i = 0 ; i < fetchResults.count ; i++){
-                //                    NSLog("Duplicate %i",fetchResults[i].count)
-                
-            }
-            isDuplicate = true
-            
-        }
-    }
+    var isDuplicate : Bool = duplicateDataCheck(serial, startTime, stopTime)
+
     
     if(!isDuplicate){
         NSLog("Unique entry found, adding to coredata")
-        NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serialnumber,startTime,stopTime)
+        NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serial,startTime,stopTime)
         var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext:(UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! StepEntry
         newItem.count = countInt
         newItem.user = UserData.getOrCreateUserData().getCurrentUID()
         newItem.syncid = syncId
         newItem.starttime = startTime
         newItem.endtime = stopTime
-        newItem.serialnumber = serialnumber
-        
-        
-        
+        newItem.serialnumber = serial
         
         
     }else{
@@ -303,4 +284,56 @@ func retrieveFBDataForYMD(Year: Int, Month: Int, Day: Int) {
     
 }
 
+
+func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)  -> String? {
+    var count:Int = 0
+    var uuid = NSUUID().UUIDString
+    var syncUid = uuid
+    for step in data {
+        count += step.steps
+        if(!duplicateDataCheck(serial, step)){
+            var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! StepEntry
+            newItem.count = Int16(step.steps)
+            newItem.user = UserData.getOrCreateUserData().getCurrentUID()
+            newItem.syncid = syncUid
+            newItem.starttime = step.start
+            newItem.endtime = step.end
+            newItem.serialnumber = String(serial)
+        }
+        
+        println("step: "+String(step.steps))
+    }
+    
+    
+    var syncItem = NSEntityDescription.insertNewObjectForEntityForName("SyncEntry", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! SyncEntry
+    syncItem.guid = syncUid
+    syncItem.starttime = syncStartTime
+    syncItem.endtime = NSDate()
+    syncItem.user = UserData.getOrCreateUserData().getCurrentUID()
+    syncItem.status = false
+    (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+
+    return syncUid
+}
+
+
+func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -> Bool {
+    var isDuplicate : Bool = false
+    let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", startTime, stopTime, serial)
+    
+    let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
+    fetchRequestDupeCheck.predicate = predicate
+    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
+        if(fetchResults.count > 0){
+            
+            isDuplicate = true
+            
+        }
+    }
+    return isDuplicate
+}
+
+func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
+    return duplicateDataCheck(serial , waveStep.start, waveStep.end)
+}
 

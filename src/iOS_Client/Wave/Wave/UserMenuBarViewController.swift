@@ -55,10 +55,13 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
             if let tabbarVC = application.tabBarController {
                 println("Tab bar controller in " + String(tabbarVC.selectedIndex))
                 if (tabbarVC.selectedIndex == 2) {
-                    tabbarVC.selectedIndex = 1
+                    dispatch_async(dispatch_get_main_queue(),  {
+                        tabbarVC.selectedIndex = 1
+                    })
                 } else if (tabbarVC.selectedIndex == 1) {
-                    tabbarVC.selectedIndex = 2
-
+                    dispatch_async(dispatch_get_main_queue(),  {
+                        tabbarVC.selectedIndex = 2
+                    })
                 }
                 
             }

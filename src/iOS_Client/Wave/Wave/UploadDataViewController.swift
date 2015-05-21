@@ -23,6 +23,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         dismissViewControllerAnimated(true, completion: nil)
         waveSync.scan(false)
         waveSync.waveController?.disconnectWaveDevices()
+
         
     }
     
@@ -81,28 +82,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         })
     }
     
-    func duplicateCheck(waveStep: WaveStep, serial:String )->Bool{
-        
-        
-        var isDuplicate = false
-        
-        let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", waveStep.start, waveStep.end, serial)
-        let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
-        fetchRequestDupeCheck.predicate = predicate
-        
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        let managedContext = appDelegate.managedObjectContext
-        
-        if let fetchResults = appDelegate.managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
-            if(fetchResults.count > 0){
-                NSLog("Duplicate found")
-                
-                return true;
-                
-            }
-        }
-        return false;
-    }
+
     
     
     //returns an array of WaveSteps with all of the data from a sync operation
@@ -120,34 +100,10 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             
             
             ///HANDLE DATA HERE
-            var uuid = NSUUID().UUIDString
-            var syncUid = uuid
-            for step in data {
-                count += step.steps
-                if(!duplicateCheck(step,  serial: serial)){
-                    var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! StepEntry
-                    newItem.count = Int16(step.steps)
-                    newItem.user = UserData.getOrCreateUserData().getCurrentUID()
-                    newItem.syncid = syncUid
-                    newItem.starttime = step.start
-                    newItem.endtime = step.end
-                    newItem.serialnumber = String(serial)
-                }
-                
-                println("step: "+String(step.steps))
-            }
-            
-            
-            var syncItem = NSEntityDescription.insertNewObjectForEntityForName("SyncEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! SyncEntry
-            syncItem.guid = syncUid
-            syncItem.starttime = syncStartTime
-            syncItem.endtime = NSDate()
-            syncItem.user = UserData.getOrCreateUserData().getCurrentUID()
-            syncItem.status = false
-            appDelegate.managedObjectContext!.save(nil)
-        
+            if let syncUid = insertSyncDataInDB(serial, data, syncStartTime) {
 
-            uploadSyncResultsToFirebase(syncUid, syncStartTime)
+                uploadSyncResultsToFirebase(syncUid, syncStartTime)
+            }
             
             ///END HANDLE DATA
             

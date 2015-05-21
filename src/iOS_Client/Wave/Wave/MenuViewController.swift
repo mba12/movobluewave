@@ -28,6 +28,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.delegate = self
         tableView.dataSource = self
         tableView.tableFooterView = UIView(frame: CGRect.zeroRect)
+        tableView.backgroundColor = UIColor.clearColor()
         
         if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
             
