@@ -230,7 +230,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
 }
 
 
-func retrieveFBDataForYMD(Year: Int, Month: Int, Day: Int) {
+func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int) {
     if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
         var year:String = String(Year)
         var month:String = ""
