@@ -12,11 +12,13 @@ import CoreData
 class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITableViewDelegate, UITableViewDataSource {
     var waveSync : waveSyncManager!
     var syncUid:String = "Error"
+    var syncStartTime:NSDate = NSDate()
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var syncButton: UIButton!
     @IBOutlet weak var waveDeviceTableView: UITableView!
     
     var syncStatusVC : SyncStatusViewController?
+    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
     @IBAction func cancel(sender: AnyObject?){
         dismissViewControllerAnimated(true, completion: nil)
@@ -108,8 +110,10 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     func syncComplete(deviceId: NSString?, data: [WaveStep]) {
         println("Completed Sync")
         var count = 0
+        var uuid = NSUUID().UUIDString
+        syncUid = uuid
+
         
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext
         if let serial = waveSync?.connectedWaveDeviceSerialString(deviceId!) as? String{
             
@@ -131,18 +135,20 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 
                 println("step: "+String(step.steps))
             }
-            appDelegate.managedObjectContext!.save(nil)
             
-            //        class WaveStep : NSObject {
-            //            let start : NSDate
-            //            let end : NSDate
-            //            let steps : Int
-            //            init (start: NSDate, end: NSDate, steps: Int) {
-            //                self.start = start
-            //                self.end = end
-            //                self.steps = steps
-            //            }
-            //        }
+            
+            var syncItem = NSEntityDescription.insertNewObjectForEntityForName("SyncEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! SyncEntry
+            syncItem.guid = syncUid
+            syncItem.starttime = syncStartTime
+            syncItem.endtime = NSDate()
+            syncItem.user = UserData.getOrCreateUserData().getCurrentUID()
+            syncItem.status = false
+            
+            
+            
+            
+            appDelegate.managedObjectContext!.save(nil)
+            uploadSyncResultsToFirebase()
             
             
             ///END HANDLE DATA
@@ -161,6 +167,163 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 self.syncStatusVC?.performSegueWithIdentifier("SyncFailure", sender: self)
             })
         }
+    }
+    
+    func dateFormatFBRootNode( dateIn:NSDate)->String{
+        var dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd"
+        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
+        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
+        var dateStringOut = dateFormatter.stringFromDate(dateIn)
+        return dateStringOut
+    }
+    
+    func dateFormatFBTimeNode( dateIn:NSDate)->String{
+        var dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "'T'HH:mm:ss'Z"
+        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
+        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
+        var dateStringOut = dateFormatter.stringFromDate(dateIn)
+        return dateStringOut
+    }
+    
+    func dateToStringFormat( dateIn:NSDate)->String{
+        var dateFormatter = NSDateFormatter()
+        dateFormatter.dateFormat = "yyyy/MM/dd'T'HH:mm:ss'Z"
+        //        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
+        dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
+        var dateStringOut = dateFormatter.stringFromDate(dateIn)
+        return dateStringOut
+    }
+    
+    func uploadSyncResultsToFirebase(){
+        
+        var firebaseURL = UserData.getOrCreateUserData().getFirebase()
+        firebaseURL = firebaseURL + "users/"
+        firebaseURL = firebaseURL + UserData.getOrCreateUserData().getCurrentUID()
+        var firebaseStepsURL = firebaseURL + "/steps/"
+        var refSteps = Firebase(url:firebaseStepsURL)
+        var firebaseSyncURL = firebaseURL + "/sync/"
+        firebaseSyncURL = firebaseSyncURL + syncUid
+        firebaseSyncURL = firebaseSyncURL + "/"
+        var refSync = Firebase(url:firebaseSyncURL)
+        
+        
+        var syncStart = ["starttime":dateToStringFormat(syncStartTime)]
+        var syncStop = ["endtime":dateToStringFormat(NSDate())]
+        
+        refSync.updateChildValues(syncStart)
+        refSync.updateChildValues(syncStop)
+            
+        
+        
+        let predicate = NSPredicate(format:"%@ == syncid", syncUid)
+        let fetchRequestSteps = NSFetchRequest(entityName: "StepEntry")
+        fetchRequestSteps.predicate = predicate
+        if let fetchResults = appDelegate.managedObjectContext!.executeFetchRequest(fetchRequestSteps, error: nil) as? [StepEntry] {
+            
+            
+            if(fetchResults.count > 0){
+                println("Count %i",fetchResults.count)
+                var resultsCount = fetchResults.count
+                for(var i=0;i<(resultsCount);i++){
+                    var dateStringFB = dateFormatFBRootNode(fetchResults[i].starttime)
+                    var dateStringTimeOnly = dateFormatFBTimeNode(fetchResults[i].starttime)
+                    
+                    
+                    var appendString = dateStringFB
+                    appendString = appendString + "/"
+                    appendString = appendString + fetchResults[i].syncid
+                    appendString = appendString + "/"
+                    appendString = appendString + dateStringTimeOnly
+                    appendString = appendString + "/"
+
+                    var syncAppend = "steps/"
+                    syncAppend = syncAppend + appendString
+//                    syncAppend = syncAppend + dateStringFB
+//                    syncAppend = syncAppend + "/"
+//                    syncAppend =
+//                    syncAppend = syncAppend + dateStringTimeOnly
+                    
+                    var daySyncRef = refSync.childByAppendingPath(syncAppend)
+                    var dayRef = refSteps.childByAppendingPath(appendString)
+                    
+                    var count = ["count": String(fetchResults[i].count)]
+                    var deviceid = ["deviceid": String(fetchResults[i].serialnumber)]
+                    var starttime = ["endtime": dateFormatFBTimeNode(fetchResults[i].starttime)]
+                    var endtime = ["starttime": dateFormatFBTimeNode(fetchResults[i].endtime)]
+                    
+                    dayRef.updateChildValues(count)
+                    dayRef.updateChildValues(deviceid)
+                    dayRef.updateChildValues(starttime)
+                    dayRef.updateChildValues(endtime)
+                    
+                    daySyncRef.updateChildValues(count)
+                    daySyncRef.updateChildValues(deviceid)
+                    daySyncRef.updateChildValues(starttime)
+                    daySyncRef.updateChildValues(endtime)
+
+                    
+                    
+                    
+                    
+                    NSLog("%@",fetchResults[i].starttime)
+                    
+                    
+                    
+//                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
+                }
+                
+            }else{
+                //no new steps, nothing to upload
+            }
+        } else {
+            //error grabbing steps from coredata
+        }
+        
+        
+        //this will pull steps for a day in april and display them.
+        //        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/"
+        //        urlString = urlString + String(cellDateNumber)
+        //        var todayFirebaseRef = Firebase(url:urlString)
+        //        // Attach a closure to read the data at our posts reference
+        //        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
+        //
+        //            let children = snapshot.hasChildren()
+        //            if(children){
+        //            var itr = snapshot.children
+        //            while let rest = itr.nextObject() as? FDataSnapshot {
+        //                //                    println(rest.value)
+        //                var itr2 = rest.children
+        //                while let rest2 = itr2.nextObject() as? FDataSnapshot{
+        //                    //                    println(rest2.value)
+        //
+        //
+        //                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
+        //                    println(stepsChild.value)
+        //
+        //                    var todaysSteps = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
+        //                    cell.textLabel2?.text = todaysSteps
+        //
+        //                }
+        //            }
+        //            }else{
+        //                cell.textLabel2?.text = "0"
+        //            }
+        
+        
+        //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
+        //                cell.textLabel2?.text = valueStr
+        //                println(valueStr)
+        //            }, withCancelBlock: { error in
+        //                println(error.description)
+        //        })
+
+
+        
     }
     
     //final failure call from a sync attempt.  Sync should not be considered
@@ -194,8 +357,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveSync.scan(true)
     }
     @IBAction func syncButtonPress(sender: AnyObject) {
-        var uuid = NSUUID().UUIDString
-        syncUid = uuid
+                syncStartTime = NSDate()
         waveSync.attemptSync(deviceId: nil)
     }
 
