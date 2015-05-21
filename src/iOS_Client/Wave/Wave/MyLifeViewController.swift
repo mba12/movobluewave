@@ -12,7 +12,7 @@ import CoreData
 
 //@objc(StepEntry)
 
-class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource {
+class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UICollectionViewDelegate {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     //    var userID = ""
     
@@ -402,6 +402,11 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        performSegueWithIdentifier("ShowDailyView", sender: self)
     }
     
     

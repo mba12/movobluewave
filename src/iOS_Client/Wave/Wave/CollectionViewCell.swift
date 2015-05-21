@@ -37,5 +37,9 @@ class CollectionViewCell: UICollectionViewCell {
         textLabel2.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
         textLabel2.textAlignment = .Center
         contentView.addSubview(textLabel2)
+        
     }
+    
+    
+    
 }
