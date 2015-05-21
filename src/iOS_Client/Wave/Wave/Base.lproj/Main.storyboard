@@ -36,7 +36,7 @@
                                     <constraint firstAttribute="height" constant="128" id="M83-4Z-thW"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" id="5Rn-yN-IPh"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="" id="5Rn-yN-IPh"/>
                                 </connections>
                             </containerView>
                         </subviews>
@@ -129,7 +129,7 @@
                                     <constraint firstAttribute="height" constant="128" id="WyB-af-s9V"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" id="Ld4-Fc-WJ2"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="" id="Ld4-Fc-WJ2"/>
                                 </connections>
                             </containerView>
                         </subviews>
@@ -1022,10 +1022,10 @@
             </objects>
             <point key="canvasLocation" x="460" y="1750"/>
         </scene>
-        <!--View Controller-->
+        <!--User Menu Bar View Controller-->
         <scene sceneID="Yvk-Zt-Bfe">
             <objects>
-                <viewController automaticallyAdjustsScrollViewInsets="NO" id="qF1-ct-G6I" sceneMemberID="viewController">
+                <viewController automaticallyAdjustsScrollViewInsets="NO" id="qF1-ct-G6I" customClass="UserMenuBarViewController" customModule="Wave" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Cfs-VU-7R2"/>
                         <viewControllerLayoutGuide type="bottom" id="9yH-Yd-2JZ"/>
@@ -1056,7 +1056,7 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
-                                    <segue destination="DcF-Cx-Kre" kind="showDetail" identifier="ShowChartView" id="jjn-CC-OPQ"/>
+                                    <action selector="statsButtonPress:" destination="qF1-ct-G6I" eventType="touchUpInside" id="c5W-Xv-fvt"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -1081,7 +1081,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wbl-xU-JA6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1861" y="1300"/>
+            <point key="canvasLocation" x="1861" y="1295"/>
         </scene>
         <!--View Controller-->
         <scene sceneID="g8H-a5-wkD">
@@ -1129,11 +1129,41 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="pBm-UI-GOT">
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="splash" translatesAutoresizingMaskIntoConstraints="NO" id="pBm-UI-GOT">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </imageView>
-                            <navigationBar contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Gdy-p1-q9Q">
-                                <rect key="frame" x="0.0" y="20" width="600" height="44"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="daily_stats_gradient" translatesAutoresizingMaskIntoConstraints="NO" id="RXX-N0-glb">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="STEPS" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="M5C-HE-mXm">
+                                <rect key="frame" x="36" y="479" width="184.5" height="72"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="60"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="e98-sf-rq0">
+                                <rect key="frame" x="36" y="407" width="33" height="72"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="60"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0.0 CAL" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="o1I-Ds-AxH">
+                                <rect key="frame" x="36" y="319" width="140.5" height="48"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="40"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2.0 MILES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="rSE-O1-XKR">
+                                <rect key="frame" x="36" y="271" width="180.5" height="48"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="40"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <navigationBar alpha="0.75" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Gdy-p1-q9Q">
+                                <rect key="frame" x="0.0" y="0.0" width="600" height="64"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="64" id="Pfz-FQ-HZy"/>
+                                </constraints>
                                 <textAttributes key="titleTextAttributes">
                                     <fontDescription key="fontDescription" type="system" pointSize="18"/>
                                     <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -1155,33 +1185,6 @@
                                     </navigationItem>
                                 </items>
                             </navigationBar>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="daily_stats_gradient" translatesAutoresizingMaskIntoConstraints="NO" id="RXX-N0-glb">
-                                <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
-                            </imageView>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="STEPS" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="M5C-HE-mXm">
-                                <rect key="frame" x="36" y="479" width="185" height="72"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="60"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="e98-sf-rq0">
-                                <rect key="frame" x="36" y="407" width="33" height="72"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="60"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0.0 CAL" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="o1I-Ds-AxH">
-                                <rect key="frame" x="36" y="319" width="141" height="48"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="40"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="2.0 MILES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="rSE-O1-XKR">
-                                <rect key="frame" x="36" y="271" width="181" height="48"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="40"/>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -1192,6 +1195,7 @@
                             <constraint firstAttribute="width" secondItem="Gdy-p1-q9Q" secondAttribute="width" id="Gm6-eZ-SN7"/>
                             <constraint firstAttribute="centerY" secondItem="pBm-UI-GOT" secondAttribute="centerY" id="Hli-vL-Csy"/>
                             <constraint firstItem="o1I-Ds-AxH" firstAttribute="leading" secondItem="YVA-cV-VlS" secondAttribute="leadingMargin" constant="20" id="JUF-kc-YhI"/>
+                            <constraint firstItem="Gdy-p1-q9Q" firstAttribute="top" secondItem="23J-7l-SQC" secondAttribute="bottom" constant="-20" id="MNr-cx-csz"/>
                             <constraint firstAttribute="centerY" secondItem="RXX-N0-glb" secondAttribute="centerY" id="NRT-gG-lal"/>
                             <constraint firstAttribute="centerX" secondItem="pBm-UI-GOT" secondAttribute="centerX" id="T9q-22-GAU"/>
                             <constraint firstAttribute="centerX" secondItem="RXX-N0-glb" secondAttribute="centerX" id="TK0-FZ-jAY"/>
@@ -1209,6 +1213,7 @@
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
+                                <exclude reference="kBs-0i-ROE"/>
                                 <exclude reference="Ymv-aS-2yb"/>
                                 <exclude reference="glk-SR-LDh"/>
                             </mask>
@@ -1224,7 +1229,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="oQI-Bh-itM" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1148" y="1750"/>
+            <point key="canvasLocation" x="1148" y="1761"/>
         </scene>
         <!--Sync Failure-->
         <scene sceneID="nak-ng-CPi">
@@ -1321,8 +1326,8 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="1Av-rn-EMf"/>
         <segue reference="m7l-kc-Wzc"/>
+        <segue reference="Ge0-sS-8AU"/>
         <segue reference="Ld4-Fc-WJ2"/>
     </inferredMetricsTieBreakers>
 </document>
