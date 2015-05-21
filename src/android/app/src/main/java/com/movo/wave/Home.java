@@ -79,7 +79,6 @@ public class Home extends MenuActivity {
     Calendar calendar;
     static GridView gridview;
     final static String EXTRA_CHART_VIEW = "com.movo.wave.home.EXTRA_CHART_VIEW";
-    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
     boolean chartVisible;
     private static ProgressBar syncProgressBar;
     private static TextView syncText;
@@ -174,7 +173,7 @@ public class Home extends MenuActivity {
                 timestamp = calendar.getTimeInMillis();
             }
             UserData myData = UserData.getUserData(c);
-            Firebase ref = new Firebase(Home.firebase_url + "users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
+            Firebase ref = new Firebase(UserData.firebase_url + "users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -1003,7 +1002,7 @@ public class Home extends MenuActivity {
                 Log.d(TAG, "Loading image from firebase");
                 final Calendar monthCal = Calendar.getInstance();
                 monthCal.setTimeInMillis(today);
-                Firebase ref = new Firebase(firebase_url + "/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                Firebase ref = new Firebase(UserData.firebase_url + "/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
