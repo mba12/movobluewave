@@ -288,115 +288,19 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
         
         cell.textLabel?.text = "\(indexPath.row)"
-        //Do calculations for reverse calendar
-        
-        
-        //This won't work//
-        //This doesn't account for local time or GMT // end of month
-        /*
-        let cellCount = collectionView.numberOfItemsInSection(0)
-        let cellDateNumber = abs(indexPath.row - cellCount)
-        
-        var year:String = String(todayYear)
-        var month:String = String(todayMonth)
-        var iso8601String:String = year
-        iso8601String = iso8601String + "-"
-        iso8601String = iso8601String + month
-        iso8601String = iso8601String + "-"
 
-        var isoStartString = iso8601String + String(cellDateNumber)
-        isoStartString = isoStartString + "T"
-        isoStartString = isoStartString + "00:00:00Z"
-        var isoStopString = iso8601String + String(cellDateNumber)
-        isoStopString = isoStopString + "T"
-        isoStopString = isoStopString + "23:59:59Z"
-        
-        var dateStart = createDateFromString(String: isoStartString)
-        var dateStop = createDateFromString(String: isoStopString)
-        */
         
         //This display should be built from LOCAL TIME
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
 
-        var calendar = NSCalendar.currentCalendar()
-        calendar.timeZone = NSTimeZone.localTimeZone()
-        var startTimeComponents = NSDateComponents()
-        startTimeComponents.setValue(cellDateNumber, forComponent: NSCalendarUnit.CalendarUnitDay)
-        startTimeComponents.setValue(todayYear, forComponent: NSCalendarUnit.CalendarUnitYear)
-        startTimeComponents.setValue(todayMonth, forComponent: NSCalendarUnit.CalendarUnitMonth)
-        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
-        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
-        startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
+        if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
         
-        var dateStart : NSDate = calendar.dateFromComponents(startTimeComponents)!
-        
-        var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-        
-        
-        
-        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
-
-        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-        fetchRequest.predicate = predicate
-        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-            
-            var totalStepsForToday = 0
-            if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
-                var resultsCount = fetchResults.count
-                for(var i=0;i<(resultsCount);i++){
-//                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
-                }
-                
-                var countString = String(totalStepsForToday)
-                cell.textLabel2?.text = countString
-            }else{
-                cell.textLabel2?.text = "0"
-            }
+            cell.textLabel2?.text = String(stepsForDayStarting(dateStart))
         } else {
-            cell.textLabel2?.text = "0"
+            cell.textLabel2?.text = String(0)
         }
-        
-        //this will pull steps for a day in april and display them.
-        //        var urlString = "https://ss-movo-wave-v2.firebaseio.com/users/simplelogin:7/steps/2015/4/"
-        //        urlString = urlString + String(cellDateNumber)
-        //        var todayFirebaseRef = Firebase(url:urlString)
-        //        // Attach a closure to read the data at our posts reference
-        //        todayFirebaseRef.observeEventType(.Value, withBlock: { snapshot in
-        //
-        //            let children = snapshot.hasChildren()
-        //            if(children){
-        //            var itr = snapshot.children
-        //            while let rest = itr.nextObject() as? FDataSnapshot {
-        //                //                    println(rest.value)
-        //                var itr2 = rest.children
-        //                while let rest2 = itr2.nextObject() as? FDataSnapshot{
-        //                    //                    println(rest2.value)
-        //
-        //
-        //                    var stepsChild:FDataSnapshot = rest2.childSnapshotForPath("count")
-        //                    println(stepsChild.value)
-        //
-        //                    var todaysSteps = (rest2.childSnapshotForPath("count").valueInExportFormat() as? String)!
-        //                    cell.textLabel2?.text = todaysSteps
-        //
-        //                }
-        //            }
-        //            }else{
-        //                cell.textLabel2?.text = "0"
-        //            }
-        
-        
-        //                var valueStr:String  = String(stringInterpolationSegment: snapshot.value)
-        //                cell.textLabel2?.text = valueStr
-        //                println(valueStr)
-        //            }, withCancelBlock: { error in
-        //                println(error.description)
-        //        })
-        
         
         
         cell.imageView?.image = UIImage(named: "datebgwide")
@@ -409,7 +313,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     func createDateFromString(String isoString:String) -> NSDate{
         let form = NSDateFormatter()
         form.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
-//        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+        form.timeZone = NSTimeZone(forSecondsFromGMT: 0)
         form.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
         form.locale = NSLocale(localeIdentifier: "en_US_POSIX")
         
@@ -457,16 +361,3 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 }
 
 
-func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
-    var calendar = NSCalendar.currentCalendar()
-    calendar.timeZone = NSTimeZone.localTimeZone()
-    var startTimeComponents = NSDateComponents()
-    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.CalendarUnitDay)
-    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.CalendarUnitYear)
-    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.CalendarUnitMonth)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
-    
-    return calendar.dateFromComponents(startTimeComponents)
-}

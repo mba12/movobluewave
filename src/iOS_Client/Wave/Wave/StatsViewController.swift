@@ -52,8 +52,6 @@ class StatsViewController: UIViewController  {
     
     
     func displayStepsChart(){
-        var calendar = NSCalendar.currentCalendar()
-        calendar.timeZone = NSTimeZone.localTimeZone()
         var days:[String] = []
         //        var steps:[Int] = []
         var yVals:[ChartDataEntry] = []
@@ -61,23 +59,11 @@ class StatsViewController: UIViewController  {
         //loop through and add steps for each day.
         for(var i=0;i<todayDate;i++){
             
-            var startTimeComponents = NSDateComponents()
-            
-            startTimeComponents.setValue(i, forComponent: NSCalendarUnit.CalendarUnitDay)
-            startTimeComponents.setValue(todayYear, forComponent: NSCalendarUnit.CalendarUnitYear)
-            startTimeComponents.setValue(todayMonth, forComponent: NSCalendarUnit.CalendarUnitMonth)
-            startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
-            startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
-            startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
-            
-            var dateStart : NSDate = calendar.dateFromComponents(startTimeComponents)!
-            
-            var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-            
-            var stepCount = getStepsForTimeInterval(NSDate: dateStart, NSDate: dateStop)
-            
-            days.append(String(i+1))
-            yVals.append(ChartDataEntry(value: Float(stepCount), xIndex:i))
+            if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, i) {            
+                var stepCount = stepsForDayStarting(dateStart)
+                days.append(String(i+1))
+                yVals.append(ChartDataEntry(value: Float(stepCount), xIndex:i))
+            }
             
         }
         
@@ -97,34 +83,7 @@ class StatsViewController: UIViewController  {
         
     }
     
-    func getStepsForTimeInterval(NSDate dateStart:NSDate, NSDate dateStop:NSDate) -> Int{
-        
-        
-        
-        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
-        
-        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-        fetchRequest.predicate = predicate
-        if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-            
-            var totalStepsForToday = 0
-            if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
-                var resultsCount = fetchResults.count
-                for(var i=0;i<(resultsCount);i++){
-                    //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
-                }
-                
-                return totalStepsForToday
-            }else{
-                return 0
-            }
-        } else {
-            return 0
-        }
-    }
-    
+
     
     
 }

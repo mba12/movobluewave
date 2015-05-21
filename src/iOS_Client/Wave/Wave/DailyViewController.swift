@@ -113,25 +113,4 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
 }
 
 
-// Should be moved to be a general utility function
-//MARK: should be moved to be a general utility function
-func stepsForDayStarting(dateStart: NSDate) -> Int {
-    var totalStepsForToday : Int = 0
-    var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-    let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, UserData.getOrCreateUserData().getCurrentUID())
-    
-    let fetchRequest = NSFetchRequest(entityName: "StepEntry")
-    fetchRequest.predicate = predicate
-    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
-        if(fetchResults.count > 0){
-            println("Count %i",fetchResults.count)
-            var resultsCount = fetchResults.count
-            for(var i=0;i<(resultsCount);i++){
-                //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
-            }
-        }
-    }
-    
-    return totalStepsForToday
-}
+
