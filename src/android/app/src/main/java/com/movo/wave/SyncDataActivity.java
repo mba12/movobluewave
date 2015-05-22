@@ -12,7 +12,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -340,21 +339,21 @@ public class SyncDataActivity extends MenuActivity {
                                         final String guid,
                                         final String userID,
                                         final WaveRequest.WaveDataPoint point,
-                                        final String deviceAddress) {
+                                        final String deviceSerial) {
 
         long THIRTY_MINUTES_IN_MILLIS =1800000;//millisecs
-        long endLong = point.date.getTime();
-        endLong = endLong + THIRTY_MINUTES_IN_MILLIS;
+        final long startLong = point.date.getTime();
+        final long endLong = startLong + THIRTY_MINUTES_IN_MILLIS;
 
         ContentValues values = new ContentValues();
         values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
         values.put(Database.StepEntry.STEPS, point.value);
-        values.put(Database.StepEntry.START, point.date.getTime());
+        values.put(Database.StepEntry.START, startLong);
         values.put(Database.StepEntry.END,endLong);
         values.put(Database.StepEntry.USER,userID);
         values.put(Database.StepEntry.IS_PUSHED, 0);
         values.put(Database.StepEntry.SYNC_ID, guid);
-        values.put(Database.StepEntry.DEVICEID, deviceAddress);
+        values.put(Database.StepEntry.DEVICEID, deviceSerial);
 //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
         //TODO: add workout type
 
@@ -365,10 +364,63 @@ public class SyncDataActivity extends MenuActivity {
                 values);
 
 
-        final boolean ret = newRowId >= 0;
+        boolean ret = newRowId >= 0;
         if (ret) {
             lazyLog.d( "Inserted into database: new row " + newRowId + " guid: " + guid);
             lazyLog.d( "Inserted data: " + point);
+        } else {
+            /* AH 20150522
+            I know this is a bit of a copy-pasta mess. Intent is to check and smart-replace
+            conflicting rows.
+             */
+
+            //Locate conflicting row
+            String selectionSteps =  Database.StepEntry.START + "=? AND "+Database.StepEntry.DEVICEID +"=?";
+            Cursor curSteps = db.query(
+                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                    new String[] {
+                            Database.StepEntry.GUID, //string
+                            Database.StepEntry.SYNC_ID, //blob
+                            Database.StepEntry.START, //int
+                            Database.StepEntry.END, //int
+                            Database.StepEntry.USER, //string
+                            Database.StepEntry.STEPS, //int
+                            Database.StepEntry.DEVICEID, //blob
+                            Database.StepEntry.GUID}, //blob                          // The columns to return
+                    selectionSteps,                                // The columns for the WHERE clause
+                    new String[] { String.valueOf(startLong), deviceSerial }, // The values for the WHERE clause
+                    null,                                     // don't group the rows
+                    null,                                     // don't filter by row groups
+                    null                                 // The sort order
+            );
+
+            if( curSteps.moveToFirst() ) {
+                // compare data if conflict exists
+                final int stepIndex = curSteps.getColumnIndex(Database.StepEntry.STEPS );
+                final long steps = curSteps.getLong( stepIndex );
+                final int idIndex = curSteps.getColumnIndex( Database.StepEntry.GUID );
+                final int syncIndex = curSteps.getColumnIndex(Database.StepEntry.SYNC_ID);
+
+                if( steps < point.value ) {
+                    //overwrite conflict
+                    lazyLog.i( "Replacing ", curSteps.getString(idIndex), " from ",
+                            curSteps.getString( syncIndex ), " (", steps, " < ", point.value,
+                            ") with ", values.getAsString( Database.StepEntry.GUID), " from ", guid);
+                    newRowId = db.replace( Database.StepEntry.STEPS_TABLE_NAME, null, values );
+                    ret = newRowId >= 0;
+                    lazyLog.a( ret, "Failed to replace row!");
+                } else {
+                    //ignore conflict
+                    lazyLog.i( "Keeping ", curSteps.getString(idIndex), " from ",
+                            curSteps.getString( syncIndex ), " (", steps, " < ", point.value,
+                            ") with ", values.getAsString( Database.StepEntry.GUID), " from ", guid);
+                }
+            } else {
+                lazyLog.e( "Insertion conflict without conflicting row! ", startLong, " ", deviceSerial);
+            }
+            
+            //close cursor
+            curSteps.close();
         }
         return ret;
 
