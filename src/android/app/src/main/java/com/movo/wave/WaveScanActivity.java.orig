@@ -110,7 +110,6 @@ public class WaveScanActivity extends MenuActivity {
             do {
                 // ignore cursorily non-wave devices
                 if (!"Wave".equals(device.device.getName())) {
-                    lazyLog.e( "IGNORING", device.device.getAddress(), device.device.getName() );
                     break;
                 }
 
@@ -155,7 +154,9 @@ public class WaveScanActivity extends MenuActivity {
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
-                            checkComplete();
+                            if( release() == 0 ) {
+                                nextState();
+                            }
                         }
                     });
                 }
@@ -163,21 +164,12 @@ public class WaveScanActivity extends MenuActivity {
             return false;
         }
 
-        /** See if all pending scan actions are done
-         *
-         */
-        private void checkComplete() {
-            if( release() == 0 ) {
-                BLEAgent.release();
-                lazyLog.i("Wave discovery complete");
-                nextState();
-            }
-        }
-
         @Override
         public void onComplete(BLEAgent.BLEDevice device) {
-            lazyLog.i( "BLE scan complete" );
-            checkComplete();
+            if( release() == 0 ) {
+                nextState();
+            }
+            lazyLog.i( "Wave discovery complete" );
         }
     };
 
@@ -190,15 +182,7 @@ public class WaveScanActivity extends MenuActivity {
             return false;
         }
 
-        knownWaves.clear();
-        knownWaveAdapter.notifyDataSetChanged();
-        newWaves.clear();
-        newWaveAdapter.notifyDataSetChanged();
-        wavesByMAC.clear();
-
         nextState();
-        final boolean status = BLEAgent.open(c);
-        lazyLog.i("Opened BLE agent with status ", status);
         BLEAgent.handle( scanRequest );
         return true;
     }
@@ -224,10 +208,14 @@ public class WaveScanActivity extends MenuActivity {
         initMenu(R.layout.activity_wave_sync);
         knownWaveList = (ListView) findViewById(R.id.knownWaveList);
         newWaveList = (ListView) findViewById( R.id.newWaveList);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 187795df5e793406f734db848139a9a6c4b3c4bc
         resources = getResources();
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);
-        scanButton = (Button) findViewById(R.id.waveScanButton);;
+        scanButton = (Button) findViewById(R.id.waveScanButton);
 
         scanButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -244,7 +232,7 @@ public class WaveScanActivity extends MenuActivity {
         newWaves = new ArrayList<>();
 
         // Create The Adapter with passing ArrayList as 3rd parameter
-        knownWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item_scan, knownWaves);
+        knownWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, knownWaves);
 
         // Set The Adapter
         knownWaveList.setAdapter(knownWaveAdapter);
@@ -263,7 +251,7 @@ public class WaveScanActivity extends MenuActivity {
             }
         });
 
-        newWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item_scan, newWaves);
+        newWaveAdapter = new ArrayAdapter<>(this,R.layout.drawer_list_item, newWaves);
 
         newWaveList.setAdapter(newWaveAdapter);
 

@@ -98,7 +98,7 @@ public class SyncDataActivity extends MenuActivity {
                         }
                     });
                 }
-                BLEAgent.close();
+                BLEAgent.release();
                 //startActivity( new Intent( c, Home.class ));
 //
             }
