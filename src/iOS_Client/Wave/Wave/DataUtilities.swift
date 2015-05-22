@@ -337,3 +337,8 @@ func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
     return duplicateDataCheck(serial , waveStep.start, waveStep.end)
 }
 
+
+
+func uploadMetadataToFirebase(fbRef:Firebase, name:String, value:String){
+    
+}
