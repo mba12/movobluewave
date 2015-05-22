@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="7701" systemVersion="14D136" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
-    <entity name="CurrentUser" syncable="YES">
+    <entity name="CurrentUser" representedClassName="Wave.CurrentUser" syncable="YES">
         <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntry" inverseName="isCurrent" inverseEntity="UserEntry" syncable="YES"/>
     </entity>
-    <entity name="KnownWaves" representedClassName="KnownWaves" syncable="YES">
+    <entity name="KnownWaves" representedClassName="Wave.KnownWaves" syncable="YES">
         <attribute name="deviceid" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="queried" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="serialnumber" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
-    <entity name="PhotoStorage" representedClassName="PhotoStorage" syncable="YES">
+    <entity name="PhotoStorage" representedClassName="Wave.PhotoStorage" syncable="YES">
         <attribute name="date" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="photoblob" optional="YES" attributeType="Binary" syncable="YES"/>
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
-    <entity name="StepEntry" representedClassName="StepEntry" syncable="YES">
+    <entity name="StepEntry" representedClassName="Wave.StepEntry" syncable="YES">
         <attribute name="count" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
         <attribute name="endtime" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="guid" optional="YES" attributeType="String" syncable="YES"/>
@@ -26,7 +26,7 @@
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="workout_type" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
-    <entity name="SyncEntry" representedClassName="SyncEntry" syncable="YES">
+    <entity name="SyncEntry" representedClassName="Wave.SyncEntry" syncable="YES">
         <attribute name="endtime" optional="YES" attributeType="Date" syncable="YES"/>
         <attribute name="guid" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="starttime" optional="YES" attributeType="Date" syncable="YES"/>

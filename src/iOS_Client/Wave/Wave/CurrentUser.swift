@@ -13,7 +13,7 @@ import CoreData
 class CurrentUser: NSManagedObject {
     
     @NSManaged var id: Int16
-    @NSManaged var user: UserEntry
+    @NSManaged var user: UserEntry?
     
     
 }

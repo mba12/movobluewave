@@ -45,6 +45,7 @@ class LoginViewController: UIViewController{
                         self.presentViewController(alertController, animated: true, completion: nil)
                         
                     } else {
+                        
                         UserData.getOrCreateUserData().setCurrentUID(String: authData.uid)
                         UserData.getOrCreateUserData().setCurrentEmail(String: email)
                         UserData.getOrCreateUserData().setCurrentPW(String: password)

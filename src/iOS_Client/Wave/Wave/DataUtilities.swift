@@ -77,7 +77,7 @@ func dateFormatFBTimeNode( dateIn:NSDate)->String{
     dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
     var dateStringOut = dateFormatter.stringFromDate(dateIn)
     return dateStringOut
-}
+}	
 
 func dateToStringFormat( dateIn:NSDate)->String{
     var dateFormatter = NSDateFormatter()

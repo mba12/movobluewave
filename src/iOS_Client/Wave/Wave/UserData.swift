@@ -96,7 +96,27 @@ class UserData {
         setCurrentUserRef(String: ref)
         
         
-        
+    }
+    
+    func logInDifferentUser(){
+        let predicate = NSPredicate(format:"%@ == id",UserData.getOrCreateUserData().getCurrentUID())
+        let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
+        fetchRequestDupeCheck.predicate = predicate
+        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+            if(fetchResults.count == 1){
+                
+                
+                
+                var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
+                var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
+                var birthLong:Int32 = Int32(birthTime);
+                var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
+                var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
+                var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
+                var weightUp = ["currentWeight": String(fetchResults[0].weight)]
+                var genderUp = ["currentGender": String(fetchResults[0].gender)]
+            }
+        }
     }
     
     func getCurrentUID() -> String{
