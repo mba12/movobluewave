@@ -25,7 +25,7 @@ class UserData {
     var currentFullName:String? = nil
     var currentUsername:String? = nil
     var currentUserRef:String? = nil
-    var currentFireBaseRef:String? = "https://ss-movo-wave-v2.firebaseio.com/"
+    static let currentFireBaseRef:String? = "https://ss-movo-wave-v2.firebaseio.com/"
 
     
     private init(){
@@ -61,7 +61,7 @@ class UserData {
         var myDateExample : NSDate = NSDateFormatter().dateFromString("2015-05-13T03:40:00Z")!
     }
     
-    func getFirebase()->String{
+    static func getFirebase()->String{
         return currentFireBaseRef!
     }
     func createUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){

@@ -17,10 +17,20 @@ class CollectionViewCell: UICollectionViewCell {
     var textLabel: UILabel!
     var textLabel2: UILabel!
     var imageView: UIImageView!
+    var bgImageView: UIImageView!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
     
+        
+        bgImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
+        bgImageView.contentMode = UIViewContentMode.ScaleAspectFit
+        bgImageView.image = UIImage(named:"calendarbg")
+        contentView.addSubview(bgImageView)
+        
+//        cell.backgroundView = UIColor(patternImage: UIImage(named:"calendarbg")!)
+
+        
         imageView = UIImageView(frame: CGRect(x: 0, y: 16, width: frame.size.width, height: frame.size.height*2/3))
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
         contentView.addSubview(imageView)
@@ -37,6 +47,8 @@ class CollectionViewCell: UICollectionViewCell {
         textLabel2.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
         textLabel2.textAlignment = .Center
         contentView.addSubview(textLabel2)
+        
+        
         
     }
     

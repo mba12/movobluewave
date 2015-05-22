@@ -23,7 +23,7 @@ class RegisterViewController: UIViewController{
     
     @IBAction func register(sender: UIButton){
         //        dismissViewControllerAnimated(true, completion: nil)
-        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+        let ref = Firebase(url: UserData.getFirebase())
         //auth with email and pass that are in the input UI
         
         var email = emailText.text

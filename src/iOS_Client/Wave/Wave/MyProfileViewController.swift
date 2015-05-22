@@ -27,6 +27,17 @@ class MyProfileViewController:  UIViewController{
   	  super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         fullName.text = "hello"
+        var nameTxt = UserData.getOrCreateUserData().getCurrentUserName()
+//        var birthUp  = 
+        var heightFtTxt = UserData.getOrCreateUserData().getCurrentHeightFeet()
+        var heightInchesTxt = UserData.getOrCreateUserData().getCurrentHeightInches()
+        var weightTxt = UserData.getOrCreateUserData().getCurrentWeight()
+        var genderTxt = UserData.getOrCreateUserData().getCurrentGender()
+        
+        
+        fullName.text = nameTxt
+        
+        
     }
     
     
@@ -35,30 +46,8 @@ class MyProfileViewController:  UIViewController{
     
     
     @IBAction func saveChanges(sender: UIButton){
-        var ref = UserData.getOrCreateUserData().getFirebase()
-        ref = ref + "users/"
-        ref = ref + UserData.getOrCreateUserData().getCurrentUID()
-        ref = ref + "/"
-        ref = ref + "metadata/"
         
-        var fbMetadataRef = Firebase(url: ref)
-        
-        var nameUp = ["currentFullName": String(fullName.text)]
-        var birthUp  = ["currentBirthdate" : String("Error")]
-        var heightFtUp = ["currentHeight1": String(heightFt.text)]
-        var heightInchesUp = ["currentHeight2": String(heightInches.text)]
-        var weightUp = ["currentWeight": String(weight.text)]
-        var genderUp = ["currentGender": String("Gender")]
-        
-        NSLog("Updaing values at %@",ref)
-        fbMetadataRef.updateChildValues(nameUp)
-        fbMetadataRef.updateChildValues(birthUp)
-        fbMetadataRef.updateChildValues(heightFtUp)
-        fbMetadataRef.updateChildValues(heightInchesUp)
-        fbMetadataRef.updateChildValues(weightUp)
-        fbMetadataRef.updateChildValues(genderUp)
-        
-//        uploadMetadataToFirebase(ref, nameUp)
+        saveMetadataToCoreData(fullName.text)
         
     }
     

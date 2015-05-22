@@ -104,9 +104,11 @@ func createDateFromString(String isoString:String) -> NSDate{
 }
 
 
+
+
 func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
     
-    var firebaseURL = UserData.getOrCreateUserData().getFirebase()
+    var firebaseURL = UserData.getFirebase()
     firebaseURL = firebaseURL + "users/"
     firebaseURL = firebaseURL + UserData.getOrCreateUserData().getCurrentUID()
     var firebaseStepsURL = firebaseURL + "/steps/"
@@ -339,6 +341,64 @@ func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
 
 
 
-func uploadMetadataToFirebase(fbRef:Firebase, name:String, value:String){
+func saveMetadataToCoreData(name:String){
+    let predicate = NSPredicate(format:"%@ == id",UserData.getOrCreateUserData().getCurrentUID())
     
+    let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
+    fetchRequestDupeCheck.predicate = predicate
+    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+        if(fetchResults.count == 1){
+            fetchResults[0].fullname = name
+            //populate other data
+            (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+            
+            
+            uploadMetadataToFirebase()
+        }
+    }
+
 }
+
+func uploadMetadataToFirebase(){
+    var ref = UserData.getFirebase()
+    ref = ref + "users/"
+    ref = ref + UserData.getOrCreateUserData().getCurrentUID()
+    ref = ref + "/"
+    ref = ref + "metadata/"
+    
+    var fbMetadataRef = Firebase(url: ref)
+    
+    let predicate = NSPredicate(format:"%@ == id",UserData.getOrCreateUserData().getCurrentUID())
+    let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
+    fetchRequestDupeCheck.predicate = predicate
+    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+        if(fetchResults.count == 1){
+            
+            
+            
+            var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
+            var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
+            var birthLong:Int32 = Int32(birthTime);
+            var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
+            var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
+            var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
+            var weightUp = ["currentWeight": String(fetchResults[0].weight)]
+            var genderUp = ["currentGender": String(fetchResults[0].gender)]
+            
+            NSLog("Updaing values at %@",ref)
+            fbMetadataRef.updateChildValues(nameUp)
+            fbMetadataRef.updateChildValues(birthUp)
+            fbMetadataRef.updateChildValues(heightFtUp)
+            fbMetadataRef.updateChildValues(heightInchesUp)
+            fbMetadataRef.updateChildValues(weightUp)
+            fbMetadataRef.updateChildValues(genderUp)
+
+            
+            
+        }
+    }
+
+}
+
+
+
