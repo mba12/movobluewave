@@ -127,9 +127,14 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             cell.textLabel2?.text = "0"
             
         }
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+                cell.imageView?.image = UIImage(named: "datebgwide")
+                cell.textLabel?.text = "Today"
         
+        } else {
         
-        cell.imageView?.image = UIImage(named: "datebgcircle")
+            cell.imageView?.image = UIImage(named: "datebgcircle")
+        }
         
         return cell
     }
