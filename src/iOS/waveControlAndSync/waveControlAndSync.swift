@@ -414,6 +414,7 @@ class waveSyncOperation : NSOperation {
                     if let timestamp = message.data![0] as? WaveYMDHMSDOW {
                         //this will let us compare the date the device has with our current date
                         var timestampDate = waveYMDHMSDOWGMTToNSDate(timestamp)
+                        println("WAVE DEVICE TIME: "+timestampDate.description)
                         var delta = NSDate().timeIntervalSinceDate(timestampDate)
                         self.status = WaveSyncStatus.VerifingDate
                         syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
@@ -483,6 +484,7 @@ class waveSyncOperation : NSOperation {
                             var firstStep = (message.data! as! [WaveStep])[0].start
                             var finalStep = (message.data! as! [WaveStep]).last?.end
                             println("Counted "+String(stepcount)+" steps from: "+dateFormatter.stringFromDate(firstStep)+" to "+dateFormatter.stringFromDate(finalStep!))
+                            println(""+firstStep.description+" to "+finalStep!.description)
                         
                         } else {
                             //still success, just nothing to print
@@ -818,11 +820,8 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                     
                     /* This is the layer where we will translate from Wave Date/Time stamps to system date time
                     * stamps */
-                    var startTimeComponents = NSDateComponents()
-                    startTimeComponents.setValue(Day, forComponent: NSCalendarUnit.CalendarUnitDay)
-                    startTimeComponents.setValue(2000+Year, forComponent: NSCalendarUnit.CalendarUnitYear)
-                    startTimeComponents.setValue(Month, forComponent: NSCalendarUnit.CalendarUnitMonth)
-                    var startTime : NSDate = NSCalendar.currentCalendar().dateFromComponents(startTimeComponents)!
+
+                    var startTime : NSDate = waveYMDHMSDOWGMTToNSDate(WaveYMDHMSDOW(Year: Year, Month: Month, Day: Day, Hours: 0, Minutes: 0, Seconds: 0, DOW: 0))
                         // Valid NSDate for handling 
                         // Right now we are at fixed 30 minute time stamps
                     for (var i = 3; i < (chartData.count-1); i += 2) {

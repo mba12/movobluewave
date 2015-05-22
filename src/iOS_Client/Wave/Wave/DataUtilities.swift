@@ -116,7 +116,7 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
     firebaseSyncURL = firebaseSyncURL + "/"
     var refSync = Firebase(url:firebaseSyncURL)
     
-    
+    /* This isn't really what syncStart & syncStop should mean */
     var syncStart = ["starttime":dateToStringFormat(whence)]
     var syncStop = ["endtime":dateToStringFormat(NSDate())]
     
