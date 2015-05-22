@@ -2,7 +2,7 @@
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="7701" systemVersion="14D136" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
     <entity name="CurrentUser" syncable="YES">
         <attribute name="id" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
-        <relationship name="currentUser" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntry" syncable="YES"/>
+        <relationship name="user" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserEntry" inverseName="isCurrent" inverseEntity="UserEntry" syncable="YES"/>
     </entity>
     <entity name="KnownWaves" representedClassName="KnownWaves" syncable="YES">
         <attribute name="deviceid" optional="YES" attributeType="String" syncable="YES"/>
@@ -46,6 +46,7 @@
         <attribute name="reference" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="username" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="weight" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
+        <relationship name="isCurrent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="CurrentUser" inverseName="user" inverseEntity="CurrentUser" syncable="YES"/>
     </entity>
     <elements>
         <element name="CurrentUser" positionX="-27" positionY="81" width="128" height="75"/>
@@ -53,6 +54,6 @@
         <element name="PhotoStorage" positionX="-18" positionY="108" width="128" height="90"/>
         <element name="StepEntry" positionX="-63" positionY="-18" width="128" height="180"/>
         <element name="SyncEntry" positionX="-54" positionY="63" width="128" height="135"/>
-        <element name="UserEntry" positionX="-36" positionY="72" width="128" height="210"/>
+        <element name="UserEntry" positionX="-36" positionY="72" width="128" height="225"/>
     </elements>
 </model>

@@ -104,7 +104,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
-        cell.backgroundColor = UIColor(patternImage: UIImage(named:"splash")!)
+
+        
+        
         cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
         
         cell.textLabel?.text = "\(indexPath.row)"
@@ -124,7 +126,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         }
         
         
-        cell.imageView?.image = UIImage(named: "datebgwide")
+        cell.imageView?.image = UIImage(named: "datebgcircle")
         
         return cell
     }

@@ -9,7 +9,7 @@ import Foundation
 
 import CoreData
 
-
+@objc(UserEntry)
 class UserEntry: NSManagedObject {
     
     @NSManaged var id: String
@@ -24,5 +24,5 @@ class UserEntry: NSManagedObject {
     @NSManaged var weight: Int16
     @NSManaged var reference: String
     
-    
+    @NSManaged var isCurrent: CurrentUser
 }
