@@ -6,6 +6,7 @@ import com.movo.wave.util.LazyLogger;
 import com.movo.wave.util.UTC;
 
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -399,6 +400,8 @@ public class WaveAgent {
 
                 switch (state) {
                     case VERSION:
+                        device.acquire(); //<-- VERY IMPORTANT!!!!
+
                         lazyLog.d( "DeviceName: '", device.device.getName(),
                                 "' DeviceAddress: ", device.device.getAddress() );
                         BLEAgent.handle(new WaveRequest.ReadVersion(device, timeout) {
@@ -442,7 +445,7 @@ public class WaveAgent {
                         break;
 
                     case COMPLETE:
-                        callback.complete( this, data );
+                        signalComplete( data );
                         break;
 
                     case ERROR:
@@ -463,8 +466,13 @@ public class WaveAgent {
                         break;
                 }
             } else {
-                callback.complete( this, null );
+                signalComplete( null );
             }
+        }
+
+        private void signalComplete( List<WaveRequest.WaveDataPoint> data ) {
+            callback.complete( this, data );
+            device.release(); //<-- VERY IMPORTANT!!!!
         }
 
         /** Convenience wrapper for dispatching data requests

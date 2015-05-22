@@ -155,9 +155,7 @@ public class WaveScanActivity extends MenuActivity {
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
-                            if( release() == 0 ) {
-                                nextState();
-                            }
+                            checkComplete();
                         }
                     });
                 }
@@ -165,12 +163,21 @@ public class WaveScanActivity extends MenuActivity {
             return false;
         }
 
-        @Override
-        public void onComplete(BLEAgent.BLEDevice device) {
+        /** See if all pending scan actions are done
+         *
+         */
+        private void checkComplete() {
             if( release() == 0 ) {
+                BLEAgent.release();
+                lazyLog.i("Wave discovery complete");
                 nextState();
             }
-            lazyLog.i( "Wave discovery complete" );
+        }
+
+        @Override
+        public void onComplete(BLEAgent.BLEDevice device) {
+            lazyLog.i( "BLE scan complete" );
+            checkComplete();
         }
     };
 
@@ -183,7 +190,6 @@ public class WaveScanActivity extends MenuActivity {
             return false;
         }
 
-        BLEAgent.clear();
         knownWaves.clear();
         knownWaveAdapter.notifyDataSetChanged();
         newWaves.clear();
@@ -191,6 +197,8 @@ public class WaveScanActivity extends MenuActivity {
         wavesByMAC.clear();
 
         nextState();
+        final boolean status = BLEAgent.open(c);
+        lazyLog.i("Opened BLE agent with status ", status);
         BLEAgent.handle( scanRequest );
         return true;
     }
@@ -219,10 +227,7 @@ public class WaveScanActivity extends MenuActivity {
         resources = getResources();
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);
-        scanButton = (Button) findViewById(R.id.waveScanButton);
-
-        final boolean status = BLEAgent.open(c);
-        lazyLog.i( "Opened BLE agent with status ", status);
+        scanButton = (Button) findViewById(R.id.waveScanButton);;
 
         scanButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -305,6 +310,5 @@ public class WaveScanActivity extends MenuActivity {
     protected void onDestroy() {
         super.onDestroy();
         db.close();
-        BLEAgent.close();
     }
 }
