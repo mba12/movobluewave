@@ -59,20 +59,44 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
                         
                     }else{
                         let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-                        ref.authUser("7@7.com", password: "7",
+                        
+//                        ref.authUser("7@7.com", password: "7",
+//                            withCompletionBlock: { error, authData in
+//                                
+//                                if error != nil {
+//                                    // There was an error logging in to this account
+//                                    NSLog("Login failed")
+//                                } else {
+//                                    // We are now logged in
+//                                    NSLog("We logged in as 7: %@",authData.uid)
+//                                    //                                    self.userID = authData.uid
+//                                    var ref = "https://ss-movo-wave-v2.firebaseio.com"
+//                                    ref = ref + "/users/"
+//                                    ref = ref + authData.uid
+//                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "7@7.com", String: "7", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
+//                                    
+//                                    //                            self.retrieveData()
+//                                    
+//                                    
+//                                }
+//                        })
+
+                        
+                        //me
+                        ref.authUser("6@6.com", password: "6",
                             withCompletionBlock: { error, authData in
                                 
-                                if error != nil {
+                                if error != nil {	
                                     // There was an error logging in to this account
                                     NSLog("Login failed")
                                 } else {
                                     // We are now logged in
-                                    NSLog("We logged in as 7: %@",authData.uid)
+                                    NSLog("We logged in as 6: %@",authData.uid)
                                     //                                    self.userID = authData.uid
                                     var ref = "https://ss-movo-wave-v2.firebaseio.com"
                                     ref = ref + "/users/"
                                     ref = ref + authData.uid
-                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "7@7.com", String: "7", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
+                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "6@6.com", String: "6", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
                                     
                                     //                            self.retrieveData()
                                     
