@@ -401,4 +401,18 @@ func uploadMetadataToFirebase(){
 }
 
 
+func showSpinner(title: String, message: String) -> UIAlertView {
+    var activityAlert : UIAlertView = UIAlertView(title: title, message: message, delegate: nil, cancelButtonTitle: nil)
+    
+    var indicator : UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
+    indicator.center = CGPointMake(activityAlert.bounds.size.width / 2, activityAlert.bounds.size.height - 50);
+    indicator.startAnimating()
+    activityAlert.addSubview(indicator)
+    return activityAlert
+}
+
+
+
+
+
 
