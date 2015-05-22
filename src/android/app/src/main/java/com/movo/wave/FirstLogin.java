@@ -218,6 +218,7 @@ public class FirstLogin extends Activity {
 
                     try {
                         Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
+
                         Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
 //                        Log.d("TAG", "date is "+curDate);
                         thisCal.setTime(curDateStart);
@@ -275,7 +276,13 @@ public class FirstLogin extends Activity {
                 boolean firstTime = myData.addCurUserTolist();
                 final Calendar cal = Calendar.getInstance();
                 int monthtemp = cal.get(Calendar.MONTH);
-                final int month = monthtemp + 1;
+                String monthTracker = "";
+                if(monthtemp < 11){
+                    monthTracker = "0"+(monthtemp+1);
+                }else{
+                    monthTracker = (monthtemp+1) + "";
+                }
+                final String month = monthTracker;
                 int year = cal.get(Calendar.YEAR);
                 curYear = year + "";
                 curMonth = month + "";
