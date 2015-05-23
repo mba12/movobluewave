@@ -52,6 +52,12 @@ public class SyncDataActivity extends MenuActivity {
     public static final LazyLogger lazyLog = new LazyLogger( "SyncDataActivity",
             MenuActivity.lazyLog );
 
+    /*
+    Note: We could parametrize DataSync to accept a max-delta comment
+    */
+    static long MAX_DATA_TIME_DELTA = 1000*60*60*24*7;
+    static long MAX_SKEW_TIME_DELTA = 1000*60*10;
+
     private final WaveAgent.DataSync.Callback syncCallback = new WaveAgent.DataSync.Callback() {
         @Override
         public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean status) {
@@ -62,6 +68,40 @@ public class SyncDataActivity extends MenuActivity {
         @Override
         public void notify(WaveAgent.DataSync sync, float progress) {
             updateSyncProgress( progress );
+        }
+
+        @Override
+        public boolean skip(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state) {
+            final Long timeDelta;
+            if( sync.localDate != null && sync.deviceDate != null ) {
+                timeDelta = sync.localDate.getTime() - sync.deviceDate.getTime();
+            } else {
+                timeDelta = null;
+            }
+
+            final boolean ret;
+            final long max;
+
+            switch ( state ) {
+                case REQUEST_DATA:
+                    ret = timeDelta == null || timeDelta > MAX_DATA_TIME_DELTA;
+                    max = MAX_DATA_TIME_DELTA;
+                    break;
+                case SET_DATE:
+                    ret = timeDelta == null || timeDelta > MAX_SKEW_TIME_DELTA;
+                    max = MAX_DATA_TIME_DELTA;
+                    break;
+                default:
+                    ret = false;
+                    max = -1;
+                    break;
+            }
+
+            if( ret ) {
+                lazyLog.w("Time delta ", timeDelta, " exceeds ", max, " Ignoring data!");
+            }
+
+            return ret;
         }
 
         @Override
@@ -105,11 +145,11 @@ public class SyncDataActivity extends MenuActivity {
         }
     };
 
-    public  Cursor getStepsForSync(String syncID){
-        String selectionSteps =  Database.StepEntry.SYNC_ID + "=? AND "+Database.StepEntry.IS_PUSHED +"=?";
+    public  Cursor getStepsForSync(String syncID) {
+        String selectionSteps = Database.StepEntry.SYNC_ID + "=? AND " + Database.StepEntry.IS_PUSHED + "=?";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                new String[] { Database.StepEntry.SYNC_ID, //blob
+                new String[]{Database.StepEntry.SYNC_ID, //blob
                         Database.StepEntry.START, //int
                         Database.StepEntry.END, //int
                         Database.StepEntry.USER, //string
@@ -117,7 +157,7 @@ public class SyncDataActivity extends MenuActivity {
                         Database.StepEntry.DEVICEID, //blob
                         Database.StepEntry.GUID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[] { syncID, "0" },                            // The values for the WHERE clause
+                new String[]{syncID, "0"},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -126,25 +166,11 @@ public class SyncDataActivity extends MenuActivity {
         return curSteps;
     }
 
-    /*
-    Note: We could parametrize DataSync to accept a max-delta comment
-     */
-    static long MAX_TIME_DELTA = 100*60*60*24*7;
-
     protected void onSyncComplete( WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
         final String syncUniqueID = UUID.randomUUID().toString();
         final String currentUserId = sync.info.user;
 
-        final Long timeDelta;
-        if( sync.localDate != null && sync.deviceDate != null ) {
-            timeDelta = sync.localDate.getTime() - sync.deviceDate.getTime();
-        } else {
-            timeDelta = null;
-        }
-
-        if( timeDelta != null && ( timeDelta ) > MAX_TIME_DELTA ) {
-            lazyLog.w("Time delta ", timeDelta, " exceeds ", MAX_TIME_DELTA, " Ignoring data!");
-        } else if (data != null) {
+        if (data != null) {
 
             final int result = insertPoints(db, syncUniqueID, currentUserId, data, sync.info.serial );
 
