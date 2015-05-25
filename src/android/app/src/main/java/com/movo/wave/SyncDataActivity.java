@@ -189,11 +189,11 @@ public class SyncDataActivity extends MenuActivity {
                 minuteMap.put(startTime, stepData);
 
 
-                Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
+                Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
                 refStep2.updateChildren(minuteMap);
 
 //            refStep2.setValue(minuteMap);
-                Firebase refSyncSteps = new Firebase(Home.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
+                Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
                 refSyncSteps.updateChildren(minuteMap);
 
             }
@@ -332,9 +332,9 @@ public class SyncDataActivity extends MenuActivity {
                         }else{
                             dayChange = String.valueOf(cal.get(Calendar.DATE)+1);
                         }
-                        Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
+                        Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
                         refStep2.setValue(minuteMap);
-                        Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
+                        Firebase refSyncSteps =  new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
                         refSyncSteps.setValue(minuteMap);
 
                         minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
@@ -418,9 +418,9 @@ public class SyncDataActivity extends MenuActivity {
                     dayChange = String.valueOf(cal.get(Calendar.DATE)+1);
                 }
 
-                Firebase refStep2 = new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
+                Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
                 refStep2.setValue(minuteMap);
-                Firebase refSyncSteps =  new Firebase(Home.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
+                Firebase refSyncSteps =  new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
                 refSyncSteps.setValue(minuteMap);
 
 //                    refStep.setValue(list);
