@@ -30,76 +30,70 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.tableFooterView = UIView(frame: CGRect.zeroRect)
         tableView.backgroundColor = UIColor.clearColor()
         
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
-            
-            if(fbUserRef=="Error"){
-                NSLog("No user logged in, logging in as stored user")
-                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
-                
-                let fetchRequest = NSFetchRequest(entityName: "UserEntry")
-                //                fetchRequest.predicate = predicate
-                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
-                    
-                    if(fetchResults.count > 0){
-                        UserData.getOrCreateUserData().loadUser(fetchResults[0])
-                    }
-                    
-                    let FB = Firebase(url: UserData.getFirebase())
-                    FB.authUser(UserData.getOrCreateUserData().getCurrentEmail(), password: UserData.getOrCreateUserData().getCurrentPW(),
-                        withCompletionBlock: { error, authData in
-                            
-                            if error != nil {
-//WARNING: Send user back to signin/create user screen!
-                                self.performSegueWithIdentifier("Logout", sender: self)
-                                // There was an error logging in to this account
-                                NSLog("Login failed")
-                            } else {
-                                // We are now logged in
-                                NSLog("We logged in as %@: %@",UserData.getOrCreateUserData().getCurrentEmail(), authData.uid)
-                                
-                            }
-                    })
-                    
-                    
-                }else{
-                    //then redirect the user to the signin / create page
-                    
-                    performSegueWithIdentifier("Logout", sender: self)
-                    /*
-                    let email = "rudy@sensorstar.com"
-                    let FB = Firebase(url: UserData.getFirebase())
-                    FB.authUser(email, password: "pub386",
-                        withCompletionBlock: { error, authData in
-                            
-                            if error != nil {
-                                // There was an error logging in to this account
-                                NSLog("Login failed")
-//WARNING: Send user back to signin screen!
-                            } else {
-                                // We are now logged in
-                                NSLog("We logged in as %@: %@",email, authData.uid)
-                                //                                    self.userID = authData.uid
-                                var ref = "https://ss-movo-wave-v2.firebaseio.com"
-                                ref = ref + "/users/"
-                                ref = ref + authData.uid
-                                UserData.getOrCreateUserData().createUser(authData.uid, email: "rudy@sensorstar.com", pw: "pub386", birth: NSDate(), heightfeet: 0, heightinches: 0, weightlbs: 0, gender: "Male", fullName: "Rudy Yukich", user: "ryukich", ref: ref)
-                                
-                                //                            self.retrieveData()
-                                
-                                
-                            }
-                    })
-
-                    */
-                    
-                }
-                
-            } else {
-                //                retrieveData()
-                
-            }
-        }
         
+        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
+//        // This is default login behavior -> probably shouldn't be here //
+//        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+//            
+//            if(fbUserRef=="Error"){
+//                NSLog("No user logged in, logging in as stored user")
+//                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
+//                
+//                let fetchRequest = NSFetchRequest(entityName: "CurrentUser")
+//                //                fetchRequest.predicate = predicate
+//                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [CurrentUser] {
+//                    
+//                    if(fetchResults.count > 0){
+//                        UserData.getOrCreateUserData().loadUser(fetchResults[0])
+//                    }
+//                    
+//                    let FB = Firebase(url: UserData.getFirebase())
+//                    FB.authUser(UserData.getOrCreateUserData().getCurrentEmail(), password: UserData.getOrCreateUserData().getCurrentPW(),
+//                        withCompletionBlock: { error, authData in
+//                            
+//                            if error != nil {
+////WARNING: UI flow unclear here -- should we redirect to the sign-in / sign-up screen, or should we 
+////assume that users don't want to be interrupted... but then how do they know 
+////that the app needs to be logged in again!
+//                                NSLog("Login failed")
+//                            } else {
+//                                // We are now logged in
+//                                NSLog("We logged in as %@: %@",UserData.getOrCreateUserData().getCurrentEmail()!, authData.uid)
+//                                
+//                            }
+//                    })
+//                    
+//                    
+//                }else{
+//                    //then redirect the user to the signin / create page
+//                    performSegueWithIdentifier("Logout", sender: self)
+//                }
+//                
+//            } else {
+//                //                retrieveData()
+//                
+//            }
+//        }
+        
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        
+        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
     }
     
     // MARK:  UITextFieldDelegate Methods
@@ -136,7 +130,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
             
         } else if (menu[row] == "Contact") {
             var username = ""
-            if let curUsername : String = UserData.getOrCreateUserData().currentUsername {
+            if let curUsername : String = UserData.getOrCreateUserData().getCurrentUserName() {
                 username = curUsername
             }
             var urlstring = "subject=Contact from "+username

@@ -14,22 +14,22 @@ private var _UserData:UserData? = nil
 
 class UserData {
         //vars
-    var currentUID:String? = nil
-    var currentEmail:String? = nil
-    var currentPW:String? = nil
-    var currentBirthDate:NSDate? = nil
-    var currentHeightFeet:Int? = nil
-    var currentHeightInches:Int? = nil
-    var currentWeight:Int? = nil
-    var currentGender:String? = nil
-    var currentFullName:String? = nil
-    var currentUsername:String? = nil
-    var currentUserRef:String? = nil
+    private var currentUserEntry : UserEntry?
+    
+
     static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
 
     
     private init(){
         //init vars
+        
+        if (loadDefaultUser()) {
+            NSLog("Success loading default user")
+            
+        } else {
+            NSLog("Failed to load default user")
+        }
+/*
         currentUID = "Error"
         currentEmail = "Error"
         currentPW = "Error"
@@ -41,7 +41,7 @@ class UserData {
         currentFullName = "Error"
         currentUsername = "Error"
         currentUserRef = "Error"
-        
+  */
      
     }
     
@@ -56,9 +56,6 @@ class UserData {
     static func disposeUserData(){
         _UserData = nil
         
-        var myNSInt : NSInteger = NSInteger(Int(1))
-        var myNSString : NSString = NSString(string: String("Hello world"))
-        var myDateExample : NSDate = NSDateFormatter().dateFromString("2015-05-13T03:40:00Z")!
     }
     
     static func getFirebase()->String{
@@ -70,24 +67,77 @@ class UserData {
     //it would be much better, additionally, if we used SI units under the hood... (i.e. meters, kilograms), but imperial units if we must.
     
     
-    func loadUser(user: UserEntry) {
-        setCurrentUID(user.id)
-        setCurrentEmail(user.email)
-        setCurrentPW(user.pw)
-        setCurrentBirthdate(user.birthdate)
-        setCurrentHeightFeet(Int(user.heightfeet))
-        setCurrentHeightInches(Int(user.heightinches))
-        setCurrentWeight(Int(user.weight))
-        setCurrentGender(user.gender)
-        setCurrentName(user.fullname)
-        setCurrentUsername(user.username)
-        setCurrentUserRef(user.reference)
+    func loadDefaultUser() -> Bool {
         
+        if let currentUser = UserData.getOrCreateCurrentUser() {
+            return loadUser(currentUser)
+        }
+        
+        return false
         
     }
     
+    func loadUser(user: CurrentUser) -> Bool {
+        //unwrap the userentry from the current user pointer!
+        if let userentry = user.user {
+            return loadUser(userentry)
+        }
+        
+        return false
+    }
     
-    func createUser(uid:String, email:String, pw:String, birth:NSDate, heightfeet:Int, heightinches:Int, weightlbs:Int, gender:String, fullName:String, user:String, ref:String){
+    
+    func loadUser(user: UserEntry) -> Bool {
+        
+        currentUserEntry = user
+        if let DBCurrentUser : CurrentUser = UserData.getOrCreateCurrentUser() {            DBCurrentUser.user = user
+            UserData.saveContext()
+            return true
+        }
+
+        return false
+    }
+    
+    
+    static func getOrCreateCurrentUser() -> CurrentUser? {
+        var createNewCurrentUser = false
+        let fetchRequest = NSFetchRequest(entityName: "CurrentUser")
+        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [CurrentUser] {
+            if (fetchResults.count == 1) {
+                return fetchResults[0]
+            } else if (fetchResults.count > 1) {
+                var toRtn = fetchResults[0]
+                clearExcessItems(fetchResults)
+                return toRtn
+            } else {
+                createNewCurrentUser = true
+            }
+            
+        } else {
+            //then
+            createNewCurrentUser = true
+        }
+        
+        if (createNewCurrentUser) {
+            if let newCurrentUser : CurrentUser = NSEntityDescription.insertNewObjectForEntityForName("CurrentUser", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as? CurrentUser {
+            
+                UserData.saveContext()
+                return newCurrentUser
+            }
+            
+        }
+        
+        //safety catchall, should not be reached unless there is something wrong with the managed context
+        return nil
+    }
+    
+    static func saveContext() {
+        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+    }
+    
+    func createUser(email:String, pw:String, uid:String?, birth:NSDate?, heightfeet:Int?, heightinches:Int?, weightlbs:Int?, gender:String?, fullName:String?, user:String?, ref:String) -> UserEntry {
+        
+        
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext
         var newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! UserEntry
@@ -96,113 +146,194 @@ class UserData {
         newItem.email = email
         newItem.pw = pw
         newItem.birthdate = birth
-        newItem.heightfeet = Int16(heightfeet)
-        newItem.heightinches = Int16(heightinches)
-        newItem.weight = Int16(weightlbs)
+        if let hf = heightfeet {
+            newItem.heightfeet = Int16(hf)
+        }
+        if let hi = heightinches {
+            newItem.heightinches = Int16(hi)
+        }
+        if let w = weightlbs {
+            newItem.weight = Int16(w)
+        }
         newItem.gender = gender
         newItem.fullname = fullName
         newItem.username = user
         newItem.reference = ref
         
         appDelegate.managedObjectContext!.save(nil)
-
-    
+        return newItem
         
     }
+//    
+//    func logInDifferentUser(){
+//        if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+//            let predicate = NSPredicate(format:"%@ == id",uid)
+//            let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
+//            fetchRequestDupeCheck.predicate = predicate
+//            if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+//                if(fetchResults.count == 1){
+//                    
+//                    
+//                    
+//                    var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
+//                    var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
+//                    var birthLong:Int32 = Int32(birthTime);
+//                    var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
+//                    var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
+//                    var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
+//                    var weightUp = ["currentWeight": String(fetchResults[0].weight)]
+//                    var genderUp = ["currentGender": String(fetchResults[0].gender)]
+//                }
+//            }
+//        }
+//    }
     
-    func logInDifferentUser(){
-        let predicate = NSPredicate(format:"%@ == id",UserData.getOrCreateUserData().getCurrentUID())
-        let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
-        fetchRequestDupeCheck.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
-            if(fetchResults.count == 1){
-                
-                
-                
-                var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
-                var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
-                var birthLong:Int32 = Int32(birthTime);
-                var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
-                var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
-                var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
-                var weightUp = ["currentWeight": String(fetchResults[0].weight)]
-                var genderUp = ["currentGender": String(fetchResults[0].gender)]
-            }
+    func getCurrentUID() -> String? {
+        if let UID = currentUserEntry?.id {
+            return UID
+        }
+        return nil
+    }
+    
+    func setCurrentUID(uid:String) {
+        if let cue : UserEntry = currentUserEntry {
+            cue.id = uid
+            UserData.saveContext()
         }
     }
     
-    func getCurrentUID() -> String{
-        return currentUID!
+    func getCurrentEmail() -> String? {
+        if let email = currentUserEntry?.email {
+            return email
+        }
+        return nil
     }
-    func setCurrentUID(uid:String){
+    func setCurrentEmail(email:String) {
+        if let cue : UserEntry = currentUserEntry {
+            cue.email = email
+            UserData.saveContext()
+        }
+    }
+    func getCurrentPW() -> String? {
+        if let pw = currentUserEntry?.pw {
+            return pw
+        }
+        return nil
         
-        currentUID = uid
-    }
-    
-    func getCurrentEmail() -> String{
-        return currentEmail!
-    }
-    func setCurrentEmail(email:String){
-        currentEmail = email
-    }
-    func getCurrentPW() -> String{
-        return currentPW!
     }
     func setCurrentPW(password:String){
-        currentPW = password
+        if let cue : UserEntry = currentUserEntry {
+            cue.pw = password
+            UserData.saveContext()
+        }
     }
     //date object
-    func getCurrentBirthdate() -> NSDate{
-        return currentBirthDate!
+    func getCurrentBirthdate() -> NSDate? {
+        if let bd = currentUserEntry?.birthdate {
+            return bd
+        }
+        return nil
+        
     }
     func setCurrentBirthdate(birthDate:NSDate){
-        currentBirthDate = birthDate
+        if let cue : UserEntry = currentUserEntry {
+            cue.birthdate = birthDate
+            UserData.saveContext()
+        }
     }
-    func getCurrentHeightFeet() -> Int{
-        return currentHeightFeet!
+    
+    func getCurrentHeightFeet() -> Int? {
+        if let hf = currentUserEntry?.heightfeet {
+            return Int(hf)
+        }
+        return nil
+        
     }
-    func setCurrentHeightFeet(heightfeet:Int){
-        currentHeightFeet = heightfeet
+    func setCurrentHeightFeet(heightfeet:Int) {
+        if let cue : UserEntry = currentUserEntry {
+            cue.heightfeet = Int16(heightfeet)
+            UserData.saveContext()
+        }
     }
-    func getCurrentHeightInches() -> Int{
-        return currentHeightInches!
+    func getCurrentHeightInches() -> Int? {
+        if let hi = currentUserEntry?.heightinches {
+            return Int(hi)
+        }
+        return nil
+        
     }
     func setCurrentHeightInches(heightinches:Int){
-        currentHeightInches = heightinches
+        if let cue : UserEntry = currentUserEntry {
+            cue.heightinches = Int16(heightinches)
+            UserData.saveContext()
+        }
     }
-    func getCurrentWeight() -> Int{
-        return currentWeight!
+    func getCurrentWeight() -> Int? {
+        if let wlbs = currentUserEntry?.weight {
+            return Int(wlbs)
+        }
+        return nil
+        
     }
     func setCurrentWeight(weightlbs:Int){
-        currentWeight = weightlbs
+        if let cue : UserEntry = currentUserEntry {
+            cue.weight = Int16(weightlbs)
+            UserData.saveContext()
+        }
     }
-    func getCurrentGender() -> String{
-        return currentGender!
+    func getCurrentGender() -> String? {
+        if let g = currentUserEntry?.gender {
+            return g
+        }
+        return nil
+        
     }
     func setCurrentGender(gender:String){
-        currentGender = gender
+        if let cue : UserEntry = currentUserEntry {
+            cue.gender = gender
+            UserData.saveContext()
+        }
     }
-    func getCurrentName() -> String{
-        return currentFullName!
+    func getCurrentName() -> String? {
+        if let fn = currentUserEntry?.fullname {
+            return fn
+        }
+        return nil
+        
     }
     func setCurrentName(name:String){
-        currentFullName = name
+        if let cue : UserEntry = currentUserEntry {
+            cue.fullname = name
+            UserData.saveContext()
+        }
     }
-    func getCurrentUserName() -> String{
-        return currentUsername!
+    
+    func getCurrentUserName() -> String? {
+        if let un = currentUserEntry?.username {
+            return un
+        }
+        return nil
+        
     }
     func setCurrentUsername(username:String){
-        currentUsername = username
+        if let cue : UserEntry = currentUserEntry {
+            cue.username = username
+            UserData.saveContext()
+        }
     }
-    func getCurrentUserRef() -> String{
-        return currentUserRef!
+    func getCurrentUserRef() -> String? {
+        if let ref = currentUserEntry?.reference {
+            return ref
+        }
+        return nil
     }
     func setCurrentUserRef(ref:String){
-        currentUserRef = ref
+        if let cue : UserEntry = currentUserEntry {
+            cue.reference = ref
+            UserData.saveContext()
+        }
     }
-    
-    
-    
+
     
 }
 

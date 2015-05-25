@@ -67,7 +67,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
 //         Create a new fetch request using the LogItem entity
-                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
         
                     if(fbUserRef=="Error"){
                         //no user is logged in

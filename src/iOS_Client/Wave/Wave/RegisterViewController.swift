@@ -74,6 +74,11 @@ class RegisterViewController: UIViewController{
                                 
                             } else {
                                 NSLog("We logged in as %@: %@",email, authData.uid)
+                                
+                                ///
+                                
+                                
+                                
                                 var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
                                 
                                 self.presentViewController(vc, animated: true, completion: nil)
