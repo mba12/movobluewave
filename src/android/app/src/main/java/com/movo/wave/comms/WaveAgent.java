@@ -202,12 +202,11 @@ public class WaveAgent {
 
         /**
          * Discovery: 1 (maybe)
-         * //Data: 8 requests/day * 7 days (2 min/point)
-         * Data: ~4 requests per week (2 days per request at 30 min/point)
+         * Data: 7 requests per week (1 days per request at 30 min/point)
          * Get and set date: 2
          * Serial and version: 2
          */
-        private static float PROGRESS_STEP = 1.0f / ( 4 + 5 );
+        private static float PROGRESS_STEP = 1.0f / ( 7 + 5 );
 
         private void progress() {
             callback.notify( this, requestProgress += PROGRESS_STEP );
@@ -477,14 +476,9 @@ public class WaveAgent {
             cal.set( Calendar.SECOND, 0 );
             cal.set( Calendar.MILLISECOND, 0 );
 
-            cal.add( Calendar.DATE, 0 );
-
             for( int day = 0; day < 7; day += 1 ) {
                 dataTotal += 1;
-                BLEAgent.handle(new WaveRequest.ReadData(device, timeout,
-                        cal.get( Calendar.YEAR ),
-                        cal.get( Calendar.MONTH),
-                        cal.get( Calendar.DATE )) {
+                BLEAgent.handle(new WaveRequest.ReadData(device, timeout, cal ) {
                     @Override
                     protected void onComplete(boolean success,
                                               WaveRequest.WaveDataPoint[] data) {
