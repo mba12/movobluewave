@@ -46,13 +46,13 @@ class LoginViewController: UIViewController{
                         
                     } else {
                         
-                        UserData.getOrCreateUserData().setCurrentUID(String: authData.uid)
-                        UserData.getOrCreateUserData().setCurrentEmail(String: email)
-                        UserData.getOrCreateUserData().setCurrentPW(String: password)
+                        UserData.getOrCreateUserData().setCurrentUID(authData.uid)
+                        UserData.getOrCreateUserData().setCurrentEmail(email)
+                        UserData.getOrCreateUserData().setCurrentPW(password)
                         var stringRef = "https://ss-movo-wave-v2.firebaseio.com/users/"
                         stringRef = stringRef + authData.uid
                         
-                        UserData.getOrCreateUserData().setCurrentUserRef(String: stringRef)
+                        UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
                         NSLog("We logged in as %@: %@",email, authData.uid)
                         var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
                         
@@ -70,6 +70,9 @@ class LoginViewController: UIViewController{
         
     }
     
+    @IBAction func cancelButtonPress(sender: AnyObject) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
     
     
 }

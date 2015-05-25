@@ -41,54 +41,58 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
                 if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
                     
                     if(fetchResults.count > 0){
-                        UserData.getOrCreateUserData().createUser(
-                            String: fetchResults[0].id,
-                            String: fetchResults[0].email,
-                            String: fetchResults[0].pw,
-                            NSDate: fetchResults[0].birthdate,
-                            Int: Int(fetchResults[0].heightfeet),
-                            Int: Int(fetchResults[0].heightinches),
-                            Int: Int(fetchResults[0].weight),
-                            String: fetchResults[0].gender,
-                            String: fetchResults[0].fullname,
-                            String: fetchResults[0].username,
-                            String: fetchResults[0].reference)
-                        //                        UserData.getOrCreateUserData().createUser(String: fetchResults[0].id, String: fetchResults[0].email, String: fetchResults[0].pw, NSDate:fetchResults[0].birthdate, Int: fetchResults[0].heightinches, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: "")
-                        
-                        //                        CreateUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){
-                        
-                    }else{
-                        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-                        ref.authUser("7@7.com", password: "7",
-                            withCompletionBlock: { error, authData in
-                                
-                                if error != nil {
-                                    // There was an error logging in to this account
-                                    NSLog("Login failed")
-                                } else {
-                                    // We are now logged in
-                                    NSLog("We logged in as 7: %@",authData.uid)
-                                    //                                    self.userID = authData.uid
-                                    var ref = "https://ss-movo-wave-v2.firebaseio.com"
-                                    ref = ref + "/users/"
-                                    ref = ref + authData.uid
-                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "7@7.com", String: "7", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
-                                    
-                                    //                            self.retrieveData()
-                                    
-                                    
-                                }
-                        })
-                        
+                        UserData.getOrCreateUserData().loadUser(fetchResults[0])
                     }
-                } else {
+                    
+                    let FB = Firebase(url: UserData.getFirebase())
+                    FB.authUser(UserData.getOrCreateUserData().getCurrentEmail(), password: UserData.getOrCreateUserData().getCurrentPW(),
+                        withCompletionBlock: { error, authData in
+                            
+                            if error != nil {
+//WARNING: Send user back to signin/create user screen!
+                                self.performSegueWithIdentifier("Logout", sender: self)
+                                // There was an error logging in to this account
+                                NSLog("Login failed")
+                            } else {
+                                // We are now logged in
+                                NSLog("We logged in as %@: %@",UserData.getOrCreateUserData().getCurrentEmail(), authData.uid)
+                                
+                            }
+                    })
+                    
+                    
+                }else{
+                    //then redirect the user to the signin / create page
+                    
+                    performSegueWithIdentifier("Logout", sender: self)
+                    /*
+                    let email = "rudy@sensorstar.com"
+                    let FB = Firebase(url: UserData.getFirebase())
+                    FB.authUser(email, password: "pub386",
+                        withCompletionBlock: { error, authData in
+                            
+                            if error != nil {
+                                // There was an error logging in to this account
+                                NSLog("Login failed")
+//WARNING: Send user back to signin screen!
+                            } else {
+                                // We are now logged in
+                                NSLog("We logged in as %@: %@",email, authData.uid)
+                                //                                    self.userID = authData.uid
+                                var ref = "https://ss-movo-wave-v2.firebaseio.com"
+                                ref = ref + "/users/"
+                                ref = ref + authData.uid
+                                UserData.getOrCreateUserData().createUser(authData.uid, email: "rudy@sensorstar.com", pw: "pub386", birth: NSDate(), heightfeet: 0, heightinches: 0, weightlbs: 0, gender: "Male", fullName: "Rudy Yukich", user: "ryukich", ref: ref)
+                                
+                                //                            self.retrieveData()
+                                
+                                
+                            }
+                    })
+
+                    */
                     
                 }
-                
-                
-                
-                
-                
                 
             } else {
                 //                retrieveData()
@@ -125,17 +129,17 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         
-        if (menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
+        if (menu[row] != "FAQ" && menu[row] != "Contact") {
             performSegueWithIdentifier(menu[row], sender:self)
         } else if (menu[row] == "FAQ") {
             UIApplication.sharedApplication().openURL(NSURL(string: "http://www.getmovo.com/appfaq")!)
             
         } else if (menu[row] == "Contact") {
-            var UID = ""
-            if let curUID : String = UserData.getOrCreateUserData().currentUID {
-                UID = curUID
+            var username = ""
+            if let curUsername : String = UserData.getOrCreateUserData().currentUsername {
+                username = curUsername
             }
-            var urlstring = "subject=Contact from "+UID
+            var urlstring = "subject=Contact from "+username
             urlstring = "mailto:info@getmovo.com?"+urlstring.stringByAddingPercentEncodingWithAllowedCharacters(.URLPathAllowedCharacterSet())!
             UIApplication.sharedApplication().openURL(NSURL(string: urlstring)!)
         }

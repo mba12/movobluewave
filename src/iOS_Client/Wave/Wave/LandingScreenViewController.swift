@@ -10,17 +10,7 @@ import UIKit
 
 class LandingScreenViewController: UIViewController{
     
-    
-    @IBAction func login(sender: UIButton){
-        //dismissViewControllerAnimated(true, completion: nil)
-        
-    }
-    
-    @IBAction func signup(sender: UIButton){
-        
-        
-    }
-    
+
     
     
 }

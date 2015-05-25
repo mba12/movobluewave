@@ -25,7 +25,7 @@ class UserData {
     var currentFullName:String? = nil
     var currentUsername:String? = nil
     var currentUserRef:String? = nil
-    static let currentFireBaseRef:String? = "https://ss-movo-wave-v2.firebaseio.com/"
+    static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
 
     
     private init(){
@@ -62,9 +62,32 @@ class UserData {
     }
     
     static func getFirebase()->String{
-        return currentFireBaseRef!
+        return currentFireBaseRef
     }
-    func createUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){
+    
+    //WARNING: height should be in a single unit!! - RY
+    //it is a bad idea to be tracking height across two units (i.e. use feet (double) or meters (double) or inches (int/double) or cm (int or double) but do not split, it will just cause headaches
+    //it would be much better, additionally, if we used SI units under the hood... (i.e. meters, kilograms), but imperial units if we must.
+    
+    
+    func loadUser(user: UserEntry) {
+        setCurrentUID(user.id)
+        setCurrentEmail(user.email)
+        setCurrentPW(user.pw)
+        setCurrentBirthdate(user.birthdate)
+        setCurrentHeightFeet(Int(user.heightfeet))
+        setCurrentHeightInches(Int(user.heightinches))
+        setCurrentWeight(Int(user.weight))
+        setCurrentGender(user.gender)
+        setCurrentName(user.fullname)
+        setCurrentUsername(user.username)
+        setCurrentUserRef(user.reference)
+        
+        
+    }
+    
+    
+    func createUser(uid:String, email:String, pw:String, birth:NSDate, heightfeet:Int, heightinches:Int, weightlbs:Int, gender:String, fullName:String, user:String, ref:String){
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext
         var newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! UserEntry
@@ -73,9 +96,9 @@ class UserData {
         newItem.email = email
         newItem.pw = pw
         newItem.birthdate = birth
-        newItem.heightfeet = Int16(height1)
-        newItem.heightinches = Int16(height2)
-        newItem.weight = Int16(weight)
+        newItem.heightfeet = Int16(heightfeet)
+        newItem.heightinches = Int16(heightinches)
+        newItem.weight = Int16(weightlbs)
         newItem.gender = gender
         newItem.fullname = fullName
         newItem.username = user
@@ -83,18 +106,7 @@ class UserData {
         
         appDelegate.managedObjectContext!.save(nil)
 
-        setCurrentUID(String: uid)
-        setCurrentEmail(String: email)
-        setCurrentPW(String: pw)
-        setCurrentBirthdate(NSDate: birth)
-        setCurrentHeightFeet(Int: height1)
-        setCurrentHeightInches(Int: height2)
-        setCurrentWeight(Int: weight)
-        setCurrentGender(String: gender)
-        setCurrentName(String: fullName)
-        setCurrentUsername(String: user)
-        setCurrentUserRef(String: ref)
-        
+    
         
     }
     
@@ -122,71 +134,71 @@ class UserData {
     func getCurrentUID() -> String{
         return currentUID!
     }
-    func setCurrentUID(String newUID:String){
+    func setCurrentUID(uid:String){
         
-        currentUID = newUID
+        currentUID = uid
     }
     
     func getCurrentEmail() -> String{
         return currentEmail!
     }
-    func setCurrentEmail(String newEmail:String){
-        currentEmail = newEmail
+    func setCurrentEmail(email:String){
+        currentEmail = email
     }
     func getCurrentPW() -> String{
         return currentPW!
     }
-    func setCurrentPW(String newPW:String){
-        currentPW = newPW
+    func setCurrentPW(password:String){
+        currentPW = password
     }
     //date object
     func getCurrentBirthdate() -> NSDate{
         return currentBirthDate!
     }
-    func setCurrentBirthdate(NSDate newDate:NSDate){
-        currentBirthDate = newDate
+    func setCurrentBirthdate(birthDate:NSDate){
+        currentBirthDate = birthDate
     }
     func getCurrentHeightFeet() -> Int{
         return currentHeightFeet!
     }
-    func setCurrentHeightFeet(Int newHeight:Int){
-        currentHeightFeet = newHeight
+    func setCurrentHeightFeet(heightfeet:Int){
+        currentHeightFeet = heightfeet
     }
     func getCurrentHeightInches() -> Int{
         return currentHeightInches!
     }
-    func setCurrentHeightInches(Int newHeight:Int){
-        currentHeightInches = newHeight
+    func setCurrentHeightInches(heightinches:Int){
+        currentHeightInches = heightinches
     }
     func getCurrentWeight() -> Int{
         return currentWeight!
     }
-    func setCurrentWeight(Int newWeight:Int){
-        currentWeight = newWeight
+    func setCurrentWeight(weightlbs:Int){
+        currentWeight = weightlbs
     }
     func getCurrentGender() -> String{
         return currentGender!
     }
-    func setCurrentGender(String newGender:String){
-        currentGender = newGender
+    func setCurrentGender(gender:String){
+        currentGender = gender
     }
     func getCurrentName() -> String{
         return currentFullName!
     }
-    func setCurrentName(String newName:String){
-        currentFullName = newName
+    func setCurrentName(name:String){
+        currentFullName = name
     }
     func getCurrentUserName() -> String{
         return currentUsername!
     }
-    func setCurrentUsername(String newUsername:String){
-        currentUsername = newUsername
+    func setCurrentUsername(username:String){
+        currentUsername = username
     }
     func getCurrentUserRef() -> String{
         return currentUserRef!
     }
-    func setCurrentUserRef(String newUserRef:String){
-        currentUserRef = newUserRef
+    func setCurrentUserRef(ref:String){
+        currentUserRef = ref
     }
     
     

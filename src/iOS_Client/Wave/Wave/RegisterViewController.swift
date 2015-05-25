@@ -17,7 +17,7 @@ class RegisterViewController: UIViewController{
     
     @IBOutlet weak var passText: UITextField!
     
-    @IBOutlet weak var comfPassText: UITextField!
+    @IBOutlet weak var confirmPassText: UITextField!
     
     
     
@@ -28,19 +28,21 @@ class RegisterViewController: UIViewController{
         
         var email = emailText.text
         var password = passText.text
-        var passComf = comfPassText.text
+        var confirmPass = confirmPassText.text
         var emailCheck = false
         var passCheck = false
-        var passComfCheck = false
+        var passConfirmCheck = false
         
+//WARN: bad email validation check
+//this isn't really a good check for valid email address
         if(!(email=="")){
             emailCheck = true
         }
         if(!(password=="")){
             passCheck = true
         }
-        if(password == passComf){
-            passComfCheck = true
+        if(password == confirmPass){
+            passConfirmCheck = true
         }
         ref.createUser(email, password: password,
             withValueCompletionBlock: { error, user in
@@ -91,7 +93,11 @@ class RegisterViewController: UIViewController{
     
     
     
+    @IBAction func cancelButtonPressed(sender: AnyObject) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
     
     
     
 }
+

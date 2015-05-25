@@ -320,8 +320,10 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
 
 
 func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -> Bool {
+    //should also check for current user
     var isDuplicate : Bool = false
-    let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber", startTime, stopTime, serial)
+    var currentUserId = UserData.getOrCreateUserData().getCurrentUID()
+    let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber AND %@ == user", startTime, stopTime, serial, currentUserId)
     
     let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
     fetchRequestDupeCheck.predicate = predicate
@@ -411,6 +413,19 @@ func showSpinner(title: String, message: String) -> UIAlertView {
     return activityAlert
 }
 
+
+
+func fetchUserList() -> [UserEntry]? {
+    let fetchRequest = NSFetchRequest(entityName: "UserEntry")
+    var userList : [UserEntry]?
+    //                fetchRequest.predicate = predicate
+    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
+        
+        userList = fetchResults
+    }
+    
+    return userList
+}
 
 
 
