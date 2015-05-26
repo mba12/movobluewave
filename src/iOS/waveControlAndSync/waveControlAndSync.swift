@@ -479,7 +479,7 @@ class waveSyncOperation : NSOperation {
                         if (newdata.count > 0) {
                             for x in newdata {
                                 stepcount += x.steps
-                                //println(String(x.steps) + " new steps")
+                                println(String(x.steps) + " steps at: " + x.start.description + " - " + x.end.description)
                             }
                             var firstStep = (message.data! as! [WaveStep])[0].start
                             var finalStep = (message.data! as! [WaveStep]).last?.end

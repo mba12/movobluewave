@@ -86,7 +86,7 @@ class StatsViewController: UIViewController  {
         }
         
         //need to set up today logic like myLifeView
-        for(var i=0;i<numDays;i++){
+        for(var i=1;i<(numDays+1);i++){
             
             if let dateStart : NSDate = YMDLocalToNSDate(year, month, i) {
                 stepsCount.append(stepsForDayStarting(dateStart))
