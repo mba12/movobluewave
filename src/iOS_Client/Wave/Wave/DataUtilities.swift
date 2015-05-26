@@ -176,7 +176,7 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                         } else {
                             println("Steps saved successfully to FB!")
                             fetchResults[i].ispushed = true
-                        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+                            UserData.saveContext()
                         
                         
                         }
@@ -244,7 +244,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             //NSLog("Duplicate entry found, not adding to coredata")
             //NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serial,startTime,stopTime)
         }
-        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+        UserData.saveContext()
     }
 
     
@@ -334,7 +334,7 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
         syncItem.endtime = NSDate()
         syncItem.user = uid
         syncItem.status = false
-        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+        UserData.saveContext()
         
         return syncUid
     } else {
