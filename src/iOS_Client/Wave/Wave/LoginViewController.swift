@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class LoginViewController: UIViewController{
+class LoginViewController: KeyboardSlideViewController {
     
     @IBOutlet weak var emailText: UITextField!
     

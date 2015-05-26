@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class RegisterViewController: UIViewController{
+class RegisterViewController: KeyboardSlideViewController {
     
     
     @IBOutlet weak var emailText: UITextField!
@@ -18,7 +18,7 @@ class RegisterViewController: UIViewController{
     @IBOutlet weak var passText: UITextField!
     
     @IBOutlet weak var confirmPassText: UITextField!
-    
+
     
     
     @IBAction func register(sender: UIButton){

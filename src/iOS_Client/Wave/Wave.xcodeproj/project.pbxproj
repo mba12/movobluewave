@@ -15,6 +15,7 @@
 		028BB27D1B0E80C3004EBA8B /* DataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB27C1B0E80C3004EBA8B /* DataUtilities.swift */; };
 		028BB27F1B0E96EA004EBA8B /* WaveTabBarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */; };
 		02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */; };
+		02CEFDF81B14E8F4001FE19F /* KeyboardSlideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701951AFD401600848DCB /* MenuViewController.swift */; };
 		4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701971B00DE3800848DCB /* MyProfileViewController.swift */; };
@@ -97,6 +98,7 @@
 		028BB27C1B0E80C3004EBA8B /* DataUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUtilities.swift; sourceTree = "<group>"; };
 		028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveTabBarViewController.swift; sourceTree = "<group>"; };
 		02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
+		02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardSlideViewController.swift; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4A2701951AFD401600848DCB /* MenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		4A2701971B00DE3800848DCB /* MyProfileViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyProfileViewController.swift; sourceTree = "<group>"; };
@@ -232,6 +234,7 @@
 				4AEEA9CF1AD173900055C771 /* Wave.xcdatamodeld */,
 				02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */,
 				028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */,
+				02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -383,6 +386,7 @@
 				4A2701A01B00E51D00848DCB /* LoginViewController.swift in Sources */,
 				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
 				4A27019C1B00E3E900848DCB /* UserViewController.swift in Sources */,
+				02CEFDF81B14E8F4001FE19F /* KeyboardSlideViewController.swift in Sources */,
 				02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */,
 				02678D561B0CDBBB008113D4 /* SyncStatusViewController.swift in Sources */,
 				4A27019A1B00E34E00848DCB /* UploadDataViewController.swift in Sources */,
