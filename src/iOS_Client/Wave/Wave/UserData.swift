@@ -102,7 +102,7 @@ class UserData {
         var stringRef = getCurrentUserRef()
         stringRef = stringRef! + "/metadata"
         var fbMetaRef:Firebase = Firebase(url: stringRef)
-        fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentName())
+        fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
 //        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
         fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
         fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
@@ -337,14 +337,14 @@ class UserData {
             UserData.saveContext()
         }
     }
-    func getCurrentName() -> String? {
+    func getCurrentFullName() -> String? {
         if let fn = currentUserEntry?.fullname {
             return fn
         }
         return nil
         
     }
-    func setCurrentName(name:String){
+    func setCurrentFullName(name:String){
         if let cue : UserEntry = currentUserEntry {
             cue.fullname = name
             UserData.saveContext()

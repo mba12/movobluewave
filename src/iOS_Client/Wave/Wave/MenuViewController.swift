@@ -31,7 +31,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.backgroundColor = UIColor.clearColor()
         
         
-        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+        if (UserData.getOrCreateUserData().getCurrentEmail() == nil) {
             //no current user
             
             NSLog("No usable CurrentUser!")
@@ -88,7 +88,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     override func viewDidAppear(animated: Bool) {
         
-        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+        if (UserData.getOrCreateUserData().getCurrentEmail() == nil) {
             //no current user
             
             NSLog("No usable CurrentUser!")
