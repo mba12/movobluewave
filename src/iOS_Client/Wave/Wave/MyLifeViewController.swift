@@ -11,8 +11,12 @@ import CoreData
 
 
 //@objc(StepEntry)
+protocol FBUpdateDelegate {
+    
+    func UpdatedDataFromFirebase()
+}
 
-class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UICollectionViewDelegate {
+class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UICollectionViewDelegate, FBUpdateDelegate {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     //    var userID = ""
     
@@ -74,7 +78,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         NSLog("No user logged in")
                     } else {
                         NSLog("Grabbing user steps from firebase")
-                        retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate)
+                        retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
                         
                     }
                 } else {
@@ -227,6 +231,13 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
     }
     
+    
+    func UpdatedDataFromFirebase() {
+        dispatch_async(dispatch_get_main_queue(), {
+            self.collectionView.reloadData()
+        })
+        
+    }
     
 }
 
