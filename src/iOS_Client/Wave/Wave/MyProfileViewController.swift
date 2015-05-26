@@ -26,16 +26,27 @@ class MyProfileViewController:  UIViewController{
     override func viewDidLoad() {
   	  super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        fullName.text = "hello"
-        var nameTxt = UserData.getOrCreateUserData().getCurrentUserName()
-//        var birthUp  = 
-        var heightFtTxt = UserData.getOrCreateUserData().getCurrentHeightFeet()
-        var heightInchesTxt = UserData.getOrCreateUserData().getCurrentHeightInches()
-        var weightTxt = UserData.getOrCreateUserData().getCurrentWeight()
-        var genderTxt = UserData.getOrCreateUserData().getCurrentGender()
         
+        if let fn = UserData.getOrCreateUserData().getCurrentName() {
+            fullName.text = fn
+        }
         
-        fullName.text = nameTxt
+        if let hf = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+            heightFt.text = String(Int(hf))
+        
+        }
+        
+        if let hi = UserData.getOrCreateUserData().getCurrentHeightInches() {
+            heightInches.text = String(Int(hi))
+        }
+        
+        if let w = UserData.getOrCreateUserData().getCurrentWeight() {
+            weight.text = String(Int(w))
+        }
+
+        if let g = UserData.getOrCreateUserData().getCurrentGender() {
+            gender.text = g
+        }
         
         
     }
@@ -46,8 +57,8 @@ class MyProfileViewController:  UIViewController{
     
     
     @IBAction func saveChanges(sender: UIButton){
+        //call the sets on all of the name changes
         
-        saveMetadataToCoreData(fullName.text)
         
     }
     

@@ -30,96 +30,72 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.tableFooterView = UIView(frame: CGRect.zeroRect)
         tableView.backgroundColor = UIColor.clearColor()
         
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+        
+        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+            //no current user
             
-            if(fbUserRef=="Error"){
-                NSLog("No user logged in, logging in as stored user")
-                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
-                
-                let fetchRequest = NSFetchRequest(entityName: "UserEntry")
-                //                fetchRequest.predicate = predicate
-                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
-                    
-                    if(fetchResults.count > 0){
-                        UserData.getOrCreateUserData().createUser(
-                            String: fetchResults[0].id,
-                            String: fetchResults[0].email,
-                            String: fetchResults[0].pw,
-                            NSDate: fetchResults[0].birthdate,
-                            Int: Int(fetchResults[0].heightfeet),
-                            Int: Int(fetchResults[0].heightinches),
-                            Int: Int(fetchResults[0].weight),
-                            String: fetchResults[0].gender,
-                            String: fetchResults[0].fullname,
-                            String: fetchResults[0].username,
-                            String: fetchResults[0].reference)
-                        //                        UserData.getOrCreateUserData().createUser(String: fetchResults[0].id, String: fetchResults[0].email, String: fetchResults[0].pw, NSDate:fetchResults[0].birthdate, Int: fetchResults[0].heightinches, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: "")
-                        
-                        //                        CreateUser(String uid:String, String email:String, String pw:String, NSDate birth:NSDate, Int height1:Int, Int height2:Int, Int weight:Int, String gender:String, String fullName:String, String user:String, String ref:String){
-                        
-                    }else{
-                        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
-                        
-//                        ref.authUser("7@7.com", password: "7",
-//                            withCompletionBlock: { error, authData in
-//                                
-//                                if error != nil {
-//                                    // There was an error logging in to this account
-//                                    NSLog("Login failed")
-//                                } else {
-//                                    // We are now logged in
-//                                    NSLog("We logged in as 7: %@",authData.uid)
-//                                    //                                    self.userID = authData.uid
-//                                    var ref = "https://ss-movo-wave-v2.firebaseio.com"
-//                                    ref = ref + "/users/"
-//                                    ref = ref + authData.uid
-//                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "7@7.com", String: "7", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
-//                                    
-//                                    //                            self.retrieveData()
-//                                    
-//                                    
-//                                }
-//                        })
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
+//        // This is default login behavior -> probably shouldn't be here //
+//        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+//            
+//            if(fbUserRef=="Error"){
+//                NSLog("No user logged in, logging in as stored user")
+//                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
+//                
+//                let fetchRequest = NSFetchRequest(entityName: "CurrentUser")
+//                //                fetchRequest.predicate = predicate
+//                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [CurrentUser] {
+//                    
+//                    if(fetchResults.count > 0){
+//                        UserData.getOrCreateUserData().loadUser(fetchResults[0])
+//                    }
+//                    
+//                    let FB = Firebase(url: UserData.getFirebase())
+//                    FB.authUser(UserData.getOrCreateUserData().getCurrentEmail(), password: UserData.getOrCreateUserData().getCurrentPW(),
 
                         
-                        //me
-                        ref.authUser("6@6.com", password: "6",
-                            withCompletionBlock: { error, authData in
-                                
-                                if error != nil {	
-                                    // There was an error logging in to this account
-                                    NSLog("Login failed")
-                                } else {
-                                    // We are now logged in
-                                    NSLog("We logged in as 6: %@",authData.uid)
-                                    //                                    self.userID = authData.uid
-                                    var ref = "https://ss-movo-wave-v2.firebaseio.com"
-                                    ref = ref + "/users/"
-                                    ref = ref + authData.uid
-                                    UserData.getOrCreateUserData().createUser(String: authData.uid, String: "6@6.com", String: "6", NSDate: NSDate(), Int: 0, Int: 0, Int: 0, String: "Male", String: "Phil Gandy", String: "pgandy", String: ref)
-                                    
-                                    //                            self.retrieveData()
-                                    
-                                    
-                                }
-                        })
-                        
-                    }
-                } else {
-                    
-                }
-                
-                
-                
-                
-                
-                
-            } else {
-                //                retrieveData()
-                
-            }
-        }
+//                        withCompletionBlock: { error, authData in
+//                            
+//                            if error != nil {
+////WARNING: UI flow unclear here -- should we redirect to the sign-in / sign-up screen, or should we 
+////assume that users don't want to be interrupted... but then how do they know 
+////that the app needs to be logged in again!
+//                                NSLog("Login failed")
+//                            } else {
+//                                // We are now logged in
+//                                NSLog("We logged in as %@: %@",UserData.getOrCreateUserData().getCurrentEmail()!, authData.uid)
+//                                
+//                            }
+//                    })
+//                    
+//                    
+//                }else{
+//                    //then redirect the user to the signin / create page
+//                    performSegueWithIdentifier("Logout", sender: self)
+//                }
+//                
+//            } else {
+//                //                retrieveData()
+//                
+//            }
+//        }
         
+    }
+    
+    override func viewDidAppear(animated: Bool) {
+        
+        if (UserData.getOrCreateUserData().getCurrentUID() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
     }
     
     // MARK:  UITextFieldDelegate Methods
@@ -149,17 +125,17 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         let row = indexPath.row
         
-        if (menu[row] != "FAQ" && menu[row] != "Contact" && menu[row] != "Users") {
+        if (menu[row] != "FAQ" && menu[row] != "Contact") {
             performSegueWithIdentifier(menu[row], sender:self)
         } else if (menu[row] == "FAQ") {
             UIApplication.sharedApplication().openURL(NSURL(string: "http://www.getmovo.com/appfaq")!)
             
         } else if (menu[row] == "Contact") {
-            var UID = ""
-            if let curUID : String = UserData.getOrCreateUserData().currentUID {
-                UID = curUID
+            var username = ""
+            if let curUsername : String = UserData.getOrCreateUserData().getCurrentUserName() {
+                username = curUsername
             }
-            var urlstring = "subject=Contact from "+UID
+            var urlstring = "subject=Contact from "+username
             urlstring = "mailto:info@getmovo.com?"+urlstring.stringByAddingPercentEncodingWithAllowedCharacters(.URLPathAllowedCharacterSet())!
             UIApplication.sharedApplication().openURL(NSURL(string: urlstring)!)
         }
