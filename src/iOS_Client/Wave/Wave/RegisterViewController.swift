@@ -76,14 +76,30 @@ class RegisterViewController: UIViewController{
                                 NSLog("We logged in as %@: %@",email, authData.uid)
                                 
                                 ///
+                                //in this case, the user does not exist locally
+                                //so we need to create a new local user copy
+                                //and log that one in
+                                
+                                //so we should retrieve the user info
+                                var stringRef = UserData.getFirebase() + "users/"
+                                stringRef = stringRef + authData.uid
                                 
                                 
+                                var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
                                 
-                                var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
+                                UserData.saveContext()
                                 
-                                self.presentViewController(vc, animated: true, completion: nil)
+                                UserData.getOrCreateUserData().loadUser(userentry)
                                 
+                                self.performSegueWithIdentifier("tabBar", sender: self)
+                                if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
+                                    if let tabbarVC = application.tabBarController {
+                                        println("setting selected index")
+                                        tabbarVC.selectedIndex = 1
+                                    }
+                                }
                                 
+    
                                 
                             }
                     })
