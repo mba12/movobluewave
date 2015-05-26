@@ -241,7 +241,8 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             
             
         }else{
-            //            NSLog("Duplicate entry found, not adding to coredata")
+            //NSLog("Duplicate entry found, not adding to coredata")
+            //NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serial,startTime,stopTime)
         }
         (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
     }

@@ -27,7 +27,7 @@ class MyProfileViewController:  UIViewController{
   	  super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        if let fn = UserData.getOrCreateUserData().getCurrentName() {
+        if let fn = UserData.getOrCreateUserData().getCurrentFullName() {
             fullName.text = fn
         }
         
@@ -60,7 +60,7 @@ class MyProfileViewController:  UIViewController{
         //call the sets on all of the name changes
 
 
-        UserData.getOrCreateUserData().setCurrentName(fullName.text)
+        UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
         UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
         UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
         UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)

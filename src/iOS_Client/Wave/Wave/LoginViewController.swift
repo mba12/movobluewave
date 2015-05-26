@@ -70,7 +70,7 @@ class LoginViewController: UIViewController{
                             stringRef = stringRef + authData.uid
 
                             
-                            var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: nil, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
+                            var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
                             
                             UserData.saveContext()
                             
