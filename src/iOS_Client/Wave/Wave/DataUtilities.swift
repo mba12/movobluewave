@@ -238,7 +238,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             newItem.starttime = startTime
             newItem.endtime = stopTime
             newItem.serialnumber = serial
-            
+            newItem.ispushed = true
             
         }else{
             //NSLog("Duplicate entry found, not adding to coredata")
