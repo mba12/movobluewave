@@ -259,27 +259,44 @@ class UserData {
         var fbMeta = Firebase(url:metaRef)
         fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
             var metaObjects = snapshot.children
-            self.setCurrentUsername((snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String)!)
-            self.setCurrentEmail((snapshot.childSnapshotForPath("currentEmail").valueInExportFormat() as? String)!)
-            self.setCurrentFullName((snapshot.childSnapshotForPath("currentFullName").valueInExportFormat() as? String)!)
-            if(((snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!) != "Error"){
-                var weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
-                var weightInt = weightIn.toInt()
-                self.setCurrentWeight(weightInt!)
+            if let username = (snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String) {
+                self.setCurrentUsername(username)
             }
-            if(((snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!) != "Error"){
-                var height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
-                var height1Int = height1In.toInt()
-                 self.setCurrentHeightFeet(height1Int!)
+            
+            if let email = snapshot.childSnapshotForPath("currentEmail").valueInExportFormat() as? String {
+                self.setCurrentEmail(email)
             }
-            if(((snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!) != "Error"){
-                var height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
-                var height2Int = height2In.toInt()
-                self.setCurrentHeightInches(height2Int!)
+            
+            if let fullname = (snapshot.childSnapshotForPath("currentFullName").valueInExportFormat() as? String) {
+                self.setCurrentFullName(fullname)
+            }
+            
+            if let weight = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String) {
+                if((weight) != "Error"){
+                    var weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
+                    var weightInt = weightIn.toInt()
+                    self.setCurrentWeight(weightInt!)
+                }
+            }
+            if let heightft = snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String {
+                if(heightft != "Error"){
+                    var height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
+                    var height1Int = height1In.toInt()
+                    self.setCurrentHeightFeet(height1Int!)
+                }
+            }
+            if let heightin = snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String {
+                if(heightin != "Error"){
+                    var height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
+                    var height2Int = height2In.toInt()
+                    self.setCurrentHeightInches(height2Int!)
+                }
                 
             }
           
-            self.setCurrentGender((snapshot.childSnapshotForPath("currentGender").valueInExportFormat() as? String)!)
+            if let gender = (snapshot.childSnapshotForPath("currentGender").valueInExportFormat() as? String) {
+                self.setCurrentGender(gender)
+            }
             //birthday
             
             

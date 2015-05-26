@@ -132,7 +132,7 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
         
         
         
-        let predicate = NSPredicate(format:"0 == ispushed")
+        let predicate = NSPredicate(format:"0 == ispushed AND %@ == user", uid)
         let fetchRequestSteps = NSFetchRequest(entityName: "StepEntry")
         fetchRequestSteps.predicate = predicate
         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestSteps, error: nil) as? [StepEntry] {
@@ -144,9 +144,8 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                 for(var i=0;i<(resultsCount);i++){
                     var dateStringFB = dateFormatFBRootNode(fetchResults[i].starttime)
                     var dateStringTimeOnly = dateFormatFBTimeNode(fetchResults[i].starttime)
-                    
-                    
                     var appendString = dateStringFB
+                    let step = fetchResults[i]
                     appendString = appendString + "/"
                     appendString = appendString + fetchResults[i].syncid
                     appendString = appendString + "/"
@@ -164,7 +163,7 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     var dayRef = refSteps.childByAppendingPath(appendString)
                     
 
-                    var stepFields = ["count":String(fetchResults[i].count),"deviceid":String(fetchResults[i].serialnumber),"starttime": dateFormatFBTimeNode(fetchResults[i].starttime),"endtime": dateFormatFBTimeNode(fetchResults[i].endtime)]
+                    var stepFields = ["count":String(step.count),"deviceid":String(step.serialnumber),"starttime": dateFormatFBTimeNode(step.starttime),"endtime": dateFormatFBTimeNode(step.endtime)]
                     
                     
                     
@@ -175,10 +174,8 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                             println("Steps could not be saved to FB.")
                         } else {
                             println("Steps saved successfully to FB!")
-                            fetchResults[i].ispushed = true
+                            step.ispushed = true
                             UserData.saveContext()
-                        
-                        
                         }
                     })
                     
@@ -195,13 +192,12 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     
                     
                     
-                    NSLog("%@",fetchResults[i].starttime)
+                    NSLog("%@",step.starttime)
                     
                     
                     
                     //                    totalStepsForToday = totalStepsForToday + Int(fetchResults[i].count)
                 }
-                
             }else{
                 //no new steps, nothing to upload
             }
