@@ -647,11 +647,12 @@
                         <outlet property="emailText" destination="KAE-G1-guG" id="0Dd-dI-Ttd"/>
                         <outlet property="passText" destination="kVp-8B-WB5" id="d1f-Mu-Bl9"/>
                         <outlet property="usernameText" destination="M7k-u1-WUP" id="7jD-fP-iSU"/>
+                        <segue destination="EIb-5E-vMu" kind="showDetail" identifier="tabBar" id="vtk-Ik-Lon"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XXc-c6-i8I" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-1632" y="128"/>
+            <point key="canvasLocation" x="-716" y="-540"/>
         </scene>
         <!--Wave Tab Bar View Controller-->
         <scene sceneID="g9u-85-4eT">
@@ -1656,7 +1657,7 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="Ge0-sS-8AU"/>
-        <segue reference="OuT-jJ-KdH"/>
+        <segue reference="vtk-Ik-Lon"/>
         <segue reference="5Rn-yN-IPh"/>
         <segue reference="8NQ-DC-l8W"/>
         <segue reference="60l-AC-Hvq"/>

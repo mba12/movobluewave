@@ -35,8 +35,10 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
         
     }
     
-   func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        println("Selected User: "+(userSelectionTable.cellForRowAtIndexPath(indexPath) as! UserTableCell?)!.userNameLabel.text!)
+    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        if let name = (userSelectionTable.cellForRowAtIndexPath(indexPath) as! UserTableCell?)!.userNameLabel.text {
+            println("Selected User: "+name)
+        }
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
