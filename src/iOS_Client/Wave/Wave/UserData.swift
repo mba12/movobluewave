@@ -103,17 +103,46 @@ class UserData {
         var stringRef = getCurrentUserRef()
         stringRef = stringRef! + "/metadata"
         var fbMetaRef:Firebase = Firebase(url: stringRef)
-        fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
+        if(getCurrentFullName() != nil){
+            fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
+        }else{
+            fbMetaRef.childByAppendingPath("currentFullName").setValue("Error")
+        }
         //        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
-        fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
-        fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
-                fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet()?.description)
+        if(getCurrentEmail() != nil){
+            fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
+        }else{
+            fbMetaRef.childByAppendingPath("currentEmail").setValue("Error")
+        }
+        if(getCurrentGender() != nil){
+            fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
+        }else{
+            fbMetaRef.childByAppendingPath("currentGender").setValue("Error")
+        }
+        if(getCurrentHeightFeet() != nil){
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet()?.description)
+        }else{
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue("Error")
+        }
+        if(getCurrentHeightInches() != nil){
                 fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches()?.description)
-        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
-        fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
-                fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight()?.description)
+        }else{
+                fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
+        }
         
-    }
+        
+        fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
+
+        if(getCurrentWeight() != nil){
+            fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight()?.description)
+        }else{
+            fbMetaRef.childByAppendingPath("currentWeight").setValue("Error")
+        }
+
+
+        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
+        
+            }
     
     
     static func getOrCreateCurrentUser() -> CurrentUser? {
@@ -234,13 +263,19 @@ class UserData {
             self.setCurrentEmail((snapshot.childSnapshotForPath("currentEmail").valueInExportFormat() as? String)!)
             self.setCurrentFullName((snapshot.childSnapshotForPath("currentFullName").valueInExportFormat() as? String)!)
             if(((snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!) != "Error"){
-                self.setCurrentWeight((snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? Int)!)
+                var weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
+                var weightInt = weightIn.toInt()
+                self.setCurrentWeight(weightInt!)
             }
             if(((snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!) != "Error"){
-                 self.setCurrentHeightFeet((snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? Int)!)
+                var height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
+                var height1Int = height1In.toInt()
+                 self.setCurrentHeightFeet(height1Int!)
             }
             if(((snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!) != "Error"){
-                self.setCurrentHeightInches((snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? Int)!)
+                var height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
+                var height2Int = height2In.toInt()
+                self.setCurrentHeightInches(height2Int!)
                 
             }
           
