@@ -132,7 +132,7 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
         
         
         
-        let predicate = NSPredicate(format:"%@ == syncid", syncUid)
+        let predicate = NSPredicate(format:"0 == ispushed")
         let fetchRequestSteps = NSFetchRequest(entityName: "StepEntry")
         fetchRequestSteps.predicate = predicate
         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestSteps, error: nil) as? [StepEntry] {
@@ -163,23 +163,35 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     var daySyncRef = refSync.childByAppendingPath(syncAppend)
                     var dayRef = refSteps.childByAppendingPath(appendString)
                     
-                    var count = ["count": String(fetchResults[i].count)]
-                    var deviceid = ["deviceid": String(fetchResults[i].serialnumber)]
-                    var starttime = ["starttime": dateFormatFBTimeNode(fetchResults[i].starttime)]
-                    var endtime = ["endtime": dateFormatFBTimeNode(fetchResults[i].endtime)]
+
+                    var stepFields = ["count":String(fetchResults[i].count),"deviceid":String(fetchResults[i].serialnumber),"starttime": dateFormatFBTimeNode(fetchResults[i].starttime),"endtime": dateFormatFBTimeNode(fetchResults[i].endtime)]
                     
                     
-                    dayRef.updateChildValues(count)
-                    dayRef.updateChildValues(deviceid)
-                    dayRef.updateChildValues(starttime)
-                    dayRef.updateChildValues(endtime)
-                    
-                    daySyncRef.updateChildValues(count)
-                    daySyncRef.updateChildValues(deviceid)
-                    daySyncRef.updateChildValues(starttime)
-                    daySyncRef.updateChildValues(endtime)
                     
                     
+                    dayRef.updateChildValues(stepFields, withCompletionBlock: {
+                        (error:NSError?, ref:Firebase!) in
+                        if (error != nil) {
+                            println("Steps could not be saved to FB.")
+                        } else {
+                            println("Steps saved successfully to FB!")
+                            fetchResults[i].ispushed = true
+                        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+                        
+                        
+                        }
+                    })
+                    
+                    daySyncRef.updateChildValues(stepFields, withCompletionBlock: {
+                            (error:NSError?, ref:Firebase!) in
+                        if (error != nil) {
+                            println("Sync could not be saved to FB.")
+                        } else {
+                            println("Sync saved successfully to FB!")
+                            }
+                        })
+
+
                     
                     
                     
@@ -308,6 +320,7 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
                 newItem.starttime = step.start
                 newItem.endtime = step.end
                 newItem.serialnumber = String(serial)
+                newItem.ispushed = false
             }
             
             println("step: "+String(step.steps))
