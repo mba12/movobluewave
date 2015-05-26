@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -512,6 +513,7 @@ public class Home extends MenuActivity {
 
             //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
             Calendar monthCal = calendar;
+            monthCal.setTimeZone( TimeZone.getTimeZone("UTC"));
             monthCal.setTimeInMillis(timestamp);
             monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i, 0, 0, 0);
             long monthRangeStart = monthCal.getTimeInMillis();
@@ -693,16 +695,21 @@ public class Home extends MenuActivity {
 
             TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
             Calendar today = Calendar.getInstance();
-            today.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
+
+            today.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
             String wholeDate = today.getTimeInMillis() + "";
             date.setText(wholeDate);
             //Grab today's data//
             Calendar monthCal = Calendar.getInstance();
 
 
-            monthCal = today;
+            monthCal.setTimeInMillis(today.getTimeInMillis());
+//            monthCal.setTimeZone( TimeZone.getTimeZone( "UTC" ));
+
+
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, calendar.getActualMaximum(Calendar.HOUR_OF_DAY), calendar.getActualMaximum(Calendar.MINUTE), 0);
+//            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), dayToDisplay, monthCal.getActualMaximum(Calendar.HOUR_OF_DAY), monthCal.getActualMaximum(Calendar.MINUTE), monthCal.getActualMaximum(Calendar.SECOND));
+            monthCal.add(Calendar.DATE, 1);
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
             Bitmap bm = null;
@@ -716,7 +723,7 @@ public class Home extends MenuActivity {
                 e.printStackTrace();
             }
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
-
+            curSteps.moveToFirst();
             if (curSteps != null && curSteps.getCount() != 0) {
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
@@ -815,7 +822,7 @@ public class Home extends MenuActivity {
 
     public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID) {
 
-        String selectionSteps = Database.StepEntry.START + " > ? AND " + Database.StepEntry.END + " < ? AND " + Database.StepEntry.USER + " =? ";
+        String selectionSteps = Database.StepEntry.START + " >= ? AND " + Database.StepEntry.END + " <= ? AND " + Database.StepEntry.USER + " =? ";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                 new String[]{Database.StepEntry.SYNC_ID, //blob
