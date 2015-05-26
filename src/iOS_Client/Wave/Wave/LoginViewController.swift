@@ -79,6 +79,7 @@ class LoginViewController: KeyboardSlideViewController {
                             
                         }
                         
+                        
                         /*
                         UserData.getOrCreateUserData().setCurrentUID(authData.uid)
                         UserData.getOrCreateUserData().setCurrentEmail(email)
@@ -89,7 +90,8 @@ class LoginViewController: KeyboardSlideViewController {
                         UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
                         */
                         NSLog("We logged in as %@: %@",email, authData.uid)
-//                        var vc = self.storyboard?.instantiateViewControllerWithIdentifier("WaveTabBarViewController") as! WaveTabBarViewController
+
+                        
                         self.performSegueWithIdentifier("tabBar", sender: self)
                         if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
                             if let tabbarVC = application.tabBarController {
@@ -97,11 +99,10 @@ class LoginViewController: KeyboardSlideViewController {
                                 tabbarVC.selectedIndex = 1
                             }
                         }
+                        UserData.getOrCreateUserData().downloadMetaData()
+
                         
-                        
-//                        self.presentViewController(vc, animated: true, completion: nil)
-                        
-                        
+                                                
                     }
             })
             

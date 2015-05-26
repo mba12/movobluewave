@@ -91,6 +91,8 @@ class RegisterViewController: KeyboardSlideViewController {
                                 
                                 UserData.getOrCreateUserData().loadUser(userentry)
                                 
+                                UserData.getOrCreateUserData().saveMetaDataToFirebase()
+                                
                                 self.performSegueWithIdentifier("tabBar", sender: self)
                                 if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
                                     if let tabbarVC = application.tabBarController {

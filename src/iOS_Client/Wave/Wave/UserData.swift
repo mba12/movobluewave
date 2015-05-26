@@ -13,12 +13,12 @@ private var _UserData:UserData? = nil
 
 
 class UserData {
-        //vars
+    //vars
     private var currentUserEntry : UserEntry?
     
-
+    
     static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
-
+    
     
     private init(){
         //init vars
@@ -29,7 +29,7 @@ class UserData {
         } else {
             NSLog("Failed to load default user")
         }
-/*
+        /*
         currentUID = "Error"
         currentEmail = "Error"
         currentPW = "Error"
@@ -41,13 +41,13 @@ class UserData {
         currentFullName = "Error"
         currentUsername = "Error"
         currentUserRef = "Error"
-  */
-     
+        */
+        
     }
     
     static func getOrCreateUserData() -> UserData{
         if (_UserData==nil){
-          _UserData = UserData()
+            _UserData = UserData()
             
         }
         return _UserData!
@@ -94,25 +94,55 @@ class UserData {
             UserData.saveContext()
             return true
         }
-
+        
         return false
     }
     
     func saveMetaDataToFirebase(){
+        NSLog("Saving metadata to firebase")
         var stringRef = getCurrentUserRef()
         stringRef = stringRef! + "/metadata"
         var fbMetaRef:Firebase = Firebase(url: stringRef)
-        fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
-//        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
-        fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
-        fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
-//        fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet())
-//        fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches())
-        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
-        fbMetaRef.childByAppendingPath("currentUserName").setValue(getCurrentUserName())
-//        fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight())
+        if(getCurrentFullName() != nil){
+            fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
+        }else{
+            fbMetaRef.childByAppendingPath("currentFullName").setValue("Error")
+        }
+        //        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
+        if(getCurrentEmail() != nil){
+            fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
+        }else{
+            fbMetaRef.childByAppendingPath("currentEmail").setValue("Error")
+        }
+        if(getCurrentGender() != nil){
+            fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
+        }else{
+            fbMetaRef.childByAppendingPath("currentGender").setValue("Error")
+        }
+        if(getCurrentHeightFeet() != nil){
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet()?.description)
+        }else{
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue("Error")
+        }
+        if(getCurrentHeightInches() != nil){
+                fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches()?.description)
+        }else{
+                fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
+        }
         
-    }
+        
+        fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
+
+        if(getCurrentWeight() != nil){
+            fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight()?.description)
+        }else{
+            fbMetaRef.childByAppendingPath("currentWeight").setValue("Error")
+        }
+
+
+        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
+        
+            }
     
     
     static func getOrCreateCurrentUser() -> CurrentUser? {
@@ -136,7 +166,7 @@ class UserData {
         
         if (createNewCurrentUser) {
             if let newCurrentUser : CurrentUser = NSEntityDescription.insertNewObjectForEntityForName("CurrentUser", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as? CurrentUser {
-            
+                
                 UserData.saveContext()
                 return newCurrentUser
             }
@@ -180,50 +210,90 @@ class UserData {
         return newItem
         
     }
-//    
+    //
+    
+    //    func logInDifferentUser(){
+    
+    
+    //        if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+    //            let predicate = NSPredicate(format:"%@ == id",uid)
+    //            let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
+    //            fetchRequestDupeCheck.predicate = predicate
+    //            if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+    //                if(fetchResults.count == 1){
+    //
+    //
+    //
+    //                    var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
+    //                    var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
+    //                    var birthLong:Int32 = Int32(birthTime);
+    //                    var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
+    //                    var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
+    //                    var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
+    //                    var weightUp = ["currentWeight": String(fetchResults[0].weight)]
+    //                    var genderUp = ["currentGender": String(fetchResults[0].gender)]
+    //                }
+    //            }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //        }
+    //    }
+    
+    func downloadMetaData(){
+        NSLog("Downloading new metadata")
+        var metaRef = getCurrentUserRef()
+        metaRef = metaRef! + "/metadata"
         
-//    func logInDifferentUser(){
-
+        var fbMeta = Firebase(url:metaRef)
+        fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            var metaObjects = snapshot.children
+            self.setCurrentUsername((snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String)!)
+            self.setCurrentEmail((snapshot.childSnapshotForPath("currentEmail").valueInExportFormat() as? String)!)
+            self.setCurrentFullName((snapshot.childSnapshotForPath("currentFullName").valueInExportFormat() as? String)!)
+            if(((snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!) != "Error"){
+                var weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
+                var weightInt = weightIn.toInt()
+                self.setCurrentWeight(weightInt!)
+            }
+            if(((snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!) != "Error"){
+                var height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
+                var height1Int = height1In.toInt()
+                 self.setCurrentHeightFeet(height1Int!)
+            }
+            if(((snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!) != "Error"){
+                var height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
+                var height2Int = height2In.toInt()
+                self.setCurrentHeightInches(height2Int!)
+                
+            }
+          
+            self.setCurrentGender((snapshot.childSnapshotForPath("currentGender").valueInExportFormat() as? String)!)
+            //birthday
+            
+            
+            
+            }, withCancelBlock: { error in
+                println(error.description)
+        })
         
-//        if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-//            let predicate = NSPredicate(format:"%@ == id",uid)
-//            let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
-//            fetchRequestDupeCheck.predicate = predicate
-//            if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
-//                if(fetchResults.count == 1){
-//                    
-//                    
-//                    
-//                    var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
-//                    var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
-//                    var birthLong:Int32 = Int32(birthTime);
-//                    var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
-//                    var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
-//                    var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
-//                    var weightUp = ["currentWeight": String(fetchResults[0].weight)]
-//                    var genderUp = ["currentGender": String(fetchResults[0].gender)]
-//                }
-//            }
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-//        }
-//    }
+    }
+    
     
     func getCurrentUID() -> String? {
         if let UID = currentUserEntry?.id {
-                
+            
             return UID
         }
         return nil
@@ -236,13 +306,13 @@ class UserData {
         }
     }
     
-
-            
-            
     
-        
-        
-        
+    
+    
+    
+    
+    
+    
     
     
     func getCurrentEmail() -> String? {
@@ -376,7 +446,7 @@ class UserData {
             UserData.saveContext()
         }
     }
-
+    
     
 }
 

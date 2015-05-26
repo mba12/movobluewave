@@ -12,7 +12,7 @@ class StepEntry: NSManagedObject {
     @NSManaged var count: Int16
     @NSManaged var endtime: NSDate
     @NSManaged var guid: String
-    @NSManaged var ispushed: String
+    @NSManaged var ispushed: Bool
     @NSManaged var serialnumber: String
     @NSManaged var starttime: NSDate
     @NSManaged var syncid: String
