@@ -169,7 +169,7 @@ public class SyncDataActivity extends MenuActivity {
 //    }
 
     public  Cursor getStepsForSync(String syncID) {
-        String selectionSteps = Database.StepEntry.SYNC_ID + "=? OR (" + Database.StepEntry.IS_PUSHED + "=? AND "+ Database.StepEntry.USER +"=?)";
+        String selectionSteps = Database.StepEntry.IS_PUSHED + "=? AND "+ Database.StepEntry.USER +"=?";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                 new String[]{Database.StepEntry.SYNC_ID, //blob
@@ -180,7 +180,7 @@ public class SyncDataActivity extends MenuActivity {
                         Database.StepEntry.DEVICEID, //blob
                         Database.StepEntry.GUID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[]{syncID, "0", UserData.getUserData(c).getCurUID()},                            // The values for the WHERE clause
+                new String[]{"0", UserData.getUserData(c).getCurUID()},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -291,6 +291,7 @@ public class SyncDataActivity extends MenuActivity {
             newRowId = db.insert(Database.SyncEntry.SYNC_TABLE_NAME,
                     null,
                     syncValues);
+//            db.close();
             lazyLog.d("Sync database add:\n" + syncValues.toString());
 
 //                    FirebaseCalls fbc = new FirebaseCalls(c);
@@ -318,8 +319,8 @@ public class SyncDataActivity extends MenuActivity {
                     cur.getColumnIndexOrThrow(Database.SyncEntry.GUID)
 
             );
-            //firebase upload sync
-//                    UserData myData = UserData.getUserData(c);
+//            firebase upload sync
+                    UserData myData = UserData.getUserData(c);
             //sync ref
             Firebase ref = new Firebase(UserData.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
 
