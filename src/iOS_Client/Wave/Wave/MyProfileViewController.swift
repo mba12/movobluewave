@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class MyProfileViewController:  UIViewController{
+class MyProfileViewController:  KeyboardSlideViewController {
     @IBOutlet weak var cancel: UIButton!
     
     @IBOutlet weak var fullName: UITextField!
@@ -21,6 +21,8 @@ class MyProfileViewController:  UIViewController{
     @IBOutlet weak var weight: UITextField!
     
     @IBOutlet weak var gender: UITextField!
+    
+    @IBOutlet weak var cancelButton: UIButton!
     
     
     override func viewDidLoad() {
@@ -48,7 +50,7 @@ class MyProfileViewController:  UIViewController{
             gender.text = g
         }
         
-        
+        offsetModifier = -(cancelButton.frame.origin.y - cancelButton.frame.height)
     }
     
     
