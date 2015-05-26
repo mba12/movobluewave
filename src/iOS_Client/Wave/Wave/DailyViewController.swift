@@ -50,6 +50,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
             //do nothing
+        
     }
     
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {

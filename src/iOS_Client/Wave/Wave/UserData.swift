@@ -98,6 +98,22 @@ class UserData {
         return false
     }
     
+    func saveMetaDataToFirebase(){
+        var stringRef = getCurrentUserRef()
+        stringRef = stringRef! + "/metadata"
+        var fbMetaRef:Firebase = Firebase(url: stringRef)
+        fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentName())
+//        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
+        fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
+        fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
+//        fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet())
+//        fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches())
+        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
+        fbMetaRef.childByAppendingPath("currentUserName").setValue(getCurrentUserName())
+//        fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight())
+        
+    }
+    
     
     static func getOrCreateCurrentUser() -> CurrentUser? {
         var createNewCurrentUser = false

@@ -58,7 +58,14 @@ class MyProfileViewController:  UIViewController{
     
     @IBAction func saveChanges(sender: UIButton){
         //call the sets on all of the name changes
-        
+
+
+        UserData.getOrCreateUserData().setCurrentName(fullName.text)
+        UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
+        UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
+        UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
+        UserData.getOrCreateUserData().setCurrentGender(gender.text)
+        UserData.getOrCreateUserData().saveMetaDataToFirebase()
         
     }
     

@@ -84,6 +84,7 @@ class RegisterViewController: UIViewController{
                                 self.presentViewController(vc, animated: true, completion: nil)
                                 
                                 
+                                
                             }
                     })
                 }

@@ -89,11 +89,17 @@ class LoginViewController: UIViewController{
                         UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
                         */
                         NSLog("We logged in as %@: %@",email, authData.uid)
-                        var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
+//                        var vc = self.storyboard?.instantiateViewControllerWithIdentifier("WaveTabBarViewController") as! WaveTabBarViewController
+                        self.performSegueWithIdentifier("tabBar", sender: self)
+                        if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
+                            if let tabbarVC = application.tabBarController {
+                                println("setting selected index")
+                                tabbarVC.selectedIndex = 1
+                            }
+                        }
                         
                         
-                        
-                        self.presentViewController(vc, animated: true, completion: nil)
+//                        self.presentViewController(vc, animated: true, completion: nil)
                         
                         
                     }
