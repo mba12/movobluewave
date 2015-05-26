@@ -533,7 +533,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hcE-Ck-C3W" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-716" y="122"/>
+            <point key="canvasLocation" x="-816" y="-334"/>
         </scene>
         <!--Register-->
         <scene sceneID="zhv-tb-v2I">
@@ -676,7 +676,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XXc-c6-i8I" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-716" y="-540"/>
+            <point key="canvasLocation" x="-816" y="-996"/>
         </scene>
         <!--Wave Tab Bar View Controller-->
         <scene sceneID="g9u-85-4eT">
@@ -1427,11 +1427,12 @@
                     </view>
                     <connections>
                         <outlet property="userSelectionTable" destination="XWd-UI-gIR" id="WRK-gm-IA9"/>
+                        <segue destination="0Lf-Ys-XJY" kind="show" identifier="AddAccount" id="FLg-vA-6yt"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qYU-BA-djU" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="188" y="2812"/>
+            <point key="canvasLocation" x="-784" y="625"/>
         </scene>
         <!--User Menu Bar View Controller-->
         <scene sceneID="Yvk-Zt-Bfe">
@@ -1707,6 +1708,7 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
+        <segue reference="FLg-vA-6yt"/>
         <segue reference="Ge0-sS-8AU"/>
         <segue reference="vtk-Ik-Lon"/>
         <segue reference="5Rn-yN-IPh"/>

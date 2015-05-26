@@ -36,9 +36,26 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        if let name = (userSelectionTable.cellForRowAtIndexPath(indexPath) as! UserTableCell?)!.userNameLabel.text {
-            println("Selected User: "+name)
+        if let email = (userSelectionTable.cellForRowAtIndexPath(indexPath) as! UserTableCell?)!.userNameLabel.text {
+            println("Selected User: "+email)
+            
+            if (email == "Add Account") {
+                //then we need to handle this as an account add...
+                //this is simply a segue to the register user VC
+                
+                performSegueWithIdentifier("AddAccount", sender: self)
+                
+            } else {
+                //anything else, we would want to log in, name is the email address
+                if (login(email)) {
+                    println("Switching to user: "+email)
+                    dismissViewControllerAnimated(true, completion: nil)
+                }
+                
+            }
         }
+        
+        
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -47,7 +64,7 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
             if let users = userList {
                 
                 if (indexPath.row < users.count) {
-                    cell.userNameLabel.text = users[indexPath.row].username
+                    cell.userNameLabel.text = users[indexPath.row].email
                 } else {
                     cell.userNameLabel.text = "Add Account"
                 }

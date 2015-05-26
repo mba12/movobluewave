@@ -238,7 +238,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             newItem.starttime = startTime
             newItem.endtime = stopTime
             newItem.serialnumber = serial
-            
+            newItem.ispushed = true
             
         }else{
             //NSLog("Duplicate entry found, not adding to coredata")
@@ -487,3 +487,30 @@ func clearExcessItems(array: [NSManagedObject]) {
     }
     UserData.saveContext()
 }
+
+
+
+//Attempt login based on email selection
+
+//since we allow offline operation, assume that the user information is correct
+
+func login(email: String) -> Bool {
+    
+    //auth with email and pass that are in the input UI
+
+    if let userentry : UserEntry = fetchUserByEmail(email) {
+        UserData.getOrCreateUserData().loadUser(userentry)
+        return true
+    }
+    return false
+}
+
+//for any current user, see if FB authenticates
+//for now, we will stub this to return true because 
+//the intended functionality isn't clear
+func checkAuth() -> Bool {
+    
+    return true
+}
+
+
