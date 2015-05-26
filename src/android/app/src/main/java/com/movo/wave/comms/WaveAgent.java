@@ -163,6 +163,14 @@ public class WaveAgent {
              */
             public void notify( DataSync sync, SyncState state, boolean status );
 
+            /** Indicate if state should be skipped, if skippable
+             * 
+             * @param sync sync object.
+             * @param state sync state.
+             * @return boolean indicator of if to skip the state
+             */
+            public boolean skip( DataSync sync, SyncState state );
+
             /** Notify progress
              *
              * @param sync sync object.
@@ -216,12 +224,12 @@ public class WaveAgent {
          *
          */
         public static enum SyncState {
-            DISCOVERY,
+            DISCOVERY(false),
             VERSION,
             GET_DATE,
             REQUEST_DATA,
             SET_DATE,
-            COMPLETE {
+            COMPLETE(false) {
                 /** Don't advance beyond complete!
                  *
                  * @return ERROR enum
@@ -231,7 +239,7 @@ public class WaveAgent {
                     return ERROR;
                 }
             },
-            ERROR {
+            ERROR(false) {
                 /** Once in ERROR, always in ERROR
                  *
                  * @return ERROR enum
@@ -241,7 +249,7 @@ public class WaveAgent {
                     return this;
                 }
             },
-            ABORT {
+            ABORT(false) {
                 /** Stop issuing requests, just go to completion state.
                  *
                  * @return COMPLETE
@@ -252,6 +260,15 @@ public class WaveAgent {
                 }
             };
 
+            public final boolean skippable;
+            
+            private SyncState() {
+                this.skippable = true;
+            }
+            private SyncState( boolean skippable ) {
+                this.skippable = skippable;
+            }
+            
             public SyncState next() {
                 return values()[ordinal() + 1];
             }
@@ -288,11 +305,11 @@ public class WaveAgent {
                                           final Callback callback ) {
             final DataSync ret = new DataSync( callback );
 
-            BLEAgent.handle( new BLEAgent.BLERequestScanForAddress( timeout, address ) {
+            BLEAgent.handle(new BLEAgent.BLERequestScanForAddress(timeout, address) {
                 @Override
                 public void onComplete(BLEAgent.BLEDevice device) {
                     ret.device = device;
-                    ret.nextState( device != null );
+                    ret.nextState(device != null);
                 }
             });
 
@@ -373,7 +390,7 @@ public class WaveAgent {
         public DataSync( final BLEAgent.BLEDevice device, final Callback callback ) {
             this.device = device;
             this.callback = callback;
-            nextState( true );
+            nextState(true);
         }
 
         private boolean inNotify = false;
@@ -389,11 +406,19 @@ public class WaveAgent {
             callback.notify( this, state, success );
             inNotify = false;
 
-            lazyLog.v( this.toString(), "\tState was: ", state, " (", success, ")" );
+            lazyLog.v(this.toString(), "\tState was: ", state, " (", success, ")");
 
             if( success ) {
 
-                state = state.next();
+                while( true ) {
+                    state = state.next();
+                    if (state.skippable && callback.skip(this, state)) {
+                        state = state.next();
+                    } else {
+                        break;
+                    }
+                }
+
                 lazyLog.v( this.toString(), "\tState now: ", state );
 
                 switch (state) {
