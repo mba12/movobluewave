@@ -21,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
@@ -145,8 +146,30 @@ public class SyncDataActivity extends MenuActivity {
         }
     };
 
+//    public Cursor getNotUploadedSteps(){
+//
+//        String selectionSteps = Database.StepEntry.SYNC_ID + "=? OR " + Database.StepEntry.IS_PUSHED + "=?";
+//        Cursor curSteps = db.query(
+//                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+//                new String[]{Database.StepEntry.SYNC_ID, //blob
+//                        Database.StepEntry.START, //int
+//                        Database.StepEntry.END, //int
+//                        Database.StepEntry.USER, //string
+//                        Database.StepEntry.STEPS, //int
+//                        Database.StepEntry.DEVICEID, //blob
+//                        Database.StepEntry.GUID}, //blob                          // The columns to return
+//                selectionSteps,                                // The columns for the WHERE clause
+//                new String[]{syncID, "0"},                            // The values for the WHERE clause
+//                null,                                     // don't group the rows
+//                null,                                     // don't filter by row groups
+//                null                                 // The sort order
+//        );
+//        curSteps.moveToFirst();
+//        return curSteps;
+//    }
+
     public  Cursor getStepsForSync(String syncID) {
-        String selectionSteps = Database.StepEntry.SYNC_ID + "=? AND " + Database.StepEntry.IS_PUSHED + "=?";
+        String selectionSteps = Database.StepEntry.SYNC_ID + "=? OR (" + Database.StepEntry.IS_PUSHED + "=? AND "+ Database.StepEntry.USER +"=?)";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                 new String[]{Database.StepEntry.SYNC_ID, //blob
@@ -157,7 +180,7 @@ public class SyncDataActivity extends MenuActivity {
                         Database.StepEntry.DEVICEID, //blob
                         Database.StepEntry.GUID}, //blob                          // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
-                new String[]{syncID, "0"},                            // The values for the WHERE clause
+                new String[]{syncID, "0", UserData.getUserData(c).getCurUID()},                            // The values for the WHERE clause
                 null,                                     // don't group the rows
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
@@ -361,7 +384,17 @@ public class SyncDataActivity extends MenuActivity {
                             dayChange = String.valueOf(cal.get(Calendar.DATE)+1);
                         }
                         Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
-                        refStep2.setValue(minuteMap);
+                        refStep2.setValue(minuteMap, new Firebase.CompletionListener() {
+                            @Override
+                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                                if (firebaseError != null) {
+                                    System.out.println("Step Data could not be saved. " + firebaseError.getMessage());
+                                } else {
+                                    System.out.println("Step Data saved successfully.");
+
+                                }
+                            }
+                        });
                         Firebase refSyncSteps =  new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
                         refSyncSteps.setValue(minuteMap);
 
