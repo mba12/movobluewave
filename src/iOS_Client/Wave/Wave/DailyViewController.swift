@@ -62,7 +62,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
             //        UIImageJPEGRepresentatio
             let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
+//            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
             var cal = NSCalendar.currentCalendar()
             
             var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
@@ -90,7 +90,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             firebaseImage.setValue(parts)
             
             
-            
+            UserData.getOrCreateUserData().downloadPhotoFromFirebase(NSDate: date)
             
             
             
@@ -98,6 +98,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         
     }
         
+
 
 
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {

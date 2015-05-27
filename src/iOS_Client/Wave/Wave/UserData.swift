@@ -258,7 +258,7 @@ class UserData {
         
         var fbMeta = Firebase(url:metaRef)
         fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            var metaObjects = snapshot.children
+//            var metaObjects = snapshot.children
             if let username = (snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String) {
                 self.setCurrentUsername(username)
             }
@@ -468,6 +468,61 @@ class UserData {
         //stub function
         return nil
     }
+    
+    func downloadPhotoFromFirebase(NSDate date:NSDate){
+
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbDownloadRef = fbDownloadRef! + "/photos/"
+        fbDownloadRef = fbDownloadRef! + todayYear + "/" + month + "/" + day
+        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+//            var numberOfImageBlobs:Int16 = 0
+            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
+                if(numberOfImageBlobs=="1"){
+                    var rawData = snapshot.childSnapshotForPath("1").valueInExportFormat() as? String
+                    let decodedData:NSData = NSData(base64EncodedString: rawData!, options: nil)!
+                    var decodedImage:UIImage = UIImage(data: decodedData)!
+
+                    
+                    //handle image stoarge here
+                    
+                
+                }
+                
+            }
+
+            
+            
+            
+        })
+        
+
+        
+    }
+    
+    
+    
+    
+    
 }
 
 
