@@ -229,6 +229,24 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             self.collectionView.reloadData()
         })
         
+        //grab the data from Firebase for the month
+        
+        
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
+        
     }
     
     

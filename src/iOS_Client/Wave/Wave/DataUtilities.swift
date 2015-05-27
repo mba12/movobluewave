@@ -300,7 +300,8 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                 println(error.description)
         })
     }
-
+    //update our local metadata as well
+    UserData.getOrCreateUserData().downloadMetaData()
     
 }
 
@@ -366,7 +367,7 @@ func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
 }
 
 //WARN: needs return function, and both need to be called correctly!
-func uploadMetadataToFirebase(){
+func uploadMetadataToFirebase() {
     
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         var ref = UserData.getFirebase()

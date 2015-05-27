@@ -11,7 +11,7 @@ import CoreData
 import UIKit
 import Charts
 
-class StatsViewController: UIViewController  {
+class StatsViewController: UIViewController, FBUpdateDelegate  {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     var todayDate:Int = 0
     var todayMonth:Int = 0
@@ -71,6 +71,20 @@ class StatsViewController: UIViewController  {
         super.viewDidAppear(animated)
         
         
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
         
         
     }
@@ -269,6 +283,32 @@ class StatsViewController: UIViewController  {
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + ", " + yearName
+            self.loadDataForYM(self.todayYear, month: self.todayMonth)
+        })
+        
+        
+        
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
+        
+        
+    }
+    
+    
+    func UpdatedDataFromFirebase() {
+        dispatch_async(dispatch_get_main_queue(), {
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
         
