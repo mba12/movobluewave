@@ -920,7 +920,7 @@
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="rCb-fO-90R"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numberPad" returnKeyType="done"/>
                                 <connections>
                                     <outlet property="delegate" destination="ris-T2-JXb" id="zMI-1w-4v5"/>
                                 </connections>
@@ -932,7 +932,7 @@
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="30f-6w-Bgx"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numberPad" returnKeyType="done"/>
                                 <connections>
                                     <outlet property="delegate" destination="ris-T2-JXb" id="yeI-co-EP5"/>
                                 </connections>
@@ -971,7 +971,7 @@
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="AGM-Te-b9H"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" returnKeyType="done"/>
+                                <textInputTraits key="textInputTraits" keyboardType="numberPad" returnKeyType="done"/>
                                 <connections>
                                     <outlet property="delegate" destination="ris-T2-JXb" id="OoA-kT-SqM"/>
                                 </connections>

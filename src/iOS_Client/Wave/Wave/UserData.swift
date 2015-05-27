@@ -29,19 +29,7 @@ class UserData {
         } else {
             NSLog("Failed to load default user")
         }
-        /*
-        currentUID = "Error"
-        currentEmail = "Error"
-        currentPW = "Error"
-        currentBirthDate = nil
-        currentHeightFeet = 0
-        currentHeightInches = 0
-        currentWeight = 0
-        currentGender = "Error"
-        currentFullName = "Error"
-        currentUsername = "Error"
-        currentUserRef = "Error"
-        */
+
         
     }
     

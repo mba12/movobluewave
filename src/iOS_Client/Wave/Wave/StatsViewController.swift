@@ -91,6 +91,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     
     func loadDataForYM(year: Int, month: Int) {
         stepsCount = [Int]()
+        var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
             forDate: date).toRange()!.endIndex
@@ -104,7 +105,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             
             if let dateStart : NSDate = YMDLocalToNSDate(year, month, i) {
                 stepsCount.append(stepsForDayStarting(dateStart))
+                caloriesList.append(caloriesForDayStarting(dateStart))
             }
+            
         }
         
         var days:[String] = []
@@ -118,6 +121,18 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         var milesTotal = 0.0
         var caloriesAvgC = 0.0
         var caloriesTotal = 0.0
+        var height = 5.5
+        
+        //collect height
+        if let heightft = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+            if (heightft > 0) {
+                height = Double(heightft)
+                if let heightin = UserData.getOrCreateUserData().getCurrentHeightInches() {
+                    height += Double(heightin)/12.0
+                }
+            }
+            
+        }
         
         //loop through and add steps for each day.
         //WARN: Only using simple calculator until user profile exists
@@ -126,10 +141,21 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             stepsTotal += stepCount
             days.append(String(i+1))
             stepsYVals.append(ChartDataEntry(value: Float(stepCount), xIndex:i))
-            var miles = Calculator.calculate_distance(stepCount, height: Int(5.5*12))
+            
+            
+            
+           
+            
+            
+            var miles = Calculator.calculate_distance(stepCount, height: Int(height*12.0))
+            
             milesTotal += miles
             milesYVals.append(ChartDataEntry(value: Float(miles), xIndex:i))
-            var calories = Calculator.simple_calculate_calories(int: stepCount)
+            
+            
+            
+            
+            var calories = caloriesList[i]
             caloriesTotal += calories
             caloriesYVals.append(ChartDataEntry(value: Float(calories), xIndex:i))
         }
