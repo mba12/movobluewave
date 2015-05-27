@@ -319,7 +319,7 @@ public class SyncDataActivity extends MenuActivity {
 
             );
 //            firebase upload sync
-                    UserData myData = UserData.getUserData(c);
+//                    UserData myData = UserData.getUserData(c);
             //sync ref
             Firebase ref = new Firebase(UserData.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
 

@@ -171,17 +171,17 @@ public class FirstSignUp extends Activity {
                                                     @Override
                                                     public void onAuthenticated(AuthData authData) {
                                                         //success, save auth data
-                                                        UserData myData = UserData.getUserData(c);
-                                                        myData.setCurUID(authData.getUid());
-                                                        myData.setCurToken(authData.getToken());
-                                                        myData.setCurEmail(mEmail);
-                                                        myData.setCurPW(mPassword);
-                                                        myData.setCurBirthdate(birthdateInput + "");
-                                                        myData.setCurUsername(mUsername);
+//                                                        UserData myData = UserData.getUserData(c);
+                                                        UserData.getUserData(c).setCurUID(authData.getUid());
+                                                        UserData.getUserData(c).setCurToken(authData.getToken());
+                                                        UserData.getUserData(c).setCurEmail(mEmail);
+                                                        UserData.getUserData(c).setCurPW(mPassword);
+                                                        UserData.getUserData(c).setCurBirthdate(birthdateInput + "");
+                                                        UserData.getUserData(c).setCurUsername(mUsername);
                                                         Firebase currentUserRef = new Firebase(UserData.firebase_url + "users/" + authData.getUid());
 
-                                                        myData.setCurrentUserRef(currentUserRef);
-                                                        myData.addCurUserTolist();
+                                                        UserData.getUserData(c).setCurrentUserRef(currentUserRef);
+                                                        UserData.getUserData(c).addCurUserTolist();
 
                                                         //username lookup table
                                                         Firebase usernameEmailTies = new Firebase(UserData.firebase_url + "emailtable");

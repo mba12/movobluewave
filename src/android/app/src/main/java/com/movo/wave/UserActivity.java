@@ -39,8 +39,8 @@ public class UserActivity extends MenuActivity {
 //        users.add("User 1");
 //        users.add("User 2");
 
-        UserData myUserData = UserData.getUserData(c);
-        users = myUserData.getUserList();
+//        UserData myUserData = UserData.getUserData(c);
+        users =  UserData.getUserData(c).getUserList();
 
         // Create The Adapter with passing ArrayList as 3rd parameter
         ArrayAdapter<String> arrayAdapter =

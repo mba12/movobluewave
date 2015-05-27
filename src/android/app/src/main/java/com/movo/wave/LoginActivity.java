@@ -375,12 +375,12 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 public void onAuthenticated(AuthData authData) {
                     result = true;
                     //success, save auth data
-                    UserData myData = UserData.getUserData(c);
-                    myData.setCurUID(authData.getUid());
-                    myData.setCurToken(authData.getToken());
-                    myData.setCurEmail(mEmail);
-                    myData.setCurPW(mPassword);
-                    myData.addCurUserTolist();
+//                    UserData myData = UserData.getUserData(c);
+                    UserData.getUserData(c).setCurUID(authData.getUid());
+                    UserData.getUserData(c).setCurToken(authData.getToken());
+                    UserData.getUserData(c).setCurEmail(mEmail);
+                    UserData.getUserData(c).setCurPW(mPassword);
+                    UserData.getUserData(c).addCurUserTolist();
 
                     Log.d(TAG,"User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
                     updateHomePage();
