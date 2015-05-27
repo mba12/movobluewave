@@ -464,7 +464,10 @@ class UserData {
         }
     }
     
-    
+    func getCurrentUserPhoto() -> UIImage? {
+        //stub function
+        return nil
+    }
 }
 
 
