@@ -50,50 +50,56 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         picker.dismissViewControllerAnimated(true, completion: nil)
-        if let date = currentDate{
-        
-        
-        var tempImage:UIImage = info[UIImagePickerControllerOriginalImage] as! UIImage
-        var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
-//        UIImageJPEGRepresentatio
-        let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-        println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
-        var cal = NSCalendar.currentCalendar()
-            
-        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-        var month = ""
-        var day = ""
-        if(todayMonth<10){
-            month = "0" + (String(todayMonth))
-        }else{
-            month = String(todayMonth)
-        }
-        if(todayDate<10){
-            day = "0" + (String(todayDate))
-        }else{
-            day = String(todayDate)
-        }
-            
-            
-        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbUploadRef = fbUploadRef! + "/photos/"
-        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
-        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-        var parts = ["0":"1","1":base64String]
-        firebaseImage.setValue(parts)
-            
-            
-            
-            
-            
-        
-        }
-        
-        
+
+        uploadImage(info)
     }
     
+    func uploadImage(info: [NSObject: AnyObject]){
+        if let date = currentDate{
+            
+            
+            var tempImage:UIImage = info[UIImagePickerControllerOriginalImage] as! UIImage
+            var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
+            //        UIImageJPEGRepresentatio
+            let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
+            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
+            var cal = NSCalendar.currentCalendar()
+            
+            var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+            var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+            var month = ""
+            var day = ""
+            if(todayMonth<10){
+                month = "0" + (String(todayMonth))
+            }else{
+                month = String(todayMonth)
+            }
+            if(todayDate<10){
+                day = "0" + (String(todayDate))
+            }else{
+                day = String(todayDate)
+            }
+            
+            
+            var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+            fbUploadRef = fbUploadRef! + "/photos/"
+            fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+            var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+            var parts = ["0":"1","1":base64String]
+            firebaseImage.setValue(parts)
+            
+            
+            
+            
+            
+            
+        }
+        
+    }
+        
+
+
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
             currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
