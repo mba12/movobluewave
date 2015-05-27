@@ -561,7 +561,11 @@ public class BLEAgent {
 
     public void stopScan() {
         lazyLog.d( "stop ble scan");
-        adapter.stopLeScan( scanCallback );
+        try {
+            adapter.stopLeScan(scanCallback);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     //new request queue!
@@ -975,23 +979,27 @@ public class BLEAgent {
      */
     private void updateDevice( final BluetoothDevice device ) {
         final Date now = new Date();
-        UIHandler.post( new Runnable() {
-            @Override
-            public void run() {
-                final String address = device.getAddress();
-                BLEDevice dev = deviceMap.get( address );
-                if( dev != null ) {
-                    dev.lastSeen = now;
-                } else {
-                    dev = new BLEDevice( device, now );
-                    deviceMap.put( address, dev );
+        try {
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    final String address = device.getAddress();
+                    BLEDevice dev = deviceMap.get(address);
+                    if (dev != null) {
+                        dev.lastSeen = now;
+                    } else {
+                        dev = new BLEDevice(device, now);
+                        deviceMap.put(address, dev);
+                    }
+                    lazyLog.a(currentRequest != null, "No active request!!!");
+                    if (currentRequest != null && currentRequest.onReceive(dev)) {
+                        nextRequest();
+                    }
                 }
-                lazyLog.a(currentRequest != null, "No active request!!!");
-                if( currentRequest != null && currentRequest.onReceive( dev ) ) {
-                    nextRequest();
-                }
-            }
-        });
+            });
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     /** Queue a request for the agent to handle.

@@ -322,17 +322,17 @@ public class MyProfile extends MenuActivity {
             public void onClick(View v) {
                 Log.d(TAG, "Saving new user data");
                 fullName = edName.getText().toString();
-                UserData myUserData = UserData.getUserData(c);
-                myUserData.setCurName(fullName);
-                myUserData.setCurHeight1(height1);
-                myUserData.setCurHeight2(height2);
-                myUserData.setCurWeight(weight);
-                myUserData.setCurGender(gender);
-                myUserData.setCurBirthdate(birth);
+//                UserData myUserData = UserData.getUserData(c);
+                UserData.getUserData(c).setCurName(fullName);
+                UserData.getUserData(c).setCurHeight1(height1);
+                UserData.getUserData(c).setCurHeight2(height2);
+                UserData.getUserData(c).setCurWeight(weight);
+                UserData.getUserData(c).setCurGender(gender);
+                UserData.getUserData(c).setCurBirthdate(birth);
 //                myUserData.setCurUsername()
-                myUserData.uploadToFirebase();
+                UserData.getUserData(c).uploadToFirebase();
 
-                Toast.makeText(c,"Userdata has been saved.",Toast.LENGTH_LONG).show();
+                Toast.makeText(c,"User data has been saved.",Toast.LENGTH_LONG).show();
                 finish();
 
             }

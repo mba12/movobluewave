@@ -258,7 +258,13 @@ public class Home extends MenuActivity {
             String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-            currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+            if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                currentUserTV.setText( "" );
+            }else{
+                currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+            }
+
+
             setUpCharts(c);
 //            }
 
@@ -466,6 +472,7 @@ public class Home extends MenuActivity {
 //        curDay = calendar.get(Calendar.DAY_OF_MONTH);
 //        curMonth = calendar.get(Calendar.MONTH);
 //        curYear = calendar.get(Calendar.YEAR);
+
         Intent intentIncoming = getIntent();
 //
         String date = intentIncoming.getStringExtra("date");
@@ -484,13 +491,17 @@ public class Home extends MenuActivity {
 //
         }
         try {
-            if (UserData.getUserData(c).getCurUID() != null) {
+            if (UserData.getUserData(c).getCurUID() != null ) {
                 gridview.setAdapter(new GridViewCalendar(Home.this));
                 setUpChart();
                 gridview.invalidate();
                 chart.invalidate();
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
+                if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                    currentUserTV.setText( "" );
+                }else{
+                    currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -872,64 +883,18 @@ public class Home extends MenuActivity {
     }
 
     private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
-//        UserData myData = UserData.getUserData(c);
-        Iterable<DataSnapshot> children = snapshot.getChildren();
-
-        for (DataSnapshot child : children) {
-            String date = child.getKey();
-            Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for (DataSnapshot syncsForToday : syncEvents) {
-                String syncName = syncsForToday.getKey();
-                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for (DataSnapshot stepChunk : stepEvents) {
-                    String stepTime = stepChunk.getKey();
-                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-                    Object stepEvent = stepChunk.getValue();
-                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-                    monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test" + monthMap);
-                    Calendar thisCal = Calendar.getInstance();
-//                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
-                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
+        String monthChange = "";
+        String yearChange = "";
 
 
-                    try {
-                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
-                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
-//                        Log.d("TAG", "date is "+curDate);
-                        thisCal.setTime(curDateStart);
-
-                        ContentValues values = new ContentValues();
-                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START, curDateStart.getTime());
-                        values.put(Database.StepEntry.END, curDateStop.getTime());
-                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
-                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-                        //TODO: add workout type
-
-                        long newRowId;
-
-                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                null,
-                                values);
-                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ;
-                    }
-
-                }
-
-            }
-
+        if(month<11){
+            monthChange = "0"+(month+1);
+        }else{
+            monthChange = String.valueOf(month+1);
         }
+        yearChange = ""+ year;
+
+        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
     }
 
 
