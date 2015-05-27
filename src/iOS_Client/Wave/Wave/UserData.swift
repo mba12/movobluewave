@@ -506,6 +506,19 @@ class UserData {
                     //handle image stoarge here
                     
                 
+                }else{
+                    var count = numberOfImageBlobs.toInt()
+                    var rawData = ""
+                    //i = 1 to skip the first node that tells us how many nodes.
+                    for(var i = 1; i < count; i++){
+                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
+                        rawData = rawData + curData!
+
+                    }
+                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
+                    var decodedImage:UIImage = UIImage(data: decodedData)!
+                    
+                    
                 }
                 
             }

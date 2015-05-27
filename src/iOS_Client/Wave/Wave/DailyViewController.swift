@@ -36,7 +36,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         updateDisplay()
     }
     
-
+    
     @IBAction func doneButtonPressed(sender: AnyObject) {
         self.dismissViewControllerAnimated(true, completion: nil)
     }
@@ -50,7 +50,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         picker.dismissViewControllerAnimated(true, completion: nil)
-
+        
         uploadImage(info)
     }
     
@@ -62,7 +62,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
             //        UIImageJPEGRepresentatio
             let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-//            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
+            //            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
             var cal = NSCalendar.currentCalendar()
             
             var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
@@ -85,9 +85,79 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
             fbUploadRef = fbUploadRef! + "/photos/"
             fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+            
+            
+            
             var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-            var parts = ["0":"1","1":base64String]
-            firebaseImage.setValue(parts)
+            //            if let iOSString:NSString = NSString(UTF8String: base64String){
+            //                if(iOSString.length>1000000){
+            //                    var result:[String] = []
+            //                    var index = 0
+            //                    while(index < iOSString.length){
+            //                        var endPart = iOSString.endIndex
+            //
+            //                        var subPart = iOSString.substringWithRange(Range<String.Index>(start: advance(iOSString.startIndex,index), end: advance(iOSString.endIndex, -1))
+            //)
+            //                    }
+            //
+            //                }
+            //            }
+            
+            
+            
+            if let array = base64String.cStringUsingEncoding(NSUTF8StringEncoding) {
+                var result:[String] = []
+                if(array.count>1000000){
+                    //break photo into chunks
+                    var totalChunks = 0
+                    var i = 0
+                    var subSection = ""
+                    while (i<array.count){
+                        var j = 0
+                        if(i<array.count && ((i+1000000)<array.count)){
+                            j = 0
+                            while(j<1000000){
+                                subSection = subSection + String(array[j+i])
+                                j++
+                            }
+                            result.append(subSection)
+                            totalChunks++
+                            subSection = ""
+                            
+                            i = i + 1000000
+                            
+                        }else if(i<array.count && ((i+1000000)>array.count)){
+                            j = 0
+                            while((j+i)<(array.count-i)){
+                                subSection = subSection + String(array[j+i])
+                                j++
+                            }
+                            result.append(subSection)
+                            subSection = ""
+                            
+                        }
+                        
+                    }
+                    var parts = ["0":String(totalChunks)]
+                    for(var cd = 0;cd<totalChunks;cd++){
+//                     ,"1":base64String
+                        parts.updateValue(result[cd], forKey: String(cd))
+                        
+                    }
+                    
+                    firebaseImage.setValue(parts)
+
+                    
+                    
+                }else{
+                    //size is ok for 1 chunk
+                    var parts = ["0":"1","1":base64String]
+                    
+                    firebaseImage.setValue(parts)
+                    
+                    
+                }
+            }
             
             
             UserData.getOrCreateUserData().downloadPhotoFromFirebase(NSDate: date)
@@ -97,10 +167,10 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         }
         
     }
-        
-
-
-
+    
+    
+    
+    
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
             currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
@@ -139,7 +209,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             
             /* Set the miles */
-//FIXME: not checking user data and using that if available
+            //FIXME: not checking user data and using that if available
             let miles = Calculator.calculate_distance(steps, height: Int(5.5*12))
             dispatch_async(dispatch_get_main_queue(), {
                 self.distanceLabel.text = String(format: "%.1f", miles) + " MILES"
@@ -147,7 +217,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             
             /* Set the calories */
-//FIXME: not checking user data and using that if available
+            //FIXME: not checking user data and using that if available
             let calories = Calculator.simple_calculate_calories(int: steps)
             dispatch_async(dispatch_get_main_queue(), {
                 self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
@@ -157,7 +227,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             /* failure case */
         }
         
-    
+        
     }
 }
 
