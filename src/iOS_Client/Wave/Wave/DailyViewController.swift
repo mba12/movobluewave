@@ -189,9 +189,8 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         }
     }
     
- 
-
-
+       
+    
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
             currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
@@ -264,7 +263,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             /* failure case */
         }
         
-    
+        
     }
 }
 

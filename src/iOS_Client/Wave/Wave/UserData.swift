@@ -163,7 +163,7 @@ class UserData {
         
         var fbMeta = Firebase(url:metaRef)
         fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            var metaObjects = snapshot.children
+//            var metaObjects = snapshot.children
             if let username = (snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String) {
                 self.setCurrentUsername(username)
             }
@@ -422,6 +422,124 @@ class UserData {
         //stub function
         return nil
     }
+    
+    func uploadPhotoToFirebase(base64StringIn:String, date:NSDate){
+        var base64String = base64StringIn
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbUploadRef = fbUploadRef! + "/photos/"
+        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+        
+        
+        
+        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+        
+        
+        var size = (base64String as NSString).length
+        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+        firebaseImage.updateChildValues(["0":String(totalChunks)])
+        
+        
+        var part = 1
+        while (!base64String.isEmpty) {
+            var size = (base64String as NSString).length
+            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+            var result:String = base64String.substringToIndex(index)
+            let range = base64String.startIndex..<index
+            base64String.removeRange(range)
+            
+            firebaseImage.updateChildValues([String(part):result])
+            part += 1
+        }
+        
+    }
+
+    
+    func downloadPhotoFromFirebase(NSDate date:NSDate){
+
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbDownloadRef = fbDownloadRef! + "/photos/"
+        fbDownloadRef = fbDownloadRef! + todayYear + "/" + month + "/" + day
+        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+//            var numberOfImageBlobs:Int16 = 0
+            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
+                if(numberOfImageBlobs=="1"){
+                    var rawData = snapshot.childSnapshotForPath("1").valueInExportFormat() as? String
+                    let decodedData:NSData = NSData(base64EncodedString: rawData!, options: nil)!
+                    var decodedImage:UIImage = UIImage(data: decodedData)!
+
+                    
+                    //handle image stoarge here
+                    
+                
+                }else{
+                    var count = numberOfImageBlobs.toInt()
+                    var rawData = ""
+                    //i = 1 to skip the first node that tells us how many nodes.
+                    for(var i = 1; i < count; i++){
+                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
+                        rawData = rawData + curData!
+
+                    }
+                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
+                    var decodedImage:UIImage = UIImage(data: decodedData)!
+                    
+                    
+                }
+                
+            }
+
+            
+            
+            
+        })
+        
+
+        
+    }
+    
+    
+    
+    
+    
 }
 
 

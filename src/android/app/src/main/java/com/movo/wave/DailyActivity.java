@@ -28,12 +28,14 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -200,13 +202,17 @@ public class DailyActivity extends ActionBarActivity {
                         byte[] byteArray = wholePhoto.getBytes();
                         curPhoto.close();
                         uniquePic = byteArray.length;
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
+//                        final BitmapFactory.Options options = new BitmapFactory.Options();
 //                        options.inJustDecodeBounds = false;
 //                        options.inSampleSize = 4;
-                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
-
-                        background.setImageBitmap(bm);
-                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+                        Glide.with(c)
+                                .load(byteArray)
+                                .fitCenter()
+//                                .override(1080,1920)
+                                .into(background);
+//                        background.setImageBitmap(bm);
+//                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -217,10 +223,14 @@ public class DailyActivity extends ActionBarActivity {
                         final BitmapFactory.Options options = new BitmapFactory.Options();
 //                        options.inJustDecodeBounds = false;
 //                        options.inSampleSize = 4;
-                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
-
-                        background.setImageBitmap(bm);
-                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+                        Glide.with(c)
+                                .load(byteArray)
+//                                .override(1080,1920)
+                                .fitCenter()
+                                .into(background);
+//                        background.setImageBitmap(bm);
+//                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         curPhoto.close();
                     }catch(Exception e){
                         e.printStackTrace();
@@ -233,111 +243,137 @@ public class DailyActivity extends ActionBarActivity {
 
 //                setContentView(R.layout.activity_daily);
             }
+            String monthChange = "";
+            String dayChange = "";
+            if ((monthCal.get(Calendar.MONTH)) < 11) {
+                monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+            } else {
+                monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+            }
+            if ((monthCal.get(Calendar.DATE)) < 10) {
+                dayChange = "0" + (monthCal.get(Calendar.DATE));
+            } else {
+                dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+            }
             Log.d(TAG, "Loading image from firebase");
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
-            ref.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    //                    System.out.println(snapshot.getValue());
-                    if(snapshot.getChildrenCount()==2) {
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-//                        options.inSampleSize = 4;
-                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
-                        if(result.get(0).equals("1")) {
-                            try {
-                                byte[] decodedString = Base64.decode(result.get(1), Base64.DEFAULT);
-
-                                DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                                SQLiteDatabase db = mDbHelper.getWritableDatabase();
-//                              //This could be better, but for a simple uniqueness check this works.
-//                              //TODO: Change later to be specific to date upload or something else
-                                if (localFile) {
-                                    int comparePic = decodedString.length;
-                                    if (uniquePic != comparePic) {
-                                        //file from cloud is different than local, save to device
-                                        Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                                        ContentValues syncValues = new ContentValues();
-                                        syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                                        syncValues.put(Database.PhotoStore.USER, user);
-                                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                                        long newRowId;
-                                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                                null,
-                                                syncValues);
-                                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
-                                        db.close();
-                                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-                                        background.setImageBitmap(decodedByte);
-                                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                                    }
-
-                                } else {
-                                    //file doesn't exist on local device
-                                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                                    ContentValues syncValues = new ContentValues();
-                                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                                    syncValues.put(Database.PhotoStore.USER, user);
-                                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                                    long newRowId;
-                                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                            null,
-                                            syncValues);
-                                    Log.d(TAG, "Photo database add from firebase: " + newRowId);
-                                    db.close();
-                                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-                                    background.setImageBitmap(decodedByte);
-                                    background.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                                }
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                    }else if(snapshot.getChildrenCount()>=2){
-                        //multipart file upload
-                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-//                        options.inSampleSize = 4;
-                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
-                        try {
-                            String wholeString = "";
-                            for(int i =1;i<result.size();i++){
-                                wholeString += result.get(i);
-
-
-                            }
-                            byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
-                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-                            background.setImageBitmap(decodedByte);
-                            background.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                            ContentValues syncValues = new ContentValues();
-                            syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                            syncValues.put(Database.PhotoStore.USER, user);
-                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
-                            long newRowId;
-                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                                    null,
-                                    syncValues);
-                            Log.d(TAG, "Photo database add from firebase: " + newRowId);
-                            db.close();
-
-
-                        }catch(Exception e){
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                }
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    System.out.println("The read failed: " + firebaseError.getMessage());
-                }
-            });
+//            Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
+//            ref.addValueEventListener(new ValueEventListener() {
+//                @Override
+//                public void onDataChange(DataSnapshot snapshot) {
+//                    //                    System.out.println(snapshot.getValue());
+//                    if(snapshot.getChildrenCount()==2) {
+//                        final BitmapFactory.Options options = new BitmapFactory.Options();
+////                        options.inJustDecodeBounds = false;
+////                        options.inSampleSize = 4;
+//                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+//                        if(result.get(0).equals("1")) {
+//                            try {
+//                                byte[] decodedString = Base64.decode(result.get(1), Base64.DEFAULT);
+//
+//                                DatabaseHelper mDbHelper = new DatabaseHelper(c);
+//                                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+////                              //This could be better, but for a simple uniqueness check this works.
+////                              //TODO: Change later to be specific to date upload or something else
+//                                if (localFile) {
+//                                    int comparePic = decodedString.length;
+//                                    if (uniquePic != comparePic) {
+//                                        //file from cloud is different than local, save to device
+//                                        Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+//                                        ContentValues syncValues = new ContentValues();
+//                                        syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+//                                        syncValues.put(Database.PhotoStore.USER, user);
+//                                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+//                                        long newRowId;
+//                                        newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+//                                                null,
+//                                                syncValues);
+//                                        Log.d(TAG, "Photo database add from firebase: " + newRowId);
+//                                        db.close();
+//                                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                                        Glide.with(c)
+//                                                .load(decodedByte)
+//                                                .override(1080,1920)
+//                                                .into(background);
+////                                        background.setImageBitmap(decodedByte);
+////                                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                                    }
+//
+//                                } else {
+//                                    //file doesn't exist on local device
+//                                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+//                                    ContentValues syncValues = new ContentValues();
+//                                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+//                                    syncValues.put(Database.PhotoStore.USER, user);
+//                                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+//                                    long newRowId;
+//                                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+//                                            null,
+//                                            syncValues);
+//                                    Log.d(TAG, "Photo database add from firebase: " + newRowId);
+//                                    db.close();
+//                                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                                    Glide.with(c)
+//                                            .load(decodedByte)
+//                                            .override(1080,1920)
+//                                            .into(background);
+////                                    background.setImageBitmap(decodedByte);
+////                                    background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                                }
+//                            } catch (Exception e) {
+//                                e.printStackTrace();
+//                            }
+//                        }
+//
+//                    }else if(snapshot.getChildrenCount()>=2){
+//                        //multipart file upload
+//                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+//                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//                        final BitmapFactory.Options options = new BitmapFactory.Options();
+////                        options.inJustDecodeBounds = false;
+////                        options.inSampleSize = 4;
+//                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+//                        try {
+//                            String wholeString = "";
+//                            for(int i =1;i<result.size();i++){
+//                                wholeString += result.get(i);
+//
+//
+//                            }
+//                            byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
+//                            Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                            Glide.with(c)
+//                                    .load(decodedByte)
+//                                    .asBitmap()
+//                                    .override(1080,1920)
+////                                    .imageDecoder(decodedByte)
+//                                    .into(background);
+////                            background.setImageBitmap(decodedByte);
+////                            background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+//                            ContentValues syncValues = new ContentValues();
+//                            syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+//                            syncValues.put(Database.PhotoStore.USER, user);
+//                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+//                            long newRowId;
+//                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+//                                    null,
+//                                    syncValues);
+//                            Log.d(TAG, "Photo database add from firebase: " + newRowId);
+//                            db.close();
+//
+//
+//                        }catch(Exception e){
+//                            e.printStackTrace();
+//                        }
+//
+//                    }
+//
+//                }
+//                @Override
+//                public void onCancelled(FirebaseError firebaseError) {
+//                    System.out.println("The read failed: " + firebaseError.getMessage());
+//                }
+//            });
 
 
 //            }
@@ -486,24 +522,36 @@ public class DailyActivity extends ActionBarActivity {
                         Log.i( TAG, "Resolving URI: " + selectedImage);
 
                         final InputStream is = getContentResolver().openInputStream(selectedImage);
-                        //check image size
 
                         BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-
+//                        options.inJustDecodeBounds = true;
+                        int inSampleSize = 2;
+                        options.inSampleSize = inSampleSize;
 //                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
                         BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
 
 
-//                        int imageWidth = options.outWidth;
-//                        int imageHeight = options.outHeight;
+                        int imageWidth = options.outWidth;
+                        int imageHeight = options.outHeight;
 //
-//                        if(imageWidth>1980){
-//                            options.
-//                        }
+                        if (imageHeight > 1920 || imageWidth > 1080) {
 
-//                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                            final int halfHeight = imageHeight / 2;
+                            final int halfWidth = imageWidth / 2;
 
+                            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                            // height and width larger than the requested height and width.
+                            while ((halfHeight / inSampleSize) > 1080
+                                    && (halfWidth / inSampleSize) > 1920) {
+                                inSampleSize *= 2;
+                            }
+                        }
+
+                        options.inJustDecodeBounds = false;
+
+
+//                        is.reset();
+//                        BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
 
 
                     } catch( Exception e ) {
@@ -516,12 +564,28 @@ public class DailyActivity extends ActionBarActivity {
 
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-
+                    Glide.with(c)
+                            .load(b)
+                            .fitCenter()
+//                                .override(1080,1920)
+                            .into(background);
 //                    UserData myData = UserData.getUserData(c);
                     String user =  UserData.getUserData(c).getCurUID();
 
-                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
-
+                    String monthChange = "";
+                    String dayChange = "";
+                    if ((monthCal.get(Calendar.MONTH)) < 11) {
+                        monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+                    } else {
+                        monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+                    }
+                    if ((monthCal.get(Calendar.DATE)) < 10) {
+                        dayChange = "0" + (monthCal.get(Calendar.DATE));
+                    } else {
+                        dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+                    }
+                    Log.d(TAG, "Loading image from firebase");
+                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
@@ -579,6 +643,11 @@ public class DailyActivity extends ActionBarActivity {
                 Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
     }
+
+
+
+
+
     public static Date trim(Date date) {
         Calendar cal = Calendar.getInstance();
         cal.clear(); // as per BalusC comment.
