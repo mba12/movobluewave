@@ -11,8 +11,8 @@
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <entity name="PhotoStorage" representedClassName="Wave.PhotoStorage" syncable="YES">
-        <attribute name="date" optional="YES" attributeType="Integer 16" defaultValueString="0" syncable="YES"/>
-        <attribute name="photoblob" optional="YES" attributeType="Binary" syncable="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" syncable="YES"/>
+        <attribute name="photopath" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="user" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <entity name="StepEntry" representedClassName="Wave.StepEntry" syncable="YES">

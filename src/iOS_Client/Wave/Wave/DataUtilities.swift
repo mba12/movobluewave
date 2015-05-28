@@ -26,6 +26,23 @@ func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
     return calendar.dateFromComponents(startTimeComponents)
 }
 
+func YMDGMTToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
+    var calendar = NSCalendar.currentCalendar()
+    calendar.timeZone = NSTimeZone(forSecondsFromGMT: 0)
+    var startTimeComponents = NSDateComponents()
+    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.CalendarUnitDay)
+    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.CalendarUnitYear)
+    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.CalendarUnitMonth)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
+    
+    return calendar.dateFromComponents(startTimeComponents)
+    
+    
+    
+}
+
 
 
 
