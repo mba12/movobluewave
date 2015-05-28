@@ -561,11 +561,7 @@ public class BLEAgent {
 
     public void stopScan() {
         lazyLog.d( "stop ble scan");
-        try {
-            adapter.stopLeScan(scanCallback);
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+        adapter.stopLeScan(scanCallback);
     }
 
     //new request queue!
@@ -979,27 +975,23 @@ public class BLEAgent {
      */
     private void updateDevice( final BluetoothDevice device ) {
         final Date now = new Date();
-        try {
-            UIHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    final String address = device.getAddress();
-                    BLEDevice dev = deviceMap.get(address);
-                    if (dev != null) {
-                        dev.lastSeen = now;
-                    } else {
-                        dev = new BLEDevice(device, now);
-                        deviceMap.put(address, dev);
-                    }
-                    lazyLog.a(currentRequest != null, "No active request!!!");
-                    if (currentRequest != null && currentRequest.onReceive(dev)) {
-                        nextRequest();
-                    }
+        UIHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                final String address = device.getAddress();
+                BLEDevice dev = deviceMap.get(address);
+                if (dev != null) {
+                    dev.lastSeen = now;
+                } else {
+                    dev = new BLEDevice(device, now);
+                    deviceMap.put(address, dev);
                 }
-            });
-        }catch(Exception e){
-            e.printStackTrace();
-        }
+                lazyLog.a(currentRequest != null, "No active request!!!");
+                if (currentRequest != null && currentRequest.onReceive(dev)) {
+                    nextRequest();
+                }
+            }
+        });
     }
 
     /** Queue a request for the agent to handle.

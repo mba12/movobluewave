@@ -663,10 +663,6 @@ public class WaveRequest {
             tmp += 0xFF & (int) message[ offset ];
             this.value = tmp;
             this.date = date;
-
-
-            lazyLog.d("Point: " + this.value);
-
         }
 
         /** Bulk parser for extracting points from a message.
@@ -764,7 +760,7 @@ public class WaveRequest {
 
             MarshalByte.YEAR.put( message, cal.get( Calendar.YEAR ) );
             MarshalByte.MONTH.put( message, cal.get( Calendar.MONTH ) );
-            MarshalByte.DATE.put( message, cal.get( Calendar.DATE ) );
+            MarshalByte.DATE.put(message, cal.get(Calendar.DATE));
         }
 
         /** Create a new request at the given Date
@@ -788,7 +784,7 @@ public class WaveRequest {
         public ReadData(final BLEAgent.BLEDevice device,
                         final int timeout,
                         final Calendar date){
-            this( device, timeout, date.getTimeInMillis() );
+            this(device, timeout, date.getTimeInMillis());
         }
 
         /** Create a new request at the given timestamp
@@ -800,8 +796,8 @@ public class WaveRequest {
         public ReadData(final BLEAgent.BLEDevice device,
                         final int timeout,
                         final long timestamp){
-            super( WaveOp.READ_DATA_WEEK, 3, device, timeout );
-            cal.setTimeInMillis( timestamp );
+            super(WaveOp.READ_DATA_WEEK, 3, device, timeout);
+            cal.setTimeInMillis(timestamp);
 
             initMessage();
         }
@@ -864,8 +860,8 @@ public class WaveRequest {
                 final int month = MarshalByte.MONTH.parse( response );
                 final int date = MarshalByte.DATE.parse( response );
 
-                lazyLog.d(  "Response date stamp: ", year, "-", month, "-", date,
-                        0, ":00:00" );
+                lazyLog.d("Response date stamp: ", year, "-", month, "-", date,
+                        0, ":00:00");
                 lazyLog.a(year == cal.get( Calendar.YEAR ), "Year mismatch "
                        , year, " ", cal.get( Calendar.YEAR ) );
                 lazyLog.a(month == cal.get( Calendar.MONTH ), "Month mismatch "
@@ -874,6 +870,10 @@ public class WaveRequest {
                        , date, " ", cal.get( Calendar.DATE ));
 
                 ret = WaveDataPoint.parseResponse(response, 5, qty, year, month, date);
+
+                for( WaveDataPoint point : ret ) {
+                    lazyLog.d("Point ", point);
+                }
 
             } while( false );
 

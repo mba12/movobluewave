@@ -40,6 +40,7 @@ public class UTC {
     public static String isoFormat( final long timestamp ) {
         return dateFormat.format( new Date( timestamp ) );
     }
+
     public static String isoFormatShort( final long timestamp ) {
         return dateFormatShort.format( new Date( timestamp ) );
     }
