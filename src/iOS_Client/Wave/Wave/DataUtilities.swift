@@ -556,13 +556,16 @@ func uploadMetadataToFirebase() {
 }
 
 
-func showSpinner(title: String, message: String) -> UIAlertView {
-    var activityAlert : UIAlertView = UIAlertView(title: title, message: message, delegate: nil, cancelButtonTitle: nil)
+func showSpinner(title: String, message: String) -> UIAlertController {
+    var activityAlert : UIAlertController = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+    
+    
+    //(title: title, message: message, delegate: nil, cancelButtonTitle: nil)
     
     var indicator : UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
-    indicator.center = CGPointMake(activityAlert.bounds.size.width / 2, activityAlert.bounds.size.height - 50);
+    indicator.center = CGPointMake(activityAlert.view.bounds.size.width / 2, activityAlert.view.bounds.size.height - 50);
     indicator.startAnimating()
-    activityAlert.addSubview(indicator)
+    activityAlert.view.addSubview(indicator)
     return activityAlert
 }
 
@@ -643,4 +646,58 @@ func checkAuth() -> Bool {
     return true
 }
 
+
+func isKnownDevice(uid: String, serial: String) -> Bool {
+    if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+        let fetchRequest = NSFetchRequest(entityName: "KnownWaves")
+        let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
+        fetchRequest.predicate = predicate
+        
+        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+            
+            if (fetchResults.count > 0) {
+                if (fetchResults.count == 1) {
+                    //do nothing
+                } else {
+                    println("WARNING TOO MANY DEVICES")
+                    clearExcessItems(fetchResults)
+                }
+                
+                return true
+            }
+        }
+    }
+    return false
+}
+
+func addToKnownDevices(serial : String) {
+    if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+        let fetchRequest = NSFetchRequest(entityName: "KnownWaves")
+        let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
+        fetchRequest.predicate = predicate
+        
+         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+            
+            if (fetchResults.count > 0) {
+                if (fetchResults.count == 1) {
+                    //do nothing
+
+                } else {
+                    println("WARNING TOO MANY DEVICES")
+                    clearExcessItems(fetchResults)
+                }
+            } else {
+                //insert new item
+                
+                var knownWave = NSEntityDescription.insertNewObjectForEntityForName("KnownWaves", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! KnownWaves
+                knownWave.user = uid
+                knownWave.serialnumber = serial
+                UserData.saveContext()
+            }
+            
+        }
+        
+    }
+    
+}
 

@@ -19,6 +19,10 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     var syncStatusVC : SyncStatusViewController?
     let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
     
+    
+    var knownDevices : [String] = [String]()
+    var unknownDevices : [String] = [String]()
+    
     @IBAction func cancel(sender: AnyObject?){
         dismissViewControllerAnimated(true, completion: nil)
         waveSync.scan(false)
@@ -46,6 +50,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         //lets reset the waveSync to make sure we are in a sane state
         waveSync.waveController?.disconnectWaveDevices()
         waveSync.scan(true)
+        
+        updateDevicesList()
     }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -55,6 +61,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     required init(coder aDecoder:NSCoder) {
         super.init(coder: aDecoder)
         waveSync = waveSyncManager(delegate: self)
+        
+        
     }
     
     //returns status updates for state changes in the sync process
@@ -96,7 +104,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         let managedContext = appDelegate.managedObjectContext
         if let serial = waveSync?.connectedWaveDeviceSerialString(deviceId!) as? String{
             
-            
+            //add device to known devices list
+            addToKnownDevices(serial)
             
             
             ///HANDLE DATA HERE
@@ -139,8 +148,39 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         })
     }
     
+    func updateDevicesList() {
+        //update our list of devices
+        
+        knownDevices = [String]()
+        unknownDevices = [String]()
+        if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+            for dev in waveSync.waveController!.connectedSerials {
+                //for each device in the connected serials list
+                //we need to see if it is in the known devices list
+                
+                if let data = dev.value as? NSData {
+                    var count = data.length
+                    var array = [UInt8](count: count, repeatedValue: 0)
+                    data.getBytes(&array, length: count)
+                    var serial = "".join(array.map{ String($0, radix: 16, uppercase: true)})
+                    if (isKnownDevice(uid, serial)) {
+                        knownDevices.append(serial)
+                        
+                    } else {
+                        unknownDevices.append(serial)
+                    }
+                }
+            }
+        }
+        
+    }
+    
     //returns updates indicating the listed device is ready - or not ready (i.e. disconnected)
     func deviceReady(id: NSString, serial: Array<UInt8>?, ready: Bool) {
+        
+        
+        updateDevicesList()
+        
         if (ready) {
             println("Device Ready " + (id as String))
             dispatch_sync(dispatch_get_main_queue(), {
@@ -158,7 +198,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveSync.scan(true)
     }
     @IBAction func syncButtonPress(sender: AnyObject) {
-                syncStartTime = NSDate()
+        syncStartTime = NSDate()
         waveSync.attemptSync(deviceId: nil)
     }
 
@@ -177,25 +217,28 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     }
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
         if (section==0) {
-            return waveSync.waveController!.connectedSerials.count
+            return knownDevices.count
         } else {
-            return 0
+            return unknownDevices.count
         }
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("WaveTableCell") as! WaveTableCell
+        
+        let section = indexPath.section
         let row = indexPath.row
-        if (row < waveSync.waveController!.connectedSerials.count) {
-            var Name = "Unknown"
-            if let data  = waveSync.waveController!.connectedSerials.allValues[row] as? NSData {
-                var count = data.length
-                var array = [UInt8](count: count, repeatedValue: 0)
-                data.getBytes(&array, length: count)
-                Name = "".join(array.map{ String($0, radix: 16, uppercase: true)})
+        if (section == 0) {
+            if (row < knownDevices.count) {
+                cell.NameLabel.text = knownDevices[row]
             }
-            cell.NameLabel.text = Name
+        } else {
+            if (row < unknownDevices.count) {
+                cell.NameLabel.text = unknownDevices[row]
+            }
+            
         }
         cell.backgroundColor = UIColor.clearColor()
         return cell

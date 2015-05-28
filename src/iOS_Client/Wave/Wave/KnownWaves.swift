@@ -10,9 +10,9 @@ import CoreData
 
 class KnownWaves: NSManagedObject {
 
-    @NSManaged var mac: String
+    @NSManaged var deviceid: String
     @NSManaged var queried: NSNumber
-    @NSManaged var serial: String
+    @NSManaged var serialnumber: String
     @NSManaged var user: String
 
 }
