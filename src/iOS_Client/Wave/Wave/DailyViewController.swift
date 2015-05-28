@@ -140,17 +140,23 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         
     }
     
-    func updatedImage(newImage: UIImage?) {
-        
-        if let image = newImage {
-            dispatch_async(dispatch_get_main_queue(), {
-                self.backgroundImage.image = newImage
+    func updatedImage(date: NSDate, newImage: UIImage?) {
+        var setImage = false
+        if (date == currentDate) {
+            if let image = newImage {
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.backgroundImage.image = newImage
+                })
+            setImage = true
+            }
+        }
+        if (!setImage) {
+            dispatch_async(dispatch_get_main_queue(),  {
+                self.backgroundImage.image = UIImage(named: "splash")
             })
-        } else {
-            
-            self.backgroundImage.image = UIImage(named: "splash")
         }
     }
+    
 }
 
 

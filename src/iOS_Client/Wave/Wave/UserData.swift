@@ -35,7 +35,7 @@ extension String {
 
 protocol ImageUpdateDelegate {
     
-    func updatedImage(newImage: UIImage?)
+    func updatedImage(date: NSDate, newImage: UIImage?)
     
 }
 
@@ -533,76 +533,82 @@ class UserData {
         fbDownloadRef = fbDownloadRef! + "/photos/"
         fbDownloadRef = fbDownloadRef! + String(todayYear) + "/" + month + "/" + day + "/1"
         var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
-        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            //check MD5 and act on it
-            NSLog("returned")
-            if let downloadedMD5 = snapshot.value as? String{
-                
-                var storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
-                if let storeDate = storageDate {
-                    
+        var storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
+        if let storeDate = storageDate {
+            
+            firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+                //check MD5 and act on it
+                NSLog("returned")
+                if let downloadedMD5 = snapshot.value as? String{
                     
                     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
                         let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
                         
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
-                        
+                        fetchRequest.predicate = predicate
                         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
                                     
-                                    if(fetchResults[0].md5 == downloadedMD5){
-                                        //don't download new
-                                        if let delegate = callbackDelegate{
-                                            delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                    if let md5 = fetchResults[0].md5 {
+                                        if (md5 == downloadedMD5) {
+                                            //don't download new
+                                            if let delegate = callbackDelegate{
+                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                                return
+                                            }
                                         }
-                                        
                                         
                                     }else{
                                         //download newer image
                                         UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
-                                        
+                                        return
                                     }
                                     
                                 } else {
                                     //error case
                                     println("Warning: Excess Images")
-                                    if(fetchResults[0].md5 == downloadedMD5){
-                                        //don't download new
-                                        if let delegate = callbackDelegate{
-                                            delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                    if let md5 = fetchResults[0].md5 {
+                                        if (md5 == downloadedMD5) {
+                                            //don't download new
+                                            if let delegate = callbackDelegate{
+                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                                return
+                                                
+                                            }
                                         }
                                         
                                         
                                     }else{
                                         //download newer image
                                         UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
-                                        
+                                        return
                                     }
                                     
                                     
                                 }
                             }else{
                                 UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
+                                return
                             }
                         }
                     }
-                }
-            }else{
-                var storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
-                if let storeDate = storageDate {
+                    
+                }else{
+                    
                     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
                         let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
                         
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
-                        
+                        fetchRequest.predicate = predicate
                         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        return
                                     }
                                     
                                     
@@ -610,32 +616,31 @@ class UserData {
                                     //warn
                                     println("Warning: Excess Images")
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        return
                                     }
                                 }
                                 
                                 
-                            }else{
-                                if let delegate = callbackDelegate{
-                                    delegate.updatedImage(nil)
-                                }
-                                
                             }
                         }
                     }
+                    
                 }
-            }
-            
-            }, withCancelBlock: { error in
+                if let delegate = callbackDelegate{
+                    delegate.updatedImage(date, newImage: nil)
+                }
                 
-                println(error.description)
-                //continue loading image from file
-                var storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
-                if let storeDate = storageDate {
+                }, withCancelBlock: { error in
+                    
+                    println(error.description)
+                    //continue loading image from file
                     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
                         let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
                         
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
+                        fetchRequest.predicate = predicate
+                        
                         
                         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
@@ -643,7 +648,8 @@ class UserData {
                                 if (fetchResults.count == 1) {
                                     if let delegate = callbackDelegate{
                                         
-                                        delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        return
                                     }
                                     
                                 }
@@ -653,21 +659,23 @@ class UserData {
                                 
                                 //don't download new
                                 if let delegate = callbackDelegate{
-                                    delegate.updatedImage(UIImage(contentsOfFile: fetchResults[0].photopath))
+                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                    return
                                 }
                                 
                             }
                             //continue loading image from file
-                        }else{
-                            if let delegate = callbackDelegate{
-                                delegate.updatedImage(nil)
-                            }
                         }
+                        
                     }
-                }
-                
-        })
-        
+                    
+                    if let delegate = callbackDelegate{
+                        delegate.updatedImage(date, newImage: nil)
+                    }
+                    
+            })
+            
+        }
         
         
     }
@@ -736,7 +744,7 @@ class UserData {
                 UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
             } else {
                 if let delegate = callbackDelegate {
-                    delegate.updatedImage(nil)
+                    delegate.updatedImage(date, newImage: nil)
                 }
             }
             
@@ -797,6 +805,7 @@ class UserData {
                 let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
                 
                 let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
+                fetchRequest.predicate = predicate
                 
                 if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
                     if(fetchResults.count > 0){
@@ -822,10 +831,12 @@ class UserData {
                     
                     
                     if let newItem = insertUpdateItem {
+                        let base64String = data.base64EncodedStringWithOptions(.allZeros)
+
                         newItem.photopath = filepath
                         newItem.date = storeDate
                         newItem.user = uid
-                        
+                        newItem.md5 = base64String.md5()
                         //lets go ahead and store the file now
                         data.writeToFile(filepath, atomically: true)
                         UserData.saveContext()
@@ -835,12 +846,11 @@ class UserData {
                             //which will do the same conversion
                             
                             let base64String = data.base64EncodedStringWithOptions(.allZeros)
-                            newItem.md5 = base64String.md5()
                             UserData.uploadPhotoToFirebase(base64String, date: date)
                         }
                         
                         if let delegate = callbackDelegate {
-                            delegate.updatedImage(image)
+                            delegate.updatedImage(date, newImage: image)
                             return
                         }
                         
@@ -853,7 +863,7 @@ class UserData {
         }
         
         if let delegate = callbackDelegate {
-            delegate.updatedImage(nil)
+            delegate.updatedImage(date, newImage: nil)
         }
     }
     

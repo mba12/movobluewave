@@ -13,6 +13,6 @@ class PhotoStorage: NSManagedObject {
     @NSManaged var date: NSDate
     @NSManaged var user: String
     @NSManaged var photopath: String
-    @NSManaged var md5: String
+    @NSManaged var md5: String?
 
 }
