@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate {
     
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var distanceLabel: UILabel!
@@ -55,141 +55,12 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         
         if let date = currentDate {
             if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
-                storeImage(image, date: date)
+                UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
  
             }
         }
     }
-    
-    func getOrCreateDirectoryForImages() -> String {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
-        
-        let photoPath = documentsPath+"/Photos/"
-        if (NSFileManager.defaultManager().createDirectoryAtPath(photoPath, withIntermediateDirectories: true, attributes: nil, error: nil)) {
-            println("Photo dir created")
-        }
-        
-        return photoPath
-    }
-    
-    
-    func removeOldImage(oldPhoto: PhotoStorage) {
-        NSFileManager.defaultManager().removeItemAtPath(oldPhoto.photopath, error: nil)
-    }
-    
-    func uploadImage(image: UIImage, date: NSDate){
-        
-        
-        
-        var tempImage:UIImage = image
-        var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
-        //        UIImageJPEGRepresentatio
-        let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-        println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
-        var cal = NSCalendar.currentCalendar()
-        
-        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-        var month = ""
-        var day = ""
-        if(todayMonth<10){
-            month = "0" + (String(todayMonth))
-        }else{
-            month = String(todayMonth)
-        }
-        if(todayDate<10){
-            day = "0" + (String(todayDate))
-        }else{
-            day = String(todayDate)
-        }
-        
-        
-        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbUploadRef = fbUploadRef! + "/photos/"
-        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
-        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-        var parts = ["0":"1","1":base64String]
-        firebaseImage.setValue(parts)
-        
-    }
-    
-    
-    func storeImage(image: UIImage, date: NSDate) {
-        
-        //get system path to our image store
-        var path = getOrCreateDirectoryForImages()
-        
-        //this is the store function so we will be saving the image to a GUID
-        var uuid = NSUUID().UUIDString
-        var data : NSData = UIImageJPEGRepresentation(image, 1.0)
-        
-        let imagename = uuid + ".jpg"
-        let filepath = path + imagename
-        
-        var insertUpdateItem : PhotoStorage?
-        
-        //We want to store the image to the date 
-        //to be timezone independent
-        //this means that we use the GMT NSDate for storage that corresponds to
-        //the beginning of the day
-        var cal = NSCalendar.currentCalendar()
-        var thisDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var thisMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var thisYear = cal.component(.CalendarUnitYear , fromDate: date)
-        var storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
-        if let storeDate = storageDate {
-            
-            
-            if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-                let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
-                
-                let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
-                
-                if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
-                    if(fetchResults.count > 0){
-                        //then we must delete the old image and replace
-                        if (fetchResults.count == 1) {
-                            insertUpdateItem = fetchResults[0]
-                            removeOldImage(fetchResults[0])
-                            
-                            
-                        } else {
-                            //error case
-                            println("Warning: Excess Images")
-                            insertUpdateItem = fetchResults[0]
-                            removeOldImage(fetchResults[0])
-                        }
-                        
-                        
-                    } else {
-                        
-                        insertUpdateItem = NSEntityDescription.insertNewObjectForEntityForName("PhotoStorage", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as? PhotoStorage
-                    }
-                    
-                    
-                    
-                    if let newItem = insertUpdateItem {
-                        newItem.photopath = filepath
-                        newItem.date = storeDate
-                        newItem.user = uid
-                        
-                        //lets go ahead and store the file now
-                        data.writeToFile(filepath, atomically: true)
-                        UserData.saveContext()
-                        
-                        //pass through the unadulterated date to uploadImage
-                        //which will do the same conversion
-                        uploadImage(image, date: date)
-                    } else {
-                        println("failed to update image")
-                    }
-                }
-            }
-        }
-    }
-    
-       
+         
     
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
@@ -208,6 +79,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     func updateDisplay() {
         
         if let date = currentDate {
+            
             
             /* Set the date string */
             var calendar = NSCalendar.currentCalendar()
@@ -259,11 +131,25 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
                 self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
             })
             
+            UserData.getImageForDate(date, callbackDelegate: self)
+            
         } else {
             /* failure case */
         }
         
         
+    }
+    
+    func updatedImage(newImage: UIImage?) {
+        
+        if let image = newImage {
+            dispatch_async(dispatch_get_main_queue(), {
+                self.backgroundImage.image = newImage
+            })
+        } else {
+            
+            self.backgroundImage.image = UIImage(named: "splash")
+        }
     }
 }
 
