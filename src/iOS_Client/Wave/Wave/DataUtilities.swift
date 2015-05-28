@@ -647,3 +647,57 @@ func checkAuth() -> Bool {
 }
 
 
+func isKnownDevice(uid: String, serial: String) -> Bool {
+    if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+        let fetchRequest = NSFetchRequest(entityName: "KnownWaves")
+        let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
+        fetchRequest.predicate = predicate
+        
+        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+            
+            if (fetchResults.count > 0) {
+                if (fetchResults.count == 1) {
+                    //do nothing
+                } else {
+                    println("WARNING TOO MANY DEVICES")
+                    clearExcessItems(fetchResults)
+                }
+                
+                return true
+            }
+        }
+    }
+    return false
+}
+
+func addToKnownDevices(serial : String) {
+    if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+        let fetchRequest = NSFetchRequest(entityName: "KnownWaves")
+        let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
+        fetchRequest.predicate = predicate
+        
+         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+            
+            if (fetchResults.count > 0) {
+                if (fetchResults.count == 1) {
+                    //do nothing
+
+                } else {
+                    println("WARNING TOO MANY DEVICES")
+                    clearExcessItems(fetchResults)
+                }
+            } else {
+                //insert new item
+                
+                var knownWave = NSEntityDescription.insertNewObjectForEntityForName("KnownWaves", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! KnownWaves
+                knownWave.user = uid
+                knownWave.serialnumber = serial
+                UserData.saveContext()
+            }
+            
+        }
+        
+    }
+    
+}
+
