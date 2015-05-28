@@ -147,13 +147,13 @@ public class FirstSignUp extends Activity {
             public void onClick(View v) {
                 if (!(username.getText().equals("")) && !(pass.getText().equals("")) && !(usernameCust.getText().equals(""))) {
                     if (is13) {
-
-                        Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
-                        Firebase child = lookupEmail.child(usernameCust.getText().toString());
-                        child.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot snapshot) {
-                                if(snapshot.getValue()==null){
+        //take out username validation
+//                        Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
+//                        Firebase child = lookupEmail.child(usernameCust.getText().toString());
+//                        child.addListenerForSingleValueEvent(new ValueEventListener() {
+//                            @Override
+//                            public void onDataChange(DataSnapshot snapshot) {
+//                                if(snapshot.getValue()==null){
                                     Log.d(TAG, "Username not taken");
                                     mEmail = username.getText().toString();
                                     mUsername = usernameCust.getText().toString();
@@ -251,24 +251,24 @@ public class FirstSignUp extends Activity {
                                     } else {
                                         Toast.makeText(c, "Passwords do not match.", Toast.LENGTH_LONG).show();
                                     }
-                                }else{
-                                    Log.d(TAG, "Username taken");
-                                    String email = snapshot.getValue().toString();
-                                    Toast.makeText(c, "Username already taken.", Toast.LENGTH_LONG).show();
-                                }
-
+//                                }else{
+//                                    Log.d(TAG, "Username taken");
+//                                    String email = snapshot.getValue().toString();
+//                                    Toast.makeText(c, "Username already taken.", Toast.LENGTH_LONG).show();
+//                                }
 //
+////
+//
+//
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(FirebaseError firebaseError) {
+//                                Toast.makeText(c, "Username not taken", Toast.LENGTH_LONG).show();
+//                            }
 
 
-                            }
-
-                            @Override
-                            public void onCancelled(FirebaseError firebaseError) {
-                                Toast.makeText(c, "Username not taken", Toast.LENGTH_LONG).show();
-                            }
-
-
-                        });
+//                        });
 
 
 

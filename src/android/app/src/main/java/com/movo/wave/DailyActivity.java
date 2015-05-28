@@ -233,8 +233,20 @@ public class DailyActivity extends ActionBarActivity {
 
 //                setContentView(R.layout.activity_daily);
             }
+            String monthChange = "";
+            String dayChange = "";
+            if ((monthCal.get(Calendar.MONTH)) < 11) {
+                monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+            } else {
+                monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+            }
+            if ((monthCal.get(Calendar.DATE)) < 10) {
+                dayChange = "0" + (monthCal.get(Calendar.DATE));
+            } else {
+                dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+            }
             Log.d(TAG, "Loading image from firebase");
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+            Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -520,8 +532,20 @@ public class DailyActivity extends ActionBarActivity {
 //                    UserData myData = UserData.getUserData(c);
                     String user =  UserData.getUserData(c).getCurUID();
 
-                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
-
+                    String monthChange = "";
+                    String dayChange = "";
+                    if ((monthCal.get(Calendar.MONTH)) < 11) {
+                        monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+                    } else {
+                        monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+                    }
+                    if ((monthCal.get(Calendar.DATE)) < 10) {
+                        dayChange = "0" + (monthCal.get(Calendar.DATE));
+                    } else {
+                        dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+                    }
+                    Log.d(TAG, "Loading image from firebase");
+                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
 

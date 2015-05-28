@@ -974,7 +974,20 @@ public class Home extends MenuActivity {
                 Log.d(TAG, "Loading image from firebase");
                 final Calendar monthCal = Calendar.getInstance();
                 monthCal.setTimeInMillis(today);
-                Firebase ref = new Firebase(UserData.firebase_url + "/users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
+                String monthChange = "";
+                String dayChange = "";
+                if ((monthCal.get(Calendar.MONTH)) < 11) {
+                    monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+                } else {
+                    monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+                }
+                if ((monthCal.get(Calendar.DATE)) < 10) {
+                    dayChange = "0" + (monthCal.get(Calendar.DATE));
+                } else {
+                    dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+                }
+                Log.d(TAG, "Loading image from firebase");
+                Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
                 ref.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot snapshot) {
