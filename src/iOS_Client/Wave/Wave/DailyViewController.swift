@@ -61,115 +61,21 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             var tempImage:UIImage = info[UIImagePickerControllerOriginalImage] as! UIImage
             var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
             //        UIImageJPEGRepresentatio
-            let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-            //            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
-            var cal = NSCalendar.currentCalendar()
-            
-            var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-            var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-            var month = ""
-            var day = ""
-            if(todayMonth<10){
-                month = "0" + (String(todayMonth))
-            }else{
-                month = String(todayMonth)
-            }
-            if(todayDate<10){
-                day = "0" + (String(todayDate))
-            }else{
-                day = String(todayDate)
-            }
-            
-            
-            var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-            fbUploadRef = fbUploadRef! + "/photos/"
-            fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
-            
-            
-            
-            var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-            //            if let iOSString:NSString = NSString(UTF8String: base64String){
-            //                if(iOSString.length>1000000){
-            //                    var result:[String] = []
-            //                    var index = 0
-            //                    while(index < iOSString.length){
-            //                        var endPart = iOSString.endIndex
-            //
-            //                        var subPart = iOSString.substringWithRange(Range<String.Index>(start: advance(iOSString.startIndex,index), end: advance(iOSString.endIndex, -1))
-            //)
-            //                    }
-            //
-            //                }
-            //            }
-            
-            
-            
-            if let array = base64String.cStringUsingEncoding(NSUTF8StringEncoding) {
-                var result:[String] = []
-                if(array.count>1000000){
-                    //break photo into chunks
-                    var totalChunks = 0
-                    var i = 0
-                    var subSection = ""
-                    while (i<array.count){
-                        var j = 0
-                        if(i<array.count && ((i+1000000)<array.count)){
-                            j = 0
-                            while(j<1000000){
-                                subSection = subSection + String(array[j+i])
-                                j++
-                            }
-                            result.append(subSection)
-                            totalChunks++
-                            subSection = ""
-                            
-                            i = i + 1000000
-                            
-                        }else if(i<array.count && ((i+1000000)>array.count)){
-                            j = 0
-                            while((j+i)<(array.count-i)){
-                                subSection = subSection + String(array[j+i])
-                                j++
-                            }
-                            result.append(subSection)
-                            subSection = ""
-                            
-                        }
-                        
-                    }
-                    var parts = ["0":String(totalChunks)]
-                    for(var cd = 0;cd<totalChunks;cd++){
-//                     ,"1":base64String
-                        parts.updateValue(result[cd], forKey: String(cd))
-                        
-                    }
-                    
-                    firebaseImage.setValue(parts)
+            var base64String = tempData.base64EncodedStringWithOptions(.allZeros)
 
-                    
-                    
-                }else{
-                    //size is ok for 1 chunk
-                    var parts = ["0":"1","1":base64String]
-                    
-                    firebaseImage.setValue(parts)
-                    
-                    
-                }
-            }
+            //this call uploads the selected photo
+            UserData.getOrCreateUserData().uploadPhotoToFirebase(base64String, date: date)
             
             
-            UserData.getOrCreateUserData().downloadPhotoFromFirebase(NSDate: date)
-            
+            //this call will download a photo for a certain date... where do we want to put this
+//            UserData.getOrCreateUserData().downloadPhotoFromFirebase(NSDate: date)
             
             
         }
         
     }
     
-    
-    
+       
     
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {

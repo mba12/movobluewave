@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 import CoreData
 
-
+let photoMaximumSizeChunk : Int = 1000000
 
 func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
     var calendar = NSCalendar.currentCalendar()

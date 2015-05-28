@@ -469,6 +469,56 @@ class UserData {
         return nil
     }
     
+    func uploadPhotoToFirebase(base64StringIn:String, date:NSDate){
+        var base64String = base64StringIn
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbUploadRef = fbUploadRef! + "/photos/"
+        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+        
+        
+        
+        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+        
+        
+        var size = (base64String as NSString).length
+        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+        firebaseImage.updateChildValues(["0":String(totalChunks)])
+        
+        
+        var part = 1
+        while (!base64String.isEmpty) {
+            var size = (base64String as NSString).length
+            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+            var result:String = base64String.substringToIndex(index)
+            let range = base64String.startIndex..<index
+            base64String.removeRange(range)
+            
+            firebaseImage.updateChildValues([String(part):result])
+            part += 1
+        }
+        
+    }
+
+    
     func downloadPhotoFromFirebase(NSDate date:NSDate){
 
         var cal = NSCalendar.currentCalendar()
