@@ -62,7 +62,7 @@ public class SyncDataActivity extends MenuActivity {
         @Override
         public void notify(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state, boolean status) {
             lazyLog.d( sync.info, " Sync: ", sync, " state: ", state, " status: ", status);
-            updateSyncState( state );
+            updateSyncState( state.next() );
         }
 
         @Override
@@ -631,7 +631,8 @@ public class SyncDataActivity extends MenuActivity {
 
     private void updateSyncState( WaveAgent.DataSync.SyncState state ) {
         String[] enumText = resources.getStringArray( R.array.sync_state_enum );
-        syncState.setText( enumText[ state.ordinal() ] + "\u2026");
+        int ordinal = state.ordinal();
+        syncState.setText( enumText[ ordinal ] + "\u2026");
     }
 
     private void updateSyncProgress( float progress ) {

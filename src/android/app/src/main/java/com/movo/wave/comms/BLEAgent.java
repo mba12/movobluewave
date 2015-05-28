@@ -190,7 +190,7 @@ public class BLEAgent {
                         //try to lookup device
                         lazyLog.i( "Trying to reroute connection state to device... " );
                         final String address = gatt.getDevice().getAddress();
-                        final BLEDevice device = BLEDevice.byAddress( address );
+                        final BLEDevice device = BLEDevice.byAddress(address);
 
                         if (device != null) {
                             lazyLog.i( address, " ",
@@ -336,7 +336,7 @@ public class BLEAgent {
                     deviceMap.put(device.getAddress(), this);
                 }
             }
-            return stale;
+            return ! stale;
         }
 
         /** reference counting wrapper for optimally discarding gatt references as soon as possible.
@@ -344,20 +344,21 @@ public class BLEAgent {
          * @return boolean indication of success
          */
         public synchronized boolean release() {
+            final boolean ret = ! stale;
             if( stale ) {
                 lazyLog.w( "Attempt to release stale device ", this);
             } else if( --refCount == 0 ) {
                 close();
                 stale = true;
                 synchronized (deviceMap) {
-                    deviceMap.remove(this);
+                    deviceMap.remove(device.getAddress());
                     if (self.currentDevice == this) {
                         self.currentDevice = null;
                     }
                 }
             }
 
-            return stale;
+            return ret;
         }
 
         /** synchronized getter for stale state. stale-> not accepted for BLERequests.
@@ -509,7 +510,9 @@ public class BLEAgent {
         public BLERequest( final BLEDevice device, final int timeout ){
             this.timeout = timeout;
             this.device = device;
-            lazyLog.a( device.acquire(), "Failed to acquire device!! ", device );
+            if( device != null ) {
+                lazyLog.a(device.acquire(), "Failed to acquire device!! ", device);
+            }
         }
 
         /** Send data using the current BLEAgent handles.
@@ -572,29 +575,32 @@ public class BLEAgent {
         }
     }
 
-    private static Map<String, BLEDevice> deviceMap = new HashMap<>();
+    private static final Map<String, BLEDevice> deviceMap = new HashMap<>();
 
     /**
      * Close down singleton and any open devices
      * FIXME: refresh logic
      */
     public static void release() {
-        handle(new BLERequest(null, 0) {
+        handle(new BLERequest(null, 1000) {
             @Override
             public boolean dispatch(BLEAgent agent) {
                 try {
                     mutex.acquire();
                     refCount -= 1;
                     if (refCount > 0) {
-                        lazyLog.i("BLEAgent already open ", refCount);
+                        lazyLog.i("BLEAgent::release(): open elsewhere (refCount): ", refCount);
                     } else if (refCount < 0) {
-                        lazyLog.e("Negative ref count!!!!!!!", refCount);
+                        lazyLog.e("BLEAgent::release(): Negative ref count!!!!!!!", refCount);
                     } else {
-                        lazyLog.i("closing BLEAgent");
+                        lazyLog.i("BLEAgent::release(): closing BLEAgent");
                         context = null;
                         UIHandler = null;
                         self.adapter = null;
-                        lazyLog.i("Closed BLEAgent");
+                        for( BLEDevice dev : deviceMap.values()) {
+                            lazyLog.e("BLEDevice Still in use! ", dev);
+                        }
+                        lazyLog.i("BLEAgent::release(): Closed BLEAgent");
                     }
                     mutex.release();
                 } catch (InterruptedException e) {
@@ -798,6 +804,7 @@ public class BLEAgent {
             stackOp(new SetupOp() {
                 @Override
                 public void run() {
+                    if( currentRequest != request )
                     lazyLog.a(currentRequest == request,
                             "nextRequest(): currentRequest != request");
                     lazyLog.d( "Starting request ", request, " at ", new Date());
@@ -855,9 +862,8 @@ public class BLEAgent {
                 @Override
                 public void run() {
                     if (currentRequest == request) {
-                        lazyLog.w( "BLEAgent: Request timed out: ", request, " at ", new Date());
+                        lazyLog.w("BLEAgent: Request timed out: ", request, " at ", new Date());
                         request.onFailure();
-                        currentRequest = null;
                         nextRequest();
                     }
                 }
@@ -1008,6 +1014,15 @@ public class BLEAgent {
                 Currently our state may end up out of sync(on  request abort), but it does so
                 pessimistically (i.e., we'd be listening to the characteristic, just not know we
                 are).
+
+                A more reliable strategy would be to have a single op along the pseudo code:
+
+                try {
+                    connect()
+                    map( listen, uuids )
+                } catch {
+                    retry()
+                }
              */
             for(final Pair<UUID, UUID> notifyUUID : insertUUIDs) {
                 fifoOp( new SetupOp() {
@@ -1036,6 +1051,24 @@ public class BLEAgent {
                         }
                         return ret;
                     }
+
+                    @Override
+                    public boolean onConnectionStateChange(int status, int newState) {
+                        lazyLog.w("Notification observed state: ", newState);
+                        lazyLog.a(status == BluetoothGatt.GATT_SUCCESS,
+                                "Non-success state status for state ",
+                                newState, " (", status, ")" );
+                        switch (newState) {
+                            case BluetoothGatt.STATE_CONNECTED:
+                                run();
+                                break;
+                            case BluetoothGatt.STATE_DISCONNECTED:
+                                currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
+                                currentDevice.gatt.connect();
+                                break;
+                        }
+                        return false;
+                    }
                 });
             }
         }
@@ -1053,15 +1086,18 @@ public class BLEAgent {
             @Override
             public void run() {
                 final String address = device.getAddress();
-                BLEDevice dev = BLEDevice.byAddress( address );
-                lazyLog.a( dev.device == device, "BluetoothDevice objects don't match ",
-                        device, " != ", dev.device);
+                BLEDevice dev = BLEDevice.byAddress(address);
 
                 if (dev != null) {
+                    if(dev.device != device) {
+                        lazyLog.e(dev.device == device, "BluetoothDevice objects don't match ",
+                                device, " != ", dev.device);
+                    }
                     dev.lastSeen = now;
                 } else {
                     dev = new BLEDevice(device, now);
                 }
+
                 dev.acquire();
                 lazyLog.a(currentRequest != null, "No active request!!!");
                 if (currentRequest != null && currentRequest.onReceive(dev)) {

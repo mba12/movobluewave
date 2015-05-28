@@ -110,7 +110,7 @@ public class WaveScanActivity extends MenuActivity {
             do {
                 // ignore cursorily non-wave devices
                 if (!"Wave".equals(device.device.getName())) {
-                    lazyLog.e( "IGNORING", device.device.getAddress(), device.device.getName() );
+                    lazyLog.v( "IGNORING non-wave ", device.device.getAddress(), device.device.getName() );
                     break;
                 }
 
@@ -126,7 +126,7 @@ public class WaveScanActivity extends MenuActivity {
 
                 if( info.complete() ) {
                     addInfo( info );
-                    lazyLog.d( "Loading sql-cached wave device", info );
+                    lazyLog.d( "Loading sql-cached wave device ", info );
                 } else {
                     acquire();
                     // query device serial && gatt attributes
