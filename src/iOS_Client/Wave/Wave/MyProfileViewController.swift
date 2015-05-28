@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class MyProfileViewController:  KeyboardSlideViewController {
+class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate {
     @IBOutlet weak var cancel: UIButton!
     
     @IBOutlet weak var fullName: UITextField!
@@ -24,6 +24,21 @@ class MyProfileViewController:  KeyboardSlideViewController {
     
     @IBOutlet weak var cancelButton: UIButton!
     
+    
+    var genderPicker : UIPickerView
+    var genderPickerData = ["Female","Male"]
+    
+    var datePicker : UIDatePicker
+    var datePickerToolbar : UIToolbar
+    var datePickerFirstResponder : Bool = false
+
+
+    required init(coder aDecoder: NSCoder) {
+        genderPicker = UIPickerView()
+        datePicker = UIDatePicker()
+        datePickerToolbar = UIToolbar()
+        super.init(coder: aDecoder)
+    }
     
     override func viewDidLoad() {
   	  super.viewDidLoad()
@@ -50,7 +65,36 @@ class MyProfileViewController:  KeyboardSlideViewController {
             gender.text = g
         }
         
+        if let bd = UserData.getOrCreateUserData().getCurrentBirthdate() {
+            birthdate.text = bd.description
+            datePicker.date = bd
+        }
         offsetModifier = -(cancelButton.frame.origin.y - cancelButton.frame.height)
+        
+        
+        //set up gender picker
+        genderPicker.dataSource = self
+        genderPicker.delegate = self
+        gender.inputView = genderPicker
+        
+        
+        //set up birthdate picker
+        datePicker.addTarget(self, action: Selector("dateSelection:"), forControlEvents: UIControlEvents.ValueChanged)
+        datePicker.datePickerMode = UIDatePickerMode.Date
+        datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
+        birthdate.inputView = datePicker
+        birthdate.addTarget(self, action: Selector("birthdateResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
+        birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
+        
+        datePickerToolbar.sizeToFit()
+        
+        
+        
+    }
+    
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
+        datePickerFirstResponder = false
     }
     
     
@@ -67,6 +111,7 @@ class MyProfileViewController:  KeyboardSlideViewController {
         UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
         UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
         UserData.getOrCreateUserData().setCurrentGender(gender.text)
+        UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
         UserData.getOrCreateUserData().saveMetaDataToFirebase()
         
     }
@@ -77,8 +122,72 @@ class MyProfileViewController:  KeyboardSlideViewController {
 
     }
     
- 
     
+    
+    
+    
+    func dateSelection(sender: UIDatePicker) {
+        
+        println("Got Date")
+        
+        
+    }
+    
+    
+    func birthdateResponder(sender: UITextField) {
+        datePickerFirstResponder = true
+        
+    }
+    
+    func birthdateResponderEnd(sender: UITextField) {
+        birthdate.text = datePicker.date.description
+        datePickerFirstResponder = false
+        
+    }
+    
+    func resignDateKeyboard(sender: UIBarButtonItem) {
+        if (datePickerFirstResponder) {
+            birthdate.resignFirstResponder()
+            datePickerToolbar.removeFromSuperview()
+        }
+    }
+    
+    
+    func numberOfComponentsInPickerView(pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        return genderPickerData.count
+    }
+    func pickerView(pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String! {
+        return genderPickerData[row]
+    }
+    
+    func pickerView(pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        gender.text = genderPickerData[row]
+        gender.resignFirstResponder()
+    }
+    
+    override func keyboardWillShow(notification: NSNotification) {
+        super.keyboardWillShow(notification)
+        println("In keyboard will show")
+        
+        if (datePickerFirstResponder) {
+            datePickerToolbar.removeFromSuperview()
+            var keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
+            var windowheight = self.view.frame.height
+            datePickerToolbar = UIToolbar(frame: CGRectMake(0, windowheight-keyboardSize!.height-44 , keyboardSize!.width, 44))
+            datePickerToolbar.sizeToFit()
+            var flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
+            var button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
+            
+            datePickerToolbar.setItems([flex, button], animated: true)
+            self.view.addSubview(datePickerToolbar)
+            
+        }
+
+    }
     
 }
 

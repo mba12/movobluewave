@@ -115,16 +115,32 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             
             /* Set the miles */
-            //FIXME: not checking user data and using that if available
-            let miles = Calculator.calculate_distance(steps, height: Int(5.5*12))
+            //default height of person in feet, roughly 5.5'
+            var height = 5.5
+            
+            
+            //collect height
+            if let heightft = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+                if (heightft > 0) {
+                    height = Double(heightft)
+                    if let heightin = UserData.getOrCreateUserData().getCurrentHeightInches() {
+                        height += Double(heightin)/12.0
+                    }
+                }
+                
+            }
+            
+            
+            let miles = Calculator.calculate_distance(steps, height: Int(height*12.0))
+            
             dispatch_async(dispatch_get_main_queue(), {
                 self.distanceLabel.text = String(format: "%.1f", miles) + " MILES"
             })
             
             
             /* Set the calories */
-            //FIXME: not checking user data and using that if available
-            let calories = Calculator.simple_calculate_calories(int: steps)
+
+            let calories = caloriesForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
                 self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
             })

@@ -29,19 +29,7 @@ class UserData {
         } else {
             NSLog("Failed to load default user")
         }
-        /*
-        currentUID = "Error"
-        currentEmail = "Error"
-        currentPW = "Error"
-        currentBirthDate = nil
-        currentHeightFeet = 0
-        currentHeightInches = 0
-        currentWeight = 0
-        currentGender = "Error"
-        currentFullName = "Error"
-        currentUsername = "Error"
-        currentUserRef = "Error"
-        */
+
         
     }
     
@@ -92,58 +80,14 @@ class UserData {
         currentUserEntry = user
         if let DBCurrentUser : CurrentUser = UserData.getOrCreateCurrentUser() {            DBCurrentUser.user = user
             UserData.saveContext()
+            
+            //anytime we login, download the metadata for changes
+            downloadMetaData()
             return true
         }
         
         return false
     }
-    
-    func saveMetaDataToFirebase(){
-        NSLog("Saving metadata to firebase")
-        var stringRef = getCurrentUserRef()
-        stringRef = stringRef! + "/metadata"
-        var fbMetaRef:Firebase = Firebase(url: stringRef)
-        if(getCurrentFullName() != nil){
-            fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
-        }else{
-            fbMetaRef.childByAppendingPath("currentFullName").setValue("Error")
-        }
-        //        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
-        if(getCurrentEmail() != nil){
-            fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
-        }else{
-            fbMetaRef.childByAppendingPath("currentEmail").setValue("Error")
-        }
-        if(getCurrentGender() != nil){
-            fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
-        }else{
-            fbMetaRef.childByAppendingPath("currentGender").setValue("Error")
-        }
-        if(getCurrentHeightFeet() != nil){
-            fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet()?.description)
-        }else{
-            fbMetaRef.childByAppendingPath("currentHeight1").setValue("Error")
-        }
-        if(getCurrentHeightInches() != nil){
-                fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches()?.description)
-        }else{
-                fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
-        }
-        
-        
-        fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
-
-        if(getCurrentWeight() != nil){
-            fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight()?.description)
-        }else{
-            fbMetaRef.childByAppendingPath("currentWeight").setValue("Error")
-        }
-
-
-        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
-        
-            }
-    
     
     static func getOrCreateCurrentUser() -> CurrentUser? {
         var createNewCurrentUser = false
@@ -210,46 +154,7 @@ class UserData {
         return newItem
         
     }
-    //
-    
-    //    func logInDifferentUser(){
-    
-    
-    //        if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-    //            let predicate = NSPredicate(format:"%@ == id",uid)
-    //            let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
-    //            fetchRequestDupeCheck.predicate = predicate
-    //            if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
-    //                if(fetchResults.count == 1){
-    //
-    //
-    //
-    //                    var nameUp = ["currentFullName": String(fetchResults[0].fullname)]
-    //                    var birthTime:NSTimeInterval = fetchResults[0].birthdate.timeIntervalSince1970
-    //                    var birthLong:Int32 = Int32(birthTime);
-    //                    var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
-    //                    var heightFtUp = ["currentHeight1": String(fetchResults[0].heightfeet)]
-    //                    var heightInchesUp = ["currentHeight2": String(fetchResults[0].heightinches)]
-    //                    var weightUp = ["currentWeight": String(fetchResults[0].weight)]
-    //                    var genderUp = ["currentGender": String(fetchResults[0].gender)]
-    //                }
-    //            }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    //        }
-    //    }
+
     
     func downloadMetaData(){
         NSLog("Downloading new metadata")
@@ -306,6 +211,55 @@ class UserData {
         })
         
     }
+    
+    
+    func saveMetaDataToFirebase(){
+        NSLog("Saving metadata to firebase")
+        var stringRef = getCurrentUserRef()
+        stringRef = stringRef! + "/metadata"
+        var fbMetaRef:Firebase = Firebase(url: stringRef)
+        if (getCurrentFullName() != nil) {
+            fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
+        } else {
+            fbMetaRef.childByAppendingPath("currentFullName").setValue("Error")
+        }
+        //        fbMetaRef.childByAppendingPath("currentBirthdate").setValue(String(getCurrentBirthdate()))
+        if (getCurrentEmail() != nil) {
+            fbMetaRef.childByAppendingPath("currentEmail").setValue(getCurrentEmail())
+        } else {
+            fbMetaRef.childByAppendingPath("currentEmail").setValue("Error")
+        }
+        if (getCurrentGender() != nil) {
+            fbMetaRef.childByAppendingPath("currentGender").setValue(getCurrentGender())
+        }else {
+            fbMetaRef.childByAppendingPath("currentGender").setValue("Error")
+        }
+        if (getCurrentHeightFeet() != nil) {
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue(getCurrentHeightFeet()?.description)
+        } else {
+            fbMetaRef.childByAppendingPath("currentHeight1").setValue("Error")
+        }
+        if (getCurrentHeightInches() != nil) {
+            fbMetaRef.childByAppendingPath("currentHeight2").setValue(getCurrentHeightInches()?.description)
+        } else {
+            fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
+        }
+        
+        
+        fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
+        
+        if (getCurrentWeight() != nil) {
+            fbMetaRef.childByAppendingPath("currentWeight").setValue(getCurrentWeight()?.description)
+        } else {
+            fbMetaRef.childByAppendingPath("currentWeight").setValue("Error")
+        }
+        
+        
+        fbMetaRef.childByAppendingPath("currentUID").setValue(getCurrentUID())
+        
+    }
+    
+
     
     
     func getCurrentUID() -> String? {

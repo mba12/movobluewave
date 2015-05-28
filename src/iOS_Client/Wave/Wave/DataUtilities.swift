@@ -31,12 +31,16 @@ func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
 
 func stepsForDayStarting(dateStart: NSDate) -> Int {
     var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-    return getStepsForTimeInterval(NSDate: dateStart, NSDate: dateStop)
+    return getStepsForTimeInterval(dateStart, dateStop)
 }
 
 
+func caloriesForDayStarting(dateStart: NSDate) -> Double {
+    var dateStop = dateStart.dateByAddingTimeInterval(60*60*24)
+    return getCaloriesForTimeInterval(dateStart, dateStop)
+}
 
-func getStepsForTimeInterval(NSDate dateStart:NSDate, NSDate dateStop:NSDate) -> Int {
+func getStepsForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Int {
     
     var totalStepsForInterval : Int = 0
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
@@ -59,6 +63,115 @@ func getStepsForTimeInterval(NSDate dateStart:NSDate, NSDate dateStop:NSDate) ->
     
     return totalStepsForInterval
 
+}
+
+func getCaloriesForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Double {
+    
+    var totalCalForTimeInterval : Double = 0.0
+    if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+        let predicate = NSPredicate(format:"%@ <= starttime AND %@ >= endtime AND %@ == user", dateStart, dateStop, uid)
+        
+        let fetchRequest = NSFetchRequest(entityName: "StepEntry")
+        fetchRequest.predicate = predicate
+        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+            if(fetchResults.count > 0){
+                println("Count %i",fetchResults.count)
+                var resultsCount = fetchResults.count
+                for(var i=0;i<(resultsCount);i++){
+                    //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
+                    totalCalForTimeInterval += calcCaloriesForTimeInterval(Int(fetchResults[i].count), fetchResults[i].endtime.timeIntervalSinceDate(fetchResults[i].starttime))
+                    
+                }
+            }
+        }
+        
+    }
+    
+    return totalCalForTimeInterval
+    
+    
+}
+
+func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double {
+    var ret : Double = 0.0
+    var height = 0.0
+    var birthYear = 0
+    var minutes = 0
+    
+    //calculate minutes
+    
+    minutes = Int(Double(duration) / 60.0)
+    
+    
+    //collect height
+    if let heightft = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+        height = Double(heightft)
+        if let heightin = UserData.getOrCreateUserData().getCurrentHeightInches() {
+            height += Double(heightin)/12.0
+        }
+        
+    }
+    
+    //collect weight
+    var weight : Int? = UserData.getOrCreateUserData().getCurrentWeight()
+    
+    //collect gender
+    var gender : String? = UserData.getOrCreateUserData().getCurrentGender()
+
+    //collect birthYear
+    if let birthDate : NSDate = UserData.getOrCreateUserData().getCurrentBirthdate() {
+        birthYear = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: birthDate)
+        
+        var test = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: NSDate())
+        
+        //reject <1 year old as not being valid with the detailed calorie equation
+        if (birthYear == test) {
+            birthYear = 0
+        }
+    }
+    
+    //validate derivative values
+    var valid : Bool = true
+    
+    //check weight
+    if let w = weight {
+        //weight must be >0
+        if (w <= 0) {
+            valid = false
+        }
+    } else {
+        valid = false
+    }
+    
+    //check height
+    if (height < 2.0) {
+        valid = false
+    }
+    
+    //check birthdate
+    if (birthYear < 1900) {
+        valid = false
+    }
+    
+    //check gender
+    if let g = gender {
+        //default female; accept Male
+    } else {
+        valid = false
+    }
+    
+    if (minutes <= 0) {
+        //minutes must be positive
+        valid = false
+    }
+    
+    if (valid) {
+        ret = Calculator.calculate_calories(steps, height: Int(height*12.0), weight: weight!, gender: gender!, birthYear: birthYear, minutes: minutes)
+    } else {
+        ret = Calculator.simple_calculate_calories(int: steps)
+    }
+    
+    return ret
 }
 
 
@@ -300,7 +413,8 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                 println(error.description)
         })
     }
-
+    //update our local metadata as well
+    UserData.getOrCreateUserData().downloadMetaData()
     
 }
 
@@ -366,7 +480,7 @@ func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
 }
 
 //WARN: needs return function, and both need to be called correctly!
-func uploadMetadataToFirebase(){
+func uploadMetadataToFirebase() {
     
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         var ref = UserData.getFirebase()

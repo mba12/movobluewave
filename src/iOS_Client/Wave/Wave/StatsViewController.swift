@@ -11,7 +11,7 @@ import CoreData
 import UIKit
 import Charts
 
-class StatsViewController: UIViewController  {
+class StatsViewController: UIViewController, FBUpdateDelegate  {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     var todayDate:Int = 0
     var todayMonth:Int = 0
@@ -71,12 +71,27 @@ class StatsViewController: UIViewController  {
         super.viewDidAppear(animated)
         
         
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
         
         
     }
     
     func loadDataForYM(year: Int, month: Int) {
         stepsCount = [Int]()
+        var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
             forDate: date).toRange()!.endIndex
@@ -90,7 +105,9 @@ class StatsViewController: UIViewController  {
             
             if let dateStart : NSDate = YMDLocalToNSDate(year, month, i) {
                 stepsCount.append(stepsForDayStarting(dateStart))
+                caloriesList.append(caloriesForDayStarting(dateStart))
             }
+            
         }
         
         var days:[String] = []
@@ -104,6 +121,18 @@ class StatsViewController: UIViewController  {
         var milesTotal = 0.0
         var caloriesAvgC = 0.0
         var caloriesTotal = 0.0
+        var height = 5.5
+        
+        //collect height
+        if let heightft = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+            if (heightft > 0) {
+                height = Double(heightft)
+                if let heightin = UserData.getOrCreateUserData().getCurrentHeightInches() {
+                    height += Double(heightin)/12.0
+                }
+            }
+            
+        }
         
         //loop through and add steps for each day.
         //WARN: Only using simple calculator until user profile exists
@@ -112,10 +141,21 @@ class StatsViewController: UIViewController  {
             stepsTotal += stepCount
             days.append(String(i+1))
             stepsYVals.append(ChartDataEntry(value: Float(stepCount), xIndex:i))
-            var miles = Calculator.calculate_distance(stepCount, height: Int(5.5*12))
+            
+            
+            
+           
+            
+            
+            var miles = Calculator.calculate_distance(stepCount, height: Int(height*12.0))
+            
             milesTotal += miles
             milesYVals.append(ChartDataEntry(value: Float(miles), xIndex:i))
-            var calories = Calculator.simple_calculate_calories(int: stepCount)
+            
+            
+            
+            
+            var calories = caloriesList[i]
             caloriesTotal += calories
             caloriesYVals.append(ChartDataEntry(value: Float(calories), xIndex:i))
         }
@@ -269,6 +309,32 @@ class StatsViewController: UIViewController  {
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + ", " + yearName
+            self.loadDataForYM(self.todayYear, month: self.todayMonth)
+        })
+        
+        
+        
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
+        
+        
+    }
+    
+    
+    func UpdatedDataFromFirebase() {
+        dispatch_async(dispatch_get_main_queue(), {
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
         
