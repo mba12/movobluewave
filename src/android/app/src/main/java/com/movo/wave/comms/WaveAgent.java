@@ -404,7 +404,7 @@ public class WaveAgent {
             progress();
 
             inNotify = true;
-            callback.notify( this, state, success );
+            callback.notify(this, state, success);
             inNotify = false;
 
             lazyLog.v(this.toString(), "\tState was: ", state, " (", success, ")");
@@ -414,7 +414,8 @@ public class WaveAgent {
                 while( true ) {
                     state = state.next();
                     if (state.skippable && callback.skip(this, state)) {
-                        state = state.next();
+                        lazyLog.v(this.toString(), "\tSkipping state: ", state);
+                        continue;
                     } else {
                         break;
                     }

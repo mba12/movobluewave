@@ -74,7 +74,7 @@ public class SyncDataActivity extends MenuActivity {
         public boolean skip(WaveAgent.DataSync sync, WaveAgent.DataSync.SyncState state) {
             final Long timeDelta;
             if( sync.localDate != null && sync.deviceDate != null ) {
-                timeDelta = sync.localDate.getTime() - sync.deviceDate.getTime();
+                timeDelta = Math.abs(sync.localDate.getTime() - sync.deviceDate.getTime());
             } else {
                 timeDelta = null;
             }
@@ -85,20 +85,15 @@ public class SyncDataActivity extends MenuActivity {
             switch ( state ) {
                 case REQUEST_DATA:
                     ret = timeDelta == null || timeDelta > MAX_DATA_TIME_DELTA;
-                    max = MAX_DATA_TIME_DELTA;
+                    lazyLog.i( "Time delta ", timeDelta, " exceeds ", MAX_DATA_TIME_DELTA );
                     break;
                 case SET_DATE:
-                    ret = timeDelta == null || timeDelta > MAX_SKEW_TIME_DELTA;
-                    max = MAX_DATA_TIME_DELTA;
+                    ret = timeDelta == null || timeDelta < MAX_SKEW_TIME_DELTA;
+                    lazyLog.i( "Time delta ", timeDelta, " within tolerance ", MAX_SKEW_TIME_DELTA );
                     break;
                 default:
                     ret = false;
-                    max = -1;
                     break;
-            }
-
-            if( ret ) {
-                lazyLog.w("Time delta ", timeDelta, " exceeds ", max, " Ignoring data!");
             }
 
             return ret;
