@@ -555,7 +555,7 @@ class UserData {
                                         if (md5 == downloadedMD5) {
                                             //don't download new
                                             if let delegate = callbackDelegate{
-                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                                 return
                                             }
                                         }
@@ -573,7 +573,7 @@ class UserData {
                                         if (md5 == downloadedMD5) {
                                             //don't download new
                                             if let delegate = callbackDelegate{
-                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                                 return
                                                 
                                             }
@@ -607,7 +607,7 @@ class UserData {
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                         return
                                     }
                                     
@@ -616,7 +616,7 @@ class UserData {
                                     //warn
                                     println("Warning: Excess Images")
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                         return
                                     }
                                 }
@@ -648,7 +648,7 @@ class UserData {
                                 if (fetchResults.count == 1) {
                                     if let delegate = callbackDelegate{
                                         
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                         return
                                     }
                                     
@@ -659,7 +659,7 @@ class UserData {
                                 
                                 //don't download new
                                 if let delegate = callbackDelegate{
-                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: fetchResults[0].photopath))
+                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                     return
                                 }
                                 
@@ -755,17 +755,20 @@ class UserData {
         
     }
     
-    
-    
-    static func getOrCreateDirectoryForImages() -> String {
+    static func getDocumentsPath() -> String {
         let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
-        
-        let photoPath = documentsPath+"/Photos/"
-        if (NSFileManager.defaultManager().createDirectoryAtPath(photoPath, withIntermediateDirectories: true, attributes: nil, error: nil)) {
+        return documentsPath
+    }
+    
+    static func getOrCreateDirectoryForImages() -> (full: String, relative: String) {
+
+        let fullPhotoPath = UserData.getDocumentsPath()+"/Photos/"
+        let relativePath = "/Photos/"
+        if (NSFileManager.defaultManager().createDirectoryAtPath(fullPhotoPath, withIntermediateDirectories: true, attributes: nil, error: nil)) {
             println("Photo dir created")
         }
         
-        return photoPath
+        return (fullPhotoPath, relativePath)
     }
     
     
@@ -778,15 +781,15 @@ class UserData {
     static func storeImage(image: UIImage, date: NSDate,  pushToFirebase : Bool, callbackDelegate: ImageUpdateDelegate?) {
         
         //get system path to our image store
-        var path = getOrCreateDirectoryForImages()
+        var (fullPath, relativePath) = getOrCreateDirectoryForImages()
         
         //this is the store function so we will be saving the image to a GUID
         var uuid = NSUUID().UUIDString
         var data : NSData = UIImageJPEGRepresentation(image, 1.0)
         
         let imagename = uuid + ".jpg"
-        let filepath = path + imagename
-        
+        let filepath = fullPath + imagename
+        let shortfilepath = relativePath + imagename
         var insertUpdateItem : PhotoStorage?
         
         //We want to store the image to the date
@@ -831,28 +834,37 @@ class UserData {
                     
                     
                     if let newItem = insertUpdateItem {
-                        let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                        
 
-                        newItem.photopath = filepath
+                        newItem.photopath = shortfilepath
                         newItem.date = storeDate
                         newItem.user = uid
-                        newItem.md5 = base64String.md5()
                         //lets go ahead and store the file now
+                        //and update the local display
                         data.writeToFile(filepath, atomically: true)
-                        UserData.saveContext()
-                        
-                        if (pushToFirebase) {
-                            //pass through the unadulterated date to uploadImage
-                            //which will do the same conversion
-                            
-                            let base64String = data.base64EncodedStringWithOptions(.allZeros)
-                            UserData.uploadPhotoToFirebase(base64String, date: date)
+                        if let delegate = callbackDelegate {
+                            delegate.updatedImage(date, newImage: image)
                         }
-                        
+                        let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),  {
+                            newItem.md5 = base64String.md5()
+                            UserData.saveContext()
+                            
+                            if (pushToFirebase) {
+                                //pass through the unadulterated date to uploadImage
+                                //which will do the same conversion
+                                
+                                let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                                UserData.uploadPhotoToFirebase(base64String, date: date)
+                            }
+                        })
+                        /*
                         if let delegate = callbackDelegate {
                             delegate.updatedImage(date, newImage: image)
                             return
-                        }
+                        }*/
+                        return
+
                         
                         
                     } else {

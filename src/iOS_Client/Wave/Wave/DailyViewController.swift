@@ -49,16 +49,28 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
-        picker.dismissViewControllerAnimated(true, completion: nil)
         
+        var dateForImage = currentDate
+        picker.dismissViewControllerAnimated(true, completion: {
+            
+            /*
+            println("showing spinner")
+            var spinner = showSpinner("Uploading Image", "Please wait...")
         
-        
-        if let date = currentDate {
-            if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
-                UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
- 
+            self.presentViewController(spinner, animated: true, completion: nil)
+            */
+            
+            if let date = dateForImage {
+                if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
+                    UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
+                    
+                }
             }
-        }
+            /*
+            spinner.dismissViewControllerAnimated(true, completion: nil)
+            */
+        })
+        
     }
          
     
