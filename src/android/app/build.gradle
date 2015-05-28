@@ -32,6 +32,7 @@ dependencies {
     compile 'com.google.android.gms:play-services:7.0.0'
     compile 'com.android.support:support-v4:22.0.0'
     compile 'uk.co.chrisjenx:calligraphy:2.0.0'
+    compile 'com.github.bumptech.glide:glide:3.5.2'
 }
 
 repositories {
