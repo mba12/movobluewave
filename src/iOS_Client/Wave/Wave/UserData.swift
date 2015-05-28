@@ -12,6 +12,12 @@ import UIKit
 private var _UserData:UserData? = nil
 
 
+protocol ImageUpdateDelegate {
+    
+    func updatedImage(newImage: UIImage?)
+    
+}
+
 class UserData {
     //vars
     private var currentUserEntry : UserEntry?
@@ -163,7 +169,7 @@ class UserData {
         
         var fbMeta = Firebase(url:metaRef)
         fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            var metaObjects = snapshot.children
+//            var metaObjects = snapshot.children
             if let username = (snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String) {
                 self.setCurrentUsername(username)
             }
@@ -422,6 +428,247 @@ class UserData {
         //stub function
         return nil
     }
+    
+    static func getImageForDate(date: NSDate, callbackDelegate: ImageUpdateDelegate) {
+        
+        downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
+        
+    }
+    
+    static func uploadPhotoToFirebase(base64StringIn:String, date:NSDate){
+        var base64String = base64StringIn
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbUploadRef = fbUploadRef! + "/photos/"
+        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+        
+        
+        
+        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+        
+        
+        var size = (base64String as NSString).length
+        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+        firebaseImage.updateChildValues(["0":String(totalChunks)])
+        
+        
+        var part = 1
+        while (!base64String.isEmpty) {
+            var size = (base64String as NSString).length
+            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+            var result:String = base64String.substringToIndex(index)
+            let range = base64String.startIndex..<index
+            base64String.removeRange(range)
+            
+            firebaseImage.updateChildValues([String(part):result])
+            part += 1
+        }
+        
+    }
+
+    
+    static func downloadPhotoFromFirebase(date:NSDate, callbackDelegate: ImageUpdateDelegate?){
+
+        var cal = NSCalendar.currentCalendar()
+        
+        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+        var month = ""
+        var day = ""
+        if(todayMonth<10){
+            month = "0" + (String(todayMonth))
+        }else{
+            month = String(todayMonth)
+        }
+        if(todayDate<10){
+            day = "0" + (String(todayDate))
+        }else{
+            day = String(todayDate)
+        }
+        
+        
+        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbDownloadRef = fbDownloadRef! + "/photos/"
+        fbDownloadRef = fbDownloadRef! + todayYear + "/" + month + "/" + day
+        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+//            var numberOfImageBlobs:Int16 = 0
+            
+            var decodedImage : UIImage?
+            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
+                if(numberOfImageBlobs=="1"){
+                    var rawData = snapshot.childSnapshotForPath("1").valueInExportFormat() as? String
+                    let decodedData:NSData = NSData(base64EncodedString: rawData!, options: nil)!
+                    decodedImage = UIImage(data: decodedData)
+
+                    
+                    
+                    
+                
+                }else{
+                    var count = numberOfImageBlobs.toInt()
+                    var rawData = ""
+                    //i = 1 to skip the first node that tells us how many nodes.
+                    for(var i = 1; i < count; i++){
+                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
+                        rawData = rawData + curData!
+
+                    }
+                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
+                    decodedImage = UIImage(data: decodedData)
+                    
+                    
+                }
+                
+            }
+
+            
+            //handle image stoarge here
+            if let image = decodedImage {
+                UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
+            } else {
+                if let delegate = callbackDelegate {
+                    delegate.updatedImage(nil)
+                }
+            }
+            
+            
+        })
+        
+
+        
+    }
+    
+    
+    
+    static func getOrCreateDirectoryForImages() -> String {
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+        
+        let photoPath = documentsPath+"/Photos/"
+        if (NSFileManager.defaultManager().createDirectoryAtPath(photoPath, withIntermediateDirectories: true, attributes: nil, error: nil)) {
+            println("Photo dir created")
+        }
+        
+        return photoPath
+    }
+    
+    
+    static func removeOldImage(oldPhoto: PhotoStorage) {
+        NSFileManager.defaultManager().removeItemAtPath(oldPhoto.photopath, error: nil)
+    }
+    
+    
+    
+    static func storeImage(image: UIImage, date: NSDate,  pushToFirebase : Bool, callbackDelegate: ImageUpdateDelegate?) {
+        
+        //get system path to our image store
+        var path = getOrCreateDirectoryForImages()
+        
+        //this is the store function so we will be saving the image to a GUID
+        var uuid = NSUUID().UUIDString
+        var data : NSData = UIImageJPEGRepresentation(image, 1.0)
+        
+        let imagename = uuid + ".jpg"
+        let filepath = path + imagename
+        
+        var insertUpdateItem : PhotoStorage?
+        
+        //We want to store the image to the date
+        //to be timezone independent
+        //this means that we use the GMT NSDate for storage that corresponds to
+        //the beginning of the day
+        var cal = NSCalendar.currentCalendar()
+        var thisDate = cal.component(.CalendarUnitDay , fromDate: date)
+        var thisMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+        var thisYear = cal.component(.CalendarUnitYear , fromDate: date)
+        var storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+        if let storeDate = storageDate {
+            
+            
+            if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+                let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
+                
+                let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
+                
+                if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                    if(fetchResults.count > 0){
+                        //then we must delete the old image and replace
+                        if (fetchResults.count == 1) {
+                            insertUpdateItem = fetchResults[0]
+                            removeOldImage(fetchResults[0])
+                            
+                            
+                        } else {
+                            //error case
+                            println("Warning: Excess Images")
+                            insertUpdateItem = fetchResults[0]
+                            removeOldImage(fetchResults[0])
+                        }
+                        
+                        
+                    } else {
+                        
+                        insertUpdateItem = NSEntityDescription.insertNewObjectForEntityForName("PhotoStorage", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as? PhotoStorage
+                    }
+                    
+                    
+                    
+                    if let newItem = insertUpdateItem {
+                        newItem.photopath = filepath
+                        newItem.date = storeDate
+                        newItem.user = uid
+                        
+                        //lets go ahead and store the file now
+                        data.writeToFile(filepath, atomically: true)
+                        UserData.saveContext()
+                        
+                        if (pushToFirebase) {
+                            //pass through the unadulterated date to uploadImage
+                            //which will do the same conversion
+                            
+                            let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                            UserData.uploadPhotoToFirebase(base64String, date: date)
+                        }
+                        
+                        if let delegate = callbackDelegate {
+                            delegate.updatedImage(image)
+                            return
+                        }
+                        
+                        
+                    } else {
+                        println("failed to update image")
+                    }
+                }
+            }
+        }
+        
+        if let delegate = callbackDelegate {
+            delegate.updatedImage(nil)
+        }
+    }
+    
+
+    
 }
 
 

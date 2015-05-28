@@ -10,8 +10,8 @@ import CoreData
 
 class PhotoStorage: NSManagedObject {
 
-    @NSManaged var date: NSNumber
+    @NSManaged var date: NSDate
     @NSManaged var user: String
-    @NSManaged var photoblob: NSData
+    @NSManaged var photopath: String
 
 }

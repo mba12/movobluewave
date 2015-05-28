@@ -1695,7 +1695,7 @@
         <image name="challenges_sel" width="152" height="90"/>
         <image name="daily_stats_gradient" width="320" height="450"/>
         <image name="default_user_icon" width="96" height="96"/>
-        <image name="first_sync_4" width="227" height="374"/>
+        <image name="first_sync_4" width="310" height="374"/>
         <image name="firstsync_phone" width="121" height="208"/>
         <image name="firstsync_rightarrow" width="111" height="54"/>
         <image name="firstsync_wave" width="160" height="143"/>

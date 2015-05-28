@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate {
     
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var distanceLabel: UILabel!
@@ -50,56 +50,18 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         picker.dismissViewControllerAnimated(true, completion: nil)
-
-        uploadImage(info)
-    }
-    
-    func uploadImage(info: [NSObject: AnyObject]){
-        if let date = currentDate{
-            
-            
-            var tempImage:UIImage = info[UIImagePickerControllerOriginalImage] as! UIImage
-            var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
-            //        UIImageJPEGRepresentatio
-            let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
-            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
-            var cal = NSCalendar.currentCalendar()
-            
-            var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-            var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-            var month = ""
-            var day = ""
-            if(todayMonth<10){
-                month = "0" + (String(todayMonth))
-            }else{
-                month = String(todayMonth)
+        
+        
+        
+        if let date = currentDate {
+            if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
+                UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
+ 
             }
-            if(todayDate<10){
-                day = "0" + (String(todayDate))
-            }else{
-                day = String(todayDate)
-            }
-            
-            
-            var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-            fbUploadRef = fbUploadRef! + "/photos/"
-            fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
-            var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-            var parts = ["0":"1","1":base64String]
-            firebaseImage.setValue(parts)
-            
-            
-            
-            
-            
-            
         }
-        
     }
-        
-
-
+         
+    
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
             currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
@@ -117,6 +79,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     func updateDisplay() {
         
         if let date = currentDate {
+            
             
             /* Set the date string */
             var calendar = NSCalendar.currentCalendar()
@@ -168,11 +131,25 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
                 self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
             })
             
+            UserData.getImageForDate(date, callbackDelegate: self)
+            
         } else {
             /* failure case */
         }
         
+        
+    }
     
+    func updatedImage(newImage: UIImage?) {
+        
+        if let image = newImage {
+            dispatch_async(dispatch_get_main_queue(), {
+                self.backgroundImage.image = newImage
+            })
+        } else {
+            
+            self.backgroundImage.image = UIImage(named: "splash")
+        }
     }
 }
 
