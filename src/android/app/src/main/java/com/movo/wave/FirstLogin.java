@@ -159,101 +159,42 @@ public class FirstLogin extends Activity {
                 loginProgress.setVisibility(View.VISIBLE);
 //                loginRef.auth
 
-                if (false) {//(!(mEmail.contains("@"))
-                    Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
-                    Firebase child = lookupEmail.child(mEmail);
-                    child.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot snapshot) {
-                            Log.d(TAG, snapshot + "");
-                            String email = snapshot.getValue().toString();
-                            usernameCust = mEmail;
-                            mEmail = email;
-
-
-                            login();
-
-
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-                            Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-
-
-                    });
-                } else {
+//                if (false) {//(!(mEmail.contains("@"))
+//                    Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
+//                    Firebase child = lookupEmail.child(mEmail);
+//                    child.addListenerForSingleValueEvent(new ValueEventListener() {
+//                        @Override
+//                        public void onDataChange(DataSnapshot snapshot) {
+//                            Log.d(TAG, snapshot + "");
+//                            String email = snapshot.getValue().toString();
+//                            usernameCust = mEmail;
+//                            mEmail = email;
+//
+//
+//                            login();
+//
+//
+//                        }
+//
+//                        @Override
+//                        public void onCancelled(FirebaseError firebaseError) {
+//                            Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
+//                        }
+//
+//
+//                    });
+//                } else {
                     login();
-                }
+//                }
             }
         });
     }
 
 
     private static void insertSteps(DataSnapshot snapshot) {
-        UserData myData = UserData.getUserData(c);
-        Iterable<DataSnapshot> children = snapshot.getChildren();
-        DatabaseHelper mDbHelper = new DatabaseHelper(c);
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//        UserData myData = UserData.getUserData(c);
+        UserData.getUserData(c).insertStepsFromDB(snapshot, c, curMonth, curYear);
 
-        for (DataSnapshot child : children) {
-            String date = child.getKey();
-            Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for (DataSnapshot syncsForToday : syncEvents) {
-                String syncName = syncsForToday.getKey();
-                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for (DataSnapshot stepChunk : stepEvents) {
-                    String stepTime = stepChunk.getKey();
-                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-                    Object stepEvent = stepChunk.getValue();
-                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-                    monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test" + monthMap);
-                    Calendar thisCal = Calendar.getInstance();
-//                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
-                    String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
-
-
-                    try {
-                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
-                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
-//                        Log.d("TAG", "date is "+curDate);
-                        thisCal.setTime(curDateStart);
-
-                        ContentValues values = new ContentValues();
-                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START, curDateStart.getTime());
-                        values.put(Database.StepEntry.END, curDateStop.getTime());
-                        values.put(Database.StepEntry.USER, myData.getCurUID());
-                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-                        //TODO: add workout type
-
-                        long newRowId;
-
-                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                null,
-                                values);
-                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ;
-                    }
-
-                }
-
-            }
-
-        }
-
-        db.close();
 
     }
 
@@ -262,20 +203,31 @@ public class FirstLogin extends Activity {
             @Override
             public void onAuthenticated(AuthData authData) {
                 //success, save auth data
-                UserData myData = UserData.getUserData(c);
-                myData.setCurUID(authData.getUid());
-                myData.setCurToken(authData.getToken());
-                myData.setCurEmail(mEmail);
-                myData.setCurPW(mPassword);
+//                UserData myData = UserData.getUserData(c);
+                if(!(UserData.getUserData(c).getCurUID().equals("Error"))){
+                    UserData.getUserData(c).storeCurrentUser();
+                }
+
+                UserData.getUserData(c).resetCurrentUserValues();
+                UserData.getUserData(c).setCurUID(authData.getUid());
+                UserData.getUserData(c).setCurToken(authData.getToken());
+                UserData.getUserData(c).setCurEmail(mEmail);
+                UserData.getUserData(c).setCurPW(mPassword);
 
                 final Firebase currentUserRef = new Firebase(UserData.firebase_url + "users/" + authData.getUid());
-                myData.setCurrentUserRef(currentUserRef);
+                UserData.getUserData(c).setCurrentUserRef(currentUserRef);
                 Firebase metadataChild = currentUserRef.child("metadata");
 
-                boolean firstTime = myData.addCurUserTolist();
+                boolean firstTime =  UserData.getUserData(c).addCurUserTolist();
                 final Calendar cal = Calendar.getInstance();
                 int monthtemp = cal.get(Calendar.MONTH);
-                final int month = monthtemp + 1;
+                String monthTracker = "";
+                if(monthtemp < 11){
+                    monthTracker = "0"+(monthtemp+1);
+                }else{
+                    monthTracker = (monthtemp+1) + "";
+                }
+                final String month = monthTracker;
                 int year = cal.get(Calendar.YEAR);
                 curYear = year + "";
                 curMonth = month + "";
@@ -383,12 +335,13 @@ public class FirstLogin extends Activity {
 
                 } else {
 //                    UserData myData = UserData.getUserData(c);
-                    myData.setMetadata(metadataChild,authData.getUid());
-                    myData.downloadMetadata(authData.getUid());
-                    myData.downloadProfilePic();
+                    UserData.getUserData(c).setMetadata(metadataChild,authData.getUid());
+                    UserData.getUserData(c).downloadMetadata(authData.getUid());
+                    UserData.getUserData(c).downloadProfilePic();
                     if(usernameCust!=""){
-                        myData.setCurUsername(usernameCust);
+                        UserData.getUserData(c).setCurUsername(usernameCust);
                     }
+                    loginProgress.setVisibility(View.INVISIBLE);
                     Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
                     child.addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
@@ -400,11 +353,7 @@ public class FirstLogin extends Activity {
 //                            child.removeEventListener(currentUserRef);
 //                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
 
-                            loginProgress.setVisibility(View.INVISIBLE);
-                            Intent intent = new Intent(getApplicationContext(),
-                                    Home.class);
-                            startActivity(intent);
-                            finish();
+
                         }
 
                         @Override
@@ -412,6 +361,11 @@ public class FirstLogin extends Activity {
                             System.out.println("The read failed: " + firebaseError.getMessage());
                         }
                     });
+
+                    Intent intent = new Intent(getApplicationContext(),
+                            Home.class);
+                    startActivity(intent);
+                    finish();
                 }
 
 

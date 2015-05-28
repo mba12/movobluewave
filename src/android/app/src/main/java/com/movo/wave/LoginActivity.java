@@ -375,12 +375,12 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                 public void onAuthenticated(AuthData authData) {
                     result = true;
                     //success, save auth data
-                    UserData myData = UserData.getUserData(c);
-                    myData.setCurUID(authData.getUid());
-                    myData.setCurToken(authData.getToken());
-                    myData.setCurEmail(mEmail);
-                    myData.setCurPW(mPassword);
-                    myData.addCurUserTolist();
+//                    UserData myData = UserData.getUserData(c);
+                    UserData.getUserData(c).setCurUID(authData.getUid());
+                    UserData.getUserData(c).setCurToken(authData.getToken());
+                    UserData.getUserData(c).setCurEmail(mEmail);
+                    UserData.getUserData(c).setCurPW(mPassword);
+                    UserData.getUserData(c).addCurUserTolist();
 
                     Log.d(TAG,"User ID: " + authData.getUid() + ", Provider: " + authData.getProvider()+", Expires:"+authData.getExpires());
                     updateHomePage();
@@ -393,39 +393,6 @@ public class LoginActivity extends PlusBaseActivity implements LoaderCallbacks<C
                     System.out.println("Error logging in, trying user create. ");
                     Toast.makeText(c, "Error logging into user "+mEmail+".",Toast.LENGTH_SHORT);
 
-                    //this works to create new user...really bad place to put it really.
-//                    loginRef.createUser(mEmail, mPassword, new Firebase.ValueResultHandler<Map<String, Object>>() {
-//                        @Override
-//                        public void onSuccess(Map<String, Object> result) {
-//                            System.out.println("Successfully created user account with uid: " + result.get("uid"));
-//                            loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
-//                                @Override
-//                                public void onAuthenticated(AuthData authData) {
-//                                    //success, save auth data
-//                                    UserData myData = UserData.getUserData(c);
-//                                    myData.setCurUID(authData.getUid());
-//                                    myData.setCurToken(authData.getToken());
-//                                    myData.setCurEmail(mEmail);
-//                                    myData.setCurPW(mPassword);
-//                                    myData.addCurUserTolist();
-//
-//                                    Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-//                                    updateHomePage();
-//
-//                                }
-//
-//                                @Override
-//                                public void onAuthenticationError(FirebaseError firebaseError) {
-//                                    Log.d(TAG, "Error authenticating newly created user. This could be an issue. ");
-//
-//                                }
-//                            });
-//                        }
-//                        @Override
-//                        public void onError(FirebaseError firebaseError) {
-//                            Log.d(TAG,"Error creating user: " + firebaseError.getDetails());
-//                        }
-//                    });
 
                 }
             });

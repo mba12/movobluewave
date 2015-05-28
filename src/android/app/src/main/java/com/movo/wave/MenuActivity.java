@@ -60,8 +60,8 @@ public abstract class MenuActivity extends ActionBarActivity {
         Logout      ("Logout", null) {
             @Override
             public Intent select(Context context) {
-                UserData mUD = UserData.getUserData(context);
-                return new Intent( context, mUD.logoutCurrentUser() ? Home.class : FirstLaunch.class );
+//                UserData mUD = UserData.getUserData(context);
+                return new Intent( context,  UserData.getUserData(context).logoutCurrentUser() ? Home.class : FirstLaunch.class );
             }
         },
         ;

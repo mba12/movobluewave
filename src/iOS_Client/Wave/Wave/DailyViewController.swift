@@ -49,9 +49,57 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     }
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
-            //do nothing
+        picker.dismissViewControllerAnimated(true, completion: nil)
+
+        uploadImage(info)
     }
     
+    func uploadImage(info: [NSObject: AnyObject]){
+        if let date = currentDate{
+            
+            
+            var tempImage:UIImage = info[UIImagePickerControllerOriginalImage] as! UIImage
+            var tempData = UIImageJPEGRepresentation(tempImage, 1.0)
+            //        UIImageJPEGRepresentatio
+            let base64String = tempData.base64EncodedStringWithOptions(.allZeros)
+            println(base64String.lengthOfBytesUsingEncoding(NSUTF16StringEncoding))
+            var cal = NSCalendar.currentCalendar()
+            
+            var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
+            var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
+            var month = ""
+            var day = ""
+            if(todayMonth<10){
+                month = "0" + (String(todayMonth))
+            }else{
+                month = String(todayMonth)
+            }
+            if(todayDate<10){
+                day = "0" + (String(todayDate))
+            }else{
+                day = String(todayDate)
+            }
+            
+            
+            var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+            fbUploadRef = fbUploadRef! + "/photos/"
+            fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+            var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+            var parts = ["0":"1","1":base64String]
+            firebaseImage.setValue(parts)
+            
+            
+            
+            
+            
+            
+        }
+        
+    }
+        
+
+
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
         if (currentDate != nil) {
             currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
@@ -90,16 +138,32 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             
             /* Set the miles */
-//FIXME: not checking user data and using that if available
-            let miles = Calculator.calculate_distance(steps, height: Int(5.5*12))
+            //default height of person in feet, roughly 5.5'
+            var height = 5.5
+            
+            
+            //collect height
+            if let heightft = UserData.getOrCreateUserData().getCurrentHeightFeet() {
+                if (heightft > 0) {
+                    height = Double(heightft)
+                    if let heightin = UserData.getOrCreateUserData().getCurrentHeightInches() {
+                        height += Double(heightin)/12.0
+                    }
+                }
+                
+            }
+            
+            
+            let miles = Calculator.calculate_distance(steps, height: Int(height*12.0))
+            
             dispatch_async(dispatch_get_main_queue(), {
                 self.distanceLabel.text = String(format: "%.1f", miles) + " MILES"
             })
             
             
             /* Set the calories */
-//FIXME: not checking user data and using that if available
-            let calories = Calculator.simple_calculate_calories(int: steps)
+
+            let calories = caloriesForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
                 self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
             })

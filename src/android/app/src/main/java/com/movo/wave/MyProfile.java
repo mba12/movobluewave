@@ -83,17 +83,17 @@ public class MyProfile extends MenuActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_my_profile);
-        UserData myUserData = UserData.getUserData(c);
+//        UserData myUserData = UserData.getUserData(c);
         edName = (EditText) findViewById(R.id.edName);
         profileSave = (Button) findViewById(R.id.profileSave);
         profileCancel = (Button) findViewById(R.id.profileCancel);
         profilePic = (ImageView) findViewById(R.id.profilePic);
-        height1 = myUserData.getCurrentHeight1();
-        height2 = myUserData.getCurrentHeight2();
-        weight = myUserData.getCurrentWeight();
-        birth = myUserData.getCurrentBirthdate();
-        fullName = myUserData.getCurrentFullName();
-        gender = myUserData.getCurrentGender();
+        height1 =  UserData.getUserData(c).getCurrentHeight1();
+        height2 =  UserData.getUserData(c).getCurrentHeight2();
+        weight =  UserData.getUserData(c).getCurrentWeight();
+        birth =  UserData.getUserData(c).getCurrentBirthdate();
+        fullName =  UserData.getUserData(c).getCurrentFullName();
+        gender =  UserData.getUserData(c).getCurrentGender();
         Log.d(TAG, "User profile load "+
                 " "+height1+
                 " "+height2+
@@ -109,7 +109,7 @@ public class MyProfile extends MenuActivity {
         }catch(Exception e){
             e.printStackTrace();
         }
-        Bitmap prof = myUserData.getCurUserPhoto();
+        Bitmap prof =  UserData.getUserData(c).getCurUserPhoto();
         if (prof != null) {
             profilePic.setImageBitmap(prof);
         }
@@ -322,17 +322,17 @@ public class MyProfile extends MenuActivity {
             public void onClick(View v) {
                 Log.d(TAG, "Saving new user data");
                 fullName = edName.getText().toString();
-                UserData myUserData = UserData.getUserData(c);
-                myUserData.setCurName(fullName);
-                myUserData.setCurHeight1(height1);
-                myUserData.setCurHeight2(height2);
-                myUserData.setCurWeight(weight);
-                myUserData.setCurGender(gender);
-                myUserData.setCurBirthdate(birth);
+//                UserData myUserData = UserData.getUserData(c);
+                UserData.getUserData(c).setCurName(fullName);
+                UserData.getUserData(c).setCurHeight1(height1);
+                UserData.getUserData(c).setCurHeight2(height2);
+                UserData.getUserData(c).setCurWeight(weight);
+                UserData.getUserData(c).setCurGender(gender);
+                UserData.getUserData(c).setCurBirthdate(birth);
 //                myUserData.setCurUsername()
-                myUserData.uploadToFirebase();
+                UserData.getUserData(c).uploadToFirebase();
 
-                Toast.makeText(c,"Userdata has been saved.",Toast.LENGTH_LONG).show();
+                Toast.makeText(c,"User data has been saved.",Toast.LENGTH_LONG).show();
                 finish();
 
             }
@@ -374,8 +374,8 @@ public class MyProfile extends MenuActivity {
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
-                    UserData myData = UserData.getUserData(c);
-                    String user = myData.getCurUID();
+//                    UserData myData = UserData.getUserData(c);
+                    String user =  UserData.getUserData(c).getCurUID();
 
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
 
@@ -425,7 +425,7 @@ public class MyProfile extends MenuActivity {
                         ref.child(1+"").setValue(encodedImage);
                     }
                     Log.d(TAG, "End image upload "+ref);
-                    Bitmap prof =UserData.getUserData(c).getCurUserPhoto();
+                    Bitmap prof = UserData.getUserData(c).getCurUserPhoto();
 //                     myUserData.getCurUserPhoto(c);
                     if(prof!=null){
                         profilePic.setImageBitmap(prof);

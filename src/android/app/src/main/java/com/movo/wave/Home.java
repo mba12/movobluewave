@@ -61,6 +61,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -172,8 +173,8 @@ public class Home extends MenuActivity {
                 calendar.set(Calendar.DATE,Calendar.getInstance().get(Calendar.DATE));
                 timestamp = calendar.getTimeInMillis();
             }
-            UserData myData = UserData.getUserData(c);
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" + myData.getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
+//            UserData myData = UserData.getUserData(c);
+            Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -221,7 +222,7 @@ public class Home extends MenuActivity {
         ContentValues values = new ContentValues();
 
 
-        UserData myData = UserData.getUserData(c);
+//        UserData myData = UserData.getUserData(c);
 
 
         gridview = (GridView) findViewById(R.id.gridview);
@@ -247,7 +248,7 @@ public class Home extends MenuActivity {
 
 //        UserData myUserData = UserData.getUserData(c);
         ArrayList<String> users = new ArrayList<String>();
-        users = myData.getUserList();
+        users =  UserData.getUserData(c).getUserList();
         if (!users.isEmpty()) {
 //            if (userExists == true) {
 //                setUpCharts(c);
@@ -257,7 +258,13 @@ public class Home extends MenuActivity {
             String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-            currentUserTV.setText(myData.getCurrentUsername());
+            if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                currentUserTV.setText( "" );
+            }else{
+                currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+            }
+
+
             setUpCharts(c);
 //            }
 
@@ -289,7 +296,7 @@ public class Home extends MenuActivity {
                 long monthForwardMillis = newCal.getTimeInMillis();
                 String lastMonth = (monthForwardMillis) + "";
                 intent.putExtra("date", lastMonth);
-                UserData myData = UserData.getUserData(c);
+//                UserData myData = UserData.getUserData(c);
                 startActivity(intent);
                 finish();
 
@@ -366,10 +373,10 @@ public class Home extends MenuActivity {
             }
         });
 
-        Log.d(TAG, "Cur user data: " + myData.getCurUID());
+        Log.d(TAG, "Cur user data: " +  UserData.getUserData(c).getCurUID());
 
         try {
-            Bitmap prof = myData.getCurUserPhoto();
+            Bitmap prof =  UserData.getUserData(c).getCurUserPhoto();
             if (prof != null) {
                 profilePic.setImageBitmap(prof);
             }
@@ -465,6 +472,7 @@ public class Home extends MenuActivity {
 //        curDay = calendar.get(Calendar.DAY_OF_MONTH);
 //        curMonth = calendar.get(Calendar.MONTH);
 //        curYear = calendar.get(Calendar.YEAR);
+
         Intent intentIncoming = getIntent();
 //
         String date = intentIncoming.getStringExtra("date");
@@ -483,13 +491,17 @@ public class Home extends MenuActivity {
 //
         }
         try {
-            if (UserData.getUserData(c).getCurUID() != null) {
+            if (UserData.getUserData(c).getCurUID() != null ) {
                 gridview.setAdapter(new GridViewCalendar(Home.this));
                 setUpChart();
                 gridview.invalidate();
                 chart.invalidate();
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
+                if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                    currentUserTV.setText( "" );
+                }else{
+                    currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -512,6 +524,7 @@ public class Home extends MenuActivity {
 
             //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
             Calendar monthCal = calendar;
+            monthCal.setTimeZone( TimeZone.getTimeZone("UTC"));
             monthCal.setTimeInMillis(timestamp);
             monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i, 0, 0, 0);
             long monthRangeStart = monthCal.getTimeInMillis();
@@ -519,8 +532,8 @@ public class Home extends MenuActivity {
             long monthRangeStop = monthCal.getTimeInMillis();
 
 
-            UserData myData = UserData.getUserData(c);
-            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
+//            UserData myData = UserData.getUserData(c);
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
 
             if (curSteps != null && curSteps.getCount() != 0) {
                 int totalStepsForToday = 0;
@@ -668,7 +681,7 @@ public class Home extends MenuActivity {
                 //Log.d(TAG,""+"View not null, loading postion "+position+" out of "+mThumbIds.length);
             }
 
-            UserData myData = UserData.getUserData(c);
+//            UserData myData = UserData.getUserData(c);
 //            Firebase fb = myData.getCurrentUserRef()
 //            DataSnapshot data = myData.getUserSnapshot();
 
@@ -693,16 +706,21 @@ public class Home extends MenuActivity {
 
             TextView date = (TextView) gridView.findViewById(R.id.wholeDate);
             Calendar today = Calendar.getInstance();
-            today.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
+
+            today.set(calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), dayToDisplay, 0, 0, 0);
             String wholeDate = today.getTimeInMillis() + "";
             date.setText(wholeDate);
             //Grab today's data//
             Calendar monthCal = Calendar.getInstance();
 
 
-            monthCal = today;
+            monthCal.setTimeInMillis(today.getTimeInMillis());
+//            monthCal.setTimeZone( TimeZone.getTimeZone( "UTC" ));
+
+
             long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(2015, calendar.get(Calendar.MONTH), dayToDisplay, calendar.getActualMaximum(Calendar.HOUR_OF_DAY), calendar.getActualMaximum(Calendar.MINUTE), 0);
+//            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), dayToDisplay, monthCal.getActualMaximum(Calendar.HOUR_OF_DAY), monthCal.getActualMaximum(Calendar.MINUTE), monthCal.getActualMaximum(Calendar.SECOND));
+            monthCal.add(Calendar.DATE, 1);
             long monthRangeStop = monthCal.getTimeInMillis();
             ImageView background = (ImageView) gridView.findViewById(R.id.cellBackground);
             Bitmap bm = null;
@@ -715,8 +733,8 @@ public class Home extends MenuActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop, myData.getCurUID());
-
+            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
+            curSteps.moveToFirst();
             if (curSteps != null && curSteps.getCount() != 0) {
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
@@ -764,8 +782,8 @@ public class Home extends MenuActivity {
     }
 
     public void logout() {
-        UserData mUD = UserData.getUserData(c);
-        boolean status = mUD.logoutCurrentUser();
+//        UserData mUD = UserData.getUserData(c);
+        boolean status =  UserData.getUserData(c).logoutCurrentUser();
         if (!status) {
             Intent intent = new Intent(getApplicationContext(),
                     FirstLaunch.class);
@@ -815,7 +833,7 @@ public class Home extends MenuActivity {
 
     public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID) {
 
-        String selectionSteps = Database.StepEntry.START + " > ? AND " + Database.StepEntry.END + " < ? AND " + Database.StepEntry.USER + " =? ";
+        String selectionSteps = Database.StepEntry.START + " >= ? AND " + Database.StepEntry.END + " <= ? AND " + Database.StepEntry.USER + " =? ";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                 new String[]{Database.StepEntry.SYNC_ID, //blob
@@ -865,64 +883,18 @@ public class Home extends MenuActivity {
     }
 
     private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
-        UserData myData = UserData.getUserData(c);
-        Iterable<DataSnapshot> children = snapshot.getChildren();
-
-        for (DataSnapshot child : children) {
-            String date = child.getKey();
-            Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for (DataSnapshot syncsForToday : syncEvents) {
-                String syncName = syncsForToday.getKey();
-                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for (DataSnapshot stepChunk : stepEvents) {
-                    String stepTime = stepChunk.getKey();
-                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-                    Object stepEvent = stepChunk.getValue();
-                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-                    monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test" + monthMap);
-                    Calendar thisCal = Calendar.getInstance();
-//                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
-                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
+        String monthChange = "";
+        String yearChange = "";
 
 
-                    try {
-                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
-                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
-//                        Log.d("TAG", "date is "+curDate);
-                        thisCal.setTime(curDateStart);
-
-                        ContentValues values = new ContentValues();
-                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START, curDateStart.getTime());
-                        values.put(Database.StepEntry.END, curDateStop.getTime());
-                        values.put(Database.StepEntry.USER, myData.getCurUID());
-                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-                        //TODO: add workout type
-
-                        long newRowId;
-
-                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                null,
-                                values);
-                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
-
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ;
-                    }
-
-                }
-
-            }
-
+        if(month<11){
+            monthChange = "0"+(month+1);
+        }else{
+            monthChange = String.valueOf(month+1);
         }
+        yearChange = ""+ year;
+
+        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
     }
 
 
@@ -944,8 +916,8 @@ public class Home extends MenuActivity {
         Date currentDay = new Date(today);
         Bitmap returnBM=null;
         currentDay = trim(currentDay);
-        UserData myData = UserData.getUserData(c);
-        String user = myData.getCurUID();
+//        UserData myData = UserData.getUserData(c);
+        String user =  UserData.getUserData(c).getCurUID();
         String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
         Cursor curPhoto = db.query(
                 Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query

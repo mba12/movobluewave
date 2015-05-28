@@ -43,6 +43,20 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
                 }
             }
         }
+        
+        if let username = UserData.getOrCreateUserData().getCurrentUserName() {
+            dispatch_async(dispatch_get_main_queue(),  {
+                self.userNameLabel.text = username
+            })
+        }
+        
+        if let profilePicture = UserData.getOrCreateUserData().getCurrentUserPhoto() {
+            dispatch_async(dispatch_get_main_queue(),  {
+                self.profilePictureButton.setImage(profilePicture, forState: UIControlState.Normal)
+            })
+            
+        }
+        
     }
     
     func tabBarController(tabBarController: UITabBarController, didSelectViewController viewController: UIViewController) {

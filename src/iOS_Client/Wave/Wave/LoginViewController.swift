@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class LoginViewController: UIViewController{
+class LoginViewController: KeyboardSlideViewController {
     
     @IBOutlet weak var emailText: UITextField!
     
@@ -17,7 +17,7 @@ class LoginViewController: UIViewController{
     
     @IBAction func login(sender: UIButton){
         
-        let ref = Firebase(url: "https://ss-movo-wave-v2.firebaseio.com")
+        let ref = Firebase(url: UserData.getFirebase())
         //auth with email and pass that are in the input UI
         
         var email = emailText.text
@@ -45,19 +45,64 @@ class LoginViewController: UIViewController{
                         self.presentViewController(alertController, animated: true, completion: nil)
                         
                     } else {
-                        UserData.getOrCreateUserData().setCurrentUID(String: authData.uid)
-                        UserData.getOrCreateUserData().setCurrentEmail(String: email)
-                        UserData.getOrCreateUserData().setCurrentPW(String: password)
-                        var stringRef = "https://ss-movo-wave-v2.firebaseio.com/users/"
+                        
+                        /* this logic isn't quite right */
+                        /* This is a successful login, but we can assume that the current user may not exist and even if it does, it may not have values set correctly */
+                        
+                        /* So what do we need to do? */
+                        
+                        /* 1 - get the user entry that corresponds to this email */
+                        if let userentry : UserEntry = fetchUserByEmail(email) {
+                            //in this case, the user is an existing user
+                            //accept the new password
+                            //and attempt to load the user
+                            userentry.pw = password
+                            UserData.saveContext()
+                            UserData.getOrCreateUserData().loadUser(userentry)
+                            
+                        } else {
+                            //in this case, the user does not exist locally
+                            //so we need to create a new local user copy
+                            //and log that one in
+                            
+                            //so we should retrieve the user info
+                            var stringRef = UserData.getFirebase() + "users/"
+                            stringRef = stringRef + authData.uid
+
+                            
+                            var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
+                            
+                            UserData.saveContext()
+                            
+                            UserData.getOrCreateUserData().loadUser(userentry)
+                            
+                            
+                        }
+                        
+                        
+                        /*
+                        UserData.getOrCreateUserData().setCurrentUID(authData.uid)
+                        UserData.getOrCreateUserData().setCurrentEmail(email)
+                        UserData.getOrCreateUserData().setCurrentPW(password)
+                        var stringRef = UserData.getFirebase() + "users/"
                         stringRef = stringRef + authData.uid
                         
-                        UserData.getOrCreateUserData().setCurrentUserRef(String: stringRef)
+                        UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
+                        */
                         NSLog("We logged in as %@: %@",email, authData.uid)
-                        var vc = self.storyboard?.instantiateViewControllerWithIdentifier("MyLifeViewController") as! MyLifeViewController
+
                         
-                        self.presentViewController(vc, animated: true, completion: nil)
+                        self.performSegueWithIdentifier("tabBar", sender: self)
+                        if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
+                            if let tabbarVC = application.tabBarController {
+                                println("setting selected index")
+                                tabbarVC.selectedIndex = 1
+                            }
+                        }
+                        UserData.getOrCreateUserData().downloadMetaData()
+
                         
-                        
+                                                
                     }
             })
             
@@ -69,6 +114,9 @@ class LoginViewController: UIViewController{
         
     }
     
+    @IBAction func cancelButtonPress(sender: AnyObject) {
+        dismissViewControllerAnimated(true, completion: nil)
+    }
     
     
 }

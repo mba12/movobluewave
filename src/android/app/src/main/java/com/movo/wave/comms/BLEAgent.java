@@ -622,7 +622,7 @@ public class BLEAgent {
 
     public void stopScan() {
         lazyLog.d( "stop ble scan");
-        adapter.stopLeScan( scanCallback );
+        adapter.stopLeScan(scanCallback);
     }
 
     //new request queue!
@@ -1049,7 +1049,7 @@ public class BLEAgent {
      */
     private void updateDevice( final BluetoothDevice device ) {
         final Date now = new Date();
-        UIHandler.post( new Runnable() {
+        UIHandler.post(new Runnable() {
             @Override
             public void run() {
                 final String address = device.getAddress();
@@ -1057,14 +1057,14 @@ public class BLEAgent {
                 lazyLog.a( dev.device == device, "BluetoothDevice objects don't match ",
                         device, " != ", dev.device);
 
-                if( dev != null ) {
+                if (dev != null) {
                     dev.lastSeen = now;
                 } else {
-                    dev = new BLEDevice( device, now );
+                    dev = new BLEDevice(device, now);
                 }
                 dev.acquire();
                 lazyLog.a(currentRequest != null, "No active request!!!");
-                if( currentRequest != null && currentRequest.onReceive( dev ) ) {
+                if (currentRequest != null && currentRequest.onReceive(dev)) {
                     nextRequest();
                 }
                 dev.release();

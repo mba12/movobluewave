@@ -23,11 +23,14 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.UUID;
 
 
 /**
@@ -278,16 +281,6 @@ public class UserData extends Activity{
             allUsersEditor.commit();
 
 
-//        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
-//        prefs.edit().putString(currentUID, userDataString).commit();
-
-//        Set<String> allUsers = prefs.getStringSet("allUsers", new HashSet<String>());
-//        if(!allUsers.contains(currentUID)){
-//            Log.d(TAG, "Adding "+currentUID+" to users list:"+allUsers);
-//            allUsers.add(currentUID);
-//            prefs.edit().putStringSet("allUsers",allUsers).commit();
-//        }
-
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
             prefs.edit().putBoolean("userExists", false);
@@ -301,11 +294,26 @@ public class UserData extends Activity{
         }
     }
 
+    public boolean resetCurrentUserValues(){
+        currentUID = "Error";
+        currentToken = "Error";
+        currentEmail = "Error";
+        currentPW = "Error";
+        currentHeight1 = "Error";
+        currentHeight2 = "Error";
+        currentWeight = "Error";
+        currentGender = "Error";
+        currentFullName = "Error";
+        currentBirthdate = "Error";
+        currentUsername = "Error";
+        return true;
+    }
+
 
 
 
     public boolean logoutCurrentUser(){
-        String storeUID = currentUID;
+//        String storeUID = currentUID;
 
 
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
@@ -324,7 +332,7 @@ public class UserData extends Activity{
 //                keys.remove(entry);
 //            }
 //        }
-
+        resetCurrentUserValues();
 
 
 
@@ -467,10 +475,13 @@ public class UserData extends Activity{
 
         allUsersEditor.clear();
 
+
+
         allUsersEditor.commit();
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
-        prefs.edit().putBoolean("userExists", false);
-        instance = null;
+        prefs.edit().clear();
+//        prefs.edit().putBoolean("userExists", false);
+//        instance = null;
 //        return allUsersReturn;
     }
 
@@ -673,8 +684,8 @@ public class UserData extends Activity{
 
     public void setMetadata(Firebase child, String useruid){
 
-        setCurUID(useruid);
-        child.addValueEventListener(new ValueEventListener() {
+//        setCurUID(useruid);
+        child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 setCurEmail(snapshot.child("currentEmail").getValue(String.class));
@@ -733,7 +744,139 @@ public class UserData extends Activity{
     }
 
 
+    public void insertStepsFromDB(DataSnapshot snapshot, Context c, String curMonth, String curYear){
+        UserData myData = UserData.getUserData(c);
+        Iterable<DataSnapshot> children = snapshot.getChildren();
+        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
+        for (DataSnapshot child : children) {
+            String date = child.getKey();
+            Iterable<DataSnapshot> syncEvents = child.getChildren();
+            for (DataSnapshot syncsForToday : syncEvents) {
+                String syncName = syncsForToday.getKey();
+                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
+                for (DataSnapshot stepChunk : stepEvents) {
+                    String stepTime = stepChunk.getKey();
+                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
+                    Object stepEvent = stepChunk.getValue();
+                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
+                    monthMap = (Map<String, String>) stepChunk.getValue();
+                    Log.d(TAG, "Monthmap test" + monthMap);
+                    Calendar thisCal = Calendar.getInstance();
+                    thisCal.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+//                    Date curDate = monthMap.get("starttime").toString();
+                    String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
+                    String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
+
+
+                    try {
+                       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                        Date curDateStart = sdf.parse(dateConcatStart);
+
+                        Date curDateStop = sdf.parse(dateConcatStop);
+//                        Log.d("TAG", "date is "+curDate);
+                        thisCal.setTime(curDateStart);
+
+                        ContentValues values = new ContentValues();
+                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
+                        values.put(Database.StepEntry.START, thisCal.getTimeInMillis());
+                        Log.d(TAG, "Inserting step count "+monthMap.get("count") + " into DB from firebase. Time zone set is "+thisCal.getTimeZone() + " And start is "+thisCal.getTime());
+                        thisCal.setTime(curDateStop);
+                        values.put(Database.StepEntry.END, thisCal.getTimeInMillis());
+                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
+                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
+                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
+                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
+                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+                        //TODO: add workout type
+
+                        long newRowId;
+
+                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                                null,
+                                values);
+                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        ;
+                    }
+
+                }
+
+            }
+
+        }
+
+        db.close();
+    }
+
+//    public void insertStepsFromFB(DataSnapshot snapshot, int year, int month, Context c) {
+////        UserData myData = UserData.getUserData(c);
+//        Iterable<DataSnapshot> children = snapshot.getChildren();
+//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+//        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//        for (DataSnapshot child : children) {
+//            String date = child.getKey();
+//            Iterable<DataSnapshot> syncEvents = child.getChildren();
+//            for (DataSnapshot syncsForToday : syncEvents) {
+//                String syncName = syncsForToday.getKey();
+//                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
+//                for (DataSnapshot stepChunk : stepEvents) {
+//                    String stepTime = stepChunk.getKey();
+//                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
+//                    Object stepEvent = stepChunk.getValue();
+//                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
+//                    monthMap = (Map<String, String>) stepChunk.getValue();
+//                    Log.d(TAG, "Monthmap test" + monthMap);
+//                    Calendar thisCal = Calendar.getInstance();
+////                    Date curDate = monthMap.get("starttime").toString();
+//                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
+//                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
+//
+//
+//                    try {
+//                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
+//                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
+////                        Log.d("TAG", "date is "+curDate);
+//                        thisCal.setTime(curDateStart);
+//
+//                        ContentValues values = new ContentValues();
+//                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+//                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
+//                        values.put(Database.StepEntry.START, curDateStart.getTime());
+//                        values.put(Database.StepEntry.END, curDateStop.getTime());
+//                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
+//                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
+//                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
+//                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
+//                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+//                        //TODO: add workout type
+//
+//                        long newRowId;
+//
+//                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+//                                null,
+//                                values);
+//                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+//
+//
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                        ;
+//                    }
+//
+//                }
+//
+//            }
+//
+//        }
+//    }
 
 
 

@@ -11,10 +11,12 @@ import UIKit
 
 class WaveTabBarViewController : UITabBarController {
     override func viewDidLoad() {
+        super.viewDidLoad()
         (UIApplication.sharedApplication().delegate as! AppDelegate).tabBarController = self
     }
     
     override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(animated)
         (UIApplication.sharedApplication().delegate as! AppDelegate).tabBarController = self        
     }
     

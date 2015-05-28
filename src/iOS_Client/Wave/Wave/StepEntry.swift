@@ -8,17 +8,14 @@
 import Foundation
 import CoreData
 
-@objc(StepEntry)
 class StepEntry: NSManagedObject {
-
-    @NSManaged var syncid: String
-    @NSManaged var starttime: NSDate
-    @NSManaged var endtime: NSDate
-    @NSManaged var user: String
     @NSManaged var count: Int16
-    @NSManaged var ispushed: String
-    @NSManaged var serialnumber: String
-    @NSManaged var workout_type: String
+    @NSManaged var endtime: NSDate
     @NSManaged var guid: String
-
+    @NSManaged var ispushed: Bool
+    @NSManaged var serialnumber: String
+    @NSManaged var starttime: NSDate
+    @NSManaged var syncid: String
+    @NSManaged var user: String
+    @NSManaged var workout_type: String
 }

@@ -517,8 +517,8 @@ public class DailyActivity extends ActionBarActivity {
                     byte[] b = baos.toByteArray();
                     String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
-                    UserData myData = UserData.getUserData(c);
-                    String user = myData.getCurUID();
+//                    UserData myData = UserData.getUserData(c);
+                    String user =  UserData.getUserData(c).getCurUID();
 
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthCal.get(Calendar.MONTH) + "/" + (monthCal.get(Calendar.DAY_OF_MONTH)));
 

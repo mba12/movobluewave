@@ -11,8 +11,12 @@ import CoreData
 
 
 //@objc(StepEntry)
+protocol FBUpdateDelegate {
+    
+    func UpdatedDataFromFirebase()
+}
 
-class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UICollectionViewDelegate {
+class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, UICollectionViewDelegate, FBUpdateDelegate {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     //    var userID = ""
     
@@ -24,14 +28,20 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     @IBOutlet weak var collectionViewHost: UIView!
     
     @IBOutlet weak var collectionView: UICollectionView!
+    
+    @IBOutlet weak var dateLabel: UILabel!
+    
+    @IBOutlet weak var forwardButton: UIButton!
+    @IBOutlet weak var backwardButton: UIButton!
+    
     // Retreive the managedObjectContext from AppDelegate
     let managedObjectContext = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext
     var todayDate:Int = 0
     var todayMonth:Int = 0
     var todayYear:Int = 0
 //    var days:Int? = nil
-    var date = NSDate()
     
+    var date : NSDate = NSDate()
     //for passing context to daily view
     var selectedDay:Int = 0
     var selectedMonth:Int = 0
@@ -41,22 +51,19 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     override func viewDidLoad() {
         super.viewDidLoad()
+         date = NSDate()
 //        let date = NSDate()
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
-        let days = cal.rangeOfUnit(.CalendarUnitDay,
-            inUnit: .CalendarUnitMonth,
-            forDate: date)
         // let todayDate = cal.ordinalityOfUnit(.CalendarUnitDay, inUnit: .CalendarUnitDay, forDate: date)
         todayDate = cal.component(.CalendarUnitDay , fromDate: date)
         todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
         todayYear = cal.component(.CalendarUnitYear , fromDate: date)
         
-        
         self.collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         self.collectionView!.backgroundColor = UIColor.clearColor()
         self.collectionViewHost.backgroundColor = UIColor.clearColor()
         
-        
+        resetDate(0)
         
     }
     
@@ -64,14 +71,14 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
 //         Create a new fetch request using the LogItem entity
-                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
         
                     if(fbUserRef=="Error"){
                         //no user is logged in
                         NSLog("No user logged in")
                     } else {
                         NSLog("Grabbing user steps from firebase")
-                        retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate)
+                        retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
                         
                     }
                 } else {
@@ -90,21 +97,23 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     }
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let date = NSDate()
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
-        let days = cal.rangeOfUnit(.CalendarUnitDay,
+        var days = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
-            forDate: date)
-        let todayDate = cal.component(.CalendarUnitDay , fromDate: date)
+            forDate: date).toRange()!.endIndex
         
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+            days = cal.component(.CalendarUnitDay , fromDate: NSDate())
+        }
         
-        
-        return todayDate
+        return days
     }
     
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
-        cell.backgroundColor = UIColor(patternImage: UIImage(named:"splash")!)
+
+        
+        
         cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
         
         cell.textLabel?.text = "\(indexPath.row)"
@@ -122,9 +131,14 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             cell.textLabel2?.text = "0"
             
         }
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+                cell.imageView?.image = UIImage(named: "datebgwide")
+                cell.textLabel?.text = "Today"
         
+        } else {
         
-        cell.imageView?.image = UIImage(named: "datebgwide")
+            cell.imageView?.image = UIImage(named: "datebgcircle")
+        }
         
         return cell
     }
@@ -147,7 +161,6 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
         selectedDay =  collectionView.numberOfItemsInSection(0) - indexPath.row
         
-        //temporary
         selectedMonth = todayMonth
         selectedYear = todayYear
         
@@ -165,6 +178,83 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 
             }
         }
+    }
+    
+    @IBAction func forwardButtonPress(sender: AnyObject) {
+        
+        resetDate(1)
+    }
+    
+    @IBAction func backButtonPress(sender: AnyObject) {
+        resetDate(-1)
+    }
+    
+    func resetDate(monthIncrement: Int) {
+
+        
+        var year = todayYear
+        var month : Int = todayMonth
+        month += monthIncrement
+        while (month <= 0) {
+            month += 12
+            year -= 1
+        }
+        while (month > 12) {
+            month -= 12
+            year += 1
+        }
+        
+        todayMonth = month
+        todayYear = year
+        
+        date = YMDLocalToNSDate(todayYear, todayMonth, 1)!
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+            //then turn off the forward button
+            forwardButton.enabled = false
+            forwardButton.hidden = true
+
+        } else {
+            //turn on the forward button
+            forwardButton.enabled = true
+            forwardButton.hidden = false
+        }
+        
+        //set the text label
+        let dateFormat = NSDateFormatter()
+        dateFormat.dateStyle = NSDateFormatterStyle.LongStyle
+        let monthName : String = dateFormat.monthSymbols[month-1] as! String
+        let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
+        dispatch_async(dispatch_get_main_queue(), {
+            self.dateLabel.text = monthName + ", " + yearName
+            self.collectionView.reloadData()
+        })
+        
+        //grab the data from Firebase for the month
+        
+        
+        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+            
+            if(fbUserRef=="Error"){
+                //no user is logged in
+                NSLog("No user logged in")
+            } else {
+                NSLog("Grabbing user steps from firebase")
+                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                
+            }
+        } else {
+            //firebase ref is null from coredata
+            NSLog("MyLife we shouldn't enter this block, coredata should never be null")
+        }
+        
+    }
+    
+    
+    func UpdatedDataFromFirebase() {
+        dispatch_async(dispatch_get_main_queue(), {
+            self.collectionView.reloadData()
+        })
+        
     }
     
 }
