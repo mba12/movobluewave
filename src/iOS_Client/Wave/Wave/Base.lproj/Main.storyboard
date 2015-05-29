@@ -339,7 +339,7 @@
                                     <constraint firstAttribute="height" constant="128" id="WyB-af-s9V"/>
                                 </constraints>
                                 <connections>
-                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="Ld4-Fc-WJ2"/>
+                                    <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="WXR-Nx-pmE"/>
                                 </connections>
                             </containerView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wAm-Jg-ySP">
@@ -439,6 +439,7 @@
                         <outlet property="containerView" destination="YTR-kN-WCm" id="yOg-5F-O0o"/>
                         <outlet property="dateLabel" destination="aLP-iz-qHc" id="NQZ-D0-MnV"/>
                         <outlet property="forwardButton" destination="MW8-H5-yum" id="BYV-6D-oa3"/>
+                        <segue destination="0Lf-Ys-XJY" kind="show" identifier="Logout" id="sjD-rI-l2J"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="NXd-q2-twR" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -690,6 +691,7 @@
                         <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                     </tabBar>
                     <connections>
+                        <segue destination="0Lf-Ys-XJY" kind="show" identifier="Logout" id="WZd-SJ-PUI"/>
                         <segue destination="xAg-Eg-8QU" kind="relationship" relationship="viewControllers" id="Ge0-sS-8AU"/>
                         <segue destination="xPq-rx-jam" kind="relationship" relationship="viewControllers" id="K4n-9f-8iS"/>
                         <segue destination="FmR-P1-6gD" kind="relationship" relationship="viewControllers" id="PxZ-2O-BSa"/>
@@ -697,7 +699,7 @@
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XEg-R3-Vii" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="175" y="-225"/>
+            <point key="canvasLocation" x="175" y="-209"/>
         </scene>
         <!--Menu-->
         <scene sceneID="4tm-7m-xTg">
@@ -773,7 +775,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iaF-2I-kZt" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="175" y="625"/>
+            <point key="canvasLocation" x="187" y="653"/>
         </scene>
         <!--Landing Screen-->
         <scene sceneID="pgY-4R-55W">
@@ -1495,7 +1497,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="wbl-xU-JA6" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="2109" y="1311"/>
+            <point key="canvasLocation" x="2101" y="1167"/>
         </scene>
         <!--Daily View Controller-->
         <scene sceneID="R3w-ER-B8r">
@@ -1708,11 +1710,11 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="FLg-vA-6yt"/>
-        <segue reference="Ge0-sS-8AU"/>
         <segue reference="vtk-Ik-Lon"/>
-        <segue reference="5Rn-yN-IPh"/>
-        <segue reference="8NQ-DC-l8W"/>
+        <segue reference="qVh-tw-zPR"/>
+        <segue reference="Ge0-sS-8AU"/>
         <segue reference="60l-AC-Hvq"/>
+        <segue reference="8NQ-DC-l8W"/>
+        <segue reference="WXR-Nx-pmE"/>
     </inferredMetricsTieBreakers>
 </document>

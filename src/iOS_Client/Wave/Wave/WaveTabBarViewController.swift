@@ -13,6 +13,22 @@ class WaveTabBarViewController : UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
         (UIApplication.sharedApplication().delegate as! AppDelegate).tabBarController = self
+        
+        if (UserData.getOrCreateUserData().getCurrentEmail() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        } else {
+            
+
+            self.selectedIndex = 1
+
+        }
+        
+        
     }
     
     override func viewWillAppear(animated: Bool) {

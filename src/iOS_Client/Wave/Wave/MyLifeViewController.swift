@@ -51,6 +51,17 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        if (UserData.getOrCreateUserData().getCurrentEmail() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
+        
          date = NSDate()
 //        let date = NSDate()
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!

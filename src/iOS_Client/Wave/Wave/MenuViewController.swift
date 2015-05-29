@@ -38,51 +38,12 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
             performSegueWithIdentifier("Logout", sender: self)
             
             
-        }
-//        // This is default login behavior -> probably shouldn't be here //
-//        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
-//            
-//            if(fbUserRef=="Error"){
-//                NSLog("No user logged in, logging in as stored user")
-//                //                let predicate = NSPredicate(format:"%@ >= starttime AND %@ <= endtime AND %@ == user", dateStop, dateStart,UserData.getOrCreateUserData().getCurrentUID())
-//                
-//                let fetchRequest = NSFetchRequest(entityName: "CurrentUser")
-//                //                fetchRequest.predicate = predicate
-//                if let fetchResults = self.managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [CurrentUser] {
-//                    
-//                    if(fetchResults.count > 0){
-//                        UserData.getOrCreateUserData().loadUser(fetchResults[0])
-//                    }
-//                    
-//                    let FB = Firebase(url: UserData.getFirebase())
-//                    FB.authUser(UserData.getOrCreateUserData().getCurrentEmail(), password: UserData.getOrCreateUserData().getCurrentPW(),
+        } else {
 
-                        
-//                        withCompletionBlock: { error, authData in
-//                            
-//                            if error != nil {
-////WARNING: UI flow unclear here -- should we redirect to the sign-in / sign-up screen, or should we 
-////assume that users don't want to be interrupted... but then how do they know 
-////that the app needs to be logged in again!
-//                                NSLog("Login failed")
-//                            } else {
-//                                // We are now logged in
-//                                NSLog("We logged in as %@: %@",UserData.getOrCreateUserData().getCurrentEmail()!, authData.uid)
-//                                
-//                            }
-//                    })
-//                    
-//                    
-//                }else{
-//                    //then redirect the user to the signin / create page
-//                    performSegueWithIdentifier("Logout", sender: self)
-//                }
-//                
-//            } else {
-//                //                retrieveData()
-//                
-//            }
-//        }
+            
+            
+        }
+   
         
     }
     
