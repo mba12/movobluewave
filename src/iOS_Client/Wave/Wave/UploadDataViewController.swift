@@ -186,6 +186,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             dispatch_sync(dispatch_get_main_queue(), {
 //                self.statusLabel.text = "Device Ready: "+(id as String)
             })
+        } else {
+            println("Device NOT ready " + (id as String))
+            
         }
         dispatch_async(dispatch_get_main_queue(), {
             self.waveDeviceTableView.reloadData()
