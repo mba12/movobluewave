@@ -11,33 +11,7 @@ import UIKit
 
 private var _UserData:UserData? = nil
 
-extension String {
-    func md5() -> String! {
-    let str = self.cStringUsingEncoding(NSUTF8StringEncoding)
-    let strLen = CUnsignedInt(self.lengthOfBytesUsingEncoding(NSUTF8StringEncoding))
-    let digestLen = Int(CC_MD5_DIGEST_LENGTH)
-    let result = UnsafeMutablePointer<CUnsignedChar>.alloc(digestLen)
-    
-    CC_MD5(str!, strLen, result)
-    
-    var hash = NSMutableString()
-    for i in 0..<digestLen {
-    hash.appendFormat("%02x", result[i])
-    }
-    
-    result.destroy()
-    
-    return String(format: hash as String)
-    }
-}
 
-
-
-protocol ImageUpdateDelegate {
-    
-    func updatedImage(date: NSDate, newImage: UIImage?)
-    
-}
 
 class UserData {
     //vars
@@ -450,124 +424,143 @@ class UserData {
         return nil
     }
     
-    static func getImageForDate(date: NSDate, callbackDelegate: ImageUpdateDelegate) {
+    
+    //passing in a nil date results in getting/setting the profile picture
+    static func getImageForDate(date: NSDate?, callbackDelegate: ImageUpdateDelegate) {
         shouldDownloadNewImage(date, callbackDelegate: callbackDelegate)
     }
     
-    static func getProfilePicFromFirebase(callbackDelegate: ImageUpdateDelegate?){
-        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbDownloadRef = fbDownloadRef! + "/photos/profilepic"
-        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
-        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            //            var numberOfImageBlobs:Int16 = 0
-            
-            var decodedImage : UIImage?
-            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
-                if(numberOfImageBlobs=="1"){
-                    if let rawData = snapshot.childSnapshotForPath("2").valueInExportFormat() as? String{
-                        if let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil){
-                            decodedImage = UIImage(data: decodedData)
-                        }
-                    }
-                    
-                    
-                    
-                    
-                    
-                    
-                }else{
-                    var count = numberOfImageBlobs.toInt()
-                    var rawData = ""
-                    //i = 2 to skip the first and second nodes, as they're metadata.
-                    for(var i = 2; i < count; i++){
-                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
-                        rawData = rawData + curData!
-                        
-                    }
-                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
-                    decodedImage = UIImage(data: decodedData)
-                    
-                    
-                }
-                
-            }
-            
-            
-            //handle image storage here
+    
+//    
+//    static func getProfilePicFromFirebase(callbackDelegate: ImageUpdateDelegate?){
+//        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+//        fbDownloadRef = fbDownloadRef! + "/photos/profilepic"
+//        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+//        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+//            var decodedImage : UIImage?
+//            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
+//                if(numberOfImageBlobs=="1"){
+//                    if let rawData = snapshot.childSnapshotForPath("2").valueInExportFormat() as? String{
+//                        if let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil){
+//                            decodedImage = UIImage(data: decodedData)
+//                        }
+//                    }
+//                    
+//                    
+//                }else{
+//                    var count = numberOfImageBlobs.toInt()
+//                    var rawData = ""
+//                    //i = 2 to skip the first and second nodes, as they're metadata.
+//                    for(var i = 2; i < count; i++){
+//                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
+//                        rawData = rawData + curData!
+//                        
+//                    }
+//                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
+//                    decodedImage = UIImage(data: decodedData)
+//                    
+//                    
+//                }
+//                
+//            }
+//            
+//            
+//            //handle image storage here
 //            if let image = decodedImage {
-////                UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
+//                //use 1970-1-1 00:00:00 as storage date
+//                if let date = YMDGMTToNSDate(1970, 1, 1) {
+//                    UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
+//                }
 //                //store profile pic here
 //            } else {
 //                if let delegate = callbackDelegate {
-////                    delegate.updatedImage(date, newImage: nil)
-//                    
+//                    //inform the delegate of the new profile picture
+//                    delegate.updatedImage(nil, newImage: nil)
 //                }
 //            }
-            
-            
-        })
-    }
+//            
+//            
+//        })
+//    }
+////    
+//    static func uploadProfilePicToFirebase(base64StringIn:String){
+//         var base64String = base64StringIn
+//        var md5Sum = base64String.md5()
+//        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+//        fbUploadRef = fbUploadRef! + "/photos/profilepic"
+//     
+//        
+//        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+//        
+//        
+//        var size = (base64String as NSString).length
+//        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+//        firebaseImage.updateChildValues(["0":String(totalChunks)])
+//        firebaseImage.updateChildValues(["1":md5Sum])
+//        
+//        
+//        var part = 2
+//        while (!base64String.isEmpty) {
+//            var size = (base64String as NSString).length
+//            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+//            var result:String = base64String.substringToIndex(index)
+//            let range = base64String.startIndex..<index
+//            base64String.removeRange(range)
+//            
+//            firebaseImage.updateChildValues([String(part):result])
+//            part += 1
+//        }
+//        println("Upload complete")
+//    }
+//    
     
-    static func uploadProfilePicToFirebase(base64StringIn:String){
-         var base64String = base64StringIn
-        var md5Sum = base64String.md5()
-        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbUploadRef = fbUploadRef! + "/photos/profilepic"
-//        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+    static func buildFBPictureDownloadFromDate(date: NSDate?) -> (fbpath:String, storageDate:NSDate?) {
         
+        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbDownloadRef = fbDownloadRef! + "/photos/"
         
-        
-        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-        
-        
-        var size = (base64String as NSString).length
-        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
-        firebaseImage.updateChildValues(["0":String(totalChunks)])
-        firebaseImage.updateChildValues(["1":md5Sum])
-        
-        
-        var part = 2
-        while (!base64String.isEmpty) {
-            var size = (base64String as NSString).length
-            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
-            var result:String = base64String.substringToIndex(index)
-            let range = base64String.startIndex..<index
-            base64String.removeRange(range)
+        var storageDate : NSDate!
+        if let downloadDate = date {
+            var cal = NSCalendar.currentCalendar()
             
-            firebaseImage.updateChildValues([String(part):result])
-            part += 1
+            var todayDate = cal.component(.CalendarUnitDay , fromDate: downloadDate)
+            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: downloadDate)
+            var todayYear = cal.component(.CalendarUnitYear , fromDate: downloadDate)
+            
+            var month = ""
+            var day = ""
+            if(todayMonth<10){
+                month = "0" + (String(todayMonth))
+            }else{
+                month = String(todayMonth)
+            }
+            if(todayDate<10){
+                day = "0" + (String(todayDate))
+            }else{
+                day = String(todayDate)
+            }
+            fbDownloadRef = fbDownloadRef! + String(todayYear) + "/" + month + "/" + day
+            storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
+        } else {
+            fbDownloadRef = fbDownloadRef! + "profilepic"
+            storageDate = YMDGMTToNSDate(1970, 1, 1)
         }
+        
+        
+        return (fbDownloadRef!, storageDate)
     }
     
-    
-    static func uploadPhotoToFirebase(base64StringIn:String, date:NSDate){
+    static func uploadPhotoToFirebase(base64StringIn:String, date:NSDate?){
         var base64String = base64StringIn
         
         var md5Sum = base64String.md5()
         
+        
+        
         var cal = NSCalendar.currentCalendar()
         
         
-        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-        var month = ""
-        var day = ""
-        if(todayMonth<10){
-            month = "0" + (String(todayMonth))
-        }else{
-            month = String(todayMonth)
-        }
-        if(todayDate<10){
-            day = "0" + (String(todayDate))
-        }else{
-            day = String(todayDate)
-        }
-        
-        
-        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbUploadRef = fbUploadRef! + "/photos/"
-        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+        var (fbUploadRef, storageDate) = buildFBPictureDownloadFromDate(date)
         
         
         
@@ -595,32 +588,15 @@ class UserData {
         
     }
     
-    static func shouldDownloadNewImage(date:NSDate, callbackDelegate: ImageUpdateDelegate?){
-        var cal = NSCalendar.currentCalendar()
-        
-        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var todayYear = cal.component(.CalendarUnitYear , fromDate: date)
-        
-        var month = ""
-        var day = ""
-        if(todayMonth<10){
-            month = "0" + (String(todayMonth))
-        }else{
-            month = String(todayMonth)
-        }
-        if(todayDate<10){
-            day = "0" + (String(todayDate))
-        }else{
-            day = String(todayDate)
-        }
+
+    //pass in a nil date for profile picutre
+    static func shouldDownloadNewImage(date:NSDate?, callbackDelegate: ImageUpdateDelegate?){
         
         
-        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbDownloadRef = fbDownloadRef! + "/photos/"
-        fbDownloadRef = fbDownloadRef! + String(todayYear) + "/" + month + "/" + day + "/1"
+        var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
+        fbDownloadRef = fbDownloadRef + "/1"
         var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
-        var storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
+
         if let storeDate = storageDate {
             
             firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
@@ -775,30 +751,9 @@ class UserData {
 
     
 
-    static func downloadPhotoFromFirebase(date:NSDate, callbackDelegate: ImageUpdateDelegate?){
+    static func downloadPhotoFromFirebase(date:NSDate?, callbackDelegate: ImageUpdateDelegate?){
 
-        var cal = NSCalendar.currentCalendar()
-        
-        var todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var todayYear = String(cal.component(.CalendarUnitYear , fromDate: date))
-        var month = ""
-        var day = ""
-        if(todayMonth<10){
-            month = "0" + (String(todayMonth))
-        }else{
-            month = String(todayMonth)
-        }
-        if(todayDate<10){
-            day = "0" + (String(todayDate))
-        }else{
-            day = String(todayDate)
-        }
-        
-        
-        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-        fbDownloadRef = fbDownloadRef! + "/photos/"
-        fbDownloadRef = fbDownloadRef! + todayYear + "/" + month + "/" + day
+        var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
         var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
         firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
 //            var numberOfImageBlobs:Int16 = 0
@@ -874,7 +829,7 @@ class UserData {
     
     
     
-    static func storeImage(image: UIImage, date: NSDate,  pushToFirebase : Bool, callbackDelegate: ImageUpdateDelegate?) {
+    static func storeImage(image: UIImage, date: NSDate?,  pushToFirebase : Bool, callbackDelegate: ImageUpdateDelegate?) {
         
         //get system path to our image store
         var (fullPath, relativePath) = getOrCreateDirectoryForImages()
@@ -892,11 +847,17 @@ class UserData {
         //to be timezone independent
         //this means that we use the GMT NSDate for storage that corresponds to
         //the beginning of the day
-        var cal = NSCalendar.currentCalendar()
-        var thisDate = cal.component(.CalendarUnitDay , fromDate: date)
-        var thisMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        var thisYear = cal.component(.CalendarUnitYear , fromDate: date)
-        var storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+        var storageDate : NSDate?
+        if let unwrapDate = date {
+            var cal = NSCalendar.currentCalendar()
+            var thisDate = cal.component(.CalendarUnitDay , fromDate: unwrapDate)
+            var thisMonth = cal.component(.CalendarUnitMonth , fromDate: unwrapDate)
+            var thisYear = cal.component(.CalendarUnitYear , fromDate: unwrapDate)
+            storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+        } else {
+            storageDate = YMDGMTToNSDate(1970, 1, 1)
+        }
+        
         if let storeDate = storageDate {
             
             
@@ -980,5 +941,31 @@ class UserData {
 }
 
 
+extension String {
+    func md5() -> String! {
+        let str = self.cStringUsingEncoding(NSUTF8StringEncoding)
+        let strLen = CUnsignedInt(self.lengthOfBytesUsingEncoding(NSUTF8StringEncoding))
+        let digestLen = Int(CC_MD5_DIGEST_LENGTH)
+        let result = UnsafeMutablePointer<CUnsignedChar>.alloc(digestLen)
+        
+        CC_MD5(str!, strLen, result)
+        
+        var hash = NSMutableString()
+        for i in 0..<digestLen {
+            hash.appendFormat("%02x", result[i])
+        }
+        
+        result.destroy()
+        
+        return String(format: hash as String)
+    }
+}
 
 
+
+
+protocol ImageUpdateDelegate {
+    
+    func updatedImage(date: NSDate?, newImage: UIImage?)
+    
+}
