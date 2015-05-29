@@ -427,6 +427,7 @@ class UserData {
     
     //passing in a nil date results in getting/setting the profile picture
     static func getImageForDate(date: NSDate?, callbackDelegate: ImageUpdateDelegate) {
+        loadImageFromFile(date, callbackDelegate: callbackDelegate)
         shouldDownloadNewImage(date, callbackDelegate: callbackDelegate)
     }
     
@@ -721,19 +722,19 @@ class UserData {
                                         return
                                     }
                                     
+                                } else {
+                                    //continue loading image from file
+                                    println("Warning: Excess Images")
+                                    
+                                    //don't download new
+                                    if let delegate = callbackDelegate{
+                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        return
+                                    }
+                                    
                                 }
-                            } else {
-                                //error case
-                                println("Warning: Excess Images")
-                                
-                                //don't download new
-                                if let delegate = callbackDelegate{
-                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
-                                    return
-                                }
-                                
                             }
-                            //continue loading image from file
+                            
                         }
                         
                     }
@@ -770,11 +771,7 @@ class UserData {
                         
                     }
                   
-
-                    
-                    
-                    
-                
+      
                 }else{
                     var count = numberOfImageBlobs.toInt()
                     var rawData = ""
@@ -975,7 +972,63 @@ class UserData {
         }
     }
     
-
+    static func loadImageFromFile(date: NSDate?, callbackDelegate: ImageUpdateDelegate?) {
+        //We want to store the image to the date
+        //to be timezone independent
+        //this means that we use the GMT NSDate for storage that corresponds to
+        //the beginning of the day
+        var storageDate : NSDate?
+        if let unwrapDate = date {
+            var cal = NSCalendar.currentCalendar()
+            var thisDate = cal.component(.CalendarUnitDay , fromDate: unwrapDate)
+            var thisMonth = cal.component(.CalendarUnitMonth , fromDate: unwrapDate)
+            var thisYear = cal.component(.CalendarUnitYear , fromDate: unwrapDate)
+            storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+        } else {
+            storageDate = YMDGMTToNSDate(1970, 1, 1)
+        }
+        if let storeDate : NSDate = storageDate {
+            if let uid = UserData.getOrCreateUserData().getCurrentUID() {
+                let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
+                
+                let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
+                fetchRequest.predicate = predicate
+                
+                
+                if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                    if(fetchResults.count > 0){
+                        //then we must delete the old image and replace
+                        if (fetchResults.count == 1) {
+                            if let delegate = callbackDelegate{
+                                
+                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                return
+                            }
+                            
+                        } else {
+                            //continue loading image from file
+                            println("Warning: Excess Images")
+                            
+                            //don't download new
+                            if let delegate = callbackDelegate{
+                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                return
+                            }
+                            
+                        }
+                        
+                    }
+                }
+                
+            }
+        }
+        
+        if let delegate = callbackDelegate{
+            delegate.updatedImage(date, newImage: nil)
+        }
+        
+        
+    }
     
 }
 
