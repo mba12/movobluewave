@@ -32,6 +32,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     var datePickerToolbar : UIToolbar
     var datePickerFirstResponder : Bool = false
 
+    var birthdateDate : NSDate!
 
     required init(coder aDecoder: NSCoder) {
         genderPicker = UIPickerView()
@@ -68,7 +69,13 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         if let bd = UserData.getOrCreateUserData().getCurrentBirthdate() {
             birthdate.text = bd.description
             datePicker.date = bd
+            birthdateDate = bd
+        } else {
+            datePicker.date = NSDate()
+            birthdateDate = datePicker.date
         }
+        
+        
         offsetModifier = -(cancelButton.frame.origin.y - cancelButton.frame.height)
         
         
@@ -104,16 +111,30 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     @IBAction func saveChanges(sender: UIButton){
         //call the sets on all of the name changes
+        var validation = true
 
-
-        UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
-        UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentGender(gender.text)
-        UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
-        UserData.getOrCreateUserData().saveMetaDataToFirebase()
         
+        if (!isValidBirthDate(birthdateDate)) {
+            validation = false
+        }
+        
+        if (validation) {
+            UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
+            UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentGender(gender.text)
+            UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
+            UserData.getOrCreateUserData().saveMetaDataToFirebase()
+            dismissViewControllerAnimated(true, completion: nil)
+        } else {
+            let alertController = UIAlertController(title: "Error", message:
+                "Invalid profile information, please correct and try again", preferredStyle: UIAlertControllerStyle.Alert)
+            alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+            
+            self.presentViewController(alertController, animated: true, completion: nil)
+            
+        }
     }
     
     
@@ -141,6 +162,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     func birthdateResponderEnd(sender: UITextField) {
         birthdate.text = datePicker.date.description
+        birthdateDate = datePicker.date
         datePickerFirstResponder = false
         
     }

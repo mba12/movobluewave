@@ -30,6 +30,8 @@ class RegisterViewController: KeyboardSlideViewController {
         var password = passText.text
         var confirmPass = confirmPassText.text
         var username = usernameText.text
+        
+        var birthday = NSDate()
         var validation = true
         
 //WARN: bad email validation check
@@ -44,6 +46,10 @@ class RegisterViewController: KeyboardSlideViewController {
             validation = false
         }
         if(password != confirmPass){
+            validation = false
+        }
+        
+        if (!isValidBirthDate(birthday)) {
             validation = false
         }
         
