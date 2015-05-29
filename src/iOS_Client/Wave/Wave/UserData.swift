@@ -505,6 +505,7 @@ class UserData {
             firebaseImage.updateChildValues([String(part):result])
             part += 1
         }
+        println("Upload complete")
         
     }
     
@@ -558,9 +559,12 @@ class UserData {
                                                 delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
                                                 return
                                             }
+                                        } else {
+                                            //download replacement images
+                                            UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
                                         }
                                         
-                                    }else{
+                                    } else{
                                         //download newer image
                                         UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
                                         return
@@ -577,6 +581,9 @@ class UserData {
                                                 return
                                                 
                                             }
+                                        } else {
+                                            //download replacement images
+                                            UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
                                         }
                                         
                                         
@@ -588,7 +595,7 @@ class UserData {
                                     
                                     
                                 }
-                            }else{
+                            } else{
                                 UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
                                 return
                             }
