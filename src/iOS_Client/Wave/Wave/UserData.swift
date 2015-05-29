@@ -713,9 +713,12 @@ class UserData {
             var decodedImage : UIImage?
             if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
                 if(numberOfImageBlobs=="1"){
-                    var rawData = snapshot.childSnapshotForPath("1").valueInExportFormat() as? String
-                    let decodedData:NSData = NSData(base64EncodedString: rawData!, options: nil)!
-                    decodedImage = UIImage(data: decodedData)
+                    if let rawData = snapshot.childSnapshotForPath("2").valueInExportFormat() as? String{
+                        if let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil){
+                            decodedImage = UIImage(data: decodedData)
+                        }
+                    }
+                  
 
                     
                     
