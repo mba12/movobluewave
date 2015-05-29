@@ -62,7 +62,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             if let date = dateForImage {
                 if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
-                    UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
+                    UserData.storeImage(image, rawData: nil, date: date, pushToFirebase: true, callbackDelegate: self)
                     
                 }
             }

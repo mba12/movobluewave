@@ -254,7 +254,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
             
         
             if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
-                UserData.storeImage(image, date: nil, pushToFirebase: true, callbackDelegate: self)
+                UserData.storeImage(image, rawData: nil, date: nil, pushToFirebase: true, callbackDelegate: self)
                     
             }
             
