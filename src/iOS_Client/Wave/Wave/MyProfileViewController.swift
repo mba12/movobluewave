@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate {
+class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate, ImageUpdateDelegate,  UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     @IBOutlet weak var cancel: UIButton!
     
     @IBOutlet weak var fullName: UITextField!
@@ -24,6 +24,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     @IBOutlet weak var cancelButton: UIButton!
     
+    @IBOutlet weak var profilePicture: UIImageView!
     
     var genderPicker : UIPickerView
     var genderPickerData = ["Female","Male"]
@@ -94,7 +95,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
         datePickerToolbar.sizeToFit()
-        
+        UserData.getImageForDate(nil, callbackDelegate: self)
         
         
     }
@@ -102,6 +103,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         datePickerFirstResponder = false
+        UserData.getImageForDate(nil, callbackDelegate: self)
     }
     
     
@@ -209,6 +211,58 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
             
         }
 
+    }
+    
+    
+    func updatedImage(date: NSDate?, newImage: UIImage?) {
+        var setImage = false
+        if (date == nil) {
+            if let image = newImage {
+                //then we have a new profile image
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePicture.image = image
+                })
+                
+            } else {
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePicture.image = UIImage(named: "default_user_icon")
+                })                    
+            }
+            
+        }
+        
+    }
+    
+    @IBAction func updateProfilePictureClick(sender: AnyObject) {
+        var imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+        
+        
+    }
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+        
+        picker.dismissViewControllerAnimated(true, completion: {
+            
+            /*
+            println("showing spinner")
+            var spinner = showSpinner("Uploading Image", "Please wait...")
+            
+            self.presentViewController(spinner, animated: true, completion: nil)
+            */
+            
+        
+            if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
+                UserData.storeImage(image, date: nil, pushToFirebase: true, callbackDelegate: self)
+                    
+            }
+            
+            /*
+            spinner.dismissViewControllerAnimated(true, completion: nil)
+            */
+        })
+        
     }
     
 }

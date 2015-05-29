@@ -928,7 +928,7 @@
                                 </connections>
                             </textField>
                             <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" horizontalHuggingPriority="249" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="89a-bt-YCh">
-                                <rect key="frame" x="179" y="208" width="379" height="30"/>
+                                <rect key="frame" x="179" y="208" width="378.5" height="30"/>
                                 <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="32" id="30f-6w-Bgx"/>
@@ -998,6 +998,15 @@
                                     <outlet property="delegate" destination="ris-T2-JXb" id="xHp-lw-AR2"/>
                                 </connections>
                             </textField>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="g6h-Jo-ibl">
+                                <rect key="frame" x="16" y="28" width="100" height="100"/>
+                                <state key="normal">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="updateProfilePictureClick:" destination="ris-T2-JXb" eventType="touchUpInside" id="bgg-Er-acy"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -1006,6 +1015,7 @@
                             <constraint firstItem="bdL-gs-wvx" firstAttribute="leading" secondItem="SB7-Fm-G5q" secondAttribute="leadingMargin" id="1QH-lw-oHI"/>
                             <constraint firstAttribute="centerX" secondItem="xx0-wa-zUc" secondAttribute="centerX" id="1iD-I7-l4X"/>
                             <constraint firstItem="89a-bt-YCh" firstAttribute="leading" secondItem="gok-VW-IY6" secondAttribute="trailing" constant="8" id="24u-2i-tzK"/>
+                            <constraint firstItem="bdL-gs-wvx" firstAttribute="centerY" secondItem="g6h-Jo-ibl" secondAttribute="centerY" id="2QY-dI-rYV"/>
                             <constraint firstItem="pi9-c1-a99" firstAttribute="top" secondItem="plp-IS-VzO" secondAttribute="bottom" priority="800" constant="150" id="2Zl-MV-bhQ"/>
                             <constraint firstItem="5wl-g3-S4x" firstAttribute="top" secondItem="zIn-0X-Oxy" secondAttribute="bottom" constant="8" id="3sB-gQ-5mU"/>
                             <constraint firstItem="FwL-Ap-WNX" firstAttribute="top" relation="greaterThanOrEqual" secondItem="xx0-wa-zUc" secondAttribute="bottom" constant="18" id="4uq-QD-L9i"/>
@@ -1018,6 +1028,7 @@
                             <constraint firstItem="pi9-c1-a99" firstAttribute="top" secondItem="plp-IS-VzO" secondAttribute="bottom" constant="77" id="FCn-8l-mx7"/>
                             <constraint firstItem="Vpi-HB-ehg" firstAttribute="centerY" secondItem="89a-bt-YCh" secondAttribute="centerY" id="FVL-ij-xjK"/>
                             <constraint firstItem="TQ1-3s-Dia" firstAttribute="centerY" secondItem="NaR-Of-6aH" secondAttribute="centerY" id="HGM-Qw-pH5"/>
+                            <constraint firstItem="bdL-gs-wvx" firstAttribute="height" secondItem="g6h-Jo-ibl" secondAttribute="height" id="Kd4-ph-T7Q"/>
                             <constraint firstItem="pi9-c1-a99" firstAttribute="top" relation="greaterThanOrEqual" secondItem="plp-IS-VzO" secondAttribute="bottom" priority="900" constant="75" id="Kdq-4q-3yE"/>
                             <constraint firstAttribute="centerX" secondItem="pi9-c1-a99" secondAttribute="centerX" id="Ml7-Ia-zD4"/>
                             <constraint firstItem="bdL-gs-wvx" firstAttribute="trailing" secondItem="5wl-g3-S4x" secondAttribute="leading" id="Nby-4D-qXf"/>
@@ -1025,11 +1036,14 @@
                             <constraint firstAttribute="trailingMargin" secondItem="5wl-g3-S4x" secondAttribute="trailing" id="O9m-oO-hd6"/>
                             <constraint firstItem="89a-bt-YCh" firstAttribute="centerY" secondItem="WA1-mY-1tr" secondAttribute="centerY" id="Oeb-5e-tms"/>
                             <constraint firstItem="hUS-JL-Lxx" firstAttribute="leading" secondItem="bdL-gs-wvx" secondAttribute="leading" id="Oq7-Zo-H0I"/>
+                            <constraint firstItem="bdL-gs-wvx" firstAttribute="width" secondItem="g6h-Jo-ibl" secondAttribute="height" multiplier="1:1" id="RlI-6q-0wL"/>
+                            <constraint firstItem="bdL-gs-wvx" firstAttribute="centerX" secondItem="g6h-Jo-ibl" secondAttribute="centerX" id="SX7-A1-RDm"/>
                             <constraint firstItem="plp-IS-VzO" firstAttribute="top" secondItem="NaR-Of-6aH" secondAttribute="bottom" constant="8" id="Sfa-16-qiW"/>
                             <constraint firstItem="NaR-Of-6aH" firstAttribute="leading" secondItem="bdL-gs-wvx" secondAttribute="trailing" id="Sqt-0r-fa1"/>
                             <constraint firstItem="YnW-wJ-rQd" firstAttribute="top" secondItem="bdL-gs-wvx" secondAttribute="bottom" constant="8" id="TG3-DF-Sqi"/>
                             <constraint firstItem="Vpi-HB-ehg" firstAttribute="leading" secondItem="89a-bt-YCh" secondAttribute="trailing" constant="8" id="Wzm-Ha-pMV"/>
                             <constraint firstItem="TQ1-3s-Dia" firstAttribute="leading" secondItem="bdL-gs-wvx" secondAttribute="leading" id="ZYk-hL-Sec"/>
+                            <constraint firstItem="bdL-gs-wvx" firstAttribute="width" secondItem="g6h-Jo-ibl" secondAttribute="width" id="bZz-1r-Zex"/>
                             <constraint firstItem="bdL-gs-wvx" firstAttribute="trailing" secondItem="zIn-0X-Oxy" secondAttribute="leading" id="cdG-EN-gMC"/>
                             <constraint firstItem="xx0-wa-zUc" firstAttribute="top" secondItem="pi9-c1-a99" secondAttribute="bottom" constant="12" id="d39-9a-rXQ"/>
                             <constraint firstItem="WA1-mY-1tr" firstAttribute="leading" secondItem="bdL-gs-wvx" secondAttribute="trailing" id="d9O-tZ-eLS"/>
@@ -1062,6 +1076,7 @@
                         <outlet property="gender" destination="plp-IS-VzO" id="55i-d8-FSW"/>
                         <outlet property="heightFt" destination="WA1-mY-1tr" id="6pG-mh-SES"/>
                         <outlet property="heightInches" destination="89a-bt-YCh" id="sVJ-h6-egp"/>
+                        <outlet property="profilePicture" destination="bdL-gs-wvx" id="Q6y-AS-53o"/>
                         <outlet property="saveChanges" destination="pi9-c1-a99" id="qJQ-2E-nqp"/>
                         <outlet property="weight" destination="NaR-Of-6aH" id="20K-bU-phI"/>
                     </connections>
@@ -1711,7 +1726,7 @@
     </resources>
     <inferredMetricsTieBreakers>
         <segue reference="vtk-Ik-Lon"/>
-        <segue reference="qVh-tw-zPR"/>
+        <segue reference="WZd-SJ-PUI"/>
         <segue reference="Ge0-sS-8AU"/>
         <segue reference="60l-AC-Hvq"/>
         <segue reference="8NQ-DC-l8W"/>
