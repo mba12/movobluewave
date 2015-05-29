@@ -454,6 +454,92 @@ class UserData {
         shouldDownloadNewImage(date, callbackDelegate: callbackDelegate)
     }
     
+    static func getProfilePicFromFirebase(callbackDelegate: ImageUpdateDelegate?){
+        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbDownloadRef = fbDownloadRef! + "/photos/profilepic"
+        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            //            var numberOfImageBlobs:Int16 = 0
+            
+            var decodedImage : UIImage?
+            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
+                if(numberOfImageBlobs=="1"){
+                    if let rawData = snapshot.childSnapshotForPath("2").valueInExportFormat() as? String{
+                        if let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil){
+                            decodedImage = UIImage(data: decodedData)
+                        }
+                    }
+                    
+                    
+                    
+                    
+                    
+                    
+                }else{
+                    var count = numberOfImageBlobs.toInt()
+                    var rawData = ""
+                    //i = 2 to skip the first and second nodes, as they're metadata.
+                    for(var i = 2; i < count; i++){
+                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
+                        rawData = rawData + curData!
+                        
+                    }
+                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
+                    decodedImage = UIImage(data: decodedData)
+                    
+                    
+                }
+                
+            }
+            
+            
+            //handle image storage here
+//            if let image = decodedImage {
+////                UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
+//                //store profile pic here
+//            } else {
+//                if let delegate = callbackDelegate {
+////                    delegate.updatedImage(date, newImage: nil)
+//                    
+//                }
+//            }
+            
+            
+        })
+    }
+    
+    static func uploadProfilePicToFirebase(base64StringIn:String){
+         var base64String = base64StringIn
+        var md5Sum = base64String.md5()
+        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
+        fbUploadRef = fbUploadRef! + "/photos/profilepic"
+//        fbUploadRef = fbUploadRef! + todayYear + "/" + month + "/" + day
+        
+        
+        
+        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+        
+        
+        var size = (base64String as NSString).length
+        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+        firebaseImage.updateChildValues(["0":String(totalChunks)])
+        firebaseImage.updateChildValues(["1":md5Sum])
+        
+        
+        var part = 2
+        while (!base64String.isEmpty) {
+            var size = (base64String as NSString).length
+            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+            var result:String = base64String.substringToIndex(index)
+            let range = base64String.startIndex..<index
+            base64String.removeRange(range)
+            
+            firebaseImage.updateChildValues([String(part):result])
+            part += 1
+        }
+    }
+    
+    
     static func uploadPhotoToFirebase(base64StringIn:String, date:NSDate){
         var base64String = base64StringIn
         
