@@ -22,6 +22,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.movo.wave.util.DataUtilities;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -610,15 +611,15 @@ public class UserData extends Activity{
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //                    System.out.println(snapshot.getValue());
-                if(snapshot.getChildrenCount()==2){
+                if(snapshot.getChildrenCount()==3){
                     final BitmapFactory.Options options = new BitmapFactory.Options();
                     ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
-                    byte[] decodedString = Base64.decode(result.get(1), Base64.DEFAULT);
+                    byte[] decodedString = Base64.decode(result.get(2), Base64.NO_WRAP);
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
-//
 
+                    String md5 = result.get(1);
                     //file from cloud is different than local, save to device
                     Calendar profile = Calendar.getInstance();
                     profile.setTimeInMillis(0);
@@ -626,6 +627,7 @@ public class UserData extends Activity{
                     syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
                     syncValues.put(Database.PhotoStore.USER, currentUID);
                     syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                    syncValues.put(Database.PhotoStore.MD5, md5);
                     long newRowId;
                     newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
                             null,
@@ -635,30 +637,30 @@ public class UserData extends Activity{
                     Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
 //                            background.setImageBitmap(decodedByte);
 
-                }else if(snapshot.getChildrenCount()>=2){
+                }else if(snapshot.getChildrenCount()>3){
                     //multipart file upload
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
-                    final BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-//                        options.inSampleSize = 4;
+
                     ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
                     try {
                         Calendar profile = Calendar.getInstance();
                         profile.setTimeInMillis(0);
                         String wholeString = "";
-                        for(int i =1;i<result.size();i++){
+                        for(int i =2;i<result.size();i++){
                             wholeString += result.get(i);
 
 
                         }
-                        byte[] decodedString = Base64.decode(wholeString, Base64.DEFAULT);
+                        String md5 = result.get(1);
+                        byte[] decodedString = Base64.decode(wholeString, Base64.NO_WRAP);
 //                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
 
                         ContentValues syncValues = new ContentValues();
                         syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
                         syncValues.put(Database.PhotoStore.USER, currentUID);
                         syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                        syncValues.put(Database.PhotoStore.MD5, md5);
                         long newRowId;
                         newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
                                 null,
@@ -681,6 +683,129 @@ public class UserData extends Activity{
             }
         });
     }
+
+    public void downloadPhotoForDate(long today){
+
+        Log.d(TAG, "Loading image from firebase");
+        final Calendar monthCal = Calendar.getInstance();
+        monthCal.setTimeInMillis(today);
+        String monthChange = "";
+        String dayChange = "";
+        if ((monthCal.get(Calendar.MONTH)) < 11) {
+            monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+        } else {
+            monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+        }
+        if ((monthCal.get(Calendar.DATE)) < 10) {
+            dayChange = "0" + (monthCal.get(Calendar.DATE));
+        } else {
+            dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+        }
+        //Checking firebase photo
+
+        Log.d(TAG, "Loading image from firebase");
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if (snapshot.getValue() != null) {
+
+                    // TODO: Discuss changes below with Phil -- comment from Michael
+
+                    Object obj = snapshot.getValue();
+                    if (obj == null) {
+                        Log.d(TAG, "MBA: Value from FB is null.");
+                        return;
+                    }
+
+                    Log.d(TAG, snapshot.getValue().toString());
+                    if (snapshot.getChildrenCount() == 3) {
+                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+
+                        Object pictureObject = result.get(2);
+                        String pictureString = String.valueOf(pictureObject);
+                        String md5 = result.get(1);
+
+
+                        try {
+                            byte[] decodedString = Base64.decode(pictureString, Base64.NO_WRAP);
+
+
+                            DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+                            SQLiteDatabase db = mDbHelper.getWritableDatabase();
+//
+
+
+                            //file doesn't exist on local device
+                            Date curDay = DataUtilities.trim(new Date(monthCal.getTimeInMillis()));
+                            ContentValues syncValues = new ContentValues();
+                            syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                            syncValues.put(Database.PhotoStore.USER, getCurUID());
+                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                            syncValues.put(Database.PhotoStore.MD5, md5);
+                            long newRowId;
+                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                    null,
+                                    syncValues);
+                            Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                            db.close();
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+//
+
+                    } else if (snapshot.getChildrenCount() > 3) {
+                        Log.d(TAG, "Photo multipart");
+                        //multipart file upload
+                        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+                        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                        ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                        try {
+                            String wholeString = "";
+                            for (int i = 2; i < result.size(); i++) {
+                                wholeString += result.get(i);
+
+                            }
+                            String md5 = result.get(1);
+                            byte[] decodedString = Base64.decode(wholeString, Base64.NO_WRAP);
+//                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
+//                                background.setImageBitmap(decodedByte);
+//                                background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            Date curDay = DataUtilities.trim(new Date(monthCal.getTimeInMillis()));
+                            ContentValues syncValues = new ContentValues();
+                            syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
+                            syncValues.put(Database.PhotoStore.USER, getCurUID());
+                            syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
+                            syncValues.put(Database.PhotoStore.MD5, md5);
+                            long newRowId;
+                            newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
+                                    null,
+                                    syncValues);
+                            Log.d(TAG, "Photo database add from firebase: " + newRowId);
+                            db.close();
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("The read failed: " + firebaseError.getMessage());
+            }
+        });
+    }
+
+
+
+
 
     public void setMetadata(Firebase child, String useruid){
 
@@ -878,8 +1003,110 @@ public class UserData extends Activity{
 //        }
 //    }
 
+    public byte[]  pullPhotoFromDB(long today){
+        boolean localFile = false;
+        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+        Date currentDay = new Date(today);
+        byte[] returnByte=null;
+        currentDay = DataUtilities.trim(currentDay);
+//        UserData myData = UserData.getUserData(c);
+        String user =  UserData.getUserData(appContext).getCurUID();
+        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
+        Cursor curPhoto = db.query(
+                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+                new String[]{
+                        Database.StepEntry.USER, //string
+                        Database.PhotoStore.DATE, //int
+                        Database.PhotoStore.PHOTOBLOB, //blob
+                        Database.PhotoStore.MD5}, //string
+                // The columns to return
+                photo,                                // The columns for the WHERE clause
+                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+        try{
+//            if(curPhoto.getCount())
+            curPhoto.moveToFirst();
+            localFile = false;
+
+            int uniquePic =0;
+            if (curPhoto.getCount() != 0) {
+
+                String md5 = curPhoto.getString(3);
+
+                Log.d(TAG, "Found photo for today "+md5);
+                if (md5 != null) {
+                    byte[] byteArray = curPhoto.getBlob(2);
+                    returnByte = byteArray;
+                } else {
+                    UserData.getUserData(appContext).downloadPhotoForDate(today);
+                    return null;
+                }
+//                shouldDownloadNewPhoto(today);
+
+            }else {
+                UserData.getUserData(appContext).downloadPhotoForDate(today);
+                return null;
+
+            }
+        }catch(Exception e){
+            shouldDownloadNewPhoto(today, "");
+            e.printStackTrace();
+        }finally {
+            curPhoto.close();
+            shouldDownloadNewPhoto(today, "");
+        }
+
+        return returnByte;
+
+    }
 
 
+    public void shouldDownloadNewPhoto(long today,String md5In){
+        final String md5 = md5In;
+        final long todayFinal = today;
+        final Calendar monthCal = Calendar.getInstance();
+        monthCal.setTimeInMillis(today);
+        String monthChange = "";
+        String dayChange = "";
+        if ((monthCal.get(Calendar.MONTH)) < 11) {
+            monthChange = "0" + (monthCal.get(Calendar.MONTH) + 1);
+        } else {
+            monthChange = String.valueOf(monthCal.get(Calendar.MONTH) + 1);
+        }
+        if ((monthCal.get(Calendar.DATE)) < 10) {
+            dayChange = "0" + (monthCal.get(Calendar.DATE));
+        } else {
+            dayChange = String.valueOf(monthCal.get(Calendar.DATE));
+        }
+        //Checking firebase photo
+//        final String byteString = Base64.encodeToString(photo,Base64.NO_WRAP);
+
+        Log.d(TAG, "Loading image from firebase");
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                if(snapshot.getValue()!=null) {
+//                    String md5 = DataUtilities.getMD5EncryptedString(byteString);
+
+                    if (md5.equals(snapshot.getValue())) {
+                        //md5s match, don't download
+                    } else {
+                        //download new image
+                        downloadPhotoForDate(todayFinal);
+                    }
+                }
+            }
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                System.out.println("The read failed: " + firebaseError.getMessage());
+            }
+        });
+    }
 
 
 }

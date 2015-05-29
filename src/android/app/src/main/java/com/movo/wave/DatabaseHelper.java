@@ -61,7 +61,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.PhotoStore.DATE + INTEGER_TYPE  + COMMA_SEP +
                     Database.PhotoStore.USER + TEXT_TYPE + COMMA_SEP +
                     Database.PhotoStore.PHOTOBLOB + BLOB_TYPE + COMMA_SEP +
-                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.PhotoStore.DATE+","+Database.PhotoStore.USER +" ) ON CONFLICT REPLACE" +
+                    Database.PhotoStore.MD5 + TEXT_TYPE + COMMA_SEP +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.PhotoStore.DATE+","+Database.PhotoStore.USER +","+Database.PhotoStore.MD5+" ) ON CONFLICT IGNORE" +
                     " )";
 
 

@@ -34,6 +34,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.Calculator;
+import com.movo.wave.util.DataUtilities;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
@@ -170,79 +171,96 @@ public class DailyActivity extends ActionBarActivity {
             });
 
 
-            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-            UserData myData = UserData.getUserData(c);
-            user = myData.getCurUID();
-            String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
-            Cursor curPhoto = db.query(
-                    Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-                    new String[] {
-                            Database.StepEntry.USER, //string
-                            Database.PhotoStore.DATE, //int
-                            Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
-                    photo,                                // The columns for the WHERE clause
-                    new String[] { curDay.getTime()+"", user },                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
-
-            curPhoto.moveToFirst();
-            localFile = false;
-            if(curPhoto.getCount()!=0){
-                localFile = true;
-                String wholePhoto = "";
-
-                if(curPhoto.getCount()>1){
-                    while (curPhoto.isAfterLast() == false) {
-                        wholePhoto += curPhoto.getBlob(2);
-                        curPhoto.moveToNext();
-                    }
-                    try {
-                        byte[] byteArray = wholePhoto.getBytes();
-                        curPhoto.close();
-                        uniquePic = byteArray.length;
+//            Date curDay = trim(new Date(monthCal.getTimeInMillis()));
+//            UserData myData = UserData.getUserData(c);
+//            user = myData.getCurUID();
+//            String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
+//            Cursor curPhoto = db.query(
+//                    Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+//                    new String[] {
+//                            Database.StepEntry.USER, //string
+//                            Database.PhotoStore.DATE, //int
+//                            Database.PhotoStore.PHOTOBLOB }, //blob                          // The columns to return
+//                    photo,                                // The columns for the WHERE clause
+//                    new String[] { curDay.getTime()+"", user },                            // The values for the WHERE clause
+//                    null,                                     // don't group the rows
+//                    null,                                     // don't filter by row groups
+//                    null                                 // The sort order
+//            );
+//
+//            curPhoto.moveToFirst();
+//            localFile = false;
+//            if(curPhoto.getCount()!=0){
+//                localFile = true;
+//                String wholePhoto = "";
+//
+//                if(curPhoto.getCount()>1){
+//                    while (curPhoto.isAfterLast() == false) {
+//                        wholePhoto += curPhoto.getBlob(2);
+//                        curPhoto.moveToNext();
+//                    }
+//                    try {
+//                        byte[] byteArray = wholePhoto.getBytes();
+//                        curPhoto.close();
+//                        uniquePic = byteArray.length;
+////                        final BitmapFactory.Options options = new BitmapFactory.Options();
+////                        options.inJustDecodeBounds = false;
+////                        options.inSampleSize = 4;
+////                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+//                        Glide.with(c)
+//                                .load(byteArray)
+//                                .fitCenter()
+////                                .override(1080,1920)
+//                                .into(background);
+////                        background.setImageBitmap(bm);
+////                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                    }catch (Exception e){
+//                        e.printStackTrace();
+//                    }
+//                }else{
+//                    try {
+//                        byte[] byteArray = curPhoto.getBlob(2);
+//                        uniquePic = byteArray.length;
 //                        final BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-//                        options.inSampleSize = 4;
-//                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
-                        Glide.with(c)
-                                .load(byteArray)
-                                .fitCenter()
-//                                .override(1080,1920)
-                                .into(background);
-//                        background.setImageBitmap(bm);
-//                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                    }catch (Exception e){
-                        e.printStackTrace();
-                    }
-                }else{
-                    try {
-                        byte[] byteArray = curPhoto.getBlob(2);
-                        uniquePic = byteArray.length;
-                        final BitmapFactory.Options options = new BitmapFactory.Options();
-//                        options.inJustDecodeBounds = false;
-//                        options.inSampleSize = 4;
-//                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
-                        Glide.with(c)
-                                .load(byteArray)
-//                                .override(1080,1920)
-                                .fitCenter()
-                                .into(background);
-//                        background.setImageBitmap(bm);
-//                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                        curPhoto.close();
-                    }catch(Exception e){
-                        e.printStackTrace();
-                    }
+////                        options.inJustDecodeBounds = false;
+////                        options.inSampleSize = 4;
+////                        Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length, options);
+//                        Glide.with(c)
+//                                .load(byteArray)
+////                                .override(1080,1920)
+//                                .fitCenter()
+//                                .into(background);
+////                        background.setImageBitmap(bm);
+////                        background.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                        curPhoto.close();
+//                    }catch(Exception e){
+//                        e.printStackTrace();
+//                    }
+//
+//                }
 
-                }
 
 
 //                String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
 
 //                setContentView(R.layout.activity_daily);
+//            }
+            try {
+                byte[] photo = dailyPhotoFetch(monthRangeStart);
+
+                if (photo != null) {
+                    Glide.with(c)
+                            .load(photo)
+//                            .override(1080,1920)
+                            .thumbnail(0.1f)
+                            .centerCrop()
+                            .into(background);
+//                    background.setImageBitmap(bm);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
+
             String monthChange = "";
             String dayChange = "";
             if ((monthCal.get(Calendar.MONTH)) < 11) {
@@ -563,7 +581,7 @@ public class DailyActivity extends ActionBarActivity {
                     }
 
                     byte[] b = baos.toByteArray();
-                    String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+                    String encodedImage = Base64.encodeToString(b, Base64.NO_WRAP);
                     Glide.with(c)
                             .load(b)
                             .fitCenter()
@@ -584,6 +602,7 @@ public class DailyActivity extends ActionBarActivity {
                     } else {
                         dayChange = String.valueOf(monthCal.get(Calendar.DATE));
                     }
+
                     Log.d(TAG, "Loading image from firebase");
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
                     DatabaseHelper mDbHelper = new DatabaseHelper(c);
@@ -603,33 +622,9 @@ public class DailyActivity extends ActionBarActivity {
                     Log.d(TAG, "Photo database add: "+newRowId);
                     db.close();
 
-                    if(encodedImage.length()>1000000) {
-                        List<String> strings = new ArrayList<String>();
-                        int index = 0;
-                        while (index < encodedImage.length()) {
-                            strings.add(encodedImage.substring(index, Math.min(index + 1000000, encodedImage.length())));
-                            index += 1000000;
-                        }
+                    //upload call
+                    DataUtilities.uploadPhotoToFB(ref, encodedImage);
 
-
-                        Log.d(TAG, "Starting image upload " + ref);
-                        ref.child(""+0).setValue(strings.size()+"");
-                        for(int i = 0;i<strings.size();i++){
-                            ref.child(""+(i+1)).setValue(strings.get(i), new Firebase.CompletionListener() {
-                                @Override
-                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError != null) {
-                                        Log.i(firebaseError.toString(), firebaseError.toString());
-                                    }
-                                }
-
-                            });
-                            Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
-                        }
-                    }else{
-                        ref.child(""+0).setValue(1+"");
-                        ref.child(1+"").setValue(encodedImage);
-                    }
 
                     Log.d(TAG, "End image upload "+ref);
 //                    ref.setValue(encodedImage);
@@ -645,7 +640,10 @@ public class DailyActivity extends ActionBarActivity {
     }
 
 
+    public byte[] dailyPhotoFetch(long today) {
+        return UserData.getUserData(c).pullPhotoFromDB(today);
 
+    }
 
 
     public static Date trim(Date date) {

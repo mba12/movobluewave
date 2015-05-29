@@ -36,6 +36,7 @@ import android.widget.Toast;
 
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
+import com.movo.wave.util.DataUtilities;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -397,33 +398,9 @@ public class MyProfile extends MenuActivity {
                     Log.d(TAG, "Photo database add: "+newRowId);
                     db.close();
 
-                    if(encodedImage.length()>1000000) {
-                        List<String> strings = new ArrayList<String>();
-                        int index = 0;
-                        while (index < encodedImage.length()) {
-                            strings.add(encodedImage.substring(index, Math.min(index + 1000000, encodedImage.length())));
-                            index += 1000000;
-                        }
+                    //photo upload
+                    DataUtilities.uploadPhotoToFB(ref, encodedImage);
 
-
-                        Log.d(TAG, "Starting image upload " + ref);
-                        ref.child(""+0).setValue(strings.size() + "");
-                        for(int i = 0;i<strings.size();i++){
-                            ref.child(""+(i+1)).setValue(strings.get(i), new Firebase.CompletionListener() {
-                                @Override
-                                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-                                    if (firebaseError != null) {
-                                        Log.i(firebaseError.toString(), firebaseError.toString());
-                                    }
-                                }
-
-                            });
-                            Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
-                        }
-                    }else{
-                        ref.child(""+0).setValue(1+"");
-                        ref.child(1+"").setValue(encodedImage);
-                    }
                     Log.d(TAG, "End image upload "+ref);
                     Bitmap prof = UserData.getUserData(c).getCurUserPhoto();
 //                     myUserData.getCurUserPhoto(c);
