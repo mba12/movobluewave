@@ -136,7 +136,12 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         cell.textLabel?.text = "\(cellDateNumber)"
 
         if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
-            cell.textLabel2?.text = String(stepsForDayStarting(dateStart))
+            
+            if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(stepsForDayStarting(dateStart)) {
+                cell.textLabel2?.text = stepsstring
+            } else {
+                cell.textLabel2?.text = "0"
+            }
             
         } else {
             cell.textLabel2?.text = "0"

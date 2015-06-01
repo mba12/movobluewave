@@ -756,3 +756,13 @@ func isToday(date: NSDate) -> Bool {
     
     return false
 }
+
+func floatCommaNumberFormatter(decimals: Int) -> NSNumberFormatter {
+    var formatter = NSNumberFormatter()
+    formatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
+    formatter.maximumFractionDigits = decimals
+    
+    return formatter
+}
+
+
