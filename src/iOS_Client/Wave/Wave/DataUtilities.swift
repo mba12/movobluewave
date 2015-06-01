@@ -769,4 +769,32 @@ func floatCommaNumberFormatter(decimals: Int) -> NSNumberFormatter {
     return formatter
 }
 
+func resetUserPassword(userEmail: String){
+    var fbRef = UserData.getFirebase()
+    let ref = Firebase(url: fbRef)
+    ref.resetPasswordForUser(userEmail, withCompletionBlock: { error in
+        
+        if error != nil {
+        // There was an error processing the request
+        } else {
+        // Password reset sent successfully
+        }
+    })
+}
 
+func changeUserPassword(userEmail: String, oldPassword: String, newPassword: String){
+    let ref = Firebase(url: "https://<YOUR-FIREBASE-APP>.firebaseio.com")
+    ref.changePasswordForUser("bobtony@example.com", fromOld: "correcthorsebatterystaple",
+        toNew: "batteryhorsestaplecorrect", withCompletionBlock: { error in
+            
+            if error != nil {
+            // There was an error processing the request
+                var failure = "Failed with error" + error.description
+//                return failure
+            } else {
+            // Password changed successfully
+                var success = "success"
+//                return success
+            }
+        })
+}

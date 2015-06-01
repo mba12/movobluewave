@@ -45,6 +45,14 @@ class LoginViewController: KeyboardSlideViewController {
                         self.presentViewController(alertController, animated: true, completion: nil)
                         
                     } else {
+                        var providerData:NSDictionary = authData.providerData
+                        let tempPasswordBool = providerData["isTemporaryPassword"] as! Bool
+                        
+                        if(tempPasswordBool){
+                            //true if password is temp, do password reset prompt.
+                        }
+                        authData.uid
+                        
                         
                         /* this logic isn't quite right */
                         /* This is a successful login, but we can assume that the current user may not exist and even if it does, it may not have values set correctly */
