@@ -89,7 +89,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         //set up birthdate picker
         datePicker.addTarget(self, action: Selector("dateSelection:"), forControlEvents: UIControlEvents.ValueChanged)
         datePicker.datePickerMode = UIDatePickerMode.Date
-        datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
+        //datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
         birthdate.inputView = datePicker
         birthdate.addTarget(self, action: Selector("birthdateResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
