@@ -179,7 +179,17 @@ public class Home extends MenuActivity {
                 timestamp = calendar.getTimeInMillis();
             }
 //            UserData myData = UserData.getUserData(c);
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + calendar.get(Calendar.YEAR) + "/" + calendar.get(Calendar.MONTH));
+            String monthChange = "";
+            String yearChange = "";
+
+
+            if(calendar.get(Calendar.MONTH)<11){
+                monthChange = "0"+(calendar.get(Calendar.MONTH)+1);
+            }else{
+                monthChange = String.valueOf(calendar.get(Calendar.MONTH)+1);
+            }
+            yearChange = ""+ calendar.get(Calendar.YEAR);
+            Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
             ref.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot snapshot) {
@@ -1104,7 +1114,7 @@ public class Home extends MenuActivity {
 
 
     public byte[] dailyPhotoFetch(long today) {
-        return UserData.getUserData(c).pullPhotoFromDB(today);
+        return UserData.getUserData(c).retrievePhoto(today);
 
     }
 

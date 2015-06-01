@@ -40,13 +40,16 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
@@ -605,22 +608,16 @@ public class DailyActivity extends ActionBarActivity {
 
                     Log.d(TAG, "Loading image from firebase");
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
-                    DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+                    //database insert
+                    String md5 = DataUtilities.getMD5EncryptedString(encodedImage);
+                    UserData.getUserData(c).storePhoto(baos, monthCal.getTimeInMillis(), md5);
+
+                    //end database insert
 
 
-                    Date curDay = trim(new Date(monthCal.getTimeInMillis()));
-                    ContentValues syncValues = new ContentValues();
-                    syncValues.put(Database.PhotoStore.DATE, curDay.getTime());
-                    syncValues.put(Database.PhotoStore.USER, user);
-                    syncValues.put(Database.PhotoStore.PHOTOBLOB, b);
 
-                    long newRowId;
-                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                            null,
-                            syncValues);
-                    Log.d(TAG, "Photo database add: "+newRowId);
-                    db.close();
+
 
                     //upload call
                     DataUtilities.uploadPhotoToFB(ref, encodedImage);
@@ -641,7 +638,7 @@ public class DailyActivity extends ActionBarActivity {
 
 
     public byte[] dailyPhotoFetch(long today) {
-        return UserData.getUserData(c).pullPhotoFromDB(today);
+        return UserData.getUserData(c).retrievePhoto(today);
 
     }
 

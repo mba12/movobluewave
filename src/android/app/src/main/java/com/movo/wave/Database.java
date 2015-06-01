@@ -53,6 +53,7 @@ public final class Database {
         public static final String USER = "user";
         public static final String PHOTOBLOB = "blob";
         public static final String MD5 = "md5";
+        public static final String GUID = "guid";
 
     }
 
