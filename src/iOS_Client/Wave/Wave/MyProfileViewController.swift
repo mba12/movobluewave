@@ -32,6 +32,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     var datePicker : UIDatePicker
     var datePickerToolbar : UIToolbar
     var datePickerFirstResponder : Bool = false
+    var genderPickerFirstResponder : Bool = false
 
     var birthdateDate : NSDate!
 
@@ -65,10 +66,16 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
 
         if let g = UserData.getOrCreateUserData().getCurrentGender() {
             gender.text = g
+            
+            if (g == "Male") {
+                genderPicker.selectRow(1, inComponent: 0, animated: false)
+            }
         }
         
         if let bd = UserData.getOrCreateUserData().getCurrentBirthdate() {
-            birthdate.text = bd.description
+            var ndf = NSDateFormatter()
+            ndf.dateStyle = NSDateFormatterStyle.MediumStyle
+            birthdate.text =   ndf.stringFromDate(bd)
             datePicker.date = bd
             birthdateDate = bd
         } else {
@@ -94,6 +101,11 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         birthdate.addTarget(self, action: Selector("birthdateResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
+        
+        gender.addTarget(self, action: Selector("genderResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
+        gender.addTarget(self, action: Selector("genderResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
+        
+        
         datePickerToolbar.sizeToFit()
         UserData.getImageForDate(nil, callbackDelegate: self)
         
@@ -103,6 +115,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         datePickerFirstResponder = false
+        genderPickerFirstResponder = false
         UserData.getImageForDate(nil, callbackDelegate: self)
     }
     
@@ -162,6 +175,16 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         
     }
     
+    func genderResponder(sender: UITextField) {
+        genderPickerFirstResponder = true
+    }
+    
+    func genderResponderEnd(sender: UITextField) {
+        genderPickerFirstResponder = false
+        datePickerToolbar.removeFromSuperview()
+        
+    }
+    
     func birthdateResponderEnd(sender: UITextField) {
         var ndf = NSDateFormatter()
         ndf.dateStyle = NSDateFormatterStyle.MediumStyle
@@ -175,6 +198,9 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     func resignDateKeyboard(sender: UIBarButtonItem) {
         if (datePickerFirstResponder) {
             birthdate.resignFirstResponder()
+            datePickerToolbar.removeFromSuperview()
+        } else if (genderPickerFirstResponder) {
+            gender.resignFirstResponder()
             datePickerToolbar.removeFromSuperview()
         }
     }
@@ -200,7 +226,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         super.keyboardWillShow(notification)
         println("In keyboard will show")
         
-        if (datePickerFirstResponder) {
+        if (datePickerFirstResponder || genderPickerFirstResponder) {
             datePickerToolbar.removeFromSuperview()
             var keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
             var windowheight = self.view.frame.height
@@ -211,6 +237,17 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
             
             datePickerToolbar.setItems([flex, button], animated: true)
             self.view.addSubview(datePickerToolbar)
+            
+            if (genderPickerFirstResponder) {
+                if let g = UserData.getOrCreateUserData().getCurrentGender() {
+                    gender.text = g
+                    
+                    if (g == "Male") {
+                        genderPicker.selectRow(1, inComponent: 0, animated: false)
+                    }
+                }
+            }
+
             
         }
 
