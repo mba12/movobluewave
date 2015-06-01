@@ -163,7 +163,9 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     }
     
     func birthdateResponderEnd(sender: UITextField) {
-        birthdate.text = datePicker.date.description
+        var ndf = NSDateFormatter()
+        ndf.dateStyle = NSDateFormatterStyle.MediumStyle
+        birthdate.text =   ndf.stringFromDate(datePicker.date)
         birthdateDate = datePicker.date
         datePickerFirstResponder = false
         datePickerToolbar.removeFromSuperview()
