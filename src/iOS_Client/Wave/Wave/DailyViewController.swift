@@ -75,8 +75,11 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
          
     
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
-        if (currentDate != nil) {
-            currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
+        if let date = currentDate {
+            /* test for current date */
+            if (!isToday(date)) {
+                currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
+            }
         }
         updateDisplay()
     }

@@ -736,3 +736,23 @@ func isValidBirthDate(birthdate: NSDate) -> Bool {
     return (age >= 13) ? true : false
 }
 
+
+func isToday(date: NSDate) -> Bool {
+    let cdate = NSDate()
+    let cal = NSCalendar.currentCalendar()
+    
+    let cyear = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: cdate)
+    let year = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: date)
+    
+    let cmonth = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: cdate)
+    let month = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: date)
+    
+    let cday = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: cdate)
+    let day = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: date)
+    
+    if (cyear == year && cmonth == month && cday == day) {
+        return true
+    }
+    
+    return false
+}
