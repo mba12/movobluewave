@@ -111,9 +111,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
         var days = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
-            forDate: date).toRange()!.endIndex
+            forDate: date).toRange()!.endIndex-1
         
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear) {
             days = cal.component(.CalendarUnitDay , fromDate: NSDate())
         }
         
@@ -142,7 +142,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             cell.textLabel2?.text = "0"
             
         }
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
                 cell.imageView?.image = UIImage(named: "datebgwide")
                 cell.textLabel?.text = "Today"
         
@@ -219,7 +219,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         todayYear = year
         
         date = YMDLocalToNSDate(todayYear, todayMonth, 1)!
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth  && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear ) {
             //then turn off the forward button
             forwardButton.enabled = false
             forwardButton.hidden = true

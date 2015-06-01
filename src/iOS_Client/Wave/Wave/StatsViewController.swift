@@ -94,7 +94,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
-            forDate: date).toRange()!.endIndex
+            forDate: date).toRange()!.endIndex-1
         
         if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
             numDays = cal.component(.CalendarUnitDay , fromDate: NSDate())
