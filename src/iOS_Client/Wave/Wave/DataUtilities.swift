@@ -338,8 +338,8 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
 }
 
 
-func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String){
-    
+func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String) -> Bool {
+    var newsteps = false
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
         //        println(stepsChild.value)
@@ -365,6 +365,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             newItem.endtime = stopTime
             newItem.serialnumber = serial
             newItem.ispushed = true
+            newsteps = true
             
         }else{
             //NSLog("Duplicate entry found, not adding to coredata")
@@ -373,12 +374,13 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
         UserData.saveContext()
     }
 
-    
+    return newsteps
 }
 
 
 func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FBUpdateDelegate?) {
     if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+        var newsteps = false
         var year:String = String(Year)
         var month:String = ""
         if(Month<10){
@@ -415,7 +417,7 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                         //this steps into the node title and gets the objects
                         //                            isoDate = isoDate + daySnap.key
                         if(daySnap.hasChildren()){
-                            insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            newsteps = insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
                         }
                         
                     }
@@ -423,7 +425,9 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                 
             }
             if let callback = updateCallback {
-                callback.UpdatedDataFromFirebase()
+                if (newsteps) {
+                    callback.UpdatedDataFromFirebase()
+                }
             }
             
             }, withCancelBlock: { error in

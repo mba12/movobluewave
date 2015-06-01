@@ -134,8 +134,19 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
+        
 
         if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
+            
+            if (cell.currentDate != dateStart) {
+                cell.currentDate = dateStart
+                cell.bgImageView.image = UIImage(named:"calendarbg")
+            }
+            
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                UserData.getImageForDate(dateStart, callbackDelegate: cell)
+            })
+            
             
             if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(stepsForDayStarting(dateStart)) {
                 cell.textLabel2?.text = stepsstring
@@ -145,7 +156,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
         } else {
             cell.textLabel2?.text = "0"
-            
+            cell.bgImageView.image = UIImage(named:"calendarbg")
         }
         if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
                 cell.imageView?.image = UIImage(named: "datebgwide")

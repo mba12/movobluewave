@@ -8,7 +8,7 @@
 
 import UIKit
 
-class CollectionViewCell: UICollectionViewCell {
+class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     
     required init(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
@@ -18,6 +18,7 @@ class CollectionViewCell: UICollectionViewCell {
     var textLabel2: UILabel!
     var imageView: UIImageView!
     var bgImageView: UIImageView!
+    var currentDate:NSDate?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -53,5 +54,24 @@ class CollectionViewCell: UICollectionViewCell {
     }
     
     
+    func updatedImage(date: NSDate?, newImage: UIImage?) {
+        var setImage = false
+        if let unwrappedDate = date {
+            if (unwrappedDate == currentDate) {
+                if let image = newImage {
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.bgImageView.image = newImage
+                    })
+                    setImage = true
+                }
+            }
+            if ( (unwrappedDate == currentDate) && !setImage) {
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.bgImageView.image = UIImage(named: "calendarbg")
+                })
+            }
+        }
+    
+    }
     
 }
