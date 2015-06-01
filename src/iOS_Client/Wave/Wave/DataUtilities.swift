@@ -769,32 +769,50 @@ func floatCommaNumberFormatter(decimals: Int) -> NSNumberFormatter {
     return formatter
 }
 
-func resetUserPassword(userEmail: String){
+protocol ResetPasswordDelegate {
+    func resetPassword(success: Bool)
+}
+
+func resetUserPassword(userEmail: String, delegate: ResetPasswordDelegate?){
     var fbRef = UserData.getFirebase()
     let ref = Firebase(url: fbRef)
     ref.resetPasswordForUser(userEmail, withCompletionBlock: { error in
         
         if error != nil {
         // There was an error processing the request
+            if let d = delegate {
+                d.resetPassword(false)
+            }
         } else {
         // Password reset sent successfully
+            if let d = delegate {
+                d.resetPassword(true)
+            }
         }
     })
 }
 
-func changeUserPassword(userEmail: String, oldPassword: String, newPassword: String){
-    let ref = Firebase(url: "https://<YOUR-FIREBASE-APP>.firebaseio.com")
-    ref.changePasswordForUser("bobtony@example.com", fromOld: "correcthorsebatterystaple",
-        toNew: "batteryhorsestaplecorrect", withCompletionBlock: { error in
+protocol PasswordChangeDelegate {
+    func passwordChanged(success: Bool)
+}
+
+func changeUserPassword(userEmail: String, oldPassword: String, newPassword: String, delegate: PasswordChangeDelegate?) {
+    let ref = Firebase(url: UserData.currentFireBaseRef)
+    ref.changePasswordForUser(userEmail, fromOld: oldPassword,
+        toNew: newPassword, withCompletionBlock: { error in
             
             if error != nil {
             // There was an error processing the request
                 var failure = "Failed with error" + error.description
-//                return failure
+                if let d = delegate {
+                    d.passwordChanged(false)
+                }
+                
             } else {
             // Password changed successfully
-                var success = "success"
-//                return success
+                if let d = delegate {
+                    d.passwordChanged(true)
+                }
             }
         })
 }
