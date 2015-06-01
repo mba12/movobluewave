@@ -166,6 +166,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         birthdate.text = datePicker.date.description
         birthdateDate = datePicker.date
         datePickerFirstResponder = false
+        datePickerToolbar.removeFromSuperview()
         
     }
     

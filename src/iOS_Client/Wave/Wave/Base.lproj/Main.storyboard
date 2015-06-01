@@ -668,6 +668,7 @@
                         </variation>
                     </view>
                     <connections>
+                        <outlet property="birthdate" destination="qNZ-Dz-I22" id="PPO-RU-Xs9"/>
                         <outlet property="confirmPassText" destination="WYH-nb-GsG" id="w8J-0y-33Y"/>
                         <outlet property="emailText" destination="KAE-G1-guG" id="0Dd-dI-Ttd"/>
                         <outlet property="passText" destination="kVp-8B-WB5" id="d1f-Mu-Bl9"/>
