@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class RegisterViewController: KeyboardSlideViewController {
+class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate {
     
     
     @IBOutlet weak var emailText: UITextField!
@@ -18,7 +18,21 @@ class RegisterViewController: KeyboardSlideViewController {
     @IBOutlet weak var passText: UITextField!
     
     @IBOutlet weak var confirmPassText: UITextField!
+    
+    @IBOutlet weak var birthdate: UITextField!
 
+    var datePicker : UIDatePicker
+    var datePickerToolbar : UIToolbar
+    var datePickerFirstResponder : Bool = false
+    
+    var birthdateDate : NSDate!
+    
+    
+    required init(coder aDecoder: NSCoder) {
+        datePicker = UIDatePicker()
+        datePickerToolbar = UIToolbar()
+        super.init(coder: aDecoder)
+    }
     
     
     @IBAction func register(sender: UIButton){
@@ -30,6 +44,9 @@ class RegisterViewController: KeyboardSlideViewController {
         var password = passText.text
         var confirmPass = confirmPassText.text
         var username = usernameText.text
+        
+        var birthday = birthdateDate
+        
         var validation = true
         
 //WARN: bad email validation check
@@ -44,6 +61,10 @@ class RegisterViewController: KeyboardSlideViewController {
             validation = false
         }
         if(password != confirmPass){
+            validation = false
+        }
+        
+        if (!isValidBirthDate(birthday)) {
             validation = false
         }
         
@@ -126,7 +147,75 @@ class RegisterViewController: KeyboardSlideViewController {
     }
     
     
+    override func viewDidLoad() {
+        //set up birthdate picker
+        datePicker.addTarget(self, action: Selector("dateSelection:"), forControlEvents: UIControlEvents.ValueChanged)
+        datePicker.datePickerMode = UIDatePickerMode.Date
+        //datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
+        birthdate.inputView = datePicker
+        birthdate.addTarget(self, action: Selector("birthdateResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
+        birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
+        
+        datePickerToolbar.sizeToFit()
+
+    }
     
+    
+    func dateSelection(sender: UIDatePicker) {
+        
+        println("Got Date")
+        
+        
+    }
+    
+    
+    func birthdateResponder(sender: UITextField) {
+        datePickerFirstResponder = true
+        
+    }
+    
+    func birthdateResponderEnd(sender: UITextField) {
+        var ndf = NSDateFormatter()
+        ndf.dateStyle = NSDateFormatterStyle.MediumStyle
+        birthdate.text =   ndf.stringFromDate(datePicker.date)
+        birthdateDate = datePicker.date
+        if (datePickerFirstResponder) {
+                datePickerToolbar.removeFromSuperview()
+        }
+        datePickerFirstResponder = false
+        
+        
+    }
+    
+    func resignDateKeyboard(sender: UIBarButtonItem) {
+        if (datePickerFirstResponder) {
+            birthdate.resignFirstResponder()
+            datePickerToolbar.removeFromSuperview()
+        }
+    }
+
+    
+    
+    
+    override func keyboardWillShow(notification: NSNotification) {
+        super.keyboardWillShow(notification)
+        println("In keyboard will show")
+        
+        if (datePickerFirstResponder) {
+            datePickerToolbar.removeFromSuperview()
+            var keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
+            var windowheight = self.view.frame.height
+            datePickerToolbar = UIToolbar(frame: CGRectMake(0, windowheight-keyboardSize!.height-44 , keyboardSize!.width, 44))
+            datePickerToolbar.sizeToFit()
+            var flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
+            var button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
+            
+            datePickerToolbar.setItems([flex, button], animated: true)
+            self.view.addSubview(datePickerToolbar)
+            
+        }
+        
+    }
     
     
     @IBAction func cancelButtonPressed(sender: AnyObject) {

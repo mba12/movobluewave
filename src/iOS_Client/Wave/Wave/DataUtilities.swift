@@ -338,8 +338,8 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
 }
 
 
-func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String){
-    
+func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String) -> Bool {
+    var newsteps = false
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
         //        println(stepsChild.value)
@@ -365,6 +365,7 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             newItem.endtime = stopTime
             newItem.serialnumber = serial
             newItem.ispushed = true
+            newsteps = true
             
         }else{
             //NSLog("Duplicate entry found, not adding to coredata")
@@ -373,12 +374,13 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
         UserData.saveContext()
     }
 
-    
+    return newsteps
 }
 
 
 func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FBUpdateDelegate?) {
     if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+        var newsteps = false
         var year:String = String(Year)
         var month:String = ""
         if(Month<10){
@@ -415,7 +417,7 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                         //this steps into the node title and gets the objects
                         //                            isoDate = isoDate + daySnap.key
                         if(daySnap.hasChildren()){
-                            insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            newsteps = insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
                         }
                         
                     }
@@ -423,7 +425,9 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                 
             }
             if let callback = updateCallback {
-                callback.UpdatedDataFromFirebase()
+                if (newsteps) {
+                    callback.UpdatedDataFromFirebase()
+                }
             }
             
             }, withCancelBlock: { error in
@@ -700,4 +704,69 @@ func addToKnownDevices(serial : String) {
     }
     
 }
+
+
+func isValidBirthDate(birthdate: NSDate) -> Bool {
+    let cdate = NSDate()
+    let cal = NSCalendar.currentCalendar()
+    
+    let cyear = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: cdate)
+    let year = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: birthdate)
+    
+    let cmonth = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: cdate)
+    let month = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: birthdate)
+    
+    let cday = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: cdate)
+    let day = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: birthdate)
+    
+    //have we already had our birthday
+    var birthday = 0
+    
+    if (cmonth >= month) {
+        if (cmonth == month) {
+            if (cday >= day) {
+                birthday = 1
+            }
+        } else {
+            birthday = 1
+        }
+        
+    }
+    
+    //given this, current age is:  cyear - year + birthday - 1
+    //this will yield 1 less than cyear - year unless a birthday has occured
+    let age = cyear - year + birthday - 1
+    
+    return (age >= 13) ? true : false
+}
+
+
+func isToday(date: NSDate) -> Bool {
+    let cdate = NSDate()
+    let cal = NSCalendar.currentCalendar()
+    
+    let cyear = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: cdate)
+    let year = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: date)
+    
+    let cmonth = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: cdate)
+    let month = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: date)
+    
+    let cday = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: cdate)
+    let day = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: date)
+    
+    if (cyear == year && cmonth == month && cday == day) {
+        return true
+    }
+    
+    return false
+}
+
+func floatCommaNumberFormatter(decimals: Int) -> NSNumberFormatter {
+    var formatter = NSNumberFormatter()
+    formatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
+    formatter.maximumFractionDigits = decimals
+    
+    return formatter
+}
+
 

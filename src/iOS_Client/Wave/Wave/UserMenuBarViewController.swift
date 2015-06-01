@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
+class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, ImageUpdateDelegate {
     
     @IBOutlet weak var statsButton: UIButton!
     @IBOutlet weak var profilePictureButton: UIButton!
@@ -17,6 +17,12 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
 
     
     override func viewDidLoad() {
+        if let username = UserData.getOrCreateUserData().getCurrentUserName() {
+            dispatch_async(dispatch_get_main_queue(),  {
+                self.userNameLabel.text = username
+            })
+        }
+        UserData.getImageForDate(nil, callbackDelegate: self)
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -50,12 +56,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
             })
         }
         
-        if let profilePicture = UserData.getOrCreateUserData().getCurrentUserPhoto() {
-            dispatch_async(dispatch_get_main_queue(),  {
-                self.profilePictureButton.setImage(profilePicture, forState: UIControlState.Normal)
-            })
-            
-        }
+        UserData.getImageForDate(nil, callbackDelegate: self)
         
     }
     
@@ -83,5 +84,24 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate {
     }
     
     
+    func updatedImage(date: NSDate?, newImage: UIImage?) {
+        var setImage = false
+        if (date == nil) {
+            if let image = newImage {
+                //then we have a new profile image
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePictureButton.setImage(image, forState: UIControlState.Normal)
+                })
+                
+            } else {
+                //if image is nil
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePictureButton.setImage(UIImage(named: "default_user_icon"), forState: UIControlState.Normal)
+                })
+            }
+            
+        }
+        
+    }
     
 }

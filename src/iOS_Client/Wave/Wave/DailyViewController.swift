@@ -62,7 +62,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             if let date = dateForImage {
                 if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
-                    UserData.storeImage(image, date: date, pushToFirebase: true, callbackDelegate: self)
+                    UserData.storeImage(image, rawData: nil, date: date, pushToFirebase: true, callbackDelegate: self)
                     
                 }
             }
@@ -75,8 +75,11 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
          
     
     func swipeLeft(recognizer : UISwipeGestureRecognizer) {
-        if (currentDate != nil) {
-            currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
+        if let date = currentDate {
+            /* test for current date */
+            if (!isToday(date)) {
+                currentDate = currentDate?.dateByAddingTimeInterval(60*60*24);
+            }
         }
         updateDisplay()
     }
@@ -108,7 +111,11 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             /* Set the steps */
             var steps = stepsForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
-                self.stepsLabel.text = String(steps)
+                if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(steps) {
+                    self.stepsLabel.text = stepsstring
+                } else {
+                    self.stepsLabel.text = "0"
+                }
             })
             
             
@@ -132,7 +139,11 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             let miles = Calculator.calculate_distance(steps, height: Int(height*12.0))
             
             dispatch_async(dispatch_get_main_queue(), {
-                self.distanceLabel.text = String(format: "%.1f", miles) + " MILES"
+                if let milestring = floatCommaNumberFormatter(1).stringFromNumber(miles) {
+                    self.distanceLabel.text = milestring + " MILES"
+                } else {
+                    self.distanceLabel.text = "0.0 MILES"
+                }
             })
             
             
@@ -140,7 +151,11 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
 
             let calories = caloriesForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
-                self.calorieLabel.text = String(format: "%.1f", calories) + " CAL"
+                if let caloriestring = floatCommaNumberFormatter(1).stringFromNumber(calories) {
+                    self.calorieLabel.text =  caloriestring + " CAL"
+                } else {
+                    self.calorieLabel.text =  "0.0 CAL"
+                }
             })
             
             UserData.getImageForDate(date, callbackDelegate: self)
@@ -152,20 +167,22 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
         
     }
     
-    func updatedImage(date: NSDate, newImage: UIImage?) {
+    func updatedImage(date: NSDate?, newImage: UIImage?) {
         var setImage = false
-        if (date == currentDate) {
-            if let image = newImage {
-                dispatch_async(dispatch_get_main_queue(), {
-                    self.backgroundImage.image = newImage
-                })
-            setImage = true
+        if let unwrappedDate = date {
+            if (unwrappedDate == currentDate) {
+                if let image = newImage {
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.backgroundImage.image = newImage
+                    })
+                    setImage = true
+                }
             }
-        }
-        if (!setImage) {
-            dispatch_async(dispatch_get_main_queue(),  {
-                self.backgroundImage.image = UIImage(named: "splash")
-            })
+            if ( (unwrappedDate == currentDate) && !setImage) {
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.backgroundImage.image = UIImage(named: "splash")
+                })
+            }
         }
     }
     

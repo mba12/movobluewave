@@ -94,7 +94,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
-            forDate: date).toRange()!.endIndex
+            forDate: date).toRange()!.endIndex-1
         
         if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
             numDays = cal.component(.CalendarUnitDay , fromDate: NSDate())
@@ -176,15 +176,46 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         caloriesDataSet!.setColor(UIColor.redColor())
         
         chartView.xAxis.labelHeight = 0
+        chartView.descriptionText = ""
         
         dispatch_async(dispatch_get_main_queue(), {
-            self.milesAvg.text = String(format: "%.1f", milesAvgC)
-            self.stepsAvg.text = String(format: "%.0f", stepsAvgC)
-            self.caloriesAvg.text = String(format: "%.0f", caloriesAvgC)
             
-            self.caloriesCountLabel.text = String(format: "%.0f", caloriesTotal)
-            self.milesCountLabel.text = String(format: "%.0f", milesTotal)
-            self.stepsCountLabel.text = String(stepsTotal)
+            if let milestring = floatCommaNumberFormatter(1).stringFromNumber(milesAvgC) {
+                self.milesAvg.text = milestring
+            } else {
+                self.milesAvg.text = "0.0"
+            }
+            
+            if let milestring = floatCommaNumberFormatter(1).stringFromNumber(milesTotal) {
+                self.milesCountLabel.text = milestring
+            } else {
+                self.milesCountLabel.text = "0.0"
+            }
+            
+            if let stepstring = floatCommaNumberFormatter(0).stringFromNumber(stepsAvgC) {
+                 self.stepsAvg.text = stepstring
+            } else {
+                self.stepsAvg.text = "0"
+            }
+            
+            if let stepstring = floatCommaNumberFormatter(0).stringFromNumber(stepsTotal) {
+                self.stepsCountLabel.text = stepstring
+            } else {
+                self.stepsCountLabel.text = "0"
+            }
+            
+            if let caloriestring = floatCommaNumberFormatter(1).stringFromNumber(caloriesAvgC) {
+                self.caloriesAvg.text = caloriestring
+            } else {
+                self.caloriesAvg.text = "0.0"
+            }
+            
+            if let caloriestring = floatCommaNumberFormatter(1).stringFromNumber(caloriesTotal) {
+                self.caloriesCountLabel.text = caloriestring
+            } else {
+                self.caloriesCountLabel.text = "0.0"
+            }
+            
             
         })
         

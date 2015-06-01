@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate {
+class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate, ImageUpdateDelegate,  UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     @IBOutlet weak var cancel: UIButton!
     
     @IBOutlet weak var fullName: UITextField!
@@ -24,6 +24,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     @IBOutlet weak var cancelButton: UIButton!
     
+    @IBOutlet weak var profilePicture: UIImageView!
     
     var genderPicker : UIPickerView
     var genderPickerData = ["Female","Male"]
@@ -32,6 +33,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     var datePickerToolbar : UIToolbar
     var datePickerFirstResponder : Bool = false
 
+    var birthdateDate : NSDate!
 
     required init(coder aDecoder: NSCoder) {
         genderPicker = UIPickerView()
@@ -68,7 +70,13 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         if let bd = UserData.getOrCreateUserData().getCurrentBirthdate() {
             birthdate.text = bd.description
             datePicker.date = bd
+            birthdateDate = bd
+        } else {
+            datePicker.date = NSDate()
+            birthdateDate = datePicker.date
         }
+        
+        
         offsetModifier = -(cancelButton.frame.origin.y - cancelButton.frame.height)
         
         
@@ -81,13 +89,13 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         //set up birthdate picker
         datePicker.addTarget(self, action: Selector("dateSelection:"), forControlEvents: UIControlEvents.ValueChanged)
         datePicker.datePickerMode = UIDatePickerMode.Date
-        datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
+        //datePicker.maximumDate = NSDate().dateByAddingTimeInterval(-60*60*24) //yesterday
         birthdate.inputView = datePicker
         birthdate.addTarget(self, action: Selector("birthdateResponder:"), forControlEvents: UIControlEvents.EditingDidBegin)
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
         datePickerToolbar.sizeToFit()
-        
+        UserData.getImageForDate(nil, callbackDelegate: self)
         
         
     }
@@ -95,6 +103,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
         datePickerFirstResponder = false
+        UserData.getImageForDate(nil, callbackDelegate: self)
     }
     
     
@@ -104,16 +113,30 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     @IBAction func saveChanges(sender: UIButton){
         //call the sets on all of the name changes
+        var validation = true
 
-
-        UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
-        UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
-        UserData.getOrCreateUserData().setCurrentGender(gender.text)
-        UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
-        UserData.getOrCreateUserData().saveMetaDataToFirebase()
         
+        if (!isValidBirthDate(birthdateDate)) {
+            validation = false
+        }
+        
+        if (validation) {
+            UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
+            UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
+            UserData.getOrCreateUserData().setCurrentGender(gender.text)
+            UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
+            UserData.getOrCreateUserData().saveMetaDataToFirebase()
+            dismissViewControllerAnimated(true, completion: nil)
+        } else {
+            let alertController = UIAlertController(title: "Error", message:
+                "Invalid profile information, please correct and try again", preferredStyle: UIAlertControllerStyle.Alert)
+            alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+            
+            self.presentViewController(alertController, animated: true, completion: nil)
+            
+        }
     }
     
     
@@ -140,8 +163,12 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     }
     
     func birthdateResponderEnd(sender: UITextField) {
-        birthdate.text = datePicker.date.description
+        var ndf = NSDateFormatter()
+        ndf.dateStyle = NSDateFormatterStyle.MediumStyle
+        birthdate.text =   ndf.stringFromDate(datePicker.date)
+        birthdateDate = datePicker.date
         datePickerFirstResponder = false
+        datePickerToolbar.removeFromSuperview()
         
     }
     
@@ -187,6 +214,58 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
             
         }
 
+    }
+    
+    
+    func updatedImage(date: NSDate?, newImage: UIImage?) {
+        var setImage = false
+        if (date == nil) {
+            if let image = newImage {
+                //then we have a new profile image
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePicture.image = image
+                })
+                
+            } else {
+                dispatch_async(dispatch_get_main_queue(),  {
+                    self.profilePicture.image = UIImage(named: "default_user_icon")
+                })                    
+            }
+            
+        }
+        
+    }
+    
+    @IBAction func updateProfilePictureClick(sender: AnyObject) {
+        var imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        self.presentViewController(imagePicker, animated: true, completion: nil)
+        
+        
+    }
+    
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+        
+        picker.dismissViewControllerAnimated(true, completion: {
+            
+            /*
+            println("showing spinner")
+            var spinner = showSpinner("Uploading Image", "Please wait...")
+            
+            self.presentViewController(spinner, animated: true, completion: nil)
+            */
+            
+        
+            if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
+                UserData.storeImage(image, rawData: nil, date: nil, pushToFirebase: true, callbackDelegate: self)
+                    
+            }
+            
+            /*
+            spinner.dismissViewControllerAnimated(true, completion: nil)
+            */
+        })
+        
     }
     
 }

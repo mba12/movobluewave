@@ -257,6 +257,8 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
     func disconnectedWaveDevice(id: NSString) {
         //A device is immediately no longer "ready" when it disconnects
         //so deviceReady should be called with "nil"
+        
+        
         callbackDelegate.deviceReady(id, serial: nil, ready: false )
     }
     
@@ -999,12 +1001,13 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         var wavePeripheral : CBPeripheral?
         wavePeripheral = wavePeripherals.valueForKey(peripheral.identifier.UUIDString) as? CBPeripheral
         if (peripheral == wavePeripheral) {
-            callbackDelegate.disconnectedWaveDevice(peripheral.identifier.UUIDString)
             wavePeripherals.removeObjectForKey(peripheral.identifier.UUIDString)
             writeCharacteristics.removeObjectForKey(peripheral.identifier.UUIDString)
             notifyCharacteristics.removeObjectForKey(peripheral.identifier.UUIDString)
             connectingPeripherals.removeObjectForKey(peripheral.identifier.UUIDString)
             connectedSerials.removeObjectForKey(peripheral.identifier.UUIDString)
+            callbackDelegate.disconnectedWaveDevice(peripheral.identifier.UUIDString)
+
         }
     }
     

@@ -51,6 +51,17 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
+        if (UserData.getOrCreateUserData().getCurrentEmail() == nil) {
+            //no current user
+            
+            NSLog("No usable CurrentUser!")
+            performSegueWithIdentifier("Logout", sender: self)
+            
+            
+        }
+        
          date = NSDate()
 //        let date = NSDate()
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
@@ -100,9 +111,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
         var days = cal.rangeOfUnit(.CalendarUnitDay,
             inUnit: .CalendarUnitMonth,
-            forDate: date).toRange()!.endIndex
+            forDate: date).toRange()!.endIndex-1
         
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear) {
             days = cal.component(.CalendarUnitDay , fromDate: NSDate())
         }
         
@@ -123,15 +134,31 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
+        
 
         if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
-            cell.textLabel2?.text = String(stepsForDayStarting(dateStart))
+            
+            if (cell.currentDate != dateStart) {
+                cell.currentDate = dateStart
+                cell.bgImageView.image = UIImage(named:"calendarbg")
+            }
+            
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                UserData.getImageForDate(dateStart, callbackDelegate: cell)
+            })
+            
+            
+            if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(stepsForDayStarting(dateStart)) {
+                cell.textLabel2?.text = stepsstring
+            } else {
+                cell.textLabel2?.text = "0"
+            }
             
         } else {
             cell.textLabel2?.text = "0"
-            
+            cell.bgImageView.image = UIImage(named:"calendarbg")
         }
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
                 cell.imageView?.image = UIImage(named: "datebgwide")
                 cell.textLabel?.text = "Today"
         
@@ -208,7 +235,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         todayYear = year
         
         date = YMDLocalToNSDate(todayYear, todayMonth, 1)!
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth  && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear ) {
             //then turn off the forward button
             forwardButton.enabled = false
             forwardButton.hidden = true
