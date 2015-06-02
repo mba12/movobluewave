@@ -588,8 +588,8 @@ public class UserData extends Activity{
                 new String[] {
                         Database.StepEntry.USER, //string
                         Database.PhotoStore.DATE, //int
-                        Database.PhotoStore.PHOTOBLOB,
-                        Database.PhotoStore.GUID}, //blob                          // The columns to return
+//                        Database.PhotoStore.PHOTOBLOB,
+                        Database.PhotoStore.GUID}, //String                          // The columns to return
                 photo,                                // The columns for the WHERE clause
                 new String[] { profile.getTimeInMillis()+"", user },                            // The values for the WHERE clause
                 null,                                     // don't group the rows
@@ -601,7 +601,7 @@ public class UserData extends Activity{
         boolean localFile = false;
         if(curPhoto.getCount()!=0){
             localFile = true;
-            byte[] byteArray = loadPhotoFromGuid(curPhoto.getString(4));
+            byte[] byteArray = loadPhotoFromGuid(curPhoto.getString(2));
             final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = false;
             options.inSampleSize = 4;
@@ -1058,7 +1058,7 @@ public class UserData extends Activity{
 
             if (curPhoto.getCount() != 0) {
 
-                String md5 = curPhoto.getString(3);
+                String md5 = curPhoto.getString(2);
 
                 Log.d(TAG, "Found photo for today "+md5);
                 if (md5 != null) {
@@ -1172,7 +1172,7 @@ public class UserData extends Activity{
                 new String[]{
                         Database.StepEntry.USER, //string
                         Database.PhotoStore.DATE, //int
-                        Database.PhotoStore.PHOTOBLOB, //blob
+//                        Database.PhotoStore.PHOTOBLOB, //blob
                         Database.PhotoStore.MD5, //string
                         Database.PhotoStore.GUID},
                 // The columns to return
@@ -1190,8 +1190,8 @@ public class UserData extends Activity{
             int uniquePic =0;
             if (curPhoto.getCount() != 0) {
 
-                String md5 = curPhoto.getString(3);
-                String guid = curPhoto.getString(4);
+                String md5 = curPhoto.getString(2);
+                String guid = curPhoto.getString(3);
 
                 Log.d(TAG, "Found photo for today "+md5);
                 if (md5 != null) {
@@ -1254,7 +1254,7 @@ public class UserData extends Activity{
             shouldDownloadNewPhoto(date, "");
         }
 
-        return null;
+        return returnByte;
     }
 
     //overriden method
