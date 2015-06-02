@@ -39,6 +39,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -249,6 +250,7 @@ public class Home extends MenuActivity {
         boolean userExists = prefs.getBoolean("userExists", false);
 
         chart = (LineChart) findViewById(R.id.chart);
+        chart.setDescription("");
         chartView = (RelativeLayout) findViewById(R.id.chartView);
         ImageView chartToggle = (ImageView) findViewById(R.id.chartButton);
 //        chartToggle.setOnClickListener();
@@ -422,8 +424,8 @@ public class Home extends MenuActivity {
     public void scheduleSyncReminders(){
         long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
 
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Sync your Wave to find out how far you've come"), 5000,0 );
-        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Don't forget to sync and update your Movo calendar."), 10000,1 );
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(), "Sync your Wave to find out how far you've come"), 5000, 0);
+        scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(), "Don't forget to sync and update your Movo calendar."), 10000, 1);
         scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"Where have your steps taken you? Sync your Wave now"), 15000,2 );
         scheduleNotification(getNotification(UserData.getUserData(c).getCurrentUsername(),"You will lose data if you do not sync at least once a week."), 20000,3 );
 //        NotificationCompat.Builder mBuilder =
@@ -511,6 +513,85 @@ public class Home extends MenuActivity {
 
     }
 
+    private int numberOfDigitsBase10(int n) {
+
+        if (n < 100000)
+        {
+            // 5 or less
+            if (n < 100)
+            {
+                // 1 or 2
+                if (n < 10)
+                    return 1;
+                else
+                    return 2;
+            }
+            else
+            {
+                // 3 or 4 or 5
+                if (n < 1000)
+                    return 3;
+                else
+                {
+                    // 4 or 5
+                    if (n < 10000)
+                        return 4;
+                    else
+                        return 5;
+                }
+            }
+        }
+        else
+        {
+            // 6 or more
+            if (n < 10000000)
+            {
+                // 6 or 7
+                if (n < 1000000)
+                    return 6;
+                else
+                    return 7;
+            }
+            else
+            {
+                // 8 to 10
+                if (n < 100000000)
+                    return 8;
+                else
+                {
+                    // 9 or 10
+                    if (n < 1000000000)
+                        return 9;
+                    else
+                        return 10;
+                }
+            }
+        }
+    }
+
+    private float roundUp(int value) {
+
+        float roundedTo = 0;
+        int digits = numberOfDigitsBase10(value);
+        int exp = digits - 1;
+        double ten = 10;
+        double d = Math.pow(ten, exp);
+        int divisor = Double.valueOf(d).intValue();
+
+        Log.d(TAG, "RoundUp Input: " +  value);
+        Log.d(TAG, "RoundUp digits: " +  digits);
+        Log.d(TAG, "RoundUp Divisor: " +  divisor);
+        switch(digits) {
+            case 1:
+                roundedTo = (float) (value + 1.0);
+                break;
+            default:
+                roundedTo = (value / divisor + 1) * divisor;
+        }
+        Log.d(TAG, "RoundUp Value: " +  roundedTo);
+
+        return roundedTo;
+    }
 
     private void setUpChart() {
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
@@ -521,7 +602,9 @@ public class Home extends MenuActivity {
         numberOfDaysLeft = numberOfDaysTotal - difference;
         int totalStepsForMonth = 0;
         int greatestSteps = 0;
+
         for (int i = 0; i <= numberOfDaysLeft; i++) {
+
 
             //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
             Calendar monthCal = calendar;
@@ -537,11 +620,10 @@ public class Home extends MenuActivity {
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
             Entry curEntry = null;
             if (curSteps != null && curSteps.getCount() != 0) {
+
                 int totalStepsForToday = 0;
                 while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday += curSteps.getInt(4);//step count
-
-
+                    totalStepsForToday += curSteps.getInt(4);  //step count
                     curSteps.moveToNext();
 //                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
                     //works
@@ -561,8 +643,11 @@ public class Home extends MenuActivity {
                     float miles = (float)calculateTotalMiles(totalStepsForToday);
                     curEntry = new Entry(miles, i-1);
                 }
+
                 valsComp1.add(curEntry);
             } else {
+                Log.d(TAG, "else i Value: " +  i);
+
                 //no steps for this time period.
                 if(i!=0) {
                     curEntry = new Entry(0, i-1);
@@ -576,6 +661,15 @@ public class Home extends MenuActivity {
                 xVals.add((i) + "");
             }
         }
+
+        // Fill out the rest of the month if we are not at the end of the month
+        for(int i = numberOfDaysLeft; i <= numberOfDaysTotal; i++) {
+            Entry curEntry = new Entry(0, i);
+            valsComp1.add(curEntry);
+            xVals.add((i + 1) + "");
+        }
+
+
         Calendar monthCal = calendar;
         monthCal.setTimeInMillis(timestamp);
 
@@ -600,8 +694,33 @@ public class Home extends MenuActivity {
 //        }
 
 
-        LineDataSet setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
+        LineDataSet setComp1 = null;
+        if (curChart.equals(ChartType.STEPS)) {
+            setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
+        } else if (curChart.equals(ChartType.CALORIES)) {
+            setComp1 = new LineDataSet(valsComp1, "Calories per day");
+        } else {
+            setComp1 = new LineDataSet(valsComp1, "Miles per day");
+        }
+
+        // LineDataSet setComp1 = new LineDataSet(valsComp1, "Steps taken per day");
+
         setComp1.setColor(getResources().getColor(R.color.red));
+        // setComp1.setCircleColor(getResources().getColor(R.color.red));
+        // setComp1.setCircleColorHole(getResources().getColor(R.color.red));
+        // setComp1.setCircleSize(0f);
+        setComp1.setDrawCircles(false);
+
+        setComp1.setLineWidth(3f);
+        // setComp1.setDrawCircleHole(false);
+        // setComp1.setValueTextSize(0f);
+
+        setComp1.setHighLightColor(getResources().getColor(R.color.material_blue_grey_950));
+        setComp1.setDrawValues(false);
+        setComp1.setDrawFilled(true);
+
+        // setComp1.setFillAlpha(65);
+
 
 
         ArrayList<LineDataSet> dataSets = new ArrayList<LineDataSet>();
@@ -610,25 +729,33 @@ public class Home extends MenuActivity {
         LineData data = new LineData(xVals, dataSets);
         YAxis rightAxis = chart.getAxisRight();
         YAxis leftAxis = chart.getAxisLeft();
+
+        XAxis xaxis = chart.getXAxis();
+        xaxis.setAvoidFirstLastClipping(true);
+
         if (curChart.equals(ChartType.STEPS)) {
+            float axisMax = roundUp(greatestSteps);
 
             rightAxis.setStartAtZero(true);
-            rightAxis.setAxisMaxValue((float) greatestSteps);
+            rightAxis.setAxisMaxValue(axisMax);
             leftAxis.setStartAtZero(true);
-            leftAxis.setAxisMaxValue((float) greatestSteps);
-
+            leftAxis.setAxisMaxValue(axisMax);
         } else if (curChart.equals(ChartType.CALORIES)) {
+            double calories = calculateTotalCalories(greatestSteps);
+            float axisMax = roundUp(Double.valueOf(calories).intValue());
 
             rightAxis.setStartAtZero(true);
-            rightAxis.setAxisMaxValue((float) calculateTotalCalories(greatestSteps));
+            rightAxis.setAxisMaxValue(axisMax);
             leftAxis.setStartAtZero(true);
-            leftAxis.setAxisMaxValue((float) calculateTotalCalories(greatestSteps));
-        } else if (curChart.equals(ChartType.MILES)){
+            leftAxis.setAxisMaxValue(axisMax);
+        } else {
+            double miles = calculateTotalMiles(greatestSteps);
+            float axisMax = roundUp(Double.valueOf(miles).intValue());
 
             rightAxis.setStartAtZero(true);
-            rightAxis.setAxisMaxValue((float) calculateTotalMiles(greatestSteps));
+            rightAxis.setAxisMaxValue(axisMax);
             leftAxis.setStartAtZero(true);
-            leftAxis.setAxisMaxValue((float) calculateTotalMiles(greatestSteps));
+            leftAxis.setAxisMaxValue(axisMax);
         }
         rightAxis.setDrawLabels(false);
         leftAxis.setDrawLabels(true);
