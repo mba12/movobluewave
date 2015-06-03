@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.hardware.Camera;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
@@ -350,6 +351,8 @@ public class DailyActivity extends ActionBarActivity {
                         orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
 
+//                        ExifInterface exif = new ExifInterface(SourceFileName);     //Since API Level 5
+                        String exifOrientation = ei.getAttribute(ExifInterface.TAG_ORIENTATION);
 
                         BitmapFactory.Options options = new BitmapFactory.Options();
 //                        options.inJustDecodeBounds = true;
@@ -394,7 +397,8 @@ public class DailyActivity extends ActionBarActivity {
                     byte[] b = baos.toByteArray();
                     Bitmap bitmapBit = BitmapFactory.decodeByteArray(b, 0, b.length);
                     ByteArrayOutputStream stream = null;
-//                    byte[] byteArrayBit = null;
+
+
                     switch(orientation) {
                         case ExifInterface.ORIENTATION_ROTATE_90:
                             Log.d(TAG, "Image rotated 90");
@@ -406,6 +410,13 @@ public class DailyActivity extends ActionBarActivity {
                         case ExifInterface.ORIENTATION_ROTATE_180:
                             Log.d(TAG, "Image rotated 180");
                             bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 180);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                        case ExifInterface.ORIENTATION_ROTATE_270:
+                            Log.d(TAG, "Image rotated 270");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 270);
                             stream = new ByteArrayOutputStream();
                             bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                             b = stream.toByteArray();

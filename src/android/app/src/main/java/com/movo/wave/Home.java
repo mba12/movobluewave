@@ -19,6 +19,7 @@ import android.os.StrictMode;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -86,7 +87,9 @@ public class Home extends MenuActivity {
     Calendar calendar;
     static GridView gridview;
     final static String EXTRA_CHART_VIEW = "com.movo.wave.home.EXTRA_CHART_VIEW";
+    final static String USER_CHANGE = "newUser";
     boolean chartVisible;
+    boolean userChange;
     private static ProgressBar syncProgressBar;
     private static TextView syncText;
     private CharSequence mTitle;
@@ -160,6 +163,7 @@ public class Home extends MenuActivity {
         // Setup BLE context
 
         chartVisible = intentIncoming.getBooleanExtra( EXTRA_CHART_VIEW, false );
+        userChange = intentIncoming.getBooleanExtra(USER_CHANGE, false);
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getReadableDatabase();
@@ -263,16 +267,11 @@ public class Home extends MenuActivity {
         setChartVisible( chartVisible );
 
 
-//        UserData myUserData = UserData.getUserData(c);
         ArrayList<String> users = new ArrayList<String>();
         users =  UserData.getUserData(c).getUserList();
         if (!users.isEmpty()) {
-//            if (userExists == true) {
-//                setUpCharts(c);
-//                TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-//                currentUserTV.setText(myData.getCurrentUsername());
-//            } else {
-            String uid = UserData.getUserData(c).getUIDByEmail(users.get(0));
+
+            String uid = UserData.getUserData(c).getCurrentUser();
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
             if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
@@ -471,13 +470,37 @@ public class Home extends MenuActivity {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-//        calendar = Calendar.getInstance();
-//        curDay = calendar.get(Calendar.DAY_OF_MONTH);
-//        curMonth = calendar.get(Calendar.MONTH);
-//        curYear = calendar.get(Calendar.YEAR);
+        DrawerLayout home = (DrawerLayout) findViewById(R.id.drawer_layout);
 
+        ArrayList<String> users = new ArrayList<String>();
+        users =  UserData.getUserData(c).getUserList();
+        if (!users.isEmpty()) {
+
+            String uid = UserData.getUserData(c).getCurrentUser();
+            UserData.getUserData(c).loadNewUser(uid);
+            TextView currentUserTV = (TextView) findViewById(R.id.nameText);
+            if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                currentUserTV.setText( "" );
+            }else{
+                currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+            }
+            home.invalidate();
+
+
+            setUpCharts(c);
+
+
+        } else {
+
+            Intent intent = new Intent(getApplicationContext(),
+                    FirstLaunch.class);
+            startActivity(intent);
+
+
+        }
         Intent intentIncoming = getIntent();
-//
+//        View ourView = (View) findViewById(R.layout.activity_home);
+
         String date = intentIncoming.getStringExtra("date");
         if (date != null) {
             Long dateLong = Long.parseLong(date);
@@ -509,7 +532,7 @@ public class Home extends MenuActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        home.invalidate();
 
     }
 

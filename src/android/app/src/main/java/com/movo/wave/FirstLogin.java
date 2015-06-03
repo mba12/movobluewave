@@ -128,7 +128,7 @@ public class FirstLogin extends Activity {
 
                         });
                     } else {
-                       //is an email
+                        //is an email
                         loginRef.resetPassword(mEmail, new Firebase.ResultHandler() {
                             @Override
                             public void onSuccess() {
@@ -157,35 +157,7 @@ public class FirstLogin extends Activity {
                 mEmail = username.getText().toString();
                 mPassword = pass.getText().toString();
                 loginProgress.setVisibility(View.VISIBLE);
-//                loginRef.auth
-
-//                if (false) {//(!(mEmail.contains("@"))
-//                    Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
-//                    Firebase child = lookupEmail.child(mEmail);
-//                    child.addListenerForSingleValueEvent(new ValueEventListener() {
-//                        @Override
-//                        public void onDataChange(DataSnapshot snapshot) {
-//                            Log.d(TAG, snapshot + "");
-//                            String email = snapshot.getValue().toString();
-//                            usernameCust = mEmail;
-//                            mEmail = email;
-//
-//
-//                            login();
-//
-//
-//                        }
-//
-//                        @Override
-//                        public void onCancelled(FirebaseError firebaseError) {
-//                            Toast.makeText(c, firebaseError.getMessage(), Toast.LENGTH_LONG).show();
-//                        }
-//
-//
-//                    });
-//                } else {
-                    login();
-//                }
+                login();
             }
         });
     }
@@ -218,7 +190,7 @@ public class FirstLogin extends Activity {
                 UserData.getUserData(c).setCurrentUserRef(currentUserRef);
                 Firebase metadataChild = currentUserRef.child("metadata");
 
-                boolean firstTime =  UserData.getUserData(c).addCurUserTolist();
+                UserData.getUserData(c).addCurUserTolist();
                 final Calendar cal = Calendar.getInstance();
                 int monthtemp = cal.get(Calendar.MONTH);
                 String monthTracker = "";
@@ -262,51 +234,8 @@ public class FirstLogin extends Activity {
                                     public void onSuccess() {
                                         mPassword = resetPass1;
 
-                                       login();
+                                        login();
                                         alertDialog.cancel();
-//                                        UserData myData = UserData.getUserData(c);
-//                                        myData.downloadProfilePic();
-//
-////                                                myData.setCurUID(authData.getUid());
-////                                                myData.setCurToken(authData.getToken());
-////                                                myData.setCurEmail(mEmail);
-//                                        mPassword = resetPass1;
-//                                        myData.setCurPW(resetPass1);
-////                                        login();
-//                                        // password changed
-//                                        Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
-//                                        child.addValueEventListener(new ValueEventListener() {
-//                                            @Override
-//                                            public void onDataChange(DataSnapshot snapshot) {
-//                                                System.out.println(snapshot.getValue());
-//                                                loginProgress.setVisibility(View.INVISIBLE);
-//
-//
-//
-//                                                insertSteps(snapshot);
-//
-//
-//
-////                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-//                                                ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
-//                                                pb2.setVisibility(View.GONE);
-//
-//
-//                                                Intent intent = new Intent(getApplicationContext(),
-//                                                        Home.class);
-//                                                startActivity(intent);
-//                                                alertDialog.cancel();
-//                                                finish();
-//
-//                                            }
-//
-//                                            @Override
-//                                            public void onCancelled(FirebaseError firebaseError) {
-//                                                ProgressBar pb2 = (ProgressBar) dialogView.findViewById(R.id.progressBar2);
-//                                                pb2.setVisibility(View.GONE);
-//                                                System.out.println("The read failed: " + firebaseError.getMessage());
-//                                            }
-//                                        });
                                     }
 
                                     @Override
@@ -335,8 +264,9 @@ public class FirstLogin extends Activity {
 
                 } else {
 //                    UserData myData = UserData.getUserData(c);
+//                    if(metadataChild.)
                     UserData.getUserData(c).setMetadata(metadataChild,authData.getUid());
-                    UserData.getUserData(c).downloadMetadata(authData.getUid());
+//                    UserData.getUserData(c).downloadMetadata(authData.getUid());
                     UserData.getUserData(c).downloadProfilePic();
                     if(usernameCust!=""){
                         UserData.getUserData(c).setCurUsername(usernameCust);
@@ -361,6 +291,8 @@ public class FirstLogin extends Activity {
                             System.out.println("The read failed: " + firebaseError.getMessage());
                         }
                     });
+                    UserData.getUserData(c).setCurrentUser(authData.getUid());
+                    UserData.getUserData(c).loadNewUser(authData.getUid());
 
                     Intent intent = new Intent(getApplicationContext(),
                             Home.class);

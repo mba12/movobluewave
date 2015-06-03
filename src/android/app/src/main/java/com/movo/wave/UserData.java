@@ -355,12 +355,14 @@ public class UserData extends Activity{
         if(!users.isEmpty()) {
 
             String uid = getUIDByEmail(users.get(0));
+            setCurrentUser(uid);
             loadNewUser(uid);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
             prefs.edit().putBoolean("userExists", true);
             return true;
         }else{
+            setCurrentUser("");
             resetUserList();
 
             return false;
@@ -465,6 +467,19 @@ public class UserData extends Activity{
             allUsersReturn.add(entry.getValue().toString());
         }
         return allUsersReturn;
+    }
+
+    public String getCurrentUser(){
+        SharedPreferences allUsers = appContext.getSharedPreferences("currentActiveUser", Context.MODE_PRIVATE);
+        String currentUserId = allUsers.getString("user", null);
+
+        return currentUserId;
+    }
+    public boolean setCurrentUser(String uid){
+        SharedPreferences user = appContext.getSharedPreferences("currentActiveUser", Context.MODE_PRIVATE);
+        SharedPreferences.Editor userActive = user.edit();
+        userActive.putString("user", uid);
+        return true;
     }
 
     public void resetUserList(){
@@ -793,14 +808,16 @@ public class UserData extends Activity{
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                setCurEmail(snapshot.child("currentEmail").getValue(String.class));
-                setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
-                setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
-                setCurWeight(snapshot.child("currentWeight").getValue(String.class));
-                setCurGender(snapshot.child("currentGender").getValue(String.class));
-                setCurName(snapshot.child("currentFullName").getValue(String.class));
-                setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
-                setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+                if(snapshot.hasChildren()) {
+                    setCurEmail(snapshot.child("currentEmail").getValue(String.class));
+                    setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
+                    setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
+                    setCurWeight(snapshot.child("currentWeight").getValue(String.class));
+                    setCurGender(snapshot.child("currentGender").getValue(String.class));
+                    setCurName(snapshot.child("currentFullName").getValue(String.class));
+                    setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+                    setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+                }
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {
