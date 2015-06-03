@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -442,13 +443,14 @@ public class MyProfile extends MenuActivity {
 
                     ByteArrayOutputStream baos;
                     Uri selectedImage=null;
-
+                    int orientation = 0;
 
 
                     try {
                         selectedImage = imageReturnedIntent.getData();
 
-                        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+//                        String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
                         baos = new ByteArrayOutputStream();
 
@@ -456,10 +458,25 @@ public class MyProfile extends MenuActivity {
 
                         final InputStream is = getContentResolver().openInputStream(selectedImage);
 
+                        ///image rotation check
+                        String[] projection = { MediaStore.Images.Media.DATA };
+                        @SuppressWarnings("deprecation")
+                        Cursor cursor = managedQuery(selectedImage, projection, null, null, null);
+                        int column_index = cursor
+                                .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                        cursor.moveToFirst();
+                        String path = cursor.getString(column_index);
+
+                        ExifInterface ei = new ExifInterface(path);
+                        orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+
+
                         BitmapFactory.Options options = new BitmapFactory.Options();
 //                        options.inJustDecodeBounds = true;
                         int inSampleSize = 2;
                         options.inSampleSize = inSampleSize;
+
 //                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
                         BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
 
@@ -496,6 +513,28 @@ public class MyProfile extends MenuActivity {
                     }
 
                     byte[] b = baos.toByteArray();
+                    Bitmap bitmapBit = BitmapFactory.decodeByteArray(b, 0, b.length);
+                    ByteArrayOutputStream stream = null;
+//                    byte[] byteArrayBit = null;
+                    switch(orientation) {
+                        case ExifInterface.ORIENTATION_ROTATE_90:
+                            Log.d(TAG, "Image rotated 90");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 90);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                        case ExifInterface.ORIENTATION_ROTATE_180:
+                            Log.d(TAG, "Image rotated 180");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 180);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                    }
+                    bitmapBit.recycle();
+
+
                     String encodedImage = Base64.encodeToString(b, Base64.NO_WRAP);
                     Glide.with(c)
                             .load(b)
@@ -510,7 +549,7 @@ public class MyProfile extends MenuActivity {
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
                     //database insert
                     String md5 = DataUtilities.getMD5EncryptedString(encodedImage);
-                    UserData.getUserData(c).storePhoto(baos, 0, md5);
+                    UserData.getUserData(c).storePhoto(b, 0, md5);
 
                     //end database insert
 
