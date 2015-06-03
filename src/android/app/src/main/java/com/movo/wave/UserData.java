@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
@@ -17,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -808,17 +810,6 @@ public class UserData extends Activity{
 
 
 
-//
-//        setCurEmail(child.child("currentEmail"));
-////        currentPW =  child.child("currentEmail").toString();
-////        currentToken = userData.getString("currentToken","Error");
-//        setCurHeight1(child.child("currentHeight1").toString());
-//        setCurHeight2(child.child("currentHeight2").toString());
-//        setCurWeight(child.child("currentWeight").toString());
-//        setCurGender(child.child("currentGender").toString());
-//        setCurName(child.child("currentFullName").toString());
-////        currentPW = prefs.getString("currentPW", "Error");
-//        setCurBirthdate(child.child("currentBirthdate").toString());
     }
     public void downloadMetadata(String useruid){
         setCurUID(useruid);
@@ -919,130 +910,6 @@ public class UserData extends Activity{
         db.close();
     }
 
-//    public void insertStepsFromFB(DataSnapshot snapshot, int year, int month, Context c) {
-////        UserData myData = UserData.getUserData(c);
-//        Iterable<DataSnapshot> children = snapshot.getChildren();
-//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-//        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-//        for (DataSnapshot child : children) {
-//            String date = child.getKey();
-//            Iterable<DataSnapshot> syncEvents = child.getChildren();
-//            for (DataSnapshot syncsForToday : syncEvents) {
-//                String syncName = syncsForToday.getKey();
-//                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-//                for (DataSnapshot stepChunk : stepEvents) {
-//                    String stepTime = stepChunk.getKey();
-//                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-//                    Object stepEvent = stepChunk.getValue();
-//                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-//                    monthMap = (Map<String, String>) stepChunk.getValue();
-//                    Log.d(TAG, "Monthmap test" + monthMap);
-//                    Calendar thisCal = Calendar.getInstance();
-////                    Date curDate = monthMap.get("starttime").toString();
-//                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
-//                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
-//
-//
-//                    try {
-//                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
-//                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
-////                        Log.d("TAG", "date is "+curDate);
-//                        thisCal.setTime(curDateStart);
-//
-//                        ContentValues values = new ContentValues();
-//                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-//                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-//                        values.put(Database.StepEntry.START, curDateStart.getTime());
-//                        values.put(Database.StepEntry.END, curDateStop.getTime());
-//                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
-//                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-//                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-//                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-//                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-//                        //TODO: add workout type
-//
-//                        long newRowId;
-//
-//                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-//                                null,
-//                                values);
-//                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
-//
-//
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                        ;
-//                    }
-//
-//                }
-//
-//            }
-//
-//        }
-//    }
-
-//    public byte[]  pullPhotoFromDB(long today){
-//        boolean localFile = false;
-//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-//        Date currentDay = new Date(today);
-//        byte[] returnByte=null;
-//        currentDay = DataUtilities.trim(currentDay);
-////        UserData myData = UserData.getUserData(c);
-//        String user =  UserData.getUserData(appContext).getCurUID();
-//        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
-//        Cursor curPhoto = db.query(
-//                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-//                new String[]{
-//                        Database.StepEntry.USER, //string
-//                        Database.PhotoStore.DATE, //int
-////                        Database.PhotoStore.PHOTOBLOB, //blob
-//                        Database.PhotoStore.MD5,
-//                        Database.PhotoStore.GUID}, //string
-//                // The columns to return
-//                photo,                                // The columns for the WHERE clause
-//                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
-//                null,                                     // don't group the rows
-//                null,                                     // don't filter by row groups
-//                null                                 // The sort order
-//        );
-//        try{
-////            if(curPhoto.getCount())
-//            curPhoto.moveToFirst();
-//
-//            if (curPhoto.getCount() != 0) {
-//
-//                String md5 = curPhoto.getString(2);
-//
-//                Log.d(TAG, "Found photo for today "+md5);
-//                if (md5 != null) {
-//
-//
-//
-//                    byte[] byteArray = curPhoto.getBlob(2);
-//                    returnByte = byteArray;
-//                } else {
-//                    UserData.getUserData(appContext).downloadPhotoForDate(today);
-//                    return null;
-//                }
-////                shouldDownloadNewPhoto(today);
-//
-//            }else {
-//                UserData.getUserData(appContext).downloadPhotoForDate(today);
-//                return null;
-//
-//            }
-//        }catch(Exception e){
-//            shouldDownloadNewPhoto(today, "");
-//            e.printStackTrace();
-//        }finally {
-//            curPhoto.close();
-//            shouldDownloadNewPhoto(today, "");
-//        }
-//
-//        return returnByte;
-//
-//    }
 
 
     public void shouldDownloadNewPhoto(long today,String md5In){
@@ -1091,10 +958,6 @@ public class UserData extends Activity{
     public byte[] loadPhotoFromGuid(String guid){
         final File dir = new File(appContext.getFilesDir() +"/");
         File imageFile = new File(dir, guid);
-//                    FileInputStream fis = new FileInputStream(imageFile);
-//                    byte fileContent[] = new byte[(int)imageFile.length()];
-//                    fis.read(fileContent);
-
         int size = (int) imageFile.length();
         byte[] bytes = new byte[size];
         try {
@@ -1152,9 +1015,10 @@ public class UserData extends Activity{
                     //pull photo from file via guid.
                     final File dir = new File(appContext.getFilesDir() +"/");
                     File imageFile = new File(dir, guid);
-//                    FileInputStream fis = new FileInputStream(imageFile);
-//                    byte fileContent[] = new byte[(int)imageFile.length()];
-//                    fis.read(fileContent);
+
+                    ExifInterface ei = new ExifInterface(imageFile.getPath());
+                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
 
                     int size = (int) imageFile.length();
                     byte[] bytes = new byte[size];
@@ -1162,6 +1026,7 @@ public class UserData extends Activity{
                         BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
                         buf.read(bytes, 0, bytes.length);
                         buf.close();
+
                     } catch (FileNotFoundException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -1191,6 +1056,93 @@ public class UserData extends Activity{
 
         return returnByte;
     }
+
+//    public void checkImageRotation(long date){
+//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+//        Date currentDay = new Date(date);
+//        currentDay = DataUtilities.trim(currentDay);
+//        String user =  UserData.getUserData(appContext).getCurUID();
+//        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
+//        Cursor curPhoto = db.query(
+//                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+//                new String[]{
+//                        Database.StepEntry.USER, //string
+//                        Database.PhotoStore.DATE, //int
+////                        Database.PhotoStore.PHOTOBLOB, //blob
+//                        Database.PhotoStore.MD5, //string
+//                        Database.PhotoStore.GUID},
+//                // The columns to return
+//                photo,                                // The columns for the WHERE clause
+//                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
+//                null,                                     // don't group the rows
+//                null,                                     // don't filter by row groups
+//                null                                 // The sort order
+//        );
+//        try{
+//            curPhoto.moveToFirst();
+//            if (curPhoto.getCount() != 0) {
+//
+//                String md5 = curPhoto.getString(2);
+//                String guid = curPhoto.getString(3);
+//
+//                Log.d(TAG, "Found photo for today "+md5);
+//                if (md5 != null) {
+//                    //pull photo from file via guid.
+//                    final File dir = new File(appContext.getFilesDir() +"/");
+//                    File imageFile = new File(dir, guid);
+//
+//                    ExifInterface ei = new ExifInterface(imageFile.getPath());
+//                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+//
+//
+//                    int size = (int) imageFile.length();
+//                    byte[] bytes = new byte[size];
+//                    try {
+//                         BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
+//                        buf.read(bytes, 0, bytes.length);
+//                        buf.close();
+//                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//                        ByteArrayOutputStream stream;
+//                        byte[] byteArray;
+//                        switch(orientation) {
+//                            case ExifInterface.ORIENTATION_ROTATE_90:
+//                                Log.d(TAG, "Image rotated 90");
+//                                bitmap = DataUtilities.RotateBitmap(bitmap, 90);
+//                                stream = new ByteArrayOutputStream();
+//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                                byteArray = stream.toByteArray();
+//                                storePhoto(byteArray, date, md5);
+//                                break;
+//                            case ExifInterface.ORIENTATION_ROTATE_180:
+//                                Log.d(TAG, "Image rotated 180");
+//                                bitmap = DataUtilities.RotateBitmap(bitmap, 180);
+//                                stream = new ByteArrayOutputStream();
+//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                                byteArray = stream.toByteArray();
+//                                storePhoto(byteArray, date, md5);
+//                                break;
+//                        }
+//
+//
+//
+//                    } catch (FileNotFoundException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }catch(Exception e){
+//
+//            e.printStackTrace();
+//        }finally {
+//            curPhoto.close();
+//        }
+//
+//    }
 
 
     //overriden method
@@ -1222,7 +1174,6 @@ public class UserData extends Activity{
             ContentValues photoValues = new ContentValues();
             photoValues.put(Database.PhotoStore.DATE, curDay.getTime());
             photoValues.put(Database.PhotoStore.USER, currentUID);
-//                        photoValues.put(Database.PhotoStore.PHOTOBLOB, b);
             photoValues.put(Database.PhotoStore.MD5, md5);
             photoValues.put(Database.PhotoStore.GUID, photoGuid);
 
@@ -1233,6 +1184,7 @@ public class UserData extends Activity{
                     photoValues);
             Log.d(TAG, "New Photo database add: " + newRowId);
             db.close();
+//            checkImageRotation(date);
         }
     }
 
@@ -1266,7 +1218,6 @@ public class UserData extends Activity{
             ContentValues photoValues = new ContentValues();
             photoValues.put(Database.PhotoStore.DATE, curDay.getTime());
             photoValues.put(Database.PhotoStore.USER, currentUID);
-//                        photoValues.put(Database.PhotoStore.PHOTOBLOB, b);
             photoValues.put(Database.PhotoStore.MD5, md5);
             photoValues.put(Database.PhotoStore.GUID, photoGuid);
 

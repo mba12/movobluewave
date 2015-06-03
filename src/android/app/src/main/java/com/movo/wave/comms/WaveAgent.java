@@ -497,7 +497,9 @@ public class WaveAgent {
 
         private void signalComplete( List<WaveRequest.WaveDataPoint> data ) {
             callback.complete( this, data );
-            device.release(); //<-- VERY IMPORTANT!!!!
+            if(device!=null) {
+                device.release(); //<-- VERY IMPORTANT!!!!
+            }
         }
 
         /** Convenience wrapper for dispatching data requests

@@ -860,6 +860,7 @@ public class Home extends MenuActivity {
 
                 if (photo != null) {
                     Glide.with(c)
+
                             .load(photo)
 //                            .override(1080,1920)
                             .thumbnail(0.1f)
