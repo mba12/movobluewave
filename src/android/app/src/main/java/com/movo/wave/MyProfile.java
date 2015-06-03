@@ -531,6 +531,13 @@ public class MyProfile extends MenuActivity {
                             bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                             b = stream.toByteArray();
                             break;
+                        case ExifInterface.ORIENTATION_ROTATE_270:
+                            Log.d(TAG, "Image rotated 270");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 270);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
                     }
                     bitmapBit.recycle();
 
