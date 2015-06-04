@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
@@ -17,6 +18,7 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -353,12 +355,14 @@ public class UserData extends Activity{
         if(!users.isEmpty()) {
 
             String uid = getUIDByEmail(users.get(0));
+            setCurrentUser(uid);
             loadNewUser(uid);
 
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
             prefs.edit().putBoolean("userExists", true);
             return true;
         }else{
+            setCurrentUser("");
             resetUserList();
 
             return false;
@@ -463,6 +467,19 @@ public class UserData extends Activity{
             allUsersReturn.add(entry.getValue().toString());
         }
         return allUsersReturn;
+    }
+
+    public String getCurrentUser(){
+        SharedPreferences allUsers = appContext.getSharedPreferences("currentActiveUser", Context.MODE_PRIVATE);
+        String currentUserId = allUsers.getString("user", null);
+
+        return currentUserId;
+    }
+    public boolean setCurrentUser(String uid){
+        SharedPreferences user = appContext.getSharedPreferences("currentActiveUser", Context.MODE_PRIVATE);
+        SharedPreferences.Editor userActive = user.edit();
+        userActive.putString("user", uid);
+        return true;
     }
 
     public void resetUserList(){
@@ -575,45 +592,6 @@ public class UserData extends Activity{
 
     }
 
-    public Bitmap getCurUserPhoto(){
-//        UserData myData = UserData.getUserData(c);
-        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        String user = getCurUID();
-        Calendar profile = Calendar.getInstance();
-        profile.setTimeInMillis(0); // user photos will be stored at the dawn of time.
-        String photo =  Database.PhotoStore.DATE + " =? AND "+Database.PhotoStore.USER + " =?";
-        Cursor curPhoto = db.query(
-                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-                new String[] {
-                        Database.StepEntry.USER, //string
-                        Database.PhotoStore.DATE, //int
-                        Database.PhotoStore.PHOTOBLOB,
-                        Database.PhotoStore.GUID}, //blob                          // The columns to return
-                photo,                                // The columns for the WHERE clause
-                new String[] { profile.getTimeInMillis()+"", user },                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
-//LOADPHOTOBYGUID
-        curPhoto.moveToFirst();
-        boolean localFile = false;
-        if(curPhoto.getCount()!=0){
-            localFile = true;
-            byte[] byteArray = loadPhotoFromGuid(curPhoto.getString(4));
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = false;
-            options.inSampleSize = 4;
-            Bitmap bm = BitmapFactory.decodeByteArray(byteArray, 0 ,byteArray.length, options);
-            curPhoto.close();
-            return bm;
-
-        }else{
-            curPhoto.close();
-            return null;
-        }
-    }
 
     public void downloadProfilePic(){
         Log.d(TAG, "Loading image from firebase");
@@ -632,13 +610,11 @@ public class UserData extends Activity{
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
                     String md5 = result.get(1);
-                    //file from cloud is different than local, save to device
                     Calendar profile = Calendar.getInstance();
                     profile.setTimeInMillis(0);
                     ContentValues syncValues = new ContentValues();
-                    syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
+                    syncValues.put(Database.PhotoStore.DATE, 0);
                     syncValues.put(Database.PhotoStore.USER, currentUID);
-//                    syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
                     syncValues.put(Database.PhotoStore.MD5, md5);
                     String guid = UUID.randomUUID().toString();
                     syncValues.put(Database.PhotoStore.GUID,guid);
@@ -648,13 +624,9 @@ public class UserData extends Activity{
                             syncValues);
                     Log.d(TAG, "Photo database add from firebase: "+newRowId);
                     db.close();
-//                    byte[] photoByte = String.getBytes( decodedString);
-//                    String md5 = DataUtilities.getMD5EncryptedString(decodedString.toString());
 
                     storePhoto(decodedString, profile.getTimeInMillis(), md5);
-//                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length,options);
-//                            background.setImageBitmap(decodedByte);
-
+//
                 }else if(snapshot.getChildrenCount()>3){
                     //multipart file upload
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
@@ -673,9 +645,8 @@ public class UserData extends Activity{
                         String md5 = result.get(1);
                         byte[] decodedString = Base64.decode(wholeString, Base64.NO_WRAP);
 //                        Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
-
                         ContentValues syncValues = new ContentValues();
-                        syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
+                        syncValues.put(Database.PhotoStore.DATE, 0);
                         syncValues.put(Database.PhotoStore.USER, currentUID);
 //                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
                         syncValues.put(Database.PhotoStore.MD5, md5);
@@ -687,7 +658,7 @@ public class UserData extends Activity{
                         Log.d(TAG, "Photo database add from firebase: " + newRowId);
                         db.close();
 
-                        storePhoto(decodedString,profile.getTimeInMillis(),md5 );
+                        storePhoto(decodedString,0,md5 );
                     }catch(Exception e){
                         e.printStackTrace();
                     }
@@ -722,7 +693,7 @@ public class UserData extends Activity{
         }
         //Checking firebase photo
 
-        Log.d(TAG, "Loading image from firebase");
+//        Log.d(TAG, "Loading image from firebase");
         Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -837,14 +808,16 @@ public class UserData extends Activity{
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                setCurEmail(snapshot.child("currentEmail").getValue(String.class));
-                setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
-                setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
-                setCurWeight(snapshot.child("currentWeight").getValue(String.class));
-                setCurGender(snapshot.child("currentGender").getValue(String.class));
-                setCurName(snapshot.child("currentFullName").getValue(String.class));
-                setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
-                setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+                if(snapshot.hasChildren()) {
+                    setCurEmail(snapshot.child("currentEmail").getValue(String.class));
+                    setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
+                    setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
+                    setCurWeight(snapshot.child("currentWeight").getValue(String.class));
+                    setCurGender(snapshot.child("currentGender").getValue(String.class));
+                    setCurName(snapshot.child("currentFullName").getValue(String.class));
+                    setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
+                    setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+                }
             }
             @Override
             public void onCancelled(FirebaseError firebaseError) {
@@ -854,17 +827,6 @@ public class UserData extends Activity{
 
 
 
-//
-//        setCurEmail(child.child("currentEmail"));
-////        currentPW =  child.child("currentEmail").toString();
-////        currentToken = userData.getString("currentToken","Error");
-//        setCurHeight1(child.child("currentHeight1").toString());
-//        setCurHeight2(child.child("currentHeight2").toString());
-//        setCurWeight(child.child("currentWeight").toString());
-//        setCurGender(child.child("currentGender").toString());
-//        setCurName(child.child("currentFullName").toString());
-////        currentPW = prefs.getString("currentPW", "Error");
-//        setCurBirthdate(child.child("currentBirthdate").toString());
     }
     public void downloadMetadata(String useruid){
         setCurUID(useruid);
@@ -965,130 +927,6 @@ public class UserData extends Activity{
         db.close();
     }
 
-//    public void insertStepsFromFB(DataSnapshot snapshot, int year, int month, Context c) {
-////        UserData myData = UserData.getUserData(c);
-//        Iterable<DataSnapshot> children = snapshot.getChildren();
-//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-//        SQLiteDatabase db = mDbHelper.getWritableDatabase();
-//        for (DataSnapshot child : children) {
-//            String date = child.getKey();
-//            Iterable<DataSnapshot> syncEvents = child.getChildren();
-//            for (DataSnapshot syncsForToday : syncEvents) {
-//                String syncName = syncsForToday.getKey();
-//                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-//                for (DataSnapshot stepChunk : stepEvents) {
-//                    String stepTime = stepChunk.getKey();
-//                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-//                    Object stepEvent = stepChunk.getValue();
-//                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-//                    monthMap = (Map<String, String>) stepChunk.getValue();
-//                    Log.d(TAG, "Monthmap test" + monthMap);
-//                    Calendar thisCal = Calendar.getInstance();
-////                    Date curDate = monthMap.get("starttime").toString();
-//                    String dateConcatStart = year + "-" + month + "-" + date + "" + monthMap.get("starttime").toString();
-//                    String dateConcatStop = year + "-" + month + "-" + date + "" + monthMap.get("endtime").toString();
-//
-//
-//                    try {
-//                        Date curDateStart = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStart);
-//                        Date curDateStop = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(dateConcatStop);
-////                        Log.d("TAG", "date is "+curDate);
-//                        thisCal.setTime(curDateStart);
-//
-//                        ContentValues values = new ContentValues();
-//                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-//                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-//                        values.put(Database.StepEntry.START, curDateStart.getTime());
-//                        values.put(Database.StepEntry.END, curDateStop.getTime());
-//                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
-//                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-//                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-//                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-//                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-//                        //TODO: add workout type
-//
-//                        long newRowId;
-//
-//                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-//                                null,
-//                                values);
-//                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
-//
-//
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                        ;
-//                    }
-//
-//                }
-//
-//            }
-//
-//        }
-//    }
-
-    public byte[]  pullPhotoFromDB(long today){
-        boolean localFile = false;
-        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-        Date currentDay = new Date(today);
-        byte[] returnByte=null;
-        currentDay = DataUtilities.trim(currentDay);
-//        UserData myData = UserData.getUserData(c);
-        String user =  UserData.getUserData(appContext).getCurUID();
-        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
-        Cursor curPhoto = db.query(
-                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-                new String[]{
-                        Database.StepEntry.USER, //string
-                        Database.PhotoStore.DATE, //int
-//                        Database.PhotoStore.PHOTOBLOB, //blob
-                        Database.PhotoStore.MD5,
-                        Database.PhotoStore.GUID}, //string
-                // The columns to return
-                photo,                                // The columns for the WHERE clause
-                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
-        try{
-//            if(curPhoto.getCount())
-            curPhoto.moveToFirst();
-
-            if (curPhoto.getCount() != 0) {
-
-                String md5 = curPhoto.getString(3);
-
-                Log.d(TAG, "Found photo for today "+md5);
-                if (md5 != null) {
-
-
-
-                    byte[] byteArray = curPhoto.getBlob(2);
-                    returnByte = byteArray;
-                } else {
-                    UserData.getUserData(appContext).downloadPhotoForDate(today);
-                    return null;
-                }
-//                shouldDownloadNewPhoto(today);
-
-            }else {
-                UserData.getUserData(appContext).downloadPhotoForDate(today);
-                return null;
-
-            }
-        }catch(Exception e){
-            shouldDownloadNewPhoto(today, "");
-            e.printStackTrace();
-        }finally {
-            curPhoto.close();
-            shouldDownloadNewPhoto(today, "");
-        }
-
-        return returnByte;
-
-    }
 
 
     public void shouldDownloadNewPhoto(long today,String md5In){
@@ -1111,7 +949,7 @@ public class UserData extends Activity{
         //Checking firebase photo
 //        final String byteString = Base64.encodeToString(photo,Base64.NO_WRAP);
 
-        Log.d(TAG, "Loading image from firebase");
+        Log.d(TAG, "Checking md5 from firebase firebase");
         Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -1137,10 +975,6 @@ public class UserData extends Activity{
     public byte[] loadPhotoFromGuid(String guid){
         final File dir = new File(appContext.getFilesDir() +"/");
         File imageFile = new File(dir, guid);
-//                    FileInputStream fis = new FileInputStream(imageFile);
-//                    byte fileContent[] = new byte[(int)imageFile.length()];
-//                    fis.read(fileContent);
-
         int size = (int) imageFile.length();
         byte[] bytes = new byte[size];
         try {
@@ -1172,7 +1006,7 @@ public class UserData extends Activity{
                 new String[]{
                         Database.StepEntry.USER, //string
                         Database.PhotoStore.DATE, //int
-                        Database.PhotoStore.PHOTOBLOB, //blob
+//                        Database.PhotoStore.PHOTOBLOB, //blob
                         Database.PhotoStore.MD5, //string
                         Database.PhotoStore.GUID},
                 // The columns to return
@@ -1190,17 +1024,18 @@ public class UserData extends Activity{
             int uniquePic =0;
             if (curPhoto.getCount() != 0) {
 
-                String md5 = curPhoto.getString(3);
-                String guid = curPhoto.getString(4);
+                String md5 = curPhoto.getString(2);
+                String guid = curPhoto.getString(3);
 
                 Log.d(TAG, "Found photo for today "+md5);
                 if (md5 != null) {
                     //pull photo from file via guid.
                     final File dir = new File(appContext.getFilesDir() +"/");
                     File imageFile = new File(dir, guid);
-//                    FileInputStream fis = new FileInputStream(imageFile);
-//                    byte fileContent[] = new byte[(int)imageFile.length()];
-//                    fis.read(fileContent);
+
+                    ExifInterface ei = new ExifInterface(imageFile.getPath());
+                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
 
                     int size = (int) imageFile.length();
                     byte[] bytes = new byte[size];
@@ -1208,6 +1043,7 @@ public class UserData extends Activity{
                         BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
                         buf.read(bytes, 0, bytes.length);
                         buf.close();
+
                     } catch (FileNotFoundException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
@@ -1215,34 +1051,15 @@ public class UserData extends Activity{
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
-
-//                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-//                    try{
-//                        final File dir = new File(appContext.getFilesDir() +"/");
-//                        dir.mkdirs();
-//                        final File imageFile = new File(dir, "test.jpg");
-//                        OutputStream outStream = new FileOutputStream(imageFile);
-//                        Log.d(TAG, UserData.this.getFilesDir() + "/images/test");
-//                        is.writeTo(outStream);
-//                        success = true;
-//                    }catch(Exception e){
-////                        outStream.close();
-//                        success = false;
-//                        e.printStackTrace();
-//                    }
-
-
-//                    byte[] byteArray = curPhoto.getBlob(2);
                     returnByte = bytes;
                 } else {
-                    UserData.getUserData(appContext).downloadPhotoForDate(date);
+//                    UserData.getUserData(appContext).downloadPhotoForDate(date);
                     return null;
                 }
-//                shouldDownloadNewPhoto(today);
 
+//
             }else {
-                UserData.getUserData(appContext).downloadPhotoForDate(date);
+                shouldDownloadNewPhoto(date, "");
                 return null;
 
             }
@@ -1251,11 +1068,99 @@ public class UserData extends Activity{
             e.printStackTrace();
         }finally {
             curPhoto.close();
-            shouldDownloadNewPhoto(date, "");
+//            shouldDownloadNewPhoto(date, "");
         }
 
-        return null;
+        return returnByte;
     }
+
+//    public void checkImageRotation(long date){
+//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
+//        Date currentDay = new Date(date);
+//        currentDay = DataUtilities.trim(currentDay);
+//        String user =  UserData.getUserData(appContext).getCurUID();
+//        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
+//        Cursor curPhoto = db.query(
+//                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+//                new String[]{
+//                        Database.StepEntry.USER, //string
+//                        Database.PhotoStore.DATE, //int
+////                        Database.PhotoStore.PHOTOBLOB, //blob
+//                        Database.PhotoStore.MD5, //string
+//                        Database.PhotoStore.GUID},
+//                // The columns to return
+//                photo,                                // The columns for the WHERE clause
+//                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
+//                null,                                     // don't group the rows
+//                null,                                     // don't filter by row groups
+//                null                                 // The sort order
+//        );
+//        try{
+//            curPhoto.moveToFirst();
+//            if (curPhoto.getCount() != 0) {
+//
+//                String md5 = curPhoto.getString(2);
+//                String guid = curPhoto.getString(3);
+//
+//                Log.d(TAG, "Found photo for today "+md5);
+//                if (md5 != null) {
+//                    //pull photo from file via guid.
+//                    final File dir = new File(appContext.getFilesDir() +"/");
+//                    File imageFile = new File(dir, guid);
+//
+//                    ExifInterface ei = new ExifInterface(imageFile.getPath());
+//                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+//
+//
+//                    int size = (int) imageFile.length();
+//                    byte[] bytes = new byte[size];
+//                    try {
+//                         BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
+//                        buf.read(bytes, 0, bytes.length);
+//                        buf.close();
+//                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//                        ByteArrayOutputStream stream;
+//                        byte[] byteArray;
+//                        switch(orientation) {
+//                            case ExifInterface.ORIENTATION_ROTATE_90:
+//                                Log.d(TAG, "Image rotated 90");
+//                                bitmap = DataUtilities.RotateBitmap(bitmap, 90);
+//                                stream = new ByteArrayOutputStream();
+//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                                byteArray = stream.toByteArray();
+//                                storePhoto(byteArray, date, md5);
+//                                break;
+//                            case ExifInterface.ORIENTATION_ROTATE_180:
+//                                Log.d(TAG, "Image rotated 180");
+//                                bitmap = DataUtilities.RotateBitmap(bitmap, 180);
+//                                stream = new ByteArrayOutputStream();
+//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                                byteArray = stream.toByteArray();
+//                                storePhoto(byteArray, date, md5);
+//                                break;
+//                        }
+//
+//
+//
+//                    } catch (FileNotFoundException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
+//        }catch(Exception e){
+//
+//            e.printStackTrace();
+//        }finally {
+//            curPhoto.close();
+//        }
+//
+//    }
+
 
     //overriden method
     public void storePhoto(ByteArrayOutputStream is, long date, String md5){
@@ -1273,6 +1178,7 @@ public class UserData extends Activity{
         }catch(Exception e){
 //                        outStream.close();
             success = false;
+            Log.d(TAG, "Photo storage failed - storePhoto via outputStream");
             e.printStackTrace();
         }
 
@@ -1285,7 +1191,6 @@ public class UserData extends Activity{
             ContentValues photoValues = new ContentValues();
             photoValues.put(Database.PhotoStore.DATE, curDay.getTime());
             photoValues.put(Database.PhotoStore.USER, currentUID);
-//                        photoValues.put(Database.PhotoStore.PHOTOBLOB, b);
             photoValues.put(Database.PhotoStore.MD5, md5);
             photoValues.put(Database.PhotoStore.GUID, photoGuid);
 
@@ -1296,6 +1201,7 @@ public class UserData extends Activity{
                     photoValues);
             Log.d(TAG, "New Photo database add: " + newRowId);
             db.close();
+//            checkImageRotation(date);
         }
     }
 
@@ -1317,6 +1223,7 @@ public class UserData extends Activity{
 //                        outStream.close();
             success = false;
             e.printStackTrace();
+            Log.d(TAG, "Photo storage failed - storePhoto via byte[]");
         }
 
         if(success) {
@@ -1328,7 +1235,6 @@ public class UserData extends Activity{
             ContentValues photoValues = new ContentValues();
             photoValues.put(Database.PhotoStore.DATE, curDay.getTime());
             photoValues.put(Database.PhotoStore.USER, currentUID);
-//                        photoValues.put(Database.PhotoStore.PHOTOBLOB, b);
             photoValues.put(Database.PhotoStore.MD5, md5);
             photoValues.put(Database.PhotoStore.GUID, photoGuid);
 

@@ -2,6 +2,8 @@ package com.movo.wave.util;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.util.Log;
 
 import com.firebase.client.Firebase;
@@ -85,6 +87,13 @@ public class DataUtilities {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
+    }
+
+    public static Bitmap RotateBitmap(Bitmap source, float angle)
+    {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 
 }

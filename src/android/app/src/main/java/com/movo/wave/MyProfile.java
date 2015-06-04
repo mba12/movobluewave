@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -34,6 +35,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.movo.wave.util.DataUtilities;
@@ -110,9 +112,15 @@ public class MyProfile extends MenuActivity {
         }catch(Exception e){
             e.printStackTrace();
         }
-        Bitmap prof =  UserData.getUserData(c).getCurUserPhoto();
-        if (prof != null) {
-            profilePic.setImageBitmap(prof);
+        byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
+        if (prof != null && prof.length !=0 ) {
+            Glide.with(c)
+                    .load(prof)
+//                            .override(1080,1920)
+                    .thumbnail(0.1f)
+                    .centerCrop()
+                    .into(profilePic);
+//            profilePic.setImageBitmap(prof);
         }
 
         //---------------Set up Arraylists------------//
@@ -345,27 +353,159 @@ public class MyProfile extends MenuActivity {
             }
         });
     }
+    //    protected void onActivityResult(int requestCode, int resultCode,
+//                                    Intent imageReturnedIntent) {
+//        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+//
+//        Log.d(TAG, "Recieved result intent from photo");
+//        switch(requestCode) {
+//            case SELECT_PHOTO:
+//                if(resultCode == RESULT_OK){
+//                    if( imageReturnedIntent == null ) {
+//                        Log.e( TAG, "NULL image intent result!");
+//                    }
+//                    Uri selectedImage = imageReturnedIntent.getData();
+//                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
+//
+//                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//
+//                    Log.i( TAG, "Resolving URI: " + selectedImage);
+//
+//                    try {
+//                        final InputStream is = getContentResolver().openInputStream(selectedImage);
+//                        BitmapFactory.Options options = new BitmapFactory.Options();
+////                        options.inJustDecodeBounds = true;
+//                        int inSampleSize = 2;
+//                        options.inSampleSize = inSampleSize;
+////                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
+//                        BitmapFactory.decodeStream(is, null, options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
+//                    }catch(Exception e){
+//                        e.printStackTrace();
+//                    }
+//                    byte[] b = baos.toByteArray();
+//                    String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+//
+////                    UserData myData = UserData.getUserData(c);
+//                    String user =  UserData.getUserData(c).getCurUID();
+//
+//                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
+//
+//
+//
+//                    Calendar profile = Calendar.getInstance();
+//                    profile.setTimeInMillis(0); // user photos will be stored at the dawn of time.
+////                    Date curDay = trim(new Date(profile.getTimeInMillis()));
+//                    //db insert
+//                    //database insert
+//                    String md5 = DataUtilities.getMD5EncryptedString(encodedImage);
+//                    UserData.getUserData(c).storePhoto(baos, profile.getTimeInMillis(), md5);
+//
+//                    //end database insert
+//
+//                    //photo upload
+//                    DataUtilities.uploadPhotoToFB(ref, encodedImage);
+//
+//                    Log.d(TAG, "End image upload "+ref);
+//                    byte[] prof = UserData.getUserData(c).getCurUserPhoto();
+////                     myUserData.getCurUserPhoto(c);
+//                    if(prof != null && prof.length!=0){
+////                        profilePic.setImageBitmap(prof);
+//                        Glide.with(c)
+//                                .load(prof)
+////                            .override(1080,1920)
+//                                .thumbnail(0.1f)
+//                                .centerCrop()
+//                                .into(profilePic);
+//                    }
+////                    ref.setValue(encodedImage);
+//                }else {
+//                    final String error = "No photo selected";
+//                    Log.e( TAG, error );
+//                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
+//                }
+//                break;
+//            default:
+//                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
+//        }
+//    }
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
-        Log.d(TAG, "Recieved result intent from photo");
+        //http://dimitar.me/how-to-get-picasa-images-using-the-image-picker-on-android-devices-running-any-os-version/
+
         switch(requestCode) {
             case SELECT_PHOTO:
                 if(resultCode == RESULT_OK){
                     if( imageReturnedIntent == null ) {
                         Log.e( TAG, "NULL image intent result!");
                     }
-                    Uri selectedImage = imageReturnedIntent.getData();
-                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
 
-                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ByteArrayOutputStream baos;
+                    Uri selectedImage=null;
+                    int orientation = 0;
 
-                    Log.i( TAG, "Resolving URI: " + selectedImage);
+
                     try {
+                        selectedImage = imageReturnedIntent.getData();
+
+
+//                        String[] filePathColumn = {MediaStore.Images.Media.DATA};
+
+                        baos = new ByteArrayOutputStream();
+
+                        Log.i( TAG, "Resolving URI: " + selectedImage);
+
                         final InputStream is = getContentResolver().openInputStream(selectedImage);
-                        BitmapFactory.decodeStream(is).compress(Bitmap.CompressFormat.JPEG, 10, baos);
-                    } catch( FileNotFoundException e ) {
+
+                        ///image rotation check
+                        String[] projection = { MediaStore.Images.Media.DATA };
+                        @SuppressWarnings("deprecation")
+                        Cursor cursor = managedQuery(selectedImage, projection, null, null, null);
+                        int column_index = cursor
+                                .getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                        cursor.moveToFirst();
+                        String path = cursor.getString(column_index);
+
+                        ExifInterface ei = new ExifInterface(path);
+                        orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+
+
+
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+//                        options.inJustDecodeBounds = true;
+                        int inSampleSize = 2;
+                        options.inSampleSize = inSampleSize;
+
+//                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
+                        BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
+
+
+                        int imageWidth = options.outWidth;
+                        int imageHeight = options.outHeight;
+//
+                        if (imageHeight > 1920 || imageWidth > 1080) {
+
+                            final int halfHeight = imageHeight / 2;
+                            final int halfWidth = imageWidth / 2;
+
+                            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+                            // height and width larger than the requested height and width.
+                            while ((halfHeight / inSampleSize) > 1080
+                                    && (halfWidth / inSampleSize) > 1920) {
+                                inSampleSize *= 2;
+                            }
+                        }
+
+                        options.inJustDecodeBounds = false;
+
+
+//                        is.reset();
+//                        BitmapFactory.decodeStream(is,null,options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
+
+
+                    } catch( Exception e ) {
+                        baos = null;
                         final String error = "Cannot resolve URI: " + selectedImage;
                         Log.e( TAG, error );
                         Toast.makeText(c, error, Toast.LENGTH_LONG).show();
@@ -373,42 +513,64 @@ public class MyProfile extends MenuActivity {
                     }
 
                     byte[] b = baos.toByteArray();
-                    String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
+                    Bitmap bitmapBit = BitmapFactory.decodeByteArray(b, 0, b.length);
+                    ByteArrayOutputStream stream = null;
+//                    byte[] byteArrayBit = null;
+                    switch(orientation) {
+                        case ExifInterface.ORIENTATION_ROTATE_90:
+                            Log.d(TAG, "Image rotated 90");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 90);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                        case ExifInterface.ORIENTATION_ROTATE_180:
+                            Log.d(TAG, "Image rotated 180");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 180);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                        case ExifInterface.ORIENTATION_ROTATE_270:
+                            Log.d(TAG, "Image rotated 270");
+                            bitmapBit = DataUtilities.RotateBitmap(bitmapBit, 270);
+                            stream = new ByteArrayOutputStream();
+                            bitmapBit.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                            b = stream.toByteArray();
+                            break;
+                    }
+                    bitmapBit.recycle();
 
+
+                    String encodedImage = Base64.encodeToString(b, Base64.NO_WRAP);
+                    Glide.with(c)
+                            .load(b)
+                            .fitCenter()
+//                                .override(1080,1920)
+                            .into(profilePic);
 //                    UserData myData = UserData.getUserData(c);
                     String user =  UserData.getUserData(c).getCurUID();
 
+
+                    Log.d(TAG, "Loading image from firebase");
                     Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
+                    //database insert
+                    String md5 = DataUtilities.getMD5EncryptedString(encodedImage);
+                    UserData.getUserData(c).storePhoto(b, 0, md5);
 
-                    DatabaseHelper mDbHelper = new DatabaseHelper(c);
-                    SQLiteDatabase db = mDbHelper.getWritableDatabase();
+                    //end database insert
 
-                    Calendar profile = Calendar.getInstance();
-                    profile.setTimeInMillis(0); // user photos will be stored at the dawn of time.
-//                    Date curDay = trim(new Date(profile.getTimeInMillis()));
-                    ContentValues syncValues = new ContentValues();
-                    syncValues.put(Database.PhotoStore.DATE, profile.getTimeInMillis());
-                    syncValues.put(Database.PhotoStore.USER, user);
-                    syncValues.put(Database.PhotoStore.PHOTOBLOB, b);
 
-                    long newRowId;
-                    newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
-                            null,
-                            syncValues);
-                    Log.d(TAG, "Photo database add: "+newRowId);
-                    db.close();
 
-                    //photo upload
+
+
+                    //upload call
                     DataUtilities.uploadPhotoToFB(ref, encodedImage);
 
+
                     Log.d(TAG, "End image upload "+ref);
-                    Bitmap prof = UserData.getUserData(c).getCurUserPhoto();
-//                     myUserData.getCurUserPhoto(c);
-                    if(prof!=null){
-                        profilePic.setImageBitmap(prof);
-                    }
 //                    ref.setValue(encodedImage);
-                }else {
+                } else {
                     final String error = "No photo selected";
                     Log.e( TAG, error );
                     Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
@@ -417,5 +579,26 @@ public class MyProfile extends MenuActivity {
             default:
                 Log.e(TAG, "Error, unexpected intent result for " + requestCode);
         }
+
+
+
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();  // Always call the superclass method first
+        byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
+        if (prof != null && prof.length !=0 ) {
+            Glide.with(c)
+                    .load(prof)
+//                            .override(1080,1920)
+                    .thumbnail(0.1f)
+                    .centerCrop()
+                    .into(profilePic);
+//            profilePic.setImageBitmap(prof);
+        }
+
+    }
+
+
 }
