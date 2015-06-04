@@ -13,13 +13,17 @@ private var _UserData:UserData? = nil
 
 
 
+protocol UserMetaDataDelegate {
+    func refreshedMetadata()
+}
+
 class UserData {
     //vars
     private var currentUserEntry : UserEntry?
     
     
     static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
-    
+    static var delegate : UserMetaDataDelegate? = nil
     
     private init(){
         //init vars
@@ -205,10 +209,15 @@ class UserData {
             }
             //birthday
             
-            
+            if let delegate = UserData.delegate {
+                
+                delegate.refreshedMetadata()
+            }
             
             }, withCancelBlock: { error in
                 println(error.description)
+                
+                
         })
         
     }
