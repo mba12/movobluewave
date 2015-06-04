@@ -919,11 +919,12 @@
                         <segue destination="xAg-Eg-8QU" kind="relationship" relationship="viewControllers" id="Ge0-sS-8AU"/>
                         <segue destination="xPq-rx-jam" kind="relationship" relationship="viewControllers" id="K4n-9f-8iS"/>
                         <segue destination="FmR-P1-6gD" kind="relationship" relationship="viewControllers" id="PxZ-2O-BSa"/>
+                        <segue destination="0Lf-Ys-XJY" kind="showDetail" identifier="Logout" id="ze8-RA-cod"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="XEg-R3-Vii" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="505" y="-322.5"/>
+            <point key="canvasLocation" x="561" y="-243"/>
         </scene>
         <!--Menu-->
         <scene sceneID="4tm-7m-xTg">
@@ -2236,11 +2237,11 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="qVh-tw-zPR"/>
-        <segue reference="Ge0-sS-8AU"/>
+        <segue reference="ze8-RA-cod"/>
         <segue reference="vtk-Ik-Lon"/>
+        <segue reference="Ge0-sS-8AU"/>
         <segue reference="Ld4-Fc-WJ2"/>
-        <segue reference="QFb-do-jEW"/>
+        <segue reference="8NQ-DC-l8W"/>
         <segue reference="60l-AC-Hvq"/>
     </inferredMetricsTieBreakers>
 </document>
