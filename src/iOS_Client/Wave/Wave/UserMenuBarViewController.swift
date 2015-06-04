@@ -9,7 +9,7 @@
 import Foundation
 import UIKit
 
-class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, ImageUpdateDelegate {
+class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, ImageUpdateDelegate, UserMetaDataDelegate {
     
     @IBOutlet weak var statsButton: UIButton!
     @IBOutlet weak var profilePictureButton: UIButton!
@@ -22,6 +22,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 self.userNameLabel.text = username
             })
         }
+        UserData.delegate = self
         UserData.getImageForDate(nil, callbackDelegate: self)
     }
     
@@ -102,6 +103,14 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
             
         }
         
+    }
+    
+    func refreshedMetadata() {
+        if let username = UserData.getOrCreateUserData().getCurrentUserName() {
+            dispatch_async(dispatch_get_main_queue(),  {
+                self.userNameLabel.text = username
+            })
+        }
     }
     
 }
