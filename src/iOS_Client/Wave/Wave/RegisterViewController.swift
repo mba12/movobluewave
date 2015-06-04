@@ -157,6 +157,10 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
         datePickerToolbar.sizeToFit()
+        
+        
+        offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
+        
 
     }
     
