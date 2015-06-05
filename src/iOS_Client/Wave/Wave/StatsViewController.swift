@@ -11,6 +11,7 @@ import CoreData
 import UIKit
 import Charts
 
+
 class StatsViewController: UIViewController, FBUpdateDelegate  {
     let cal:NSCalendar =  NSLocale.currentLocale().objectForKey(NSLocaleCalendar) as! NSCalendar
     var todayDate:Int = 0
@@ -22,7 +23,6 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     
     var date = NSDate()
     
-
     var stepsDataSet : LineChartDataSet?
     var milesDataSet : LineChartDataSet?
     var caloriesDataSet : LineChartDataSet?
@@ -90,24 +90,36 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     }
     
     func loadDataForYM(year: Int, month: Int) {
+        
+        NSLog("Entered loadDataForYM " + String(year) + "-" + String(month))
+        
         stepsCount = [Int]()
         var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
-            inUnit: .CalendarUnitMonth,
-            forDate: date).toRange()!.endIndex-1
+                                      inUnit: .CalendarUnitMonth,
+                                      forDate: date).toRange()!.endIndex-1
         
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
-            numDays = cal.component(.CalendarUnitDay , fromDate: NSDate())
-        }
+        
+        NSLog("Number of Days: " + String(numDays))
+        
+        
+        // NOTE: Phil commented this out so the current month would display
+        //       as an entire month consistent with the Android look
+        // if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
+        //    numDays = cal.component(.CalendarUnitDay , fromDate: NSDate())
+        // }
+        
+        //
+
+        
+        NSLog("Number of Days: " + String(numDays))
         
         //need to set up today logic like myLifeView
         for(var i=1;i<(numDays+1);i++){
-            
             if let dateStart : NSDate = YMDLocalToNSDate(year, month, i) {
                 stepsCount.append(stepsForDayStarting(dateStart))
                 caloriesList.append(caloriesForDayStarting(dateStart))
             }
-            
         }
         
         var days:[String] = []
@@ -134,26 +146,25 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             
         }
         
+        // Figure out total number of days in this month
+        
+        
+        // What day is today and is there a difference between today and total
+        
+        NSLog("Building data points: " + String(stepsCount.count))
         //loop through and add steps for each day.
         //WARN: Only using simple calculator until user profile exists
         for (var i=0;i<stepsCount.count;i++){
             var stepCount = stepsCount[i]
             stepsTotal += stepCount
             days.append(String(i+1))
+            NSLog("Inside Building data points: " + String(i+1))
             stepsYVals.append(ChartDataEntry(value: Float(stepCount), xIndex:i))
-            
-            
-            
-           
-            
             
             var miles = Calculator.calculate_distance(stepCount, height: Int(height*12.0))
             
             milesTotal += miles
             milesYVals.append(ChartDataEntry(value: Float(miles), xIndex:i))
-            
-            
-            
             
             var calories = caloriesList[i]
             caloriesTotal += calories
@@ -167,13 +178,35 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         xVals = days
         
-        
         stepsDataSet = LineChartDataSet(yVals: stepsYVals, label: "Steps taken per day")
         stepsDataSet!.setColor(UIColor.redColor())
+        stepsDataSet!.drawCircleHoleEnabled = false
+        stepsDataSet!.drawCirclesEnabled = false
+        stepsDataSet!.drawValuesEnabled = false
+        stepsDataSet!.drawFilledEnabled = true
+        stepsDataSet!.lineWidth = 3
+        stepsDataSet!.highlightColor = UIColor.blueColor()
+        stepsDataSet!.highlightLineWidth = 1
+        
         milesDataSet = LineChartDataSet(yVals: milesYVals, label: "Miles traveled per day")
         milesDataSet!.setColor(UIColor.redColor())
+        milesDataSet!.drawCircleHoleEnabled = false
+        milesDataSet!.drawCirclesEnabled = false
+        milesDataSet!.drawValuesEnabled = false
+        milesDataSet!.drawFilledEnabled = true
+        milesDataSet!.lineWidth = 3
+        milesDataSet!.highlightColor = UIColor.blueColor()
+        milesDataSet!.highlightLineWidth = 1
+        
         caloriesDataSet = LineChartDataSet(yVals: caloriesYVals, label: "Calories burned per day")
         caloriesDataSet!.setColor(UIColor.redColor())
+        caloriesDataSet!.drawCircleHoleEnabled = false
+        caloriesDataSet!.drawCirclesEnabled = false
+        caloriesDataSet!.drawValuesEnabled = false
+        caloriesDataSet!.drawFilledEnabled = true
+        caloriesDataSet!.lineWidth = 3
+        caloriesDataSet!.highlightColor = UIColor.blueColor()
+        caloriesDataSet!.highlightLineWidth = 1
         
         chartView.xAxis.labelHeight = 0
         chartView.descriptionText = ""
@@ -216,12 +249,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 self.caloriesCountLabel.text = "0.0"
             }
             
-            
         })
         
         displayStepsChart()
-        
-        
         
     }
     
@@ -239,6 +269,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         chartView.clearValues()
         chartView.data = LineChartData(xVals: xVals, dataSet: stepsDataSet)
+        chartView.gridBackgroundColor = UIColor.whiteColor()
         chartView.setNeedsDisplay()
         
         stepsButtonDisplay.setBackgroundImage(UIImage(named:"buttonRed"), forState: UIControlState.Normal)
@@ -251,6 +282,8 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     func displayMilesChart() {
         chartView.clearValues()
         chartView.data = LineChartData(xVals: xVals, dataSet: milesDataSet)
+        chartView.gridBackgroundColor = UIColor.whiteColor()
+
         chartView.setNeedsDisplay()
         
         stepsButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
@@ -272,6 +305,8 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
 */
         chartView.clearValues()
         chartView.data = LineChartData(xVals: xVals, dataSet: caloriesDataSet)
+        chartView.gridBackgroundColor = UIColor.whiteColor()
+
         chartView.setNeedsDisplay()
         
         stepsButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
