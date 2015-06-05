@@ -49,6 +49,7 @@ import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.util.Calculator;
 import com.movo.wave.util.DataUtilities;
 import com.movo.wave.util.NotificationPublisher;
+import com.movo.wave.util.UTC;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -620,37 +621,35 @@ public class Home extends MenuActivity {
         ArrayList<Entry> valsComp1 = new ArrayList<Entry>();
         ArrayList<String> xVals = new ArrayList<String>();
 
-        numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
-        int difference = numberOfDaysTotal - curDay;
-        numberOfDaysLeft = numberOfDaysTotal - difference;
+        //setup a base calendar
+        Calendar window = Calendar.getInstance();
+        window.setTimeZone( TimeZone.getDefault() );
+        window.setTimeInMillis(timestamp);
+        window.set(Calendar.DATE, 1);
+        window.set( Calendar.HOUR_OF_DAY, 0 );
+        window.set(Calendar.MINUTE, 0);
+        window.set( Calendar.SECOND, 0 );
+        window.set( Calendar.MILLISECOND, 0 );
+
         int totalStepsForMonth = 0;
         int greatestSteps = 0;
 
-        for (int i = 0; i <= numberOfDaysLeft; i++) {
+        final int windowMonth = window.get( Calendar.MONTH );
+        final Calendar now = Calendar.getInstance();
+        now.setTimeZone(TimeZone.getDefault());
 
+        while( window.get( Calendar.MONTH ) == windowMonth ) {
+            final int windowDate = window.get(Calendar.DATE);
+            final long minTimestamp = window.getTimeInMillis();
+            window.add(Calendar.DATE, 1);
+            final long maxTimestamp = window.getTimeInMillis();
 
-            //Grab today's data by setting i to day, then adding the hours/mins/secs for the rest of the day and grabbing all steps in the range as a sum
-            Calendar monthCal = calendar;
-            monthCal.setTimeZone( TimeZone.getTimeZone("UTC"));
-            monthCal.setTimeInMillis(timestamp);
-            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i, 0, 0, 0);
-            long monthRangeStart = monthCal.getTimeInMillis();
-            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), i+1, monthCal.getActualMaximum(Calendar.HOUR_OF_DAY), monthCal.getActualMaximum(Calendar.MINUTE), monthCal.getActualMaximum(monthCal.MILLISECOND));
-            long monthRangeStop = monthCal.getTimeInMillis();
-
-
-//            UserData myData = UserData.getUserData(c);
-            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
+            Cursor curSteps = getStepsForDateRange(minTimestamp, maxTimestamp, UserData.getUserData(c).getCurUID());
             Entry curEntry = null;
-            if (curSteps != null && curSteps.getCount() != 0) {
+            if (curSteps != null && curSteps.moveToFirst()) {
 
-                int totalStepsForToday = 0;
-                while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday += curSteps.getInt(4);  //step count
-                    curSteps.moveToNext();
-//                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
-                    //works
-                }
+                int totalStepsForToday = curSteps.getInt(0);
+
                 if (totalStepsForToday > greatestSteps) {
                     greatestSteps = totalStepsForToday;
                 }
@@ -658,43 +657,36 @@ public class Home extends MenuActivity {
                 curSteps.close();
 
                 if (curChart.equals(ChartType.STEPS)) {
-                    curEntry = new Entry(totalStepsForToday, i-1);
+                    curEntry = new Entry(totalStepsForToday, windowDate -1 );
                 } else if (curChart.equals(ChartType.CALORIES)) {
                     float cals = (int) calculateTotalCalories(totalStepsForToday);
-                    curEntry = new Entry(cals, i-1);
+                    curEntry = new Entry(cals, windowDate - 1);
                 } else {
-                    float miles = (float)calculateTotalMiles(totalStepsForToday);
-                    curEntry = new Entry(miles, i-1);
+                    float miles = (float) calculateTotalMiles(totalStepsForToday);
+                    curEntry = new Entry(miles, windowDate - 1);
                 }
-
                 valsComp1.add(curEntry);
             } else {
-                Log.d(TAG, "else i Value: " +  i);
-
-                //no steps for this time period.
-                if(i!=0) {
-                    curEntry = new Entry(0, i-1);
-                    valsComp1.add(curEntry);
-                }
+                Log.d(TAG, "else i Value: " + windowDate );
+                curEntry = new Entry(0, windowDate - 1);
+                valsComp1.add(curEntry);
             }
-
 
             //add +1 for the 0 based day compensation.
-            if(curEntry!=null) {
-                xVals.add((i) + "");
+            if (curEntry != null) {
+                xVals.add((windowDate) + "");
             }
         }
 
-        // Fill out the rest of the month if we are not at the end of the month
-        for(int i = numberOfDaysLeft; i <= numberOfDaysTotal; i++) {
-            Entry curEntry = new Entry(0, i);
-            valsComp1.add(curEntry);
-            xVals.add((i + 1) + "");
+        final int daysInPast;
+
+        window.add( Calendar.DATE, -1 ); //rotate back into date range.
+        lazyLog.a( window.get( Calendar.MONTH ) == windowMonth,"Error, window month mismatch!!");
+        if( window.getTimeInMillis() < now.getTimeInMillis() ) {
+            daysInPast = window.getMaximum(Calendar.DATE);
+        } else {
+            daysInPast = now.get( Calendar.DATE );
         }
-
-
-        Calendar monthCal = calendar;
-        monthCal.setTimeInMillis(timestamp);
 
         TextView stepsTotal = (TextView) findViewById(R.id.stepTotal);
         TextView stepsAve = (TextView) findViewById(R.id.stepAverage);
@@ -702,15 +694,15 @@ public class Home extends MenuActivity {
         TextView milesAve = (TextView) findViewById(R.id.distanceAverage);
         TextView calsTotal = (TextView) findViewById(R.id.caloriesTotal);
         TextView calsAve = (TextView) findViewById(R.id.caloriesAverage);
-        double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, numberOfDaysLeft);
+        double stepsAverageDouble = calculateAverageSteps(totalStepsForMonth, daysInPast);
         stepsAve.setText(String.format("%.1f", stepsAverageDouble));
         double milesTotalDouble = calculateTotalMiles(totalStepsForMonth);
         milesTotal.setText(String.format("%.1f", milesTotalDouble));
-        double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, numberOfDaysLeft);
+        double milesAverageDouble = calculateAverageMiles(totalStepsForMonth, daysInPast);
         milesAve.setText(String.format("%.1f", milesAverageDouble));
         double caloriesDouble = calculateTotalCalories(totalStepsForMonth);
         calsTotal.setText(String.format("%.1f", caloriesDouble));
-        double caloriesAverage = calculateAverageCalories(totalStepsForMonth, numberOfDaysLeft);
+        double caloriesAverage = calculateAverageCalories(totalStepsForMonth, daysInPast);
         calsAve.setText(String.format("%.1f", caloriesAverage));
 
         stepsTotal.setText(totalStepsForMonth + "");
@@ -801,7 +793,8 @@ public class Home extends MenuActivity {
             //This gets total days in month, we want days past
             //numberOfDays = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
             calendar.setTimeInMillis(timestamp);
-            numberOfDaysTotal = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+            calendar.setTimeZone(TimeZone.getDefault());
+            numberOfDaysTotal = calendar.getActualMaximum(Calendar.DATE) - calendar.get( Calendar.DATE);
             int difference = numberOfDaysTotal - curDay;
             numberOfDaysLeft = numberOfDaysTotal - difference;
             return numberOfDaysLeft;
@@ -869,8 +862,11 @@ public class Home extends MenuActivity {
 
 
             monthCal.setTimeInMillis(today.getTimeInMillis());
-//            monthCal.setTimeZone( TimeZone.getTimeZone( "UTC" ));
-
+            monthCal.setTimeZone(TimeZone.getDefault());
+            monthCal.set( Calendar.HOUR_OF_DAY, 0 );
+            monthCal.set( Calendar.MINUTE, 0 );
+            monthCal.set( Calendar.SECOND, 0 );
+            monthCal.set( Calendar.MILLISECOND, 0 );
 
             long monthRangeStart = monthCal.getTimeInMillis();
 //            monthCal.set(monthCal.get(Calendar.YEAR), monthCal.get(Calendar.MONTH), dayToDisplay, monthCal.getActualMaximum(Calendar.HOUR_OF_DAY), monthCal.getActualMaximum(Calendar.MINUTE), monthCal.getActualMaximum(Calendar.SECOND));
@@ -896,24 +892,12 @@ public class Home extends MenuActivity {
             }
             Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
             curSteps.moveToFirst();
-            if (curSteps != null && curSteps.getCount() != 0) {
-                int totalStepsForToday = 0;
-                while (curSteps.isAfterLast() == false) {
-                    totalStepsForToday += curSteps.getInt(4);
-
-                    curSteps.moveToNext();
-//                    Log.d(TAG, "Counting steps for today: "+totalStepsForToday);
-                    //works
-                }
-
+            if (curSteps != null && curSteps.moveToFirst()) {
+                int totalStepsForToday = curSteps.getInt(0);
 
                 steps.setText(totalStepsForToday + "");
-
-
             } else {
                 steps.setText(0 + "");
-
-
             }
             curSteps.close();
             return gridView;
@@ -994,23 +978,17 @@ public class Home extends MenuActivity {
 
     public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID) {
 
-        String selectionSteps = Database.StepEntry.START + " >= ? AND " + Database.StepEntry.END + " <= ? AND " + Database.StepEntry.USER + " =? ";
-        Cursor curSteps = db.query(
-                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                new String[]{Database.StepEntry.SYNC_ID, //blob
-                        Database.StepEntry.START, //int
-                        Database.StepEntry.END, //int
-                        Database.StepEntry.USER, //string
-                        Database.StepEntry.STEPS, //int
-                        Database.StepEntry.DEVICEID}, //blob                          // The columns to return
-                selectionSteps,                                // The columns for the WHERE clause
-                new String[]{monthRangeStart + "", monthRangeStop + "", userID},                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
+        final String query = "SELECT SUM(" +Database.StepEntry.STEPS +
+                ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
+                Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
+                "<=? AND " + Database.StepEntry.USER + " =? ";
 
-        curSteps.moveToFirst();
+        final String[] args = new String[]{
+                Long.toString(monthRangeStart),
+                Long.toString(monthRangeStop),
+                userID};
+
+        Cursor curSteps = db.rawQuery(query, args);
 
         return curSteps;
     }

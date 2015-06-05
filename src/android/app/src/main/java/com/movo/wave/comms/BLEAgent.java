@@ -390,6 +390,7 @@ public class BLEAgent {
         private BLEDevice( final BluetoothDevice device, final Date seen ) {
             this.lastSeen = seen;
             this.device = device;
+            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
             this.gatt = device.connectGatt( context, true, self.gattCallback );
             lazyLog.a( this.gatt != null, "BLEDevice failed at connectGatt()!");
             this.notifyUUIDs = new HashSet<>();
@@ -486,6 +487,7 @@ public class BLEAgent {
          * Cleans up and closes the BLE context and any pending state.
          */
         private void close() {
+            // see discussion at https://code.google.com/p/android/issues/detail?id=58607
             UIHandler.post(new Runnable() {
                 @Override
                 public void run() {
