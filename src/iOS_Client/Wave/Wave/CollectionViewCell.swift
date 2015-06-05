@@ -25,7 +25,8 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     
         
         bgImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
-        bgImageView.contentMode = UIViewContentMode.ScaleAspectFit
+        bgImageView.contentMode = UIViewContentMode.ScaleAspectFill
+        bgImageView.clipsToBounds = true
         bgImageView.image = UIImage(named:"calendarbg")
         contentView.addSubview(bgImageView)
         
@@ -34,6 +35,8 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
         
         imageView = UIImageView(frame: CGRect(x: 0, y: 16, width: frame.size.width, height: frame.size.height*2/3))
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
+        imageView.clipsToBounds = true
+        
         contentView.addSubview(imageView)
     
         let textFrame = CGRect(x: 0, y: 32, width: frame.size.width, height: frame.size.height/3)
