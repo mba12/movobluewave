@@ -25,7 +25,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     
         
         bgImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
-        bgImageView.contentMode = UIViewContentMode.ScaleAspectFit
+        bgImageView.contentMode = UIViewContentMode.ScaleToFill
         bgImageView.image = UIImage(named:"calendarbg")
         contentView.addSubview(bgImageView)
         
