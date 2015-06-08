@@ -621,6 +621,7 @@ public class SyncDataActivity extends MenuActivity {
     ProgressBar syncProgress;
     TextView syncState;
     TextView syncPercent;
+    Button syncCancel;
 
     Resources resources;
 
@@ -636,6 +637,8 @@ public class SyncDataActivity extends MenuActivity {
         syncPercent.setText( percent + "%");
     }
 
+    WaveInfo info;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -646,7 +649,20 @@ public class SyncDataActivity extends MenuActivity {
         syncState = (TextView) findViewById( R.id.syncState );
         syncPercent = (TextView) findViewById(R.id.syncPercent);
         TextView syncSerial = (TextView) findViewById( R.id.syncSerial );
+        syncCancel = (Button) findViewById( R.id.syncCancel );
+        syncCancel.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if( sync != null ) {
+                    sync.abort();
+                }
+                lazyLog.i( "User aborted via click");
+                finish();
+            }
+        });
 
+        if( ! bleEnabled() )
+            requestBLEEnabled();
 
         final boolean status = BLEAgent.open(c);
         lazyLog.i( "Opened BLE agent with status ", status);
@@ -659,17 +675,24 @@ public class SyncDataActivity extends MenuActivity {
 
         final String mac = intent.getStringExtra( "MAC" );
         lazyLog.i( "Starting sync with MAC ", mac );
-        final WaveInfo info = new WaveInfo( db, mac );
+        info = new WaveInfo( db, mac );
 
         syncSerial.setText( resources.getString(R.string.sync_serial_label) + info.serial );
-        sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
-        updateSyncProgress( 0 );
-        updateSyncState( sync.getState() );
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if( bleEnabled() && sync == null ) {
+
+            syncCancel.setVisibility( View.INVISIBLE );
+            syncCancel.setEnabled(false);
+
+            sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
+            updateSyncProgress( 0 );
+            updateSyncState( sync.getState() );
+            info = null;
+        }
     }
 
     @Override
