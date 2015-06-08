@@ -164,7 +164,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         } else {
         
-            cell.imageView?.image = UIImage(named: "datebgcircle")
+//            cell.imageView?.image = UIImage(named: "datebgcircle")
+              cell.imageView?.image = UIImage(named: "datebgwide")
         }
         
         return cell
@@ -252,7 +253,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let monthName : String = dateFormat.monthSymbols[month-1] as! String
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
-            self.dateLabel.text = monthName + ", " + yearName
+            self.dateLabel.text = monthName + " " + yearName
             self.collectionView.reloadData()
         })
         

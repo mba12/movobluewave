@@ -374,7 +374,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         let monthName : String = dateFormat.monthSymbols[month-1] as! String
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
-            self.dateLabel.text = monthName + ", " + yearName
+            self.dateLabel.text = monthName + " " + yearName
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
         

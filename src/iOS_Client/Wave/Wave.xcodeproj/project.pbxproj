@@ -14,6 +14,7 @@
 		028BB27B1B0E5909004EBA8B /* UserMenuBarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB27A1B0E5909004EBA8B /* UserMenuBarViewController.swift */; };
 		028BB27D1B0E80C3004EBA8B /* DataUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB27C1B0E80C3004EBA8B /* DataUtilities.swift */; };
 		028BB27F1B0E96EA004EBA8B /* WaveTabBarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */; };
+		028CF2911B25ED2B00D66EA8 /* segoeui.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 028CF2901B25ED2B00D66EA8 /* segoeui.ttf */; };
 		02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */; };
 		02CEFDF81B14E8F4001FE19F /* KeyboardSlideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
@@ -97,6 +98,7 @@
 		028BB27A1B0E5909004EBA8B /* UserMenuBarViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UserMenuBarViewController.swift; sourceTree = "<group>"; };
 		028BB27C1B0E80C3004EBA8B /* DataUtilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DataUtilities.swift; sourceTree = "<group>"; };
 		028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaveTabBarViewController.swift; sourceTree = "<group>"; };
+		028CF2901B25ED2B00D66EA8 /* segoeui.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = segoeui.ttf; sourceTree = "<group>"; };
 		02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 		02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardSlideViewController.swift; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
@@ -242,6 +244,7 @@
 		4AEEA9CB1AD173900055C771 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				028CF2901B25ED2B00D66EA8 /* segoeui.ttf */,
 				4AEEA9CC1AD173900055C771 /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -362,6 +365,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				028CF2911B25ED2B00D66EA8 /* segoeui.ttf in Resources */,
 				4A812CC11B14B96C00B020A0 /* Main.storyboard in Resources */,
 				4AEEA9DB1AD173900055C771 /* LaunchScreen.xib in Resources */,
 				4AEEA9D81AD173900055C771 /* Images.xcassets in Resources */,
