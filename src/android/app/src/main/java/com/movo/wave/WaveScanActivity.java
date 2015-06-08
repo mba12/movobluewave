@@ -1,5 +1,8 @@
 package com.movo.wave;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
@@ -184,7 +187,16 @@ public class WaveScanActivity extends MenuActivity {
     public static final LazyLogger lazyLog = new LazyLogger( "WaveScanActivity",
             MenuActivity.lazyLog );
 
+
     public boolean startScan() {
+
+        if ( ! bleEnabled() ) {
+            lazyLog.i("BLE not enabled, spawning activity");
+            requestBLEEnabled();
+            return false;
+        }
+
+
         if( scanState != ScanState.COMPLETE ) {
             lazyLog.e( "Call to startScan() while scan in progress!");
             return false;
@@ -201,6 +213,16 @@ public class WaveScanActivity extends MenuActivity {
         lazyLog.i("Opened BLE agent with status ", status);
         BLEAgent.handle( scanRequest );
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if( requestCode == REQUEST_ENABLE_BT ) {
+            lazyLog.i( "BLE enable multi-return with status ", resultCode );
+        } else {
+            lazyLog.i("BLE still disabled, not starting scan: request ", requestCode,
+                    " result ", resultCode);
+        }
     }
 
     /** Use to add a *new* waveinfo instance.
@@ -296,7 +318,7 @@ public class WaveScanActivity extends MenuActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if( scanState == ScanState.COMPLETE ) {
+        if( scanState == ScanState.COMPLETE && bleEnabled() ) {
             startScan();
         }
     }

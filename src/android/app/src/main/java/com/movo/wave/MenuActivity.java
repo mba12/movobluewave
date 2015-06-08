@@ -1,5 +1,7 @@
 package com.movo.wave;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -203,5 +205,21 @@ public abstract class MenuActivity extends ActionBarActivity {
                 new Intent[]{takePhotoIntent});
 
         return chooserIntent;
+    }
+
+    protected boolean bleEnabled() {
+        /* check BLE state */
+        final BluetoothManager bluetoothManager =
+                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        final BluetoothAdapter mBluetoothAdapter = bluetoothManager.getAdapter();
+
+        return mBluetoothAdapter != null && mBluetoothAdapter.isEnabled();
+    }
+
+    protected final int REQUEST_ENABLE_BT = 1;
+
+    protected void requestBLEEnabled() {
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
     }
 }
