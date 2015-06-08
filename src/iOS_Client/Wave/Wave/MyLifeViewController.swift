@@ -164,8 +164,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         
         } else {
         
-//            cell.imageView?.image = UIImage(named: "datebgcircle")
-              cell.imageView?.image = UIImage(named: "datebgwide")
+            cell.imageView?.image = UIImage(named: "datebgcircle")
         }
         
         return cell

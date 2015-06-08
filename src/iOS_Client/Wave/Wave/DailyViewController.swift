@@ -44,6 +44,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     @IBAction func photoButtonPressed(sender: AnyObject) {
         var imagePicker = UIImagePickerController()
+        imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
     }

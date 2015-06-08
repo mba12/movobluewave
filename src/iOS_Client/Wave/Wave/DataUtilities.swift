@@ -816,3 +816,34 @@ func changeUserPassword(userEmail: String, oldPassword: String, newPassword: Str
             }
         })
 }
+
+
+func setupNotificationSet() {
+
+    
+    
+    
+    //cancel existing notifications
+    UIApplication.sharedApplication().cancelAllLocalNotifications()
+    
+    
+    //schedule notifications
+    let today = NSDate()
+    let days = [2, 4, 6, 7]
+    let text = ["Sync your Wave to find out how far you've come.",
+        "Don't forget to sync and update your Movo calendar.",
+        "Where have your steps taken you? Sync your Wave now.",
+        "You will lose data if you do not sync at least once a week."]
+    for (var i = 0; i<4; i++) {
+        let notificationDate = today.dateByAddingTimeInterval(Double(days[i])*60*60*24)
+        let notification = UILocalNotification()
+        notification.fireDate = notificationDate
+        notification.alertBody = text[i]
+        UIApplication.sharedApplication().scheduleLocalNotification(notification)
+    }
+    
+    
+}
+
+
+
