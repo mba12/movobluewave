@@ -47,6 +47,15 @@ public final class Database {
         public static final String USER = "user";
     }
 
+
+    public static abstract class WaveUserAssociation implements BaseColumns {
+        public static final String WAVE_USER_ASSOCIATION_TABLE_NAME = "waveuserassociation";
+        public static final String SERIAL = "serial";
+        public static final String USER = "user";
+        public static final String NAME = "name";
+        public static final String WHEN = "when";
+    }
+
     public static abstract class PhotoStore implements BaseColumns {
         public static final String PHOTO_TABLE_NAME = "photos";
         public static final String DATE = "date";
