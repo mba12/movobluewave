@@ -56,6 +56,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.KnownWaves.SERIAL + TEXT_TYPE + COMMA_SEP +
                     Database.KnownWaves.USER + TEXT_TYPE + ")";
 
+
+    private static final String SQL_CREATE_WAVE_USER_ASSOCIATION =
+            "CREATE TABLE " + Database.WaveUserAssociation.WAVE_USER_ASSOCIATION_TABLE_NAME + " (" +
+                    Database.WaveUserAssociation.SERIAL + TEXT_TYPE + " NOT NULL " + COMMA_SEP +
+                    Database.WaveUserAssociation.USER + TEXT_TYPE + " NOT NULL " + COMMA_SEP +
+                    Database.WaveUserAssociation.NAME + TEXT_TYPE + COMMA_SEP +
+                    Database.WaveUserAssociation.WHEN + INTEGER_TYPE + " NOT NULL " + COMMA_SEP +
+                    "UNIQUE ( " + Database.WaveUserAssociation.SERIAL + COMMA_SEP +
+                    Database.WaveUserAssociation.USER + " ) ON CONFLICT REPLACE )";
+
     private static final String SQL_CREATE_PHOTOS_STORAGE =
             "CREATE TABLE " + Database.PhotoStore.PHOTO_TABLE_NAME + " (" +
                     Database.PhotoStore._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
@@ -92,9 +102,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         Log.d(TAG, "Creating wave table: "+ SQL_CREATE_KNOWN_WAVES);
         db.execSQL(SQL_CREATE_KNOWN_WAVES);
 
+        Log.d(TAG, "Creating wave table: "+ SQL_CREATE_WAVE_USER_ASSOCIATION);
+        db.execSQL(SQL_CREATE_WAVE_USER_ASSOCIATION);
+
         Log.d(TAG, "Creating wave table: "+ SQL_CREATE_PHOTOS_STORAGE);
         db.execSQL(SQL_CREATE_PHOTOS_STORAGE);
-
     }
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // This database is only a cache for online data, so its upgrade policy is
