@@ -126,5 +126,7 @@ class LoginViewController: KeyboardSlideViewController {
         dismissViewControllerAnimated(true, completion: nil)
     }
     
+    @IBAction func forgotPasswordButtonPress(sender: AnyObject) {
+    }
     
 }

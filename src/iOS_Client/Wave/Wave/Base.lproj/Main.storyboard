@@ -619,6 +619,7 @@
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
                                 <connections>
+                                    <action selector="forgotPasswordButtonPress:" destination="Psc-5G-02Q" eventType="touchUpInside" id="TIG-TJ-YC6"/>
                                     <action selector="login:" destination="Psc-5G-02Q" eventType="touchUpInside" id="j3n-x4-5NG"/>
                                 </connections>
                             </button>
@@ -2198,9 +2199,9 @@
     <inferredMetricsTieBreakers>
         <segue reference="1Av-rn-EMf"/>
         <segue reference="60l-AC-Hvq"/>
-        <segue reference="lVa-zE-MYI"/>
-        <segue reference="Ld4-Fc-WJ2"/>
-        <segue reference="QFb-do-jEW"/>
         <segue reference="FLg-vA-6yt"/>
+        <segue reference="OuT-jJ-KdH"/>
+        <segue reference="5Rn-yN-IPh"/>
+        <segue reference="QFb-do-jEW"/>
     </inferredMetricsTieBreakers>
 </document>
