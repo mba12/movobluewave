@@ -49,11 +49,18 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         
         var validation = true
         
+        if ( !isValidEmail(email) ) {
+            validation = false
+            println("Email validation failed")
+        }
+        
 //WARN: bad email validation check
 //this isn't really a good check for valid email address
-        if((email=="")){
-            validation = false
-        }
+//        if((email=="")){
+//            validation = false
+//        }
+// NOTE: see new function above
+        
         if((password=="")){
             validation = false
         }
@@ -117,6 +124,20 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     UserData.getOrCreateUserData().loadUser(userentry)
                                     
                                     UserData.getOrCreateUserData().saveMetaDataToFirebase()
+
+                                    let url = NSURL(string: "https://devorders.getmovo.com/verify/user-signup?fullname=" + username + "&email=" + email)
+                                    
+                                    let task = NSURLSession.sharedSession().dataTaskWithURL(url!) {(data, response, error) in
+                                        println(NSString(data: data, encoding: NSUTF8StringEncoding))
+                                    }
+                                    
+                                    task.resume()
+                                    
+                                    /*
+                                    // Send User a Validation Email
+                                    var sender: RegistrationEmailSender = RegistrationEmailSender()
+                                    sender.sendRegistrationEmail(username, em:email)
+                                    */
                                     
                                     self.performSegueWithIdentifier("tabBar", sender: self)
                                     if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
@@ -140,10 +161,6 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
             
             self.presentViewController(alertController, animated: true, completion: nil)
         }
-        
-        
-        
-        
     }
     
     
@@ -157,13 +174,16 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
         datePickerToolbar.sizeToFit()
-        
-        
-        offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
-        
 
+        offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
     }
     
+    func isValidEmail(testStr:String) -> Bool {
+        let emailRegEx:String = "[A-Z0-9a-z._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,6}"
+        
+        let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        return emailTest.evaluateWithObject(testStr)
+    }
     
     func dateSelection(sender: UIDatePicker) {
         

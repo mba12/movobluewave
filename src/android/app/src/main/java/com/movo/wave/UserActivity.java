@@ -58,6 +58,9 @@ public class UserActivity extends MenuActivity {
                 UserData.getUserData(c).setCurrentUser(uid);
                 UserData.getUserData(c).loadNewUser(uid);
                 //startActivity( new Intent( c, Home.class ) );
+                Intent intent = new Intent(getApplicationContext(),
+                        Home.class);
+                startActivity(intent);
                 finish();
             }
         });
@@ -70,6 +73,8 @@ public class UserActivity extends MenuActivity {
                 Intent intent = new Intent(getApplicationContext(),
                         FirstLogin.class);
                 startActivity(intent);
+
+                finish();
 
 
             }

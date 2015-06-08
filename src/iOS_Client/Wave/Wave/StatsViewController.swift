@@ -93,24 +93,13 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         NSLog("Entered loadDataForYM " + String(year) + "-" + String(month))
         
+        var totalActualDays : Double = 0.0  // For when we are in the current month and the month is not yet finished
+        
         stepsCount = [Int]()
         var caloriesList : [Double] = [Double]()
         var numDays = cal.rangeOfUnit(.CalendarUnitDay,
                                       inUnit: .CalendarUnitMonth,
                                       forDate: date).toRange()!.endIndex-1
-        
-        
-        NSLog("Number of Days: " + String(numDays))
-        
-        
-        // NOTE: Phil commented this out so the current month would display
-        //       as an entire month consistent with the Android look
-        // if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
-        //    numDays = cal.component(.CalendarUnitDay , fromDate: NSDate())
-        // }
-        
-        //
-
         
         NSLog("Number of Days: " + String(numDays))
         
@@ -120,6 +109,13 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 stepsCount.append(stepsForDayStarting(dateStart))
                 caloriesList.append(caloriesForDayStarting(dateStart))
             }
+        }
+        
+        
+        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
+            totalActualDays = Double(cal.component(.CalendarUnitDay , fromDate: NSDate()))
+        } else {
+            totalActualDays = Double(stepsCount.count)
         }
         
         var days:[String] = []
@@ -171,10 +167,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             caloriesYVals.append(ChartDataEntry(value: Float(calories), xIndex:i))
         }
         
-        
-        stepsAvgC = Double(stepsTotal)/Double(stepsCount.count)
-        caloriesAvgC = caloriesTotal/Double(stepsCount.count)
-        milesAvgC = milesTotal/Double(stepsCount.count)
+        stepsAvgC = Double(stepsTotal)/totalActualDays
+        caloriesAvgC = caloriesTotal/totalActualDays
+        milesAvgC = milesTotal/totalActualDays
         
         xVals = days
         

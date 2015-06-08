@@ -200,6 +200,23 @@ public class FirstSignUp extends Activity {
 //                                                        URL url;
                                                         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                                                         StrictMode.setThreadPolicy(policy);
+
+
+                                                        urlPath: String = "https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail
+
+                                                        var url: NSURL = NSURL(string: urlPath)!
+                                                                var request1: NSURLRequest = NSURLRequest(URL: url)
+                                                        let queue:NSOperationQueue = NSOperationQueue()
+                                                        NSURLConnection.sendAsynchronousRequest(request1, queue: queue, completionHandler:{ (response: NSURLResponse!, data: NSData!, error: NSError!) -> Void in
+                                                            var err: NSError
+                                                            var jsonResult: NSDictionary = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.MutableContainers, error: nil) as NSDictionary
+                                                            println("AsSynchronous\(jsonResult)")
+                                                        })
+
+
+
+
+
                                                         try {
                                                             HttpClient httpclient = new DefaultHttpClient();
                                                             String http = "https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail;
