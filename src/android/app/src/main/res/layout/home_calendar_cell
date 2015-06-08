@@ -20,18 +20,9 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_above="@+id/stepsContainer"
-            android:background="@drawable/calendargradient"
+            android:background="@drawable/gradientrevision"
             android:orientation="horizontal" >
 
-            <TextView
-                android:id="@+id/day"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:gravity="center"
-                android:layout_centerHorizontal="true"
-                android:textColor="@android:color/black"
-                android:text="Today"/>
 
             <ImageView
                 android:id="@+id/gradient"
@@ -41,6 +32,17 @@
                 android:layout_centerVertical="true"
                 android:scaleType="fitXY"
                 android:background="@drawable/datebgwide"/>
+            <TextView
+                android:id="@+id/day"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:gravity="center"
+                android:layout_centerHorizontal="true"
+                android:textColor="@android:color/black"
+                android:textStyle="bold"
+                android:text="Today"/>
+
             <TextView
                 android:id="@+id/wholeDate"
                 android:layout_width="0dp"

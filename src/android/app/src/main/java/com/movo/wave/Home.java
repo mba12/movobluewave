@@ -480,10 +480,15 @@ public class Home extends MenuActivity {
             String uid = UserData.getUserData(c).getCurrentUser();
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-            if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
-                currentUserTV.setText( "" );
-            }else{
-                currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
+            try {
+                if (UserData.getUserData(c).getCurrentUsername().equals("Error")) {
+                    currentUserTV.setText("");
+                } else {
+                    currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+                currentUserTV.setText("");
             }
             home.invalidate();
 
