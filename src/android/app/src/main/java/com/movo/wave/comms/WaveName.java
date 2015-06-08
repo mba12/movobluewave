@@ -34,7 +34,7 @@ public class WaveName {
      *
      * @param info parent wave info attribute
      * @param user unique user string
-     * @param name
+     * @param name to associate with user and device
      */
     public WaveName( final WaveInfo info, final String user, final String name, final Date when ) {
         this.info = info;
@@ -47,9 +47,10 @@ public class WaveName {
      *
      * @param info parent wave info attribute
      * @param user unique user string
+     * @param name to associate with user and device
      */
-    public WaveName( final WaveInfo info, final String user ) {
-        this( info, user, null, new Date() );
+    public WaveName( final WaveInfo info, final String user, final String name ) {
+        this( info, user, name, new Date() );
     }
 
     /** Public getter for name.
@@ -62,6 +63,11 @@ public class WaveName {
         } else {
             return info.serial;
         }
+    }
+
+    public void setName( final String value) {
+        name = value;
+        when = new Date();
     }
 
     public final static String[] queryColumns = new String[] {
@@ -85,7 +91,7 @@ public class WaveName {
         values.put( Database.WaveUserAssociation.NAME, name );
         values.put( Database.WaveUserAssociation.WHEN, UTC.isoFormat(when));
 
-        final long ret = db.replace( Database.WaveUserAssociation.WAVE_USER_ASSOCIATION_TABLE_NAME, null, values );
+        final long ret = db.replace(Database.WaveUserAssociation.WAVE_USER_ASSOCIATION_TABLE_NAME, null, values);
 
         return ret;
     }
@@ -96,7 +102,7 @@ public class WaveName {
      * @param column column name to extract.
      * @return string value of results.
      */
-    public static String getColumn( Cursor cursor, String column ) {
+    public static String getColumn( Cursor cursor, String column) {
         int index = cursor.getColumnIndex( column );
         return cursor.getString( index );
     }
@@ -112,7 +118,13 @@ public class WaveName {
         lazyLog.a( info.serial.equals(getColumn(cursor, Database.WaveUserAssociation.SERIAL)));
         this.user = getColumn(cursor, Database.WaveUserAssociation.USER);
         this.name = getColumn(cursor, Database.WaveUserAssociation.NAME);
-        this.when = null; //! FIXME: Parse modification time!
+        final String timeString = getColumn(cursor, Database.WaveUserAssociation.WHEN);
+        try {
+            this.when = UTC.parse(timeString);
+        } catch (java.text.ParseException e ) {
+            lazyLog.e("Could not parse date: ", timeString, " with exception: ", e);
+            this.when = null;
+        }
     }
 
     public static long byInfo( final SQLiteDatabase db, final WaveInfo info, final Collection<WaveName> out ) {

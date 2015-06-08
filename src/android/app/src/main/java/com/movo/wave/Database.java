@@ -53,7 +53,7 @@ public final class Database {
         public static final String SERIAL = "serial";
         public static final String USER = "user";
         public static final String NAME = "name";
-        public static final String WHEN = "when";
+        public static final String WHEN = "lastUpdate";
     }
 
     public static abstract class PhotoStore implements BaseColumns {

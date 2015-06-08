@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.movo.wave.Database;
+import com.movo.wave.UserData;
 import com.movo.wave.util.LazyLogger;
 
 import java.util.Collection;
@@ -48,6 +49,10 @@ public class WaveInfo {
 
         final long ret = db.replace( Database.KnownWaves.WAVE_TABLE_NAME, null, values );
 
+        for( WaveName name : names ) {
+            name.store( db );
+        }
+
         return ret;
     }
 
@@ -80,7 +85,9 @@ public class WaveInfo {
             readCursor(cursor);
         }
 
-        WaveName.byInfo( db, this, names );
+        if( serial != null ) {
+            WaveName.byInfo(db, this, names);
+        }
     }
 
     private void readCursor( Cursor cursor ) {
@@ -101,7 +108,33 @@ public class WaveInfo {
         return queried != null;
     }
 
-    public String toString() {
-        return this.serial;
+    /** Lookup a user name for the device, or null if none set.
+     *
+     * @param user for lookup
+     * @return user's name for device.
+     */
+    public String getName( final String user ) {
+        for( WaveName waveName : names ) {
+            if( waveName.user.equals(user) ) {
+                return waveName.getName();
+            }
+        }
+
+        return null;
+    }
+
+    /** Set user name for this device.
+     *
+     * @param user for lookup
+     * @param name user's name for device.
+     */
+    public void setName( final String user, final String name ) {
+        for( WaveName waveName : names ) {
+            if( waveName.user.equals(user) ) {
+                waveName.setName( name );
+                return;
+            }
+        }
+        names.add( new WaveName(this, user, name));
     }
 }
