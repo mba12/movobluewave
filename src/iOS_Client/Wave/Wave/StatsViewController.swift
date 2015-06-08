@@ -272,9 +272,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         chartView.gridBackgroundColor = UIColor.whiteColor()
         chartView.setNeedsDisplay()
         
-        stepsButtonDisplay.setBackgroundImage(UIImage(named:"buttonRed"), forState: UIControlState.Normal)
-        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
-        milesButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
+        stepsButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggleSel"), forState: UIControlState.Normal)
+        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
+        milesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
         
     }
 
@@ -286,9 +286,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
 
         chartView.setNeedsDisplay()
         
-        stepsButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
-        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
-        milesButtonDisplay.setBackgroundImage(UIImage(named:"buttonRed"), forState: UIControlState.Normal)
+        stepsButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
+        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
+        milesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggleSel"), forState: UIControlState.Normal)
         
     }
     
@@ -309,9 +309,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
 
         chartView.setNeedsDisplay()
         
-        stepsButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
-        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"buttonRed"), forState: UIControlState.Normal)
-        milesButtonDisplay.setBackgroundImage(UIImage(named:"instabutton"), forState: UIControlState.Normal)
+        stepsButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
+        caloriesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggleSel"), forState: UIControlState.Normal)
+        milesButtonDisplay.setBackgroundImage(UIImage(named:"StatsToggle"), forState: UIControlState.Normal)
         
     }
     
@@ -374,7 +374,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         let monthName : String = dateFormat.monthSymbols[month-1] as! String
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
-            self.dateLabel.text = monthName + ", " + yearName
+            self.dateLabel.text = monthName + " " + yearName
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
         

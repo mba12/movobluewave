@@ -54,6 +54,10 @@ public class UTC {
         return dateFormat.format( calendar.getTime() );
     }
 
+    public static Date parse( final String iso8601 ) throws java.text.ParseException {
+        return dateFormat.parse(iso8601);
+    }
+
     /** Creates a new utc calendar object
      *
      * @return utc calendar
