@@ -228,8 +228,8 @@ public class WaveAgent {
             DISCOVERY(false),
             VERSION,
             GET_DATE,
-            REQUEST_DATA,
             SET_DATE,
+            REQUEST_DATA,
             COMPLETE(false) {
                 /** Don't advance beyond complete!
                  *
@@ -415,6 +415,7 @@ public class WaveAgent {
                     state = state.next();
                     if (state.skippable && callback.skip(this, state)) {
                         lazyLog.v(this.toString(), "\tSkipping state: ", state);
+                        callback.notify(this, state, true);
                         continue;
                     } else {
                         break;
@@ -564,7 +565,7 @@ public class WaveAgent {
             }
 
             if( dataSuccess + dataFailure == dataTotal ) {
-                nextState( true );
+                nextState( dataFailure == 0 );
             }
         }
     }

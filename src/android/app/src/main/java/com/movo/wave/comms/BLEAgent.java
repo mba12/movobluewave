@@ -167,48 +167,60 @@ public class BLEAgent {
      */
      private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
         private boolean checkGatt( final BluetoothGatt gatt ) {
-            lazyLog.a(currentOp != null, "Expected op");
-            lazyLog.a(currentDevice != null, "Expected request");
+            final boolean ret =  currentOp != null && currentDevice != null && currentDevice.gatt == gatt;
+
+            if( currentOp == null ) {
+                lazyLog.w( "Received Gatt operation without active op");
+            }
+
+            if( currentRequest == null ) {
+                lazyLog.w( "Received Gatt operation without active request");
+            }
             if( currentDevice != null )
                 lazyLog.a(currentDevice.gatt == gatt, "Gatt objects mismatch");
-            return currentOp != null && currentDevice != null && currentDevice.gatt == gatt;
+            else
+                lazyLog.w( "Received Gatt operation without active device");
+            return ret;
         }
 
         @Override
         public void onConnectionStateChange( final BluetoothGatt gatt,
                                              final int status,
                                              final int newState) {
-
-            UIHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (checkGatt(gatt)) {
-                        if (currentOp.onConnectionStateChange(status, newState)) {
-                            nextOp();
-                        }
-                    } else {
-                        //try to lookup device
-                        lazyLog.i( "Trying to reroute connection state to device... " );
-                        final String address = gatt.getDevice().getAddress();
-                        final BLEDevice device = BLEDevice.byAddress(address);
-
-                        if (device != null) {
-                            lazyLog.i( address, " ",
-                                    DebugOp.describeState( device.connectionState ), " => ",
-                                    DebugOp.describeState( newState ));
-                            device.connectionState = newState;
-                            if( device != currentDevice &&
-                                    newState != BluetoothGatt.STATE_DISCONNECTED ) {
-                                lazyLog.i( "Disconnecting from errant device: ", address );
-                                //gatt.disconnect();
+            try {
+                UIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (checkGatt(gatt)) {
+                            if (currentOp.onConnectionStateChange(status, newState)) {
+                                nextOp();
                             }
                         } else {
-                            lazyLog.e( "Failed to look up device for ", address );
-                        }
+                            //try to lookup device
+                            lazyLog.i( "Trying to reroute connection state to device... " );
+                            final String address = gatt.getDevice().getAddress();
+                            final BLEDevice device = BLEDevice.byAddress(address);
 
+                            if (device != null) {
+                                lazyLog.i( address, " ",
+                                        DebugOp.describeState( device.connectionState ), " => ",
+                                        DebugOp.describeState( newState ));
+                                device.connectionState = newState;
+                                if( device != currentDevice &&
+                                        newState != BluetoothGatt.STATE_DISCONNECTED ) {
+                                    lazyLog.i( "Disconnecting from errant device: ", address );
+                                    //gatt.disconnect();
+                                }
+                            } else {
+                                lazyLog.i( "Failed to look up device for ", address, " ignoring state change" );
+                            }
+
+                        }
                     }
-                }
-            });
+                });
+            } catch (Exception e ) {
+                lazyLog.e( "GATT ERROR:", e.getStackTrace());
+            }
         }
 
         @Override
@@ -378,7 +390,8 @@ public class BLEAgent {
         private BLEDevice( final BluetoothDevice device, final Date seen ) {
             this.lastSeen = seen;
             this.device = device;
-            this.gatt = device.connectGatt( context, false, self.gattCallback );
+            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
+            this.gatt = device.connectGatt( context, true, self.gattCallback );
             lazyLog.a( this.gatt != null, "BLEDevice failed at connectGatt()!");
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
@@ -474,8 +487,21 @@ public class BLEAgent {
          * Cleans up and closes the BLE context and any pending state.
          */
         private void close() {
-            gatt.disconnect();
-            gatt.close();
+            // see discussion at https://code.google.com/p/android/issues/detail?id=58607
+            UIHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    lazyLog.i("Close: Disconnecting ", device.getAddress());
+                    gatt.disconnect();
+                }
+            });
+            UIHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    lazyLog.i("Close: closing ", device.getAddress());
+                    gatt.close();
+                }
+            },100);
         }
     }
 
@@ -887,7 +913,7 @@ public class BLEAgent {
                 @Override
                 public void run() {
 
-                    lazyLog.d( "Disconnecting from device: ", currentDevice.device.getAddress());
+                    lazyLog.d("Disconnecting from device: ", currentDevice.device.getAddress());
 
                     // disable notifications
                     for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
@@ -899,14 +925,15 @@ public class BLEAgent {
 
                 @Override
                 public boolean onConnectionStateChange(int status, int newState) {
+
                     final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
                     currentDevice.connectionState = newState;
                     if (!ret) {
-                        lazyLog.w( "Not disconnected??!? ", describeState(newState));
-                        lazyLog.w( "Retrying disconnect...", currentDevice.device.getAddress());
+                        lazyLog.w("Not disconnected??!? ", describeState(newState));
+                        lazyLog.w("Retrying disconnect...", currentDevice.device.getAddress());
                         currentDevice.gatt.disconnect();
                     } else {
-                        lazyLog.d( "Disconnected from ", currentDevice.device.getAddress());
+                        lazyLog.d("Disconnected from ", currentDevice.device.getAddress());
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }

@@ -24,8 +24,8 @@
         <item>Connecting</item>
         <item>Checking Version</item>
         <item>Checking Time</item>
-        <item>Uploading Data</item>
         <item>Setting Time</item>
+        <item>Uploading Data</item>
         <item>Complete</item>
         <item>Error</item>
         <item>Aborting</item>
