@@ -140,9 +140,9 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             dispatch_async(dispatch_get_main_queue(), {
                 if let milestring = floatCommaNumberFormatter(1).stringFromNumber(miles) {
-                    self.distanceLabel.text = milestring + " MILES"
+                    self.distanceLabel.text = milestring
                 } else {
-                    self.distanceLabel.text = "0.0 MILES"
+                    self.distanceLabel.text = "0.0"
                 }
             })
             
@@ -152,9 +152,9 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             let calories = caloriesForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
                 if let caloriestring = floatCommaNumberFormatter(1).stringFromNumber(calories) {
-                    self.calorieLabel.text =  caloriestring + " CAL"
+                    self.calorieLabel.text =  caloriestring
                 } else {
-                    self.calorieLabel.text =  "0.0 CAL"
+                    self.calorieLabel.text =  "0.0"
                 }
             })
             
