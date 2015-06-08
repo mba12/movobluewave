@@ -98,6 +98,8 @@ public class Home extends MenuActivity {
     TextView currentUserTV;
     RelativeLayout older;
     RelativeLayout newer;
+    public static Home instance;
+    DrawerLayout homeLayout;
     TextView curMonthDisplay;
 
     public enum ChartType {
@@ -139,11 +141,18 @@ public class Home extends MenuActivity {
         db = null;
     }
 
+    public static Home getHome() {
+        if (instance == null) {
+            instance = new Home();
+        }
+        return instance;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intentIncoming = getIntent();
-
+        instance = getHome();
         LaunchAnimation.apply(this, intentIncoming);
 
 
@@ -154,6 +163,7 @@ public class Home extends MenuActivity {
                         .build()
         );
         initMenu(R.layout.activity_home);
+        homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
         stepsLayout = (RelativeLayout) findViewById(R.id.stepsLayout);
         milesLayout = (RelativeLayout) findViewById(R.id.milesLayout);
@@ -185,42 +195,45 @@ public class Home extends MenuActivity {
                 timestamp = calendar.getTimeInMillis();
             }
 //            UserData myData = UserData.getUserData(c);
-            String monthChange = "";
-            String yearChange = "";
 
             downloadMonthPhotos(calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
 
-            if(calendar.get(Calendar.MONTH)<11){
-                monthChange = "0"+(calendar.get(Calendar.MONTH)+1);
-            }else{
-                monthChange = String.valueOf(calendar.get(Calendar.MONTH)+1);
-            }
-            yearChange = ""+ calendar.get(Calendar.YEAR);
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
-            ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    Log.d(TAG, "" + snapshot.getValue());
-//                        loginProgress.setVisibility(View.INVISIBLE);
-
-//                    insertSteps(snapshot, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), c);
-
-                    Log.d(TAG, "Inserting steps into database");
-
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-                }
-            });
+//            feawfe
         } else {
             calendar = Calendar.getInstance();
             timestamp = calendar.getTimeInMillis();
             curDay = calendar.get(Calendar.DAY_OF_MONTH);
         }
-//        curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        String monthChange = "";
+        String yearChange = "";
+
+        if(calendar.get(Calendar.MONTH)<11){
+            monthChange = "0"+(calendar.get(Calendar.MONTH)+1);
+        }else{
+            monthChange = String.valueOf(calendar.get(Calendar.MONTH)+1);
+        }
+        final String monthChangefinal =monthChange;
+        yearChange = ""+ calendar.get(Calendar.YEAR);
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
+
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Log.d(TAG, "" + snapshot.getValue());
+//                        loginProgress.setVisibility(View.INVISIBLE);
+
+                UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChangefinal, calendar.get(Calendar.YEAR)+"", instance);
+
+                Log.d(TAG, "Inserting steps into database");
+
+
+            }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
+            }
+        });
 
 
         curMonth = calendar.get(Calendar.MONTH);
@@ -419,8 +432,16 @@ public class Home extends MenuActivity {
 //scheduleSyncReminders();
 
 
+
+
+
+
 //        upload();
     }
+
+
+
+
     public void scheduleSyncReminders(){
         long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
 
@@ -471,7 +492,7 @@ public class Home extends MenuActivity {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        DrawerLayout home = (DrawerLayout) findViewById(R.id.drawer_layout);
+        homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         ArrayList<String> users = new ArrayList<String>();
         users =  UserData.getUserData(c).getUserList();
@@ -490,7 +511,7 @@ public class Home extends MenuActivity {
                 e.printStackTrace();
                 currentUserTV.setText("");
             }
-            home.invalidate();
+            homeLayout.invalidate();
 
 
             setUpCharts(c);
@@ -538,7 +559,7 @@ public class Home extends MenuActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        home.invalidate();
+        homeLayout.invalidate();
 
     }
 
@@ -956,7 +977,7 @@ public class Home extends MenuActivity {
 
     public void setUpCharts(Context c) {
 //        UserData myData = UserData.getUserData(c);
-        gridview = (GridView) findViewById(R.id.gridview);
+        GridView gridview = (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         gridview.invalidate();
@@ -1026,20 +1047,20 @@ public class Home extends MenuActivity {
         //now getIntent() should always return the last received intent
     }
 
-    private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
-        String monthChange = "";
-        String yearChange = "";
-
-
-        if(month<11){
-            monthChange = "0"+(month+1);
-        }else{
-            monthChange = String.valueOf(month+1);
-        }
-        yearChange = ""+ year;
-
-        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
-    }
+//    private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
+//        String monthChange = "";
+//        String yearChange = "";
+//
+//
+//        if(month<11){
+//            monthChange = "0"+(month+1);
+//        }else{
+//            monthChange = String.valueOf(month+1);
+//        }
+//        yearChange = ""+ year;
+//
+//        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
+//    }
 
 
 

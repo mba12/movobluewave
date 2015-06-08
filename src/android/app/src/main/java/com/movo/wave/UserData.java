@@ -70,6 +70,7 @@ public class UserData extends Activity{
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
+    private Home homeView;
     final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
 
 
@@ -855,8 +856,8 @@ public class UserData extends Activity{
     }
 
 
-    public void insertStepsFromDB(DataSnapshot snapshot, Context c, String curMonth, String curYear){
-        UserData myData = UserData.getUserData(c);
+    public void insertStepsFromDB(DataSnapshot snapshot, Context c, String curMonth, String curYear, Home home){
+        homeView = home;
         Iterable<DataSnapshot> children = snapshot.getChildren();
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
@@ -923,8 +924,24 @@ public class UserData extends Activity{
             }
 
         }
-
+        refreshHome(homeView);
         db.close();
+        Log.d(TAG, "Refreshing home UI");
+
+
+
+
+
+    }
+    public void refreshHome( Home home){
+        homeView = home;
+        homeView.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //bah.
+//                homeView.refreshCharts();
+            }
+        });
     }
 
 

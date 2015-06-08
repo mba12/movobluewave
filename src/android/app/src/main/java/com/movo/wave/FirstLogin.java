@@ -163,12 +163,12 @@ public class FirstLogin extends Activity {
     }
 
 
-    private static void insertSteps(DataSnapshot snapshot) {
-//        UserData myData = UserData.getUserData(c);
-        UserData.getUserData(c).insertStepsFromDB(snapshot, c, curMonth, curYear);
-
-
-    }
+//    private static void insertSteps(DataSnapshot snapshot) {
+////        UserData myData = UserData.getUserData(c);
+//        UserData.getUserData(c).insertStepsFromDB(snapshot, c, curMonth, curYear);
+//
+//
+//    }
 
     public void login() {
         loginRef.authWithPassword(mEmail, mPassword, new Firebase.AuthResultHandler() {
@@ -272,30 +272,13 @@ public class FirstLogin extends Activity {
                         UserData.getUserData(c).setCurUsername(usernameCust);
                     }
                     loginProgress.setVisibility(View.INVISIBLE);
-                    Firebase child = currentUserRef.child("/steps/" + cal.get(Calendar.YEAR) + "/" + month);
-                    child.addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot snapshot) {
-                            Log.d(TAG,""+snapshot.getValue());
 
-
-                            insertSteps(snapshot);
-//                            child.removeEventListener(currentUserRef);
-//                                Log.d(TAG, "User ID: " + authData.getUid() + ", Provider: " + authData.getProvider() + ", Expires:" + authData.getExpires());
-
-
-                        }
-
-                        @Override
-                        public void onCancelled(FirebaseError firebaseError) {
-                            System.out.println("The read failed: " + firebaseError.getMessage());
-                        }
-                    });
                     UserData.getUserData(c).setCurrentUser(authData.getUid());
                     UserData.getUserData(c).loadNewUser(authData.getUid());
 
                     Intent intent = new Intent(getApplicationContext(),
                             Home.class);
+//                    intent.putExtra("date", cal.getTimeInMillis());
                     startActivity(intent);
                     finish();
                 }
