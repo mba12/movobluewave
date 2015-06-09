@@ -221,8 +221,14 @@ public class DailyActivity extends ActionBarActivity {
                     curSteps.moveToNext();
 //
                 }
-
-
+/*
+                // NOTE: saving for later. Michael
+                String height1 =  UserData.getUserData(c).getCurrentHeight1();
+                String height2 =  UserData.getUserData(c).getCurrentHeight2();
+                String weight =  UserData.getUserData(c).getCurrentWeight();
+                String birth =  UserData.getUserData(c).getCurrentBirthdate();
+                String gender =  UserData.getUserData(c).getCurrentGender();
+*/
                 steps.setText(stepsTaken + " STEPS");
                 Calculator calc = new Calculator();
 
