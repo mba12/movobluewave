@@ -178,12 +178,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
     }
     
-    func isValidEmail(testStr:String) -> Bool {
-        let emailRegEx:String = "[A-Z0-9a-z._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,6}"
-        
-        let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
-        return emailTest.evaluateWithObject(testStr)
-    }
+
     
     func dateSelection(sender: UIDatePicker) {
         

@@ -30,6 +30,7 @@ class UserData {
         
         if (loadDefaultUser()) {
             NSLog("Success loading default user")
+
             
         } else {
             NSLog("Failed to load default user")
@@ -41,7 +42,7 @@ class UserData {
     static func getOrCreateUserData() -> UserData{
         if (_UserData==nil){
             _UserData = UserData()
-            
+            checkAuth()
         }
         return _UserData!
     }
@@ -83,7 +84,8 @@ class UserData {
     func loadUser(user: UserEntry) -> Bool {
         
         currentUserEntry = user
-        if let DBCurrentUser : CurrentUser = UserData.getOrCreateCurrentUser() {            DBCurrentUser.user = user
+        if let DBCurrentUser : CurrentUser = UserData.getOrCreateCurrentUser() {
+            DBCurrentUser.user = user
             UserData.saveContext()
             
             //anytime we login, download the metadata for changes
@@ -441,88 +443,7 @@ class UserData {
     }
     
     
-//    
-//    static func getProfilePicFromFirebase(callbackDelegate: ImageUpdateDelegate?){
-//        var fbDownloadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-//        fbDownloadRef = fbDownloadRef! + "/photos/profilepic"
-//        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
-//        firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
-//            var decodedImage : UIImage?
-//            if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
-//                if(numberOfImageBlobs=="1"){
-//                    if let rawData = snapshot.childSnapshotForPath("2").valueInExportFormat() as? String{
-//                        if let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil){
-//                            decodedImage = UIImage(data: decodedData)
-//                        }
-//                    }
-//                    
-//                    
-//                }else{
-//                    var count = numberOfImageBlobs.toInt()
-//                    var rawData = ""
-//                    //i = 2 to skip the first and second nodes, as they're metadata.
-//                    for(var i = 2; i < count; i++){
-//                        var curData = snapshot.childSnapshotForPath(String(i)).valueInExportFormat() as? String
-//                        rawData = rawData + curData!
-//                        
-//                    }
-//                    let decodedData:NSData = NSData(base64EncodedString: rawData, options: nil)!
-//                    decodedImage = UIImage(data: decodedData)
-//                    
-//                    
-//                }
-//                
-//            }
-//            
-//            
-//            //handle image storage here
-//            if let image = decodedImage {
-//                //use 1970-1-1 00:00:00 as storage date
-//                if let date = YMDGMTToNSDate(1970, 1, 1) {
-//                    UserData.storeImage(image, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
-//                }
-//                //store profile pic here
-//            } else {
-//                if let delegate = callbackDelegate {
-//                    //inform the delegate of the new profile picture
-//                    delegate.updatedImage(nil, newImage: nil)
-//                }
-//            }
-//            
-//            
-//        })
-//    }
-////    
-//    static func uploadProfilePicToFirebase(base64StringIn:String){
-//         var base64String = base64StringIn
-//        var md5Sum = base64String.md5()
-//        var fbUploadRef = UserData.getOrCreateUserData().getCurrentUserRef()
-//        fbUploadRef = fbUploadRef! + "/photos/profilepic"
-//     
-//        
-//        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
-//        
-//        
-//        var size = (base64String as NSString).length
-//        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
-//        firebaseImage.updateChildValues(["0":String(totalChunks)])
-//        firebaseImage.updateChildValues(["1":md5Sum])
-//        
-//        
-//        var part = 2
-//        while (!base64String.isEmpty) {
-//            var size = (base64String as NSString).length
-//            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
-//            var result:String = base64String.substringToIndex(index)
-//            let range = base64String.startIndex..<index
-//            base64String.removeRange(range)
-//            
-//            firebaseImage.updateChildValues([String(part):result])
-//            part += 1
-//        }
-//        println("Upload complete")
-//    }
-//    
+
     
     static func buildFBPictureDownloadFromDate(date: NSDate?) -> (fbpath:String, storageDate:NSDate?) {
         
@@ -766,10 +687,7 @@ class UserData {
         var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
         var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
         firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
-//            var numberOfImageBlobs:Int16 = 0
-            
-//            var decodedImage : UIImage?
-//            var decodedData : NSData?
+
             var encodedData : String?
             if let numberOfImageBlobs = (snapshot.childSnapshotForPath("0").valueInExportFormat() as? String) {
                 if(numberOfImageBlobs=="1"){
@@ -798,15 +716,7 @@ class UserData {
                 }
                 
             }
-/*
-            
-            if let unwrappedData = decodedData {
-                decodedImage = UIImage(data: unwrappedData)
-            }
-            
-            //handle image stoarge here
-            if let image = decodedImage {
-*/
+
             if let data : String = encodedData {
                 if (data.lengthOfBytesUsingEncoding(NSUTF8StringEncoding) > 0) {
                     UserData.storeImage(nil, rawData: data, date: date, pushToFirebase: false, callbackDelegate: callbackDelegate)
