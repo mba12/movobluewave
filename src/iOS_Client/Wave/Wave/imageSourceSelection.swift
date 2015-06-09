@@ -37,6 +37,11 @@ class ImageSourceSelection {
         
         alert.modalInPopover = false
         
+        if (UIDevice.currentDevice().userInterfaceIdiom == .Phone) {
+            alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Cancel, handler: nil))
+            
+        }
+        
         if let presenter = alert.popoverPresentationController {
             presenter.sourceView = parent.view
             if let loc = location {
