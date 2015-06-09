@@ -2,6 +2,9 @@ package com.movo.wave.util;
 
 import android.util.Log;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 //Created by alex on 4/23/2015.
 
 /** Lazy-logging class for easy logging
@@ -68,12 +71,29 @@ public class LazyLogger {
         } else {
             StringBuilder buf = new StringBuilder();
             for( final Object arg : args ) {
-                buf.append( arg );
+
+                if( arg instanceof Exception ) {
+                    final Exception e = (Exception) arg ;
+                    buf.append( "Exception: " );
+                    buf.append( e.getMessage() );
+                    buf.append( " Stack Trace: " );
+                    buf.append( stackTrace(e) );
+                } else {
+                    buf.append( arg );
+                }
             }
             msg = buf.toString();
         }
 
         return msg;
+    }
+
+    static public String stackTrace( Exception e ) {
+        StringWriter writer = new StringWriter();
+        PrintWriter printWriter = new PrintWriter( writer );
+        e.printStackTrace(printWriter);
+        printWriter.flush();
+        return writer.toString();
     }
 
     /** Warning level logging
@@ -92,7 +112,7 @@ public class LazyLogger {
      */
     public void v( final Object... args ) {
         if( isEnabled() ) {
-            Log.v( TAG, build( args ) );
+            Log.v(TAG, build(args));
         }
     }
 
@@ -102,7 +122,7 @@ public class LazyLogger {
      */
     public void d( final Object... args ) {
         if( isEnabled() ) {
-            Log.d( TAG, build( args ) );
+            Log.d(TAG, build(args));
         }
     }
 
@@ -112,7 +132,7 @@ public class LazyLogger {
      */
     public void i( final Object... args ) {
         if( isEnabled() ) {
-            Log.i( TAG, build( args ) );
+            Log.i(TAG, build(args));
         }
     }
 
@@ -122,7 +142,7 @@ public class LazyLogger {
      */
     public void e( final Object... args ) {
         if( isEnabled() ) {
-            Log.e( TAG, build( args ) );
+            Log.e(TAG, build(args));
         }
     }
 
@@ -133,7 +153,7 @@ public class LazyLogger {
      */
     public void log( final int priority, final Object... args ) {
         if( isEnabled() ) {
-            Log.println( priority, TAG, build( args ));
+            Log.println(priority, TAG, build(args));
         }
     }
 
@@ -145,7 +165,7 @@ public class LazyLogger {
      */
     public boolean a( final boolean condition, final Object... args ) {
         if( ! condition ) {
-            Log.e( TAG, "Assertion Failed! " + build( args ) );
+            Log.e(TAG, "Assertion Failed! " + build(args));
         }
         return condition;
     }
