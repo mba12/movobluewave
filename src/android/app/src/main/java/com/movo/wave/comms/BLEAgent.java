@@ -129,12 +129,6 @@ public class BLEAgent {
      */
     static public boolean open( Context ctx ) {
         boolean ret = true;
-        try {
-            Exception q = null;
-            q.getMessage();
-        } catch ( NullPointerException e ) {
-            lazyLog.d( "Testing exception formatting ", e );
-        }
 
         try {
             mutex.acquire();
