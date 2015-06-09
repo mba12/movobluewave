@@ -432,8 +432,8 @@
                                     <action selector="backButtonPress:" destination="xPq-rx-jam" eventType="touchUpInside" id="4Dz-xF-5qa"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MW8-H5-yum">
-                                <rect key="frame" x="522" y="148" width="63" height="40"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MW8-H5-yum">
+                                <rect key="frame" x="521" y="148" width="63" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="bY8-6x-TBf"/>
                                     <constraint firstAttribute="width" secondItem="MW8-H5-yum" secondAttribute="height" multiplier="53:34" id="irV-pj-i7N"/>
@@ -2008,7 +2008,7 @@
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="e98-sf-rq0">
-                                <rect key="frame" x="36" y="497" width="22" height="54"/>
+                                <rect key="frame" x="36" y="497" width="22" height="53.5"/>
                                 <fontDescription key="fontDescription" name="SegoeUI" family="Segoe UI" pointSize="40"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
@@ -2016,8 +2016,8 @@
                                     <rect key="frame" x="36" y="628" width="34" height="72"/>
                                 </variation>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="0.0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="o1I-Ds-AxH">
-                                <rect key="frame" x="36" y="380" width="52" height="54"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0.0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="o1I-Ds-AxH">
+                                <rect key="frame" x="36" y="381" width="52" height="53.5"/>
                                 <fontDescription key="fontDescription" name="SegoeUI" family="Segoe UI" pointSize="40"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
@@ -2026,7 +2026,7 @@
                                 </variation>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0.0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="10" translatesAutoresizingMaskIntoConstraints="NO" id="rSE-O1-XKR">
-                                <rect key="frame" x="36" y="328" width="52" height="54"/>
+                                <rect key="frame" x="36" y="328" width="52" height="53.5"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="54" id="kVg-8h-1SI"/>
                                 </constraints>
@@ -2072,19 +2072,19 @@
                                 </items>
                             </navigationBar>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="MILES" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FGq-gj-c0R">
-                                <rect key="frame" x="96" y="352" width="46" height="23"/>
+                                <rect key="frame" x="96" y="352" width="45.5" height="23"/>
                                 <fontDescription key="fontDescription" name="SegoeUI" family="Segoe UI" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="CAL" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7dU-p2-eAb">
-                                <rect key="frame" x="96" y="405" width="30" height="23"/>
+                                <rect key="frame" x="96" y="405" width="29.5" height="23"/>
                                 <fontDescription key="fontDescription" name="SegoeUI" family="Segoe UI" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="STEPS" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" translatesAutoresizingMaskIntoConstraints="NO" id="M5C-HE-mXm">
-                                <rect key="frame" x="66" y="518" width="71" height="28"/>
+                                <rect key="frame" x="66" y="518" width="71" height="27.5"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="23"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
@@ -2239,11 +2239,11 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="1Av-rn-EMf"/>
         <segue reference="60l-AC-Hvq"/>
+        <segue reference="1Av-rn-EMf"/>
         <segue reference="FLg-vA-6yt"/>
         <segue reference="OuT-jJ-KdH"/>
-        <segue reference="5Rn-yN-IPh"/>
+        <segue reference="Ld4-Fc-WJ2"/>
         <segue reference="QFb-do-jEW"/>
     </inferredMetricsTieBreakers>
 </document>
