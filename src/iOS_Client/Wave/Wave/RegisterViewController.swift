@@ -20,6 +20,9 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     @IBOutlet weak var confirmPassText: UITextField!
     
     @IBOutlet weak var birthdate: UITextField!
+    
+    @IBOutlet weak var termsAndConditionsTextView: UITextView!
+    
 
     var datePicker : UIDatePicker
     var datePickerToolbar : UIToolbar
@@ -176,6 +179,11 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         datePickerToolbar.sizeToFit()
 
         offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
+        
+        let htmlString : NSString = "<center><font face='Gotham' color='white'>By proceeding, you also agree to Movo's <a href='http://www.getmovo.com/terms'>Terms of Service </a> and <a href='http://www.getmovo.com/privacy'>Privacy Policy</a>.</font></center>"
+
+        let encodedString = NSAttributedString(data: htmlString.dataUsingEncoding(NSUnicodeStringEncoding)!, options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType], documentAttributes: nil, error: nil)
+        termsAndConditionsTextView.attributedText = encodedString
     }
     
 

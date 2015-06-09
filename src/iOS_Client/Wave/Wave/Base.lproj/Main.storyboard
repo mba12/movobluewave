@@ -68,7 +68,6 @@
             <string>Gotham-Book</string>
             <string>Gotham-Book</string>
             <string>Gotham-Book</string>
-            <string>Gotham-Book</string>
         </mutableArray>
         <mutableArray key="segoeui.ttf">
             <string>SegoeUI</string>
@@ -794,15 +793,22 @@
                                     <outlet property="delegate" destination="msH-tK-Ndd" id="DZO-qv-zdH"/>
                                 </connections>
                             </textField>
-                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" editable="NO" text="By proceeding, you also agree to Movo's Terms of Service and Privacy Policy." textAlignment="center" selectable="NO" translatesAutoresizingMaskIntoConstraints="NO" id="4Bk-HO-y3V">
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" bounces="NO" scrollEnabled="NO" editable="NO" usesAttributedText="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Bk-HO-y3V">
                                 <rect key="frame" x="200" y="500" width="200" height="75"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="75" id="BoL-Te-TnK"/>
                                     <constraint firstAttribute="width" constant="200" id="oXf-ol-Cq6"/>
                                 </constraints>
-                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="13"/>
+                                <attributedString key="attributedText">
+                                    <fragment content="By proceeding, you also agree to Movo's Terms of Service and Privacy Policy.">
+                                        <attributes>
+                                            <color key="NSColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                            <font key="NSFont" size="13" name="Gotham-Book"/>
+                                            <paragraphStyle key="NSParagraphStyle" alignment="center" lineBreakMode="wordWrapping" baseWritingDirection="natural"/>
+                                        </attributes>
+                                    </fragment>
+                                </attributedString>
                                 <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
                             </textView>
                             <navigationBar contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="eJS-Vc-XV9">
@@ -859,6 +865,7 @@
                         <outlet property="confirmPassText" destination="WYH-nb-GsG" id="w8J-0y-33Y"/>
                         <outlet property="emailText" destination="KAE-G1-guG" id="0Dd-dI-Ttd"/>
                         <outlet property="passText" destination="kVp-8B-WB5" id="d1f-Mu-Bl9"/>
+                        <outlet property="termsAndConditionsTextView" destination="4Bk-HO-y3V" id="2Xj-cD-S6B"/>
                         <outlet property="usernameText" destination="M7k-u1-WUP" id="7jD-fP-iSU"/>
                         <segue destination="EIb-5E-vMu" kind="showDetail" identifier="tabBar" id="vtk-Ik-Lon"/>
                     </connections>
@@ -2261,10 +2268,10 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="60l-AC-Hvq"/>
+        <segue reference="qVh-tw-zPR"/>
         <segue reference="1Av-rn-EMf"/>
-        <segue reference="FLg-vA-6yt"/>
-        <segue reference="OuT-jJ-KdH"/>
+        <segue reference="60l-AC-Hvq"/>
+        <segue reference="vtk-Ik-Lon"/>
         <segue reference="Ld4-Fc-WJ2"/>
         <segue reference="QFb-do-jEW"/>
     </inferredMetricsTieBreakers>
