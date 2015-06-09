@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		02314C791B0D46C900AB888E /* DailyViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02314C781B0D46C900AB888E /* DailyViewController.swift */; };
+		0266F97B1B272625007956CB /* imageSourceSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0266F97A1B272625007956CB /* imageSourceSelection.swift */; };
 		02678D561B0CDBBB008113D4 /* SyncStatusViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */; };
 		02678D591B0CEACC008113D4 /* SyncCompleteViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */; };
 		028BB26F1B0E35EC004EBA8B /* Calculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 028BB26E1B0E35EC004EBA8B /* Calculator.swift */; };
@@ -93,6 +94,7 @@
 
 /* Begin PBXFileReference section */
 		02314C781B0D46C900AB888E /* DailyViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DailyViewController.swift; sourceTree = "<group>"; };
+		0266F97A1B272625007956CB /* imageSourceSelection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = imageSourceSelection.swift; sourceTree = "<group>"; };
 		02678D551B0CDBBB008113D4 /* SyncStatusViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncStatusViewController.swift; sourceTree = "<group>"; };
 		02678D581B0CEACC008113D4 /* SyncCompleteViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncCompleteViewController.swift; sourceTree = "<group>"; };
 		028BB26E1B0E35EC004EBA8B /* Calculator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Calculator.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 				02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */,
 				028BB27E1B0E96EA004EBA8B /* WaveTabBarViewController.swift */,
 				02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */,
+				0266F97A1B272625007956CB /* imageSourceSelection.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -405,6 +408,7 @@
 				4AAA1CA51B0E49920061BC45 /* StatsViewController.swift in Sources */,
 				4A2701A81B01045000848DCB /* CollectionViewCell.swift in Sources */,
 				4AEEA9D31AD173900055C771 /* ViewController.swift in Sources */,
+				0266F97B1B272625007956CB /* imageSourceSelection.swift in Sources */,
 				4A2701A61B00E68900848DCB /* MyLifeViewController.swift in Sources */,
 				4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */,
 				4A2701D21B063CFB00848DCB /* KnownWaves.swift in Sources */,
