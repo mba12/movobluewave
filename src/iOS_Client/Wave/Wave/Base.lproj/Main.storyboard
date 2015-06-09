@@ -98,13 +98,13 @@
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </imageView>
                             <view contentMode="scaleToFill" verticalHuggingPriority="254" translatesAutoresizingMaskIntoConstraints="NO" id="QkU-8E-6IT" customClass="LineChartView" customModule="Charts">
-                                <rect key="frame" x="0.0" y="200" width="600" height="235"/>
+                                <rect key="frame" x="0.0" y="180" width="600" height="255"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                             </view>
                             <containerView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="252" translatesAutoresizingMaskIntoConstraints="NO" id="SIT-Db-3yl">
-                                <rect key="frame" x="0.0" y="20" width="600" height="128"/>
+                                <rect key="frame" x="0.0" y="20" width="600" height="108"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="128" id="M83-4Z-thW">
+                                    <constraint firstAttribute="height" constant="108" id="M83-4Z-thW">
                                         <variation key="heightClass=regular" constant="100"/>
                                     </constraint>
                                 </constraints>
@@ -113,7 +113,7 @@
                                 </connections>
                             </containerView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PHu-7z-EFO">
-                                <rect key="frame" x="0.0" y="443" width="200" height="34"/>
+                                <rect key="frame" x="0.0" y="443" width="200" height="33.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <state key="normal" title="STEPS" backgroundImage="GreyBtn_Sm">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -121,7 +121,7 @@
                                 </state>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TLo-a6-0N7">
-                                <rect key="frame" x="16" y="148" width="63" height="40"/>
+                                <rect key="frame" x="16" y="128" width="63" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="TLo-a6-0N7" secondAttribute="height" multiplier="53:34" id="Jht-H3-ghH"/>
                                     <constraint firstAttribute="height" constant="40" id="Wzw-3J-D7P"/>
@@ -136,7 +136,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="StepCount" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="pRO-Ui-l7y">
-                                <rect key="frame" x="55" y="476" width="90" height="33"/>
+                                <rect key="frame" x="55" y="476.5" width="90" height="32.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -148,13 +148,13 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="AVG" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vm5-3y-JSw">
-                                <rect key="frame" x="81" y="509" width="38" height="17"/>
+                                <rect key="frame" x="81.5" y="509" width="37.5" height="17"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CjT-eY-AGn">
-                                <rect key="frame" x="200" y="443" width="200" height="34"/>
+                                <rect key="frame" x="200" y="443" width="200" height="33.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <state key="normal" title="MILES" backgroundImage="GreyBtn_Sm">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -162,13 +162,13 @@
                                 </state>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="MilesCount" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hVc-tv-cOL">
-                                <rect key="frame" x="254" y="476" width="94" height="33"/>
+                                <rect key="frame" x="253.5" y="476.5" width="93.5" height="32.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="AVG" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sHO-J2-X1L">
-                                <rect key="frame" x="282" y="509" width="38" height="17"/>
+                                <rect key="frame" x="281.5" y="509" width="37.5" height="17"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -180,7 +180,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Mdl-5h-LJ3">
-                                <rect key="frame" x="400" y="443" width="200" height="34"/>
+                                <rect key="frame" x="400" y="443" width="200" height="33.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <state key="normal" title="CALORIES" backgroundImage="GreyBtn_Sm">
                                     <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -188,13 +188,13 @@
                                 </state>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" text="CaloriesCount" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="gev-9Q-IFS">
-                                <rect key="frame" x="440" y="476" width="119" height="33"/>
+                                <rect key="frame" x="440" y="476.5" width="119" height="32.5"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="AVG" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BYw-eg-PXJ">
-                                <rect key="frame" x="481" y="509" width="38" height="17"/>
+                                <rect key="frame" x="481.5" y="509" width="37.5" height="17"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -230,7 +230,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="GC1-g7-I8u">
-                                <rect key="frame" x="521" y="148" width="63" height="40"/>
+                                <rect key="frame" x="521" y="128" width="63" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="VIa-Jt-dQN"/>
                                     <constraint firstAttribute="width" secondItem="GC1-g7-I8u" secondAttribute="height" multiplier="53:34" id="hjY-ah-Zdv"/>
@@ -245,7 +245,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" text="Month Year" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="8kM-ug-XRm">
-                                <rect key="frame" x="238" y="148" width="124" height="40"/>
+                                <rect key="frame" x="238" y="128" width="124" height="40"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="22"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -257,7 +257,7 @@
                             <constraint firstAttribute="height" relation="greaterThanOrEqual" secondItem="mLO-n6-TJh" secondAttribute="height" multiplier="6" id="0wM-pX-im5"/>
                             <constraint firstItem="41f-5P-eeE" firstAttribute="top" secondItem="AeO-bN-drQ" secondAttribute="bottom" constant="8" id="1fJ-yw-o0n"/>
                             <constraint firstItem="yUd-C9-Nwg" firstAttribute="height" secondItem="mLO-n6-TJh" secondAttribute="height" id="1ki-91-0io"/>
-                            <constraint firstItem="8kM-ug-XRm" firstAttribute="top" secondItem="cGs-y6-w9S" secondAttribute="bottom" constant="128" id="3S4-Cv-Kbe"/>
+                            <constraint firstItem="8kM-ug-XRm" firstAttribute="top" secondItem="cGs-y6-w9S" secondAttribute="bottom" constant="108" id="3S4-Cv-Kbe"/>
                             <constraint firstItem="PHu-7z-EFO" firstAttribute="centerX" secondItem="mLO-n6-TJh" secondAttribute="centerX" id="3YB-JK-e5K"/>
                             <constraint firstItem="GU9-6U-q9u" firstAttribute="top" secondItem="vm5-3y-JSw" secondAttribute="bottom" id="4cH-xW-iaP"/>
                             <constraint firstAttribute="centerX" secondItem="SIT-Db-3yl" secondAttribute="centerX" id="6AF-HE-on5"/>
@@ -309,7 +309,7 @@
                             <constraint firstAttribute="centerX" secondItem="hID-r6-GWd" secondAttribute="centerX" id="na3-rf-loA"/>
                             <constraint firstItem="mLO-n6-TJh" firstAttribute="leading" secondItem="v2s-lX-WSc" secondAttribute="leading" id="o9a-MI-qql"/>
                             <constraint firstItem="nRZ-oi-YGI" firstAttribute="centerX" secondItem="gev-9Q-IFS" secondAttribute="centerX" id="oao-WJ-wrl"/>
-                            <constraint firstItem="QkU-8E-6IT" firstAttribute="top" secondItem="cGs-y6-w9S" secondAttribute="bottom" constant="180" id="pMA-hn-u0i"/>
+                            <constraint firstItem="QkU-8E-6IT" firstAttribute="top" secondItem="cGs-y6-w9S" secondAttribute="bottom" constant="160" id="pMA-hn-u0i"/>
                             <constraint firstAttribute="centerX" secondItem="QkU-8E-6IT" secondAttribute="centerX" id="pjJ-sx-Mq9"/>
                             <constraint firstItem="Mdl-5h-LJ3" firstAttribute="width" secondItem="nRZ-oi-YGI" secondAttribute="width" id="qke-KJ-hsL"/>
                             <constraint firstAttribute="width" secondItem="yUd-C9-Nwg" secondAttribute="width" multiplier="3" id="rOe-tv-y03"/>
@@ -319,6 +319,11 @@
                             <constraint firstAttribute="centerX" secondItem="yUd-C9-Nwg" secondAttribute="centerX" id="wIn-18-e0k"/>
                             <constraint firstItem="GU9-6U-q9u" firstAttribute="centerX" secondItem="PHu-7z-EFO" secondAttribute="centerX" id="xO1-se-PJj"/>
                         </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="GQ7-z4-LyY"/>
+                            </mask>
+                        </variation>
                     </view>
                     <tabBarItem key="tabBarItem" title="STATS" image="statsicon_norm" selectedImage="statsicon_selected" id="yah-2t-xvV">
                         <inset key="imageInsets" minX="0.0" minY="5" maxX="0.0" maxY="-5"/>
@@ -363,10 +368,10 @@
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </imageView>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="4Hi-LU-hbn">
-                                <rect key="frame" x="10" y="200" width="580" height="326"/>
+                                <rect key="frame" x="10" y="180" width="580" height="346"/>
                                 <subviews>
                                     <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="DfX-a5-M43">
-                                        <rect key="frame" x="0.0" y="0.0" width="580" height="326"/>
+                                        <rect key="frame" x="0.0" y="0.0" width="580" height="346"/>
                                         <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="5" minimumInteritemSpacing="7.5" id="JvP-fV-vtU">
                                             <size key="itemSize" width="95" height="95"/>
                                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
@@ -410,16 +415,16 @@
                                 </variation>
                             </view>
                             <containerView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="252" translatesAutoresizingMaskIntoConstraints="NO" id="YTR-kN-WCm">
-                                <rect key="frame" x="0.0" y="20" width="600" height="128"/>
+                                <rect key="frame" x="0.0" y="20" width="600" height="108"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="128" id="Mn5-SQ-jLv"/>
+                                    <constraint firstAttribute="height" constant="108" id="Mn5-SQ-jLv"/>
                                 </constraints>
                                 <connections>
                                     <segue destination="qF1-ct-G6I" kind="embed" identifier="embedMenu" id="Ld4-Fc-WJ2"/>
                                 </connections>
                             </containerView>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wAm-Jg-ySP">
-                                <rect key="frame" x="16" y="148" width="63" height="40"/>
+                                <rect key="frame" x="16" y="128" width="63" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="P3c-aW-3co"/>
                                     <constraint firstAttribute="width" secondItem="wAm-Jg-ySP" secondAttribute="height" multiplier="53:34" id="s1g-Zn-Peo"/>
@@ -433,7 +438,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="MW8-H5-yum">
-                                <rect key="frame" x="521" y="148" width="63" height="40"/>
+                                <rect key="frame" x="521" y="128" width="63" height="40"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="40" id="bY8-6x-TBf"/>
                                     <constraint firstAttribute="width" secondItem="MW8-H5-yum" secondAttribute="height" multiplier="53:34" id="irV-pj-i7N"/>
@@ -447,7 +452,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Month Year" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="aLP-iz-qHc">
-                                <rect key="frame" x="238" y="148" width="124" height="40"/>
+                                <rect key="frame" x="238" y="128" width="124" height="40"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="22"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -475,9 +480,9 @@
                             <constraint firstAttribute="centerY" secondItem="lWW-IJ-Bas" secondAttribute="centerY" id="frH-Dx-XGS"/>
                             <constraint firstItem="YTR-kN-WCm" firstAttribute="leading" secondItem="goD-HN-Itg" secondAttribute="leadingMargin" constant="-16" id="hQ6-16-qaE"/>
                             <constraint firstAttribute="width" secondItem="lWW-IJ-Bas" secondAttribute="width" id="oEm-NV-wkO"/>
-                            <constraint firstItem="aLP-iz-qHc" firstAttribute="top" secondItem="5Bo-Nl-dbF" secondAttribute="bottom" constant="128" id="pRC-G9-4Bp"/>
+                            <constraint firstItem="aLP-iz-qHc" firstAttribute="top" secondItem="5Bo-Nl-dbF" secondAttribute="bottom" constant="108" id="pRC-G9-4Bp"/>
                             <constraint firstAttribute="centerX" secondItem="lWW-IJ-Bas" secondAttribute="centerX" id="qCo-S8-uId"/>
-                            <constraint firstItem="4Hi-LU-hbn" firstAttribute="top" secondItem="5Bo-Nl-dbF" secondAttribute="bottom" constant="180" id="rHJ-vV-FP1"/>
+                            <constraint firstItem="4Hi-LU-hbn" firstAttribute="top" secondItem="5Bo-Nl-dbF" secondAttribute="bottom" constant="160" id="rHJ-vV-FP1"/>
                             <constraint firstAttribute="height" secondItem="lWW-IJ-Bas" secondAttribute="height" id="wsv-Y9-B1M"/>
                         </constraints>
                         <variation key="default">
@@ -1929,11 +1934,11 @@
                         <viewControllerLayoutGuide type="bottom" id="9yH-Yd-2JZ"/>
                     </layoutGuides>
                     <view key="view" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" id="Qxp-Wh-8pS">
-                        <rect key="frame" x="0.0" y="0.0" width="600" height="128"/>
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="108"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="right" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4WT-YW-I8F">
-                                <rect key="frame" x="534" y="38" width="50" height="50"/>
+                                <rect key="frame" x="534" y="23" width="50" height="50"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="4WT-YW-I8F" secondAttribute="height" multiplier="1:1" id="dlI-tq-0EN"/>
                                     <constraint firstAttribute="width" constant="50" id="srS-6d-Cur">
@@ -1948,7 +1953,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="UserName" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Hj-VI-haW">
-                                <rect key="frame" x="104" y="8" width="88" height="17"/>
+                                <rect key="frame" x="104" y="39" width="88" height="17"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -1966,17 +1971,34 @@
                                     <segue destination="ris-T2-JXb" kind="presentation" id="QFb-do-jEW"/>
                                 </connections>
                             </button>
+                            <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" progress="1" translatesAutoresizingMaskIntoConstraints="NO" id="zko-0h-Yyv">
+                                <rect key="frame" x="0.0" y="96" width="600" height="2"/>
+                                <color key="tintColor" red="0.98431372549999996" green="0.0" blue="0.023529411760000001" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="progressTintColor" red="0.98431372549999996" green="0.0" blue="0.023529411760000001" alpha="1" colorSpace="calibratedRGB"/>
+                                <color key="trackTintColor" red="0.98431372549999996" green="0.0" blue="0.023529411760000001" alpha="1" colorSpace="calibratedRGB"/>
+                            </progressView>
                         </subviews>
                         <constraints>
                             <constraint firstItem="Ig7-ot-TW2" firstAttribute="leading" secondItem="Qxp-Wh-8pS" secondAttribute="leadingMargin" id="2p3-6c-OM1"/>
-                            <constraint firstItem="7Hj-VI-haW" firstAttribute="top" secondItem="Ig7-ot-TW2" secondAttribute="top" id="8Yg-F2-QaO"/>
-                            <constraint firstItem="4WT-YW-I8F" firstAttribute="bottom" secondItem="Ig7-ot-TW2" secondAttribute="bottom" id="Dsb-rY-aoO"/>
+                            <constraint firstItem="7Hj-VI-haW" firstAttribute="centerY" secondItem="Ig7-ot-TW2" secondAttribute="centerY" id="8Yg-F2-QaO"/>
+                            <constraint firstItem="4WT-YW-I8F" firstAttribute="centerY" secondItem="Ig7-ot-TW2" secondAttribute="centerY" id="Dsb-rY-aoO"/>
                             <constraint firstAttribute="trailingMargin" secondItem="4WT-YW-I8F" secondAttribute="trailing" id="FPX-ee-5G8">
                                 <variation key="heightClass=regular" constant="11"/>
                             </constraint>
                             <constraint firstItem="Ig7-ot-TW2" firstAttribute="top" secondItem="Cfs-VU-7R2" secondAttribute="bottom" constant="8" id="Q0u-FO-OfA"/>
+                            <constraint firstItem="9yH-Yd-2JZ" firstAttribute="top" secondItem="zko-0h-Yyv" secondAttribute="bottom" constant="5" id="WBO-ZP-JOb"/>
+                            <constraint firstAttribute="centerX" secondItem="zko-0h-Yyv" secondAttribute="centerX" id="dd4-ku-UiJ"/>
+                            <constraint firstItem="9yH-Yd-2JZ" firstAttribute="top" secondItem="zko-0h-Yyv" secondAttribute="bottom" constant="20" id="gfd-rI-9X1"/>
                             <constraint firstItem="7Hj-VI-haW" firstAttribute="leading" secondItem="Ig7-ot-TW2" secondAttribute="trailing" constant="8" id="z1X-3b-6Uq"/>
+                            <constraint firstAttribute="width" secondItem="zko-0h-Yyv" secondAttribute="width" id="zLg-U2-Wih"/>
+                            <constraint firstItem="zko-0h-Yyv" firstAttribute="top" secondItem="Ig7-ot-TW2" secondAttribute="bottom" constant="8" id="zU5-pa-Bzg"/>
                         </constraints>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="WBO-ZP-JOb"/>
+                                <exclude reference="gfd-rI-9X1"/>
+                            </mask>
+                        </variation>
                     </view>
                     <toolbarItems/>
                     <connections>
