@@ -109,17 +109,14 @@ public class WaveInfo {
     }
 
     /** Lookup a user name for the device, or null if none set.
-     *
      * @param user for lookup
      * @return user's name for device.
-     */
     public String getName( final String user ) {
         for( WaveName waveName : names ) {
             if( waveName.user.equals(user) ) {
                 return waveName.getName();
             }
         }
-
         return null;
     }
 
