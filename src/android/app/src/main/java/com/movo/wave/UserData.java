@@ -35,6 +35,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -48,7 +50,7 @@ import java.util.UUID;
 
 public class UserData extends Activity{
     private static UserData instance;
-    private String TAG = "Wave.UserData";
+    private static String TAG = "Wave.UserData";
     boolean status = false;
     Context appContext;
     private String currentUID = "Error";
@@ -82,18 +84,31 @@ public class UserData extends Activity{
     static private final Handler notifyHandler = new Handler();
     static final long notifyDelay = 1000;
 
+    /** Generic listener interface for metadata and maybe other changes
+     *
+     * @param delegate for update notifications
+     */
     public static void addListener( UpdateDelegate delegate ) {
         synchronized (listenerDelegates) {
             listenerDelegates.add(delegate);
         }
     }
 
+    /** voluntary removal of listerner for the {@link com.movo.wave.UserData.UpdateDelegate( UpdateDelegate )} call
+     *
+     * note: invalidated delegates are usually removed at the next notify cycle
+     *
+     * @param delegate to remove
+     */
     public static void removeListener( UpdateDelegate delegate ) {
         synchronized (listenerDelegates) {
             listenerDelegates.remove(delegate);
         }
     }
 
+    /** Internal call to notify listeners via delegates, replete with debounce.
+     *
+     */
     private static void notifyListeners() {
         synchronized (listenerDelegates) {
             final long now = new Date().getTime();
@@ -105,11 +120,25 @@ public class UserData extends Activity{
                     @Override
                     public void run() {
                         synchronized (listenerDelegates) {
+                            final List<UpdateDelegate> invalidDelegates = new LinkedList<UpdateDelegate>();
+
+                            int notifyCount = 0;
 
                             for (final UpdateDelegate delegate : listenerDelegates) {
-                                delegate.notifyUpdate();
-                                //TODO find & remove stale delegates.
+                                if( delegate.isInvalidated() ) {
+                                    invalidDelegates.add( delegate );
+                                } else {
+                                    delegate.notifyUpdate();
+                                    notifyCount += 1;
+                                }
                             }
+
+                            for( final UpdateDelegate delegate : invalidDelegates) {
+                                listenerDelegates.remove( delegate );
+                                Log.d( TAG, "Removing invalidated delegate " + delegate );
+                            }
+
+                            Log.d( TAG, "Notified " + notifyCount + " UpdateDelegates listeners");
                             notifyPending = false;
                         }
                     }
@@ -675,7 +704,6 @@ public class UserData extends Activity{
         return ret;
     }
 
-
     public void downloadProfilePic(){
         Log.d(TAG, "Loading image from firebase");
 //        fsaf
@@ -758,7 +786,7 @@ public class UserData extends Activity{
         });
     }
 
-    public void downloadPhotoForDate(long today, final String expectedMd5, final UpdateDelegate delegate){
+    public void downloadPhotoForDate(final long today, final String expectedMd5, final UpdateDelegate delegate){
 
         Log.d(TAG, "Loading image from firebase");
         final Calendar monthCal = Calendar.getInstance();
@@ -790,6 +818,7 @@ public class UserData extends Activity{
                 if (snapshot.getValue() != null) {
 
                     final String md5;
+                    final boolean locked;
                     // TODO: Discuss changes below with Phil -- comment from Michael
 
                     Object obj = snapshot.getValue();
@@ -806,10 +835,8 @@ public class UserData extends Activity{
                         String pictureString = String.valueOf(pictureObject);
                         md5 = result.get(1);
 
-                        if( ! expectedMd5.equals(md5 )) {
-                            lockPicture( md5 );
-                        }
-
+                        //record if expectations match reality. note locked == false is possible.
+                        locked = expectedMd5.equals( md5 ) || lockPicture( md5 );
 
                         try {
                             byte[] decodedString = Base64.decode(pictureString, Base64.NO_WRAP);
@@ -853,9 +880,8 @@ public class UserData extends Activity{
                         md5 = result.get(1);
 
 
-                        if( ! expectedMd5.equals(md5 )) {
-                            lockPicture( md5 );
-                        }
+                        //record if expectations match reality. note locked == false is possible.
+                        locked = expectedMd5.equals( md5 ) || lockPicture( md5 );
                         try {
                             String wholeString = "";
                             for (int i = 2; i < result.size(); i++) {
@@ -885,15 +911,35 @@ public class UserData extends Activity{
                             e.printStackTrace();
                         }
                     } else {
+                        Log.e( TAG, "Unexpected edge case where values < 3 " + expectedMd5 + " datestamp " + today );
                         md5 = null;
+                        locked = true;
                     }
 
-                    if( ! expectedMd5.equals(md5 ) ) {
-                        unlockPicture( md5 );
+
+                    /*
+                    Lots of debugging info here. If locked is false, we lost the race condition on an unexpected digest.
+                    Otherwise, if  there was an unexpected digest, we were able to lock it (and should unlock it).
+
+                    Either way, if there is a secondary digest, is possible we're dropping update delegates elsewhere or hitting a
+                    race condition.
+                     */
+                    if( ! locked ) {
+                        Log.e(TAG, "CONFLICT!!!! we lost a data race for image " + md5 + " datestamp " + today);
+                        Log.w(TAG, "We're in poorly designed space here. If this happens often, we should change the data model. "
+                                + expectedMd5 + " != " + md5 + " datestamp " + today);
+                    } else if( ! expectedMd5.equals(md5 ) ) {
+                        if( ! unlockPicture(md5) ) {
+                            Log.e( TAG, "CONFLICT: Someone unlocked secondary " + md5 + " underneath us!! datestamp " + today);
+                        }
+                        Log.w(TAG, "We're in poorly designed space here. If this happens often, we should change the data model. "
+                                + expectedMd5 + " != " + md5  + " datestamp " + today  );
                     }
 
                     // Always a photo! Always update!
-                    unlockPicture(expectedMd5);
+                    if( ! unlockPicture(expectedMd5) ) {
+                        Log.e( TAG, "CONFLICT: Someone unlocked primary " + expectedMd5 + " underneath us!! datestamp " + today);
+                    };
                     delegate.notifyUpdate();
                 }
             } // end onDataChange
@@ -970,18 +1016,18 @@ public class UserData extends Activity{
      */
     public static abstract class UpdateDelegate implements Runnable {
 
-        private boolean active = true;
+        private boolean valid = true;
         public final Handler UIHandler;
         public UpdateDelegate( Context context ) {
             UIHandler = new Handler( context.getMainLooper() );
         }
 
-        public synchronized void disable() {
-            active = false;
+        public synchronized void invalidate() {
+            valid = false;
         }
 
         public final synchronized void run() {
-            if( active ) {
+            if(valid) {
                 this.onUpdate();
             }
         }
@@ -996,6 +1042,14 @@ public class UserData extends Activity{
          */
         public final void notifyUpdate() {
             UIHandler.post( this );
+        }
+
+        /** Pessimistic indicator of validity
+         *
+         * @return if the delegate is definitely invalid.
+         */
+        public boolean isInvalidated() {
+            return ! valid;
         }
     }
 
@@ -1153,6 +1207,12 @@ public class UserData extends Activity{
                         //download new image
                         downloadPhotoForDate(todayFinal, firebaseMd5, delegate);
                     } else {
+                        /*
+                        Note: this SILENTLY drops the delegate with no further notifications. Even
+                        though a valid image is in progress, the delegate will not be triggered when
+                        it is available. It may be triggered for other reasons, but we can't count
+                        on that....
+                        */
                         Log.v( TAG, "Already downloading image " + firebaseMd5);
                     }
                 }

@@ -237,11 +237,11 @@ public abstract class MenuActivity extends ActionBarActivity {
      */
     protected void invalidateDelegates() {
         for(UserData.UpdateDelegate delegate : delegates)
-            delegate.disable();
+            delegate.invalidate();
         delegates.clear();
     }
 
-    /** Track delegate so we can disable them in a batch
+    /** Track delegate so we can invalidate them in a batch
      *
      * @param delegate to track
      * @return original delegate
