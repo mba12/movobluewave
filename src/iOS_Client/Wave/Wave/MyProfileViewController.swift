@@ -265,7 +265,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
                 
             } else {
                 dispatch_async(dispatch_get_main_queue(),  {
-                    self.profilePicture.image = UIImage(named: "default_user_icon")
+                    self.profilePicture.image = UIImage(named: "user_icon_cir")
                 })                    
             }
             
