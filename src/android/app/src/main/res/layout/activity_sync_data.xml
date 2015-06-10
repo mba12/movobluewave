@@ -47,7 +47,7 @@
             android:padding="5pt"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="italic"
-            android:text="syncstate"
+            android:text="Waiting for Bluetooth...."
             android:textAlignment="center"
             android:id="@+id/syncState"
             android:layout_below="@+id/syncSerial"
@@ -58,7 +58,7 @@
             android:padding="5pt"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="italic"
-            android:text="syncpercent"
+            android:text="0%"
             android:textAlignment="center"
             android:id="@+id/syncPercent"
             android:layout_below="@+id/syncSerial"
@@ -150,9 +150,6 @@
         </RelativeLayout>
 
 
-
-
-
         </RelativeLayout>
         <ProgressBar
             style="@android:style/Widget.ProgressBar.Horizontal"
@@ -166,9 +163,15 @@
             android:padding="5pt"
             android:layout_alignParentStart="true" />
 
-
-
-
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/syncProgress"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/syncCancel"
+            android:text="@string/sync_cancel"
+            android:enabled="true"
+            android:visibility="visible"/>
     </RelativeLayout>
 
 

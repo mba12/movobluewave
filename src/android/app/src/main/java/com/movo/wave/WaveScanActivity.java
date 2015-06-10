@@ -1,5 +1,8 @@
 package com.movo.wave;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,6 +31,37 @@ import java.util.HashMap;
 
 public class WaveScanActivity extends MenuActivity {
 
+    /** Rendering helper for dumping wave info with CurrentUser context
+     *
+     */
+    class WaveAdapter {
+        final WaveInfo info;
+
+        WaveAdapter( WaveInfo info ) {
+            this.info = info;
+        }
+
+        boolean knownToUser( String user ) {
+            return info.getName( user ) != null;
+        }
+
+        boolean knownToUser() {
+            return knownToUser(UserData.getUserData(c).getCurUID());
+        }
+
+        /** Displayed value
+         *
+         * @return serial or user's name for device.
+         */
+        @Override
+        public String toString() {
+            String value = info.getName( UserData.getUserData(c).getCurUID() );
+            if( value == null )
+                value = info.serial;
+            return value;
+        }
+    }
+
     private HashMap<String,WaveInfo> wavesByMAC = new HashMap<>();
     private SQLiteDatabase db;
     private int pendingRequests = 0;
@@ -40,10 +74,10 @@ public class WaveScanActivity extends MenuActivity {
         return pendingRequests -= 1;
     }
 
-    ArrayList<WaveInfo> knownWaves;
-    ArrayList<WaveInfo> newWaves;
-    ArrayAdapter<WaveInfo> knownWaveAdapter;
-    ArrayAdapter<WaveInfo> newWaveAdapter;
+    ArrayList<WaveAdapter> knownWaves;
+    ArrayList<WaveAdapter> newWaves;
+    ArrayAdapter<WaveAdapter> knownWaveAdapter;
+    ArrayAdapter<WaveAdapter> newWaveAdapter;
     ListView knownWaveList;
     ListView newWaveList;
 
@@ -184,7 +218,16 @@ public class WaveScanActivity extends MenuActivity {
     public static final LazyLogger lazyLog = new LazyLogger( "WaveScanActivity",
             MenuActivity.lazyLog );
 
+
     public boolean startScan() {
+
+        if ( ! bleEnabled() ) {
+            lazyLog.i("BLE not enabled, spawning activity");
+            requestBLEEnabled();
+            return false;
+        }
+
+
         if( scanState != ScanState.COMPLETE ) {
             lazyLog.e( "Call to startScan() while scan in progress!");
             return false;
@@ -203,17 +246,35 @@ public class WaveScanActivity extends MenuActivity {
         return true;
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if( requestCode == REQUEST_ENABLE_BT ) {
+            lazyLog.i( "BLE enable multi-return with status ", resultCode );
+        } else {
+            lazyLog.i("BLE still disabled, not starting scan: request ", requestCode,
+                    " result ", resultCode);
+        }
+    }
+
     /** Use to add a *new* waveinfo instance.
      *
      * @param info
      */
     private void addInfo( WaveInfo info ) {
-        if( UserData.getUserData(c).getCurUID().equals(info.user) ) {
+        addInfo(new WaveAdapter(info));
+    }
+
+    /** Use to add a *new* waveinfo instance.
+     *
+     * @param adapter
+     */
+    private void addInfo( WaveAdapter adapter ) {
+        if( adapter.knownToUser() ) {
             //TODO: Sort by date.
-            knownWaves.add(info);
+            knownWaves.add(adapter);
             knownWaveAdapter.notifyDataSetChanged();
         } else {
-            newWaves.add(info);
+            newWaves.add(adapter);
             newWaveAdapter.notifyDataSetChanged();
         }
     }
@@ -255,10 +316,12 @@ public class WaveScanActivity extends MenuActivity {
             // argument position gives the index of item which is clicked
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
 
-                final WaveInfo info = knownWaves.get(position);
+                String currentUser = UserData.getUserData(c).getCurUID();
+                final WaveAdapter adapter = knownWaves.get(position);
                 // start sync activity
                 Intent intent = new Intent(c, SyncDataActivity.class);
-                intent.putExtra("MAC", info.mac);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_MAC, adapter.info.mac);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_USER_ID, currentUser);
                 startActivity(intent);
             }
         });
@@ -274,21 +337,22 @@ public class WaveScanActivity extends MenuActivity {
             // argument position gives the index of item which is clicked
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
                 // change association of wave to current user
-                final WaveInfo info = newWaves.get(position);
+                final WaveAdapter adapter = newWaves.get(position);
                 String currentUser = UserData.getUserData(c).getCurUID();
-                lazyLog.i("Setting user for device ", info, " from ", info.user, " to ", currentUser);
-                info.user = currentUser;
-                info.store(db);
+                lazyLog.i("Setting user for device ", adapter, " to ", currentUser);
+                adapter.info.setName( currentUser, null );
+                adapter.info.store(db);
 
                 // start sync activity
                 Intent intent = new Intent(c, SyncDataActivity.class);
-                intent.putExtra("MAC", info.mac);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_MAC, adapter.info.mac);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_USER_ID, currentUser);
                 startActivity(intent);
 
                 // Move entry from new to known
                 newWaves.remove( position );
                 newWaveAdapter.notifyDataSetChanged();
-                addInfo( info );
+                addInfo( adapter );
             }
         });
     }
@@ -296,7 +360,7 @@ public class WaveScanActivity extends MenuActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if( scanState == ScanState.COMPLETE ) {
+        if( scanState == ScanState.COMPLETE && bleEnabled() ) {
             startScan();
         }
     }

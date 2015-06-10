@@ -14,10 +14,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
     var tabBarController : UITabBarController?
+    var readyForNotifications : Bool?
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         tabBarController = self.window!.rootViewController as? UITabBarController
+        
+        //attempt to register notification
+        UIApplication.sharedApplication().registerUserNotificationSettings(UIUserNotificationSettings(forTypes: UIUserNotificationType.Alert, categories: nil))
         return true
     }
 
@@ -113,6 +117,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 NSLog("Unresolved error \(error), \(error!.userInfo)")
                 abort()
             }
+        }
+    }
+    
+    func application(application: UIApplication, didRegisterUserNotificationSettings notificationSettings: UIUserNotificationSettings) {
+        var test = (UInt(1) & UInt(2))
+        var incoming : UInt = notificationSettings.types.rawValue
+        var alertType : UInt = UIUserNotificationType.Alert.rawValue
+        if ((incoming & alertType) > 0) {
+            
+            readyForNotifications = true
         }
     }
 

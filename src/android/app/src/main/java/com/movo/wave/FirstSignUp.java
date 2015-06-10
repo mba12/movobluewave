@@ -200,6 +200,7 @@ public class FirstSignUp extends Activity {
 //                                                        URL url;
                                                         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                                                         StrictMode.setThreadPolicy(policy);
+
                                                         try {
                                                             HttpClient httpclient = new DefaultHttpClient();
                                                             String http = "https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail;

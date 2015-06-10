@@ -50,7 +50,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         //lets reset the waveSync to make sure we are in a sane state
         waveSync.waveController?.disconnectWaveDevices()
         waveSync.scan(true)
-        
+        setupNotificationSet()
         updateDevicesList()
     }
     override func didReceiveMemoryWarning() {

@@ -17,6 +17,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     var textLabel: UILabel!
     var textLabel2: UILabel!
     var imageView: UIImageView!
+    var gradImageView: UIImageView!
     var bgImageView: UIImageView!
     var currentDate:NSDate?
     
@@ -29,26 +30,37 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
         bgImageView.clipsToBounds = true
         bgImageView.image = UIImage(named:"calendarbg")
         contentView.addSubview(bgImageView)
+
+        gradImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
+        gradImageView.contentMode = UIViewContentMode.ScaleAspectFill
+        gradImageView.clipsToBounds = true
+        gradImageView.image = UIImage(named:"calendargradient")
+        contentView.addSubview(gradImageView)
+        
         
 //        cell.backgroundView = UIColor(patternImage: UIImage(named:"calendarbg")!)
 
         
-        imageView = UIImageView(frame: CGRect(x: 0, y: 16, width: frame.size.width, height: frame.size.height*2/3))
+        
+    
+        imageView = UIImageView(frame: CGRect(x: 0, y: frame.height/2-(frame.height*0.45/2), width: frame.size.width, height: frame.size.height*0.45))
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
         imageView.clipsToBounds = true
         
         contentView.addSubview(imageView)
     
-        let textFrame = CGRect(x: 0, y: 32, width: frame.size.width, height: frame.size.height/3)
+        let textFrame = CGRect(x: 0, y: 47.5-10, width: frame.size.width, height: 24)
         textLabel = UILabel(frame: textFrame)
-        textLabel.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
+        textLabel.font = UIFont(name: "Gotham", size: 18) //.systemFontOfSize(18)
+        textLabel.textColor = UIColor.blackColor()
         textLabel.textAlignment = .Center
         contentView.addSubview(textLabel)
         
         
-        let textFrame2 = CGRect(x: 0, y: 60, width: frame.size.width, height: frame.size.height/3)
+        let textFrame2 = CGRect(x: 0, y: (95-24-1), width: frame.size.width, height: 24)
         textLabel2 = UILabel(frame: textFrame2)
-        textLabel2.font = UIFont.systemFontOfSize(UIFont.smallSystemFontSize())
+        textLabel2.font = UIFont(name: "Gotham", size: 14) //.systemFontOfSize(18)
+        textLabel2.textColor = UIColor.whiteColor()
         textLabel2.textAlignment = .Center
         contentView.addSubview(textLabel2)
         

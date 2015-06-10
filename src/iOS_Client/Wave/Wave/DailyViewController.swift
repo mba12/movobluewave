@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate {
+class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate, ImageSourceSelectionDelegate {
     
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var distanceLabel: UILabel!
@@ -42,23 +42,38 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     }
     
     
+    
+    //OK instead of presenting a the image picker directly, we
+    //need to construct an alert view and respond to the user selection on 
+    //that
     @IBAction func photoButtonPressed(sender: AnyObject) {
+        ImageSourceSelection.pickImageSource(self, delegate: self, location: nil)
+    }
+    
+    
+    func didSelectSource(useCamera : Bool) {
         var imagePicker = UIImagePickerController()
+        if (useCamera) {
+            //will need to do an alert view with button options
+            if (UIImagePickerController.isSourceTypeAvailable( UIImagePickerControllerSourceType.Camera)) {
+                imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
+                imagePicker.showsCameraControls = true
+            }
+        }
+        
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
+        
+        
+        
     }
+    
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         
         var dateForImage = currentDate
         picker.dismissViewControllerAnimated(true, completion: {
             
-            /*
-            println("showing spinner")
-            var spinner = showSpinner("Uploading Image", "Please wait...")
-        
-            self.presentViewController(spinner, animated: true, completion: nil)
-            */
             
             if let date = dateForImage {
                 if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
@@ -66,9 +81,6 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
                     
                 }
             }
-            /*
-            spinner.dismissViewControllerAnimated(true, completion: nil)
-            */
         })
         
     }
@@ -140,9 +152,9 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             dispatch_async(dispatch_get_main_queue(), {
                 if let milestring = floatCommaNumberFormatter(1).stringFromNumber(miles) {
-                    self.distanceLabel.text = milestring + " MILES"
+                    self.distanceLabel.text = milestring
                 } else {
-                    self.distanceLabel.text = "0.0 MILES"
+                    self.distanceLabel.text = "0.0"
                 }
             })
             
@@ -152,9 +164,9 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             let calories = caloriesForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
                 if let caloriestring = floatCommaNumberFormatter(1).stringFromNumber(calories) {
-                    self.calorieLabel.text =  caloriestring + " CAL"
+                    self.calorieLabel.text =  caloriestring
                 } else {
-                    self.calorieLabel.text =  "0.0 CAL"
+                    self.calorieLabel.text =  "0.0"
                 }
             })
             

@@ -262,7 +262,7 @@ public class SyncDataActivity extends MenuActivity {
 
     protected void onSyncComplete( WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
         final String syncUniqueID = UUID.randomUUID().toString();
-        final String currentUserId = sync.info.user;
+        final String currentUserId = originatingUserId;
 
         if (data != null) {
 //            insertStepsIntoFirebase(data, sync.info.serial, syncUniqueID);
@@ -621,6 +621,7 @@ public class SyncDataActivity extends MenuActivity {
     ProgressBar syncProgress;
     TextView syncState;
     TextView syncPercent;
+    Button syncCancel;
 
     Resources resources;
 
@@ -636,6 +637,12 @@ public class SyncDataActivity extends MenuActivity {
         syncPercent.setText( percent + "%");
     }
 
+    WaveInfo info;
+    String originatingUserId;
+
+    final static String EXTRA_WAVE_MAC = "com.movo.wave.SyncDataActivity::EXTRA_MAC";
+    final static String EXTRA_WAVE_USER_ID = "com.movo.wave.SyncDataActivity::EXTRA_USER_ID";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -646,7 +653,20 @@ public class SyncDataActivity extends MenuActivity {
         syncState = (TextView) findViewById( R.id.syncState );
         syncPercent = (TextView) findViewById(R.id.syncPercent);
         TextView syncSerial = (TextView) findViewById( R.id.syncSerial );
+        syncCancel = (Button) findViewById( R.id.syncCancel );
+        syncCancel.setOnClickListener( new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if( sync != null ) {
+                    sync.abort();
+                }
+                lazyLog.i( "User aborted via click");
+                finish();
+            }
+        });
 
+        if( ! bleEnabled() )
+            requestBLEEnabled();
 
         final boolean status = BLEAgent.open(c);
         lazyLog.i( "Opened BLE agent with status ", status);
@@ -657,19 +677,32 @@ public class SyncDataActivity extends MenuActivity {
 
         Intent intent = getIntent();
 
-        final String mac = intent.getStringExtra( "MAC" );
-        lazyLog.i( "Starting sync with MAC ", mac );
-        final WaveInfo info = new WaveInfo( db, mac );
-
-        syncSerial.setText( resources.getString(R.string.sync_serial_label) + info.serial );
-        sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
-        updateSyncProgress( 0 );
-        updateSyncState( sync.getState() );
+        final String mac = intent.getStringExtra( EXTRA_WAVE_MAC );
+        originatingUserId = intent.getStringExtra( EXTRA_WAVE_USER_ID );
+        lazyLog.i( "Starting sync with MAC ", mac, " for user ", originatingUserId );
+        if( originatingUserId == null ) {
+            lazyLog.e( "Null user provided, aborting sync...");
+            Toast.makeText(c, "Error, no user provided, aborting sync....", Toast.LENGTH_LONG);
+            finish();
+        } else {
+            info = new WaveInfo(db, mac);
+            syncSerial.setText(resources.getString(R.string.sync_serial_label) + info.serial);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if( bleEnabled() && info != null && sync == null ) {
+
+            syncCancel.setVisibility( View.INVISIBLE );
+            syncCancel.setEnabled(false);
+
+            sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
+            updateSyncProgress( 0 );
+            updateSyncState( sync.getState() );
+            info = null;
+        }
     }
 
     @Override

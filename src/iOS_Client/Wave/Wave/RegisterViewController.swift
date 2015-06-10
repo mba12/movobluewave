@@ -20,6 +20,9 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     @IBOutlet weak var confirmPassText: UITextField!
     
     @IBOutlet weak var birthdate: UITextField!
+    
+    @IBOutlet weak var termsAndConditionsTextView: UITextView!
+    
 
     var datePicker : UIDatePicker
     var datePickerToolbar : UIToolbar
@@ -49,11 +52,18 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         
         var validation = true
         
+        if ( !isValidEmail(email) ) {
+            validation = false
+            println("Email validation failed")
+        }
+        
 //WARN: bad email validation check
 //this isn't really a good check for valid email address
-        if((email=="")){
-            validation = false
-        }
+//        if((email=="")){
+//            validation = false
+//        }
+// NOTE: see new function above
+        
         if((password=="")){
             validation = false
         }
@@ -117,6 +127,20 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     UserData.getOrCreateUserData().loadUser(userentry)
                                     
                                     UserData.getOrCreateUserData().saveMetaDataToFirebase()
+
+                                    let url = NSURL(string: "https://devorders.getmovo.com/verify/user-signup?fullname=" + username + "&email=" + email)
+                                    
+                                    let task = NSURLSession.sharedSession().dataTaskWithURL(url!) {(data, response, error) in
+                                        println(NSString(data: data, encoding: NSUTF8StringEncoding))
+                                    }
+                                    
+                                    task.resume()
+                                    
+                                    /*
+                                    // Send User a Validation Email
+                                    var sender: RegistrationEmailSender = RegistrationEmailSender()
+                                    sender.sendRegistrationEmail(username, em:email)
+                                    */
                                     
                                     self.performSegueWithIdentifier("tabBar", sender: self)
                                     if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
@@ -140,10 +164,6 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
             
             self.presentViewController(alertController, animated: true, completion: nil)
         }
-        
-        
-        
-        
     }
     
     
@@ -157,13 +177,16 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         birthdate.addTarget(self, action: Selector("birthdateResponderEnd:"), forControlEvents: UIControlEvents.EditingDidEnd)
         
         datePickerToolbar.sizeToFit()
-        
-        
+
         offsetModifier = -(birthdate.frame.origin.y + 2*birthdate.frame.height)
         
+        let htmlString : NSString = "<center><font face='Gotham' color='white'>By proceeding, you also agree to Movo's <a href='http://www.getmovo.com/terms'>Terms of Service </a> and <a href='http://www.getmovo.com/privacy'>Privacy Policy</a>.</font></center>"
 
+        let encodedString = NSAttributedString(data: htmlString.dataUsingEncoding(NSUnicodeStringEncoding)!, options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType], documentAttributes: nil, error: nil)
+        termsAndConditionsTextView.attributedText = encodedString
     }
     
+
     
     func dateSelection(sender: UIDatePicker) {
         

@@ -15,6 +15,8 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
     @IBOutlet weak var profilePictureButton: UIButton!
     @IBOutlet weak var userNameLabel: UILabel!
 
+    //hack to handle launch condition
+    static var runOnce : Bool = false
     
     override func viewDidLoad() {
         if let username = UserData.getOrCreateUserData().getCurrentUserName() {
@@ -36,17 +38,21 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
 
         if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
             if let tabBarController = application.tabBarController {
-                if (tabBarController.selectedIndex == 1) {
-                    dispatch_async(dispatch_get_main_queue(),  {
-                        self.statsButton.setImage(UIImage(named: "statsbutton"), forState: UIControlState.Normal)
-                        self.statsButton.setNeedsDisplay()
-                    })
-                    
-                } else if (tabBarController.selectedIndex == 2) {
-                    dispatch_async(dispatch_get_main_queue(),  {
-                        self.statsButton.setImage(UIImage(named: "statsicon_selected"), forState: UIControlState.Normal)
-                        self.statsButton.setNeedsDisplay()
-                    })
+                if (UserMenuBarViewController.runOnce) {
+                    if (tabBarController.selectedIndex == 1) {
+                        dispatch_async(dispatch_get_main_queue(),  {
+                            self.statsButton.setImage(UIImage(named: "statsbutton"), forState: UIControlState.Normal)
+                            self.statsButton.setNeedsDisplay()
+                        })
+                        
+                    } else if (tabBarController.selectedIndex == 2) {
+                        dispatch_async(dispatch_get_main_queue(),  {
+                            self.statsButton.setImage(UIImage(named: "statsicon_selected"), forState: UIControlState.Normal)
+                            self.statsButton.setNeedsDisplay()
+                        })
+                    }
+                } else {
+                    UserMenuBarViewController.runOnce = true
                 }
             }
         }

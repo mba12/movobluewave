@@ -32,6 +32,7 @@
     </string-array>
     <string name="sync_sql_save">Saving Data&#8230;</string>
     <string name="sync_serial_label">Wave Serial:&#160;</string>
+    <string name="sync_cancel">Cancel</string>
     <string-array name="scan_state_enum">
         <item>Waiting For Bluetooth</item>
         <item>Scanning</item>

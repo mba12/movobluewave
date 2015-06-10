@@ -16,6 +16,8 @@ import android.util.Pair;
 
 import com.movo.wave.util.LazyLogger;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EmptyStackException;
@@ -118,6 +120,7 @@ public class BLEAgent {
     protected static Handler UIHandler;
     private static int refCount = 0;
     private static Semaphore mutex = new Semaphore( 1 );
+    private static int lifeCycleCount = 0;
 
     /** Singleton initializer for framework;
      *
@@ -126,6 +129,7 @@ public class BLEAgent {
      */
     static public boolean open( Context ctx ) {
         boolean ret = true;
+
         try {
             mutex.acquire();
             if (context == null) {
@@ -139,7 +143,8 @@ public class BLEAgent {
                     lazyLog.e( "Bluetooth not enabled!");
                     ret = false;
                 } else {
-                    lazyLog.d("Initialized" );
+                    lifeCycleCount += 1;
+                    lazyLog.d("Initialized: lifecycle ", lifeCycleCount );
                 }
 
             } else if (ctx != context) {
@@ -219,7 +224,7 @@ public class BLEAgent {
                     }
                 });
             } catch (Exception e ) {
-                lazyLog.e( "GATT ERROR:", e.getStackTrace());
+                lazyLog.e( "GATT ERROR:", e );
             }
         }
 
@@ -326,6 +331,7 @@ public class BLEAgent {
      *  Represents A BLE device and connection state
      */
     public static class BLEDevice {
+        public final int lifecycle;
         public final BluetoothDevice device;
         protected final BluetoothGatt gatt;
 
@@ -387,7 +393,8 @@ public class BLEAgent {
             }
         }
 
-        private BLEDevice( final BluetoothDevice device, final Date seen ) {
+        private BLEDevice( final BluetoothDevice device, final Date seen, int lifecycle ) {
+            this.lifecycle = lifecycle;
             this.lastSeen = seen;
             this.device = device;
             // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
@@ -626,7 +633,8 @@ public class BLEAgent {
                         for( BLEDevice dev : deviceMap.values()) {
                             lazyLog.e("BLEDevice Still in use! ", dev);
                         }
-                        lazyLog.i("BLEAgent::release(): Closed BLEAgent");
+                        lifeCycleCount += 1;
+                        lazyLog.i("BLEAgent::release(): Closed BLEAgent: lifecycle, ", lifeCycleCount );
                     }
                     mutex.release();
                 } catch (InterruptedException e) {
@@ -1119,10 +1127,12 @@ public class BLEAgent {
                     if(dev.device != device) {
                         lazyLog.e(dev.device == device, "BluetoothDevice objects don't match ",
                                 device, " != ", dev.device);
+                        lazyLog.a(dev.lifecycle==lifeCycleCount, " Device is from another age!!, ",
+                                dev.lifecycle, " != ", lifeCycleCount, " for ", dev);
                     }
                     dev.lastSeen = now;
                 } else {
-                    dev = new BLEDevice(device, now);
+                    dev = new BLEDevice(device, now, lifeCycleCount);
                 }
 
                 dev.acquire();

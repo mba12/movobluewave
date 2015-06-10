@@ -637,16 +637,20 @@ func login(email: String) -> Bool {
 
     if let userentry : UserEntry = fetchUserByEmail(email) {
         UserData.getOrCreateUserData().loadUser(userentry)
-        return true
+        return checkAuth()
     }
     return false
 }
 
-//for any current user, see if FB authenticates
+//for any current user, attempt to FB authenticates
 //for now, we will stub this to return true because 
 //the intended functionality isn't clear
 func checkAuth() -> Bool {
-    
+    if let password = UserData.getOrCreateUserData().getCurrentPW() {
+        if let email = UserData.getOrCreateUserData().getCurrentEmail() {
+            login(email, password)
+        }
+    }
     return true
 }
 
@@ -816,3 +820,143 @@ func changeUserPassword(userEmail: String, oldPassword: String, newPassword: Str
             }
         })
 }
+
+
+func setupNotificationSet() {
+
+    
+    
+    
+    //cancel existing notifications
+    UIApplication.sharedApplication().cancelAllLocalNotifications()
+    
+    
+    //schedule notifications
+    let today = NSDate()
+    let days = [2, 4, 6, 7]
+    let text = ["Sync your Wave to find out how far you've come.",
+        "Don't forget to sync and update your Movo calendar.",
+        "Where have your steps taken you? Sync your Wave now.",
+        "You will lose data if you do not sync at least once a week."]
+    for (var i = 0; i<4; i++) {
+        let notificationDate = today.dateByAddingTimeInterval(Double(days[i])*60*60*24)
+        let notification = UILocalNotification()
+        notification.fireDate = notificationDate
+        notification.alertBody = text[i]
+        UIApplication.sharedApplication().scheduleLocalNotification(notification)
+    }
+    
+    
+}
+
+
+func isValidEmail(testStr:String) -> Bool {
+    let emailRegEx:String = "[A-Z0-9a-z._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,6}"
+    
+    let emailTest = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+    return emailTest.evaluateWithObject(testStr)
+}
+
+
+func getDisplayedViewController() -> UIViewController? {
+    var controller : UIViewController?
+    if let window = UIApplication.sharedApplication().keyWindow {
+        controller = window.rootViewController
+        if (controller != nil) {
+            while (controller!.presentedViewController != nil) {
+                controller = controller!.presentedViewController
+            }
+        }
+    }
+    return controller
+}
+
+
+func login(email: String, password: String) {
+
+let ref = Firebase(url: UserData.getFirebase())
+//auth with email and pass that are in the input UI
+    ref.authUser(email, password: password,
+        withCompletionBlock: { error, authData in
+            
+            if error != nil {
+                // There was an error logging in to this account
+                NSLog("Login failed")
+                let alertController = UIAlertController(title: "Error", message:
+                    "Login failed.  Please try again, operating in offline mode", preferredStyle: UIAlertControllerStyle.Alert)
+                alertController.addAction(UIAlertAction(title: "OK", style: UIAlertActionStyle.Default,handler: nil))
+                if let controller = getDisplayedViewController() {
+                    controller.presentViewController(alertController, animated: true, completion: nil)
+                }
+                
+            } else {
+                var providerData:NSDictionary = authData.providerData
+                let tempPasswordBool = providerData["isTemporaryPassword"] as! Bool
+                
+                if(tempPasswordBool){
+                    //true if password is temp, do password reset prompt.
+                    if let controller = getDisplayedViewController() {
+                        PasswordResetAlert.presentSetPasswordDialog(controller, userEmail: email, oldPassword: password)
+                    }
+                }
+                authData.uid
+                
+                
+                /* this logic isn't quite right */
+                /* This is a successful login, but we can assume that the current user may not exist and even if it does, it may not have values set correctly */
+                
+                /* So what do we need to do? */
+                
+                /* 1 - get the user entry that corresponds to this email */
+                if let userentry : UserEntry = fetchUserByEmail(email) {
+                    //in this case, the user is an existing user
+                    //accept the new password
+                    //and attempt to load the user
+                    userentry.pw = password
+                    UserData.saveContext()
+                    UserData.getOrCreateUserData().loadUser(userentry)
+                    
+                } else {
+                    //in this case, the user does not exist locally
+                    //so we need to create a new local user copy
+                    //and log that one in
+                    
+                    //so we should retrieve the user info
+                    var stringRef = UserData.getFirebase() + "users/"
+                    stringRef = stringRef + authData.uid
+                    
+                    
+                    var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
+                    
+                    UserData.saveContext()
+                    
+                    UserData.getOrCreateUserData().loadUser(userentry)
+                    
+                    
+                }
+                
+                
+                /*
+                UserData.getOrCreateUserData().setCurrentUID(authData.uid)
+                UserData.getOrCreateUserData().setCurrentEmail(email)
+                UserData.getOrCreateUserData().setCurrentPW(password)
+                var stringRef = UserData.getFirebase() + "users/"
+                stringRef = stringRef + authData.uid
+                
+                UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
+                */
+
+                UserData.getOrCreateUserData().downloadMetaData()
+                
+                
+                
+            }
+    })
+    
+    
+}
+
+
+
+
+
