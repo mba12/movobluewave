@@ -26,6 +26,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
         }
         UserData.delegate = self
         UserData.getImageForDate(nil, callbackDelegate: self)
+        
     }
     
     override func viewWillAppear(animated: Bool) {
@@ -98,12 +99,14 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 //then we have a new profile image
                 dispatch_async(dispatch_get_main_queue(),  {
                     self.profilePictureButton.setImage(image, forState: UIControlState.Normal)
+                    self.profilePictureButton.layer.cornerRadius = self.profilePictureButton.frame.size.width / 2;
+                    self.profilePictureButton.clipsToBounds = true;
                 })
                 
             } else {
                 //if image is nil
                 dispatch_async(dispatch_get_main_queue(),  {
-                    self.profilePictureButton.setImage(UIImage(named: "default_user_icon"), forState: UIControlState.Normal)
+                    self.profilePictureButton.setImage(UIImage(named: "user_icon_cir"), forState: UIControlState.Normal)
                 })
             }
             
