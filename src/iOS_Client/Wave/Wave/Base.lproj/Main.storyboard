@@ -1398,10 +1398,10 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="firstsync_rightarrow" translatesAutoresizingMaskIntoConstraints="NO" id="Vgk-et-kcI">
-                                <rect key="frame" x="242" y="273" width="111" height="54"/>
+                                <rect key="frame" x="272" y="286" width="56" height="27"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="54" id="Acp-72-yhl"/>
-                                    <constraint firstAttribute="width" constant="111" id="MyB-Ga-Kbh"/>
+                                    <constraint firstAttribute="height" constant="27" id="Acp-72-yhl"/>
+                                    <constraint firstAttribute="width" constant="56" id="MyB-Ga-Kbh"/>
                                 </constraints>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Downloading data." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UhB-MV-OFc">
@@ -1411,7 +1411,7 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Please wait." lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LdS-8d-GNL">
-                                <rect key="frame" x="251" y="78" width="100" height="17"/>
+                                <rect key="frame" x="250" y="78" width="100" height="17"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -1419,14 +1419,16 @@
                             <progressView opaque="NO" contentMode="scaleToFill" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vhS-2R-ZTV">
                                 <rect key="frame" x="41" y="496" width="518" height="10"/>
                                 <constraints>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="10" id="Nht-B6-XKx"/>
                                     <constraint firstAttribute="height" constant="10" id="TGw-XO-B4Z"/>
+                                    <constraint firstAttribute="width" constant="518" id="ljK-ql-xtx"/>
                                 </constraints>
                                 <variation key="heightClass=regular" misplaced="YES">
                                     <rect key="frame" x="41" y="696" width="518" height="10"/>
                                 </variation>
                             </progressView>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="firstsync_phone" translatesAutoresizingMaskIntoConstraints="NO" id="whD-6N-Ko2">
-                                <rect key="frame" x="363" y="196" width="221" height="208"/>
+                                <rect key="frame" x="327" y="196" width="221" height="208"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="whD-6N-Ko2" secondAttribute="height" multiplier="190:179" id="7B1-Ey-8Iv"/>
                                     <constraint firstAttribute="width" constant="190" id="SAq-0O-s6u"/>
@@ -1459,7 +1461,7 @@
                                 </variation>
                             </imageView>
                             <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" verticalHuggingPriority="251" image="firstsync_wave" translatesAutoresizingMaskIntoConstraints="NO" id="7N7-Dw-Xbg">
-                                <rect key="frame" x="16" y="228" width="220" height="143"/>
+                                <rect key="frame" x="44" y="234" width="220" height="143"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="220" id="NU7-Ry-ZTo"/>
                                     <constraint firstAttribute="height" constant="143" id="bGY-Zt-umA"/>
@@ -1491,30 +1493,32 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstAttribute="centerY" secondItem="7N7-Dw-Xbg" secondAttribute="centerY" id="0uq-cX-kLZ">
+                            <constraint firstAttribute="centerY" secondItem="7N7-Dw-Xbg" secondAttribute="centerY" constant="-5.5" id="0uq-cX-kLZ">
                                 <variation key="heightClass=regular" constant="10.5"/>
                             </constraint>
                             <constraint firstAttribute="centerX" secondItem="vhS-2R-ZTV" secondAttribute="centerX" id="1U8-FG-7LN"/>
+                            <constraint firstAttribute="centerY" secondItem="Vgk-et-kcI" secondAttribute="centerY" id="2P0-O0-QGL"/>
                             <constraint firstAttribute="centerY" secondItem="whD-6N-Ko2" secondAttribute="centerY" id="2l8-pH-kE3">
                                 <variation key="heightClass=regular" constant="14.5"/>
                             </constraint>
                             <constraint firstAttribute="trailingMargin" secondItem="vhS-2R-ZTV" secondAttribute="trailing" constant="25" id="AJf-2n-kJk"/>
                             <constraint firstItem="LdS-8d-GNL" firstAttribute="top" secondItem="UhB-MV-OFc" secondAttribute="bottom" constant="8" id="Bul-gf-UQJ"/>
                             <constraint firstItem="Vgk-et-kcI" firstAttribute="top" relation="greaterThanOrEqual" secondItem="LdS-8d-GNL" secondAttribute="bottom" constant="8" id="DWs-mm-RON"/>
-                            <constraint firstItem="7N7-Dw-Xbg" firstAttribute="leading" secondItem="Dn5-AH-OCk" secondAttribute="leadingMargin" id="F49-WR-RnU">
+                            <constraint firstItem="7N7-Dw-Xbg" firstAttribute="leading" secondItem="Dn5-AH-OCk" secondAttribute="leadingMargin" constant="28" id="F49-WR-RnU">
                                 <variation key="heightClass=regular" constant="23"/>
                             </constraint>
-                            <constraint firstItem="Vgk-et-kcI" firstAttribute="leading" secondItem="7N7-Dw-Xbg" secondAttribute="trailing" constant="6" id="F5r-NR-VOt">
+                            <constraint firstItem="Vgk-et-kcI" firstAttribute="leading" secondItem="7N7-Dw-Xbg" secondAttribute="trailing" constant="8" id="F5r-NR-VOt">
                                 <variation key="heightClass=regular" constant="15"/>
                             </constraint>
                             <constraint firstAttribute="centerY" secondItem="Vgk-et-kcI" secondAttribute="centerY" id="IPh-Y9-9lR"/>
+                            <constraint firstAttribute="centerX" secondItem="Vgk-et-kcI" secondAttribute="centerX" id="OXE-hE-l0z"/>
                             <constraint firstItem="UhB-MV-OFc" firstAttribute="top" secondItem="i6M-t5-kRc" secondAttribute="bottom" constant="8" id="OkR-mV-ODb"/>
-                            <constraint firstAttribute="centerY" secondItem="7N7-Dw-Xbg" secondAttribute="centerY" id="Q7w-yn-qbY"/>
-                            <constraint firstItem="whD-6N-Ko2" firstAttribute="leading" secondItem="Vgk-et-kcI" secondAttribute="trailing" constant="10" id="Rt1-UJ-WyN"/>
-                            <constraint firstItem="whD-6N-Ko2" firstAttribute="trailing" secondItem="Dn5-AH-OCk" secondAttribute="trailingMargin" id="VCh-Xn-SJF">
+                            <constraint firstAttribute="centerY" secondItem="7N7-Dw-Xbg" secondAttribute="centerY" constant="-5.5" id="Q7w-yn-qbY"/>
+                            <constraint firstItem="whD-6N-Ko2" firstAttribute="leading" secondItem="Vgk-et-kcI" secondAttribute="trailing" constant="-1" id="Rt1-UJ-WyN"/>
+                            <constraint firstItem="whD-6N-Ko2" firstAttribute="trailing" secondItem="Dn5-AH-OCk" secondAttribute="trailingMargin" constant="-36" id="VCh-Xn-SJF">
                                 <variation key="heightClass=regular" constant="-31"/>
                             </constraint>
-                            <constraint firstAttribute="centerX" secondItem="Vgk-et-kcI" secondAttribute="centerX" constant="2.5" id="ehS-H8-wCF"/>
+                            <constraint firstAttribute="centerX" secondItem="Vgk-et-kcI" secondAttribute="centerX" id="ehS-H8-wCF"/>
                             <constraint firstItem="Mt4-Ui-uvh" firstAttribute="top" secondItem="vhS-2R-ZTV" secondAttribute="bottom" constant="50" id="f8h-de-acM"/>
                             <constraint firstAttribute="centerX" secondItem="LdS-8d-GNL" secondAttribute="centerX" id="gpx-fs-UvJ"/>
                             <constraint firstItem="i6M-t5-kRc" firstAttribute="top" secondItem="bsd-Ik-OJY" secondAttribute="bottom" constant="8" id="kNM-pz-GB0"/>
