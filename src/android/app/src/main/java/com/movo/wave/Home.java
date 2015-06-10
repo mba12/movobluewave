@@ -688,7 +688,7 @@ public class Home extends MenuActivity {
         window.add( Calendar.DATE, -1 ); //rotate back into date range.
         lazyLog.a( window.get( Calendar.MONTH ) == windowMonth,"Error, window month mismatch!!");
         if( window.getTimeInMillis() < now.getTimeInMillis() ) {
-            daysInPast = window.getMaximum(Calendar.DATE);
+            daysInPast = window.getActualMaximum(Calendar.DATE);
         } else {
             daysInPast = now.get( Calendar.DATE );
         }
