@@ -15,7 +15,7 @@ class PasswordResetAlert: ResetPasswordDelegate, PasswordChangeDelegate {
     static var passwordResetPass : UITextField?
     
     static func resetPasswordDialog(viewcontroller: UIViewController) {
-        let alert : UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertControllerStyle.Alert)
+        let alert : UIAlertController = UIAlertController(title: "Forgot Password", message: nil, preferredStyle: UIAlertControllerStyle.Alert)
         
         
         alert.addTextFieldWithConfigurationHandler({ emailTextField in
@@ -54,7 +54,7 @@ class PasswordResetAlert: ResetPasswordDelegate, PasswordChangeDelegate {
     }
     static func presentSetPasswordDialog(viewcontroller: UIViewController, userEmail: String, oldPassword: String) {
         
-        let alert : UIAlertController = UIAlertController(title: nil, message: nil, preferredStyle: UIAlertControllerStyle.Alert)
+        let alert : UIAlertController = UIAlertController(title: "Change Password", message: nil, preferredStyle: UIAlertControllerStyle.Alert)
         
         
         alert.addTextFieldWithConfigurationHandler({ passwordTextField in
