@@ -8,7 +8,7 @@
 import Foundation
 import UIKit
 
-class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate, ImageUpdateDelegate,  UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSource, UIPickerViewDelegate, ImageUpdateDelegate,  UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageSourceSelectionDelegate {
     @IBOutlet weak var cancel: UIButton!
     
     @IBOutlet weak var fullName: UITextField!
@@ -274,12 +274,27 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     }
     
     @IBAction func updateProfilePictureClick(sender: AnyObject) {
+        ImageSourceSelection.pickImageSource(self, delegate: self, location: self.profilePicture.frame)
+    }
+    
+    
+    func didSelectSource(useCamera : Bool) {
         var imagePicker = UIImagePickerController()
+        if (useCamera) {
+            //will need to do an alert view with button options
+            if (UIImagePickerController.isSourceTypeAvailable( UIImagePickerControllerSourceType.Camera)) {
+                imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
+                imagePicker.showsCameraControls = true
+            }
+        }
+        
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
         
         
+        
     }
+    
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         

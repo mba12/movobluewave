@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate {
+class DailyViewController : UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, ImageUpdateDelegate, ImageSourceSelectionDelegate {
     
     @IBOutlet weak var navigationBar: UINavigationBar!
     @IBOutlet weak var distanceLabel: UILabel!
@@ -42,25 +42,38 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     }
     
     
+    
+    //OK instead of presenting a the image picker directly, we
+    //need to construct an alert view and respond to the user selection on 
+    //that
     @IBAction func photoButtonPressed(sender: AnyObject) {
+        ImageSourceSelection.pickImageSource(self, delegate: self, location: nil)
+    }
+    
+    
+    func didSelectSource(useCamera : Bool) {
         var imagePicker = UIImagePickerController()
-        //will need to do an alert view with button options
-        //imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
+        if (useCamera) {
+            //will need to do an alert view with button options
+            if (UIImagePickerController.isSourceTypeAvailable( UIImagePickerControllerSourceType.Camera)) {
+                imagePicker.sourceType = UIImagePickerControllerSourceType.Camera
+                imagePicker.showsCameraControls = true
+            }
+        }
+        
         imagePicker.delegate = self
         self.presentViewController(imagePicker, animated: true, completion: nil)
+        
+        
+        
     }
+    
     
     func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
         
         var dateForImage = currentDate
         picker.dismissViewControllerAnimated(true, completion: {
             
-            /*
-            println("showing spinner")
-            var spinner = showSpinner("Uploading Image", "Please wait...")
-        
-            self.presentViewController(spinner, animated: true, completion: nil)
-            */
             
             if let date = dateForImage {
                 if let image = info[UIImagePickerControllerOriginalImage] as? UIImage {
@@ -68,9 +81,6 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
                     
                 }
             }
-            /*
-            spinner.dismissViewControllerAnimated(true, completion: nil)
-            */
         })
         
     }

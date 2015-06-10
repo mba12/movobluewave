@@ -50,6 +50,7 @@ class LoginViewController: KeyboardSlideViewController {
                         
                         if(tempPasswordBool){
                             //true if password is temp, do password reset prompt.
+                            PasswordResetAlert.presentSetPasswordDialog(self, userEmail: email, oldPassword: password)
                         }
                         authData.uid
                         
@@ -127,6 +128,8 @@ class LoginViewController: KeyboardSlideViewController {
     }
     
     @IBAction func forgotPasswordButtonPress(sender: AnyObject) {
+        PasswordResetAlert.resetPasswordDialog(self)
+        
     }
     
 }
