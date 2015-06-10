@@ -19,6 +19,9 @@ import android.widget.ListView;
 
 import com.movo.wave.util.LazyLogger;
 
+import java.util.LinkedList;
+import java.util.List;
+
 //Created by Alexander Haase on 4/28/2015.
 
 
@@ -141,7 +144,7 @@ public abstract class MenuActivity extends ActionBarActivity {
         c = getApplicationContext();
         setContentView(layout_id);
         mDrawerList = (ListView) findViewById(R.id.left_drawer);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout); //:TODO <---------------this relies on drawerlayout to be the same name in each class.
         mDrawerList.setBackgroundResource(R.drawable.splash);
 
         // Set the adapter for the list view
@@ -221,5 +224,37 @@ public abstract class MenuActivity extends ActionBarActivity {
     protected void requestBLEEnabled() {
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+    }
+
+
+    /** Helpers for maintaining delegates
+     *
+     */
+    protected List<UserData.UpdateDelegate> delegates = new LinkedList<>();
+
+    /** Disable all tracked delegate
+     *
+     */
+    protected void invalidateDelegates() {
+        for(UserData.UpdateDelegate delegate : delegates)
+            delegate.disable();
+        delegates.clear();
+    }
+
+    /** Track delegate so we can disable them in a batch
+     *
+     * @param delegate to track
+     * @return original delegate
+     */
+    protected UserData.UpdateDelegate trackDelegate( final UserData.UpdateDelegate delegate ) {
+        delegates.add( delegate );
+        return delegate;
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        invalidateDelegates();
     }
 }

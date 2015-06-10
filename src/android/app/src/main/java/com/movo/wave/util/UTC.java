@@ -63,9 +63,77 @@ public class UTC {
      * @return utc calendar
      */
     static public Calendar newCal() {
-        return Calendar.getInstance( timeZone );
+        return Calendar.getInstance(timeZone);
     }
 
     //prevent object creation
     private UTC() {}
+
+    /**
+     * Field ordering for truncating calendars.
+     */
+    private static final int[] fieldOrdering = new int[] {
+            Calendar.YEAR,
+            Calendar.MONTH,
+            Calendar.DATE,
+            Calendar.HOUR_OF_DAY,
+            Calendar.MINUTE,
+            Calendar.SECOND,
+            Calendar.MILLISECOND,
+    };
+
+
+    /** Truncates a timestamp in UTC.
+     *
+     * @param timestamp to truncate.
+     * @param precision maximum field to preserve (i.e. Calendar.DATE would zero HOUR_OF_DAY and below).
+     * @return truncated timestamp.
+     * @throws ArrayIndexOutOfBoundsException if fields is not in YEAR, MONTH, DATE, HOUR_OF_DAY, MINUTE, SECOND, or MILLISECOND.
+     */
+    public static long truncateTo( final long timestamp, final int precision ) throws ArrayIndexOutOfBoundsException{
+        boolean begun = false;
+
+        final Calendar ret = UTC.newCal();
+        ret.clear();
+        ret.setTimeInMillis( timestamp );
+
+        for( final int field : fieldOrdering ) {
+            if( begun ) {
+                ret.set( field, ret.getMinimum( field ) );
+            } else if( field == precision ) {
+                begun = true;
+            }
+        }
+
+        if( ! begun ) {
+            throw new ArrayIndexOutOfBoundsException( precision );
+        }
+        return ret.getTimeInMillis();
+    }
+
+    /** Convenience COW truncate method for Date objects
+     *
+     * @see {@link #truncateTo(long, int)  truncateTo(long, int)}
+     * @param date to truncate.
+     * @param precision to truncate to.
+     * @return new truncated Date object.
+     */
+    public Date truncateTo( final Date date, final int precision ) {
+        return new Date( truncateTo( date.getTime(), precision ) );
+    }
+
+    /** Convenience COW truncate method for Calendar objects.
+     *
+     * Truncates in UTC, returns Calendar in source's time zone.
+     *
+     * @see {@link #truncateTo(long, int)  truncateTo(long, int)}
+     * @param calendar to truncate.
+     * @param precision to truncate to.
+     * @return new truncated Date object.
+     */
+    public Calendar truncateTo( final Calendar calendar, final int precision ) {
+        final Calendar ret = Calendar.getInstance( calendar.getTimeZone() );
+        ret.setTimeInMillis( truncateTo( calendar.getTimeInMillis(), precision ) );
+        return ret;
+    }
 }

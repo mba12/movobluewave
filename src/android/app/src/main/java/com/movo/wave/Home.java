@@ -67,6 +67,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -98,7 +100,10 @@ public class Home extends MenuActivity {
     TextView currentUserTV;
     RelativeLayout older;
     RelativeLayout newer;
+    public static Home instance;
+    DrawerLayout homeLayout;
     TextView curMonthDisplay;
+    ImageView profilePic;
 
     public enum ChartType {
         STEPS,
@@ -114,6 +119,7 @@ public class Home extends MenuActivity {
     RelativeLayout caloriesLayout;
     TextView caloriesText;
 
+    UserData.UpdateDelegate delegate;
 
     public static String TAG = "Movo Wave V2";
 
@@ -139,14 +145,27 @@ public class Home extends MenuActivity {
         db = null;
     }
 
+//    public static Home getHome() {
+//        if (instance == null) {
+//            instance = new Home();
+//        }
+//        return instance;
+//    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intentIncoming = getIntent();
-
+//        instance = getHome();
         LaunchAnimation.apply(this, intentIncoming);
 
-
+        delegate = trackDelegate( new UserData.UpdateDelegate(this) {
+            @Override
+            public void onUpdate() {
+                onResume();
+                homeLayout.invalidate();
+            }
+        });
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/gotham-book.otf")
@@ -154,7 +173,8 @@ public class Home extends MenuActivity {
                         .build()
         );
         initMenu(R.layout.activity_home);
-        ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
+        homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        profilePic = (ImageView) findViewById(R.id.profilePic);
         stepsLayout = (RelativeLayout) findViewById(R.id.stepsLayout);
         milesLayout = (RelativeLayout) findViewById(R.id.milesLayout);
         caloriesLayout = (RelativeLayout) findViewById(R.id.caloriesLayout);
@@ -168,6 +188,8 @@ public class Home extends MenuActivity {
 
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getReadableDatabase();
+
+        UserData.addListener(delegate);
 
         mTitle = "Movo Wave";
         //Set up date works for calendar display
@@ -185,42 +207,28 @@ public class Home extends MenuActivity {
                 timestamp = calendar.getTimeInMillis();
             }
 //            UserData myData = UserData.getUserData(c);
-            String monthChange = "";
-            String yearChange = "";
 
-            downloadMonthPhotos(calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
+//            downloadMonthPhotos(calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
 
-            if(calendar.get(Calendar.MONTH)<11){
-                monthChange = "0"+(calendar.get(Calendar.MONTH)+1);
-            }else{
-                monthChange = String.valueOf(calendar.get(Calendar.MONTH)+1);
-            }
-            yearChange = ""+ calendar.get(Calendar.YEAR);
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
-            ref.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    Log.d(TAG, "" + snapshot.getValue());
-//                        loginProgress.setVisibility(View.INVISIBLE);
-
-//                    insertSteps(snapshot, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), c);
-
-                    Log.d(TAG, "Inserting steps into database");
-
-
-                }
-
-                @Override
-                public void onCancelled(FirebaseError firebaseError) {
-                    Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-                }
-            });
+//            feawfe
         } else {
             calendar = Calendar.getInstance();
             timestamp = calendar.getTimeInMillis();
             curDay = calendar.get(Calendar.DAY_OF_MONTH);
         }
-//        curDay = calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
+        String monthChange = "";
+        String yearChange = "";
+
+        if(calendar.get(Calendar.MONTH)<11){
+            monthChange = "0"+(calendar.get(Calendar.MONTH)+1);
+        }else{
+            monthChange = String.valueOf(calendar.get(Calendar.MONTH)+1);
+        }
+        final String monthChangefinal =monthChange;
+        yearChange = ""+ calendar.get(Calendar.YEAR);
+        Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
+
+        UserData.getUserData(c).insertStepsFromDB(ref, c, monthChangefinal, calendar.get(Calendar.YEAR)+"", delegate );
 
 
         curMonth = calendar.get(Calendar.MONTH);
@@ -372,20 +380,7 @@ public class Home extends MenuActivity {
 
         Log.d(TAG, "Cur user data: " +  UserData.getUserData(c).getCurUID());
 
-        try {
-            byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
-            if (prof != null) {
-                Glide.with(c)
-                        .load(prof)
-//                            .override(1080,1920)
-                        .thumbnail(0.1f)
-                        .centerCrop()
-                        .into(profilePic);
 
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         stepsLayout.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 curChart = ChartType.STEPS;
@@ -419,8 +414,16 @@ public class Home extends MenuActivity {
 //scheduleSyncReminders();
 
 
+
+
+
+
 //        upload();
     }
+
+
+
+
     public void scheduleSyncReminders(){
         long oneDay = TimeUnit.DAYS.toMillis(1);     // 1 day to milliseconds.
 
@@ -471,7 +474,23 @@ public class Home extends MenuActivity {
     @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        DrawerLayout home = (DrawerLayout) findViewById(R.id.drawer_layout);
+        homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        try {
+            byte[] prof =  UserData.getUserData(c).retrievePhoto(db,0,delegate );
+            if (prof != null) {
+                Glide.with(c)
+                        .load(prof)
+//                            .override(1080,1920)
+                        .thumbnail(0.1f)
+                        .centerCrop()
+                        .into(profilePic);
+                Log.d(TAG, "Loading profile picture");
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         ArrayList<String> users = new ArrayList<String>();
         users =  UserData.getUserData(c).getUserList();
@@ -490,7 +509,7 @@ public class Home extends MenuActivity {
                 e.printStackTrace();
                 currentUserTV.setText("");
             }
-            home.invalidate();
+            homeLayout.invalidate();
 
 
             setUpCharts(c);
@@ -538,7 +557,7 @@ public class Home extends MenuActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        home.invalidate();
+        homeLayout.invalidate();
 
     }
 
@@ -607,9 +626,9 @@ public class Home extends MenuActivity {
         double d = Math.pow(ten, exp);
         int divisor = Double.valueOf(d).intValue();
 
-        Log.d(TAG, "RoundUp Input: " +  value);
-        Log.d(TAG, "RoundUp digits: " +  digits);
-        Log.d(TAG, "RoundUp Divisor: " +  divisor);
+//        Log.d(TAG, "RoundUp Input: " +  value);
+//        Log.d(TAG, "RoundUp digits: " +  digits);
+//        Log.d(TAG, "RoundUp Divisor: " +  divisor);
         switch(digits) {
             case 1:
                 roundedTo = (float) (value + 1.0);
@@ -617,7 +636,7 @@ public class Home extends MenuActivity {
             default:
                 roundedTo = (value / divisor + 1) * divisor;
         }
-        Log.d(TAG, "RoundUp Value: " +  roundedTo);
+//        Log.d(TAG, "RoundUp Value: " +  roundedTo);
 
         return roundedTo;
     }
@@ -688,7 +707,7 @@ public class Home extends MenuActivity {
         window.add( Calendar.DATE, -1 ); //rotate back into date range.
         lazyLog.a( window.get( Calendar.MONTH ) == windowMonth,"Error, window month mismatch!!");
         if( window.getTimeInMillis() < now.getTimeInMillis() ) {
-            daysInPast = window.getMaximum(Calendar.DATE);
+            daysInPast = window.getActualMaximum(Calendar.DATE);
         } else {
             daysInPast = now.get( Calendar.DATE );
         }
@@ -956,7 +975,7 @@ public class Home extends MenuActivity {
 
     public void setUpCharts(Context c) {
 //        UserData myData = UserData.getUserData(c);
-        gridview = (GridView) findViewById(R.id.gridview);
+        GridView gridview = (GridView) findViewById(R.id.gridview);
         final ProgressBar pbBar = (ProgressBar) findViewById(R.id.progressBar);
 
         gridview.invalidate();
@@ -1026,20 +1045,20 @@ public class Home extends MenuActivity {
         //now getIntent() should always return the last received intent
     }
 
-    private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
-        String monthChange = "";
-        String yearChange = "";
-
-
-        if(month<11){
-            monthChange = "0"+(month+1);
-        }else{
-            monthChange = String.valueOf(month+1);
-        }
-        yearChange = ""+ year;
-
-        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
-    }
+//    private void insertSteps(DataSnapshot snapshot, int year, int month, Context c) {
+//        String monthChange = "";
+//        String yearChange = "";
+//
+//
+//        if(month<11){
+//            monthChange = "0"+(month+1);
+//        }else{
+//            monthChange = String.valueOf(month+1);
+//        }
+//        yearChange = ""+ year;
+//
+//        UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChange, yearChange);
+//    }
 
 
 
@@ -1048,24 +1067,24 @@ public class Home extends MenuActivity {
 
 
     public byte[] dailyPhotoFetch(long today) {
-        return UserData.getUserData(c).retrievePhoto(today);
+        return UserData.getUserData(c).retrievePhoto(db, today, delegate);
 
     }
 
-    public void downloadMonthPhotos(int month, int year){
-        int monthFix = month + 1;
-        Calendar thisMonth = Calendar.getInstance();
-        thisMonth.set(Calendar.MONTH, monthFix);
-//        thisMonth.add(Calendar.MONTH, 1);
-        thisMonth.set(Calendar.YEAR, year);
-
-        for(int i = 0; i < thisMonth.getActualMaximum(Calendar.DATE); i++){
-            thisMonth.set(Calendar.DATE, (i+1));
-            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis());
-
-        }
-
-    }
+//    public void downloadMonthPhotos(int month, int year){
+//        int monthFix = month + 1;
+//        Calendar thisMonth = Calendar.getInstance();
+//        thisMonth.set(Calendar.MONTH, monthFix);
+////        thisMonth.add(Calendar.MONTH, 1);
+//        thisMonth.set(Calendar.YEAR, year);
+//
+//        for(int i = 0; i < thisMonth.getActualMaximum(Calendar.DATE); i++){
+//            thisMonth.set(Calendar.DATE, (i+1));
+//            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis(), delegate);
+//
+//        }
+//
+//    }
 
 
 
