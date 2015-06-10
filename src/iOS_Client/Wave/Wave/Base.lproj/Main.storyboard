@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="EIb-5E-vMu">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="EIb-5E-vMu">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
@@ -1573,12 +1573,12 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Turn Wave Bluetooth ON:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="6eu-sI-vdx">
-                                <rect key="frame" x="160" y="228" width="268" height="33"/>
+                                <rect key="frame" x="147" y="239" width="307" height="21"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="33" id="DEL-7C-kwe"/>
+                                    <constraint firstAttribute="height" constant="21" id="AKw-x9-lXS"/>
                                     <constraint firstAttribute="width" constant="195" id="Fb1-4H-F34"/>
+                                    <constraint firstAttribute="width" constant="307" id="Gtv-Tc-u41"/>
                                     <constraint firstAttribute="height" constant="44" id="bji-Wx-2CR"/>
-                                    <constraint firstAttribute="width" constant="268" id="wbb-lU-D74"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -1595,16 +1595,6 @@
                                         <include reference="bji-Wx-2CR"/>
                                     </mask>
                                 </variation>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hold the button for 3 seconds until a" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcy-M4-Hdz">
-                                <rect key="frame" x="123" y="258" width="355" height="17"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="17" id="28f-UN-Pfh"/>
-                                    <constraint firstAttribute="width" constant="355" id="fIm-fH-nPc"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
-                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                                <nil key="highlightedColor"/>
                             </label>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" verticalCompressionResistancePriority="740" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" rowHeight="44" sectionHeaderHeight="22" sectionFooterHeight="22" translatesAutoresizingMaskIntoConstraints="NO" id="p7g-g3-69Y">
                                 <rect key="frame" x="0.0" y="20" width="600" height="200"/>
@@ -1646,8 +1636,7 @@
                                 <rect key="frame" x="53" y="365" width="494" height="222"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="500" id="GkD-mR-c3b"/>
-                                    <constraint firstAttribute="width" constant="494" id="dJH-e2-VUF"/>
-                                    <constraint firstAttribute="height" constant="222" id="en8-OY-Qpo"/>
+                                    <constraint firstAttribute="height" constant="222" id="RdK-ol-Enq"/>
                                     <constraint firstAttribute="height" constant="363" id="gfq-MF-kwH"/>
                                 </constraints>
                                 <variation key="default">
@@ -1664,10 +1653,20 @@
                                 </variation>
                             </imageView>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="252" verticalCompressionResistancePriority="751" text="blue light flashes." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cfv-fF-RvV">
-                                <rect key="frame" x="199" y="289" width="203" height="17"/>
+                                <rect key="frame" x="175" y="295" width="251" height="17"/>
                                 <constraints>
-                                    <constraint firstAttribute="height" constant="17" id="Wh9-cw-KNZ"/>
-                                    <constraint firstAttribute="width" constant="203" id="eEy-Ez-b6m"/>
+                                    <constraint firstAttribute="width" constant="251" id="YHj-sj-hqI"/>
+                                    <constraint firstAttribute="height" constant="17" id="kuZ-tL-iA0"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hold the button for 3 seconds until a" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rcy-M4-Hdz">
+                                <rect key="frame" x="68" y="268" width="464" height="17"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="17" id="Ye3-dG-Xhl"/>
+                                    <constraint firstAttribute="width" constant="464" id="jGO-4x-B6Y"/>
                                 </constraints>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
@@ -1676,75 +1675,39 @@
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="cfv-fF-RvV" firstAttribute="top" secondItem="rcy-M4-Hdz" secondAttribute="bottom" constant="14" id="5Ns-bi-QpV">
-                                <variation key="heightClass=regular" constant="-1"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" constant="-0.5" id="6Ng-8R-2no"/>
+                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" id="3jC-HK-PpP"/>
+                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" id="7dF-FJ-eT5"/>
+                            <constraint firstItem="rcy-M4-Hdz" firstAttribute="top" secondItem="6eu-sI-vdx" secondAttribute="bottom" constant="8" id="7za-jz-1Hv"/>
+                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="top" secondItem="cfv-fF-RvV" secondAttribute="bottom" constant="53" id="A8g-DJ-DHU"/>
                             <constraint firstAttribute="width" secondItem="p7g-g3-69Y" secondAttribute="width" id="A9C-R5-o1Y"/>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="Iaa-m3-Lpd">
-                                <variation key="heightClass=regular" constant="-1.5"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="IwR-Tu-K8U"/>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="JJE-pG-bcb"/>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" constant="-0.5" id="LiY-eT-I57"/>
-                            <constraint firstItem="rcy-M4-Hdz" firstAttribute="top" secondItem="6eu-sI-vdx" secondAttribute="bottom" constant="-3" id="M4I-16-DJa"/>
+                            <constraint firstItem="YHf-Fo-H1x" firstAttribute="top" secondItem="OBo-Rg-3YI" secondAttribute="bottom" constant="13" id="AhD-YF-RQY"/>
+                            <constraint firstItem="cfv-fF-RvV" firstAttribute="top" secondItem="rcy-M4-Hdz" secondAttribute="bottom" constant="10" id="FQk-2o-lrA"/>
+                            <constraint firstItem="6eu-sI-vdx" firstAttribute="top" secondItem="p7g-g3-69Y" secondAttribute="bottom" constant="19" id="Ma7-ac-Z0c"/>
                             <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" id="QQa-tI-gl6">
-                                <variation key="heightClass=regular" constant="-1.5"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" id="Rbd-f4-V1i"/>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" constant="-0.5" id="S2x-ci-YP0">
                                 <variation key="heightClass=regular" constant="-1.5"/>
                             </constraint>
                             <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" id="SWC-Iz-RNh">
                                 <variation key="heightClass=regular" constant="-1.5"/>
                             </constraint>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" constant="-0.5" id="TBs-Ll-KQK"/>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" constant="-0.5" id="U0q-du-4VC"/>
                             <constraint firstAttribute="width" secondItem="p7g-g3-69Y" secondAttribute="width" id="UIR-0p-sc4"/>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" constant="-0.5" id="VQg-c2-DPc"/>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" constant="-0.5" id="Xda-3D-Y1X"/>
-                            <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="Xz2-b6-MLL"/>
-                            <constraint firstItem="rcy-M4-Hdz" firstAttribute="width" secondItem="6eu-sI-vdx" secondAttribute="width" constant="87" id="YXe-Np-54g"/>
-                            <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="Yjd-ez-POZ"/>
-                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="width" secondItem="opM-Jy-1Mp" secondAttribute="width" constant="-106" id="YyN-r4-93H">
-                                <variation key="heightClass=regular" constant="-100"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="ZQA-Rx-2my"/>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="Zfl-4F-n9e"/>
+                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="leading" secondItem="opM-Jy-1Mp" secondAttribute="leadingMargin" constant="37" id="VGU-W4-aUI"/>
                             <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="asj-f0-gkb">
                                 <variation key="heightClass=regular" constant="0.0"/>
                             </constraint>
-                            <constraint firstItem="YHf-Fo-H1x" firstAttribute="top" secondItem="OBo-Rg-3YI" secondAttribute="bottom" constant="13" id="cG1-wn-Mhg">
-                                <variation key="heightClass=regular" constant="60"/>
-                            </constraint>
                             <constraint firstAttribute="centerX" secondItem="p7g-g3-69Y" secondAttribute="centerX" id="dYI-qh-Zz4"/>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" constant="-0.5" id="dyt-vB-Op3"/>
-                            <constraint firstItem="6eu-sI-vdx" firstAttribute="top" secondItem="p7g-g3-69Y" secondAttribute="bottom" constant="8" id="fxe-kO-jZT"/>
-                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="top" relation="lessThanOrEqual" secondItem="dZP-zl-6JO" secondAttribute="bottom" constant="348" id="hb0-f6-W19">
-                                <variation key="heightClass=regular" constant="313"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" id="iUE-hg-MCK"/>
-                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="top" secondItem="cfv-fF-RvV" secondAttribute="bottom" constant="59" id="iWN-yF-cps">
-                                <variation key="heightClass=regular" constant="21"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="nJF-Di-c70"/>
                             <constraint firstItem="p7g-g3-69Y" firstAttribute="top" secondItem="dZP-zl-6JO" secondAttribute="bottom" id="nst-J5-Ea1"/>
-                            <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="pO0-4R-Rp5">
-                                <variation key="heightClass=regular" constant="0.0"/>
-                            </constraint>
-                            <constraint firstAttribute="centerX" secondItem="rcy-M4-Hdz" secondAttribute="centerX" constant="-0.5" id="qMj-3G-zNe"/>
+                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" id="q1q-hG-9Fh"/>
+                            <constraint firstItem="rcy-M4-Hdz" firstAttribute="top" secondItem="6eu-sI-vdx" secondAttribute="bottom" constant="8" id="qLS-5m-Lyh"/>
                             <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" id="scG-YG-UkB"/>
-                            <constraint firstItem="rcy-M4-Hdz" firstAttribute="width" secondItem="cfv-fF-RvV" secondAttribute="width" constant="152" id="t1w-yp-Vaw"/>
                             <constraint firstAttribute="centerX" secondItem="OBo-Rg-3YI" secondAttribute="centerX" id="w2K-xG-tJK">
                                 <variation key="heightClass=regular" constant="0.0"/>
                             </constraint>
-                            <constraint firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" constant="-0.5" id="w5T-f7-SOA"/>
-                            <constraint firstAttribute="centerX" secondItem="6eu-sI-vdx" secondAttribute="centerX" constant="6" id="ykt-cu-Afh"/>
+                            <constraint firstItem="OBo-Rg-3YI" firstAttribute="centerX" secondItem="cfv-fF-RvV" secondAttribute="centerX" id="xOu-vp-SD9"/>
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
-                                <exclude reference="SWC-Iz-RNh"/>
                                 <exclude reference="QQa-tI-gl6"/>
+                                <exclude reference="SWC-Iz-RNh"/>
                                 <exclude reference="scG-YG-UkB"/>
                                 <exclude reference="asj-f0-gkb"/>
                                 <exclude reference="w2K-xG-tJK"/>
@@ -1752,8 +1715,8 @@
                         </variation>
                         <variation key="heightClass=regular">
                             <mask key="constraints">
-                                <include reference="SWC-Iz-RNh"/>
                                 <include reference="QQa-tI-gl6"/>
+                                <include reference="SWC-Iz-RNh"/>
                                 <include reference="scG-YG-UkB"/>
                                 <include reference="asj-f0-gkb"/>
                                 <include reference="w2K-xG-tJK"/>
@@ -1788,21 +1751,21 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Hold the button for 3 seconds until a red" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sg3-PM-mgE">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Hold the button for 3 seconds until a red" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="sg3-PM-mgE">
                                 <rect key="frame" x="128" y="266" width="343" height="17"/>
-                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
+                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="16"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Turn Wave Bluetooth OFF:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2r3-pk-er2">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Turn Wave Bluetooth OFF:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2r3-pk-er2">
                                 <rect key="frame" x="188" y="241" width="224" height="17"/>
-                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
+                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="16"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="light flashes" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U5D-wE-tdw">
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="light flashes" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="U5D-wE-tdw">
                                 <rect key="frame" x="249" y="291" width="101" height="17"/>
-                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="17"/>
+                                <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="16"/>
                                 <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
@@ -2269,10 +2232,10 @@
         <image name="statsicon_selected" width="50" height="50"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="qVh-tw-zPR"/>
-        <segue reference="1Av-rn-EMf"/>
+        <segue reference="lVa-zE-MYI"/>
         <segue reference="60l-AC-Hvq"/>
-        <segue reference="vtk-Ik-Lon"/>
+        <segue reference="1Av-rn-EMf"/>
+        <segue reference="qVh-tw-zPR"/>
         <segue reference="Ld4-Fc-WJ2"/>
         <segue reference="QFb-do-jEW"/>
     </inferredMetricsTieBreakers>
