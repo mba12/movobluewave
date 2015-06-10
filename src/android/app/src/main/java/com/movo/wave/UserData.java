@@ -647,6 +647,35 @@ public class UserData extends Activity{
     }
 
 
+    private static Set<String> lockedPictureDigests = new HashSet<>();
+
+    /** lock md5 digest as in progress
+     *
+     * @param md5Digest
+     * @return lock success
+     */
+    private static boolean lockPicture( String md5Digest ) {
+        final boolean ret;
+        synchronized (lockedPictureDigests) {
+            ret = lockedPictureDigests.add(md5Digest);
+        }
+        return ret;
+    }
+
+    /** unlock md5 digest as in progress
+     *
+     * @param md5Digest
+     * @return unlock success
+     */
+    private static boolean unlockPicture( String md5Digest ) {
+        final boolean ret;
+        synchronized (lockedPictureDigests) {
+            ret = lockedPictureDigests.remove(md5Digest);
+        }
+        return ret;
+    }
+
+
     public void downloadProfilePic(){
         Log.d(TAG, "Loading image from firebase");
 //        fsaf
@@ -729,7 +758,7 @@ public class UserData extends Activity{
         });
     }
 
-    public void downloadPhotoForDate(long today, final UpdateDelegate delegate){
+    public void downloadPhotoForDate(long today, final String expectedMd5, final UpdateDelegate delegate){
 
         Log.d(TAG, "Loading image from firebase");
         final Calendar monthCal = Calendar.getInstance();
@@ -760,6 +789,7 @@ public class UserData extends Activity{
             public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.getValue() != null) {
 
+                    final String md5;
                     // TODO: Discuss changes below with Phil -- comment from Michael
 
                     Object obj = snapshot.getValue();
@@ -774,7 +804,11 @@ public class UserData extends Activity{
 
                         Object pictureObject = result.get(2);
                         String pictureString = String.valueOf(pictureObject);
-                        String md5 = result.get(1);
+                        md5 = result.get(1);
+
+                        if( ! expectedMd5.equals(md5 )) {
+                            lockPicture( md5 );
+                        }
 
 
                         try {
@@ -816,13 +850,18 @@ public class UserData extends Activity{
                         DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                         SQLiteDatabase db = mDbHelper.getWritableDatabase();
                         ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
+                        md5 = result.get(1);
+
+
+                        if( ! expectedMd5.equals(md5 )) {
+                            lockPicture( md5 );
+                        }
                         try {
                             String wholeString = "";
                             for (int i = 2; i < result.size(); i++) {
                                 wholeString += result.get(i);
 
                             }
-                            String md5 = result.get(1);
                             byte[] decodedString = Base64.decode(wholeString, Base64.NO_WRAP);
 //                                Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length, options);
 //                                background.setImageBitmap(decodedByte);
@@ -845,13 +884,19 @@ public class UserData extends Activity{
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
+                    } else {
+                        md5 = null;
                     }
 
+                    if( ! expectedMd5.equals(md5 ) ) {
+                        unlockPicture( md5 );
+                    }
 
                     // Always a photo! Always update!
+                    unlockPicture(expectedMd5);
                     delegate.notifyUpdate();
                 }
-            }
+            } // end onDataChange
 
             @Override
             public void onCancelled(FirebaseError firebaseError) {
@@ -1100,11 +1145,15 @@ public class UserData extends Activity{
                 if (snapshot.getValue() != null) {
 //                    String md5 = DataUtilities.getMD5EncryptedString(byteString);
 
-                    if (md5.equals(snapshot.getValue())) {
+                    final String firebaseMd5 = (String)snapshot.getValue();
+
+                    if (md5.equals(firebaseMd5)) {
                         //md5s match, don't download
-                    } else {
+                    } else if( lockPicture( firebaseMd5 )) {
                         //download new image
-                        downloadPhotoForDate(todayFinal, delegate);
+                        downloadPhotoForDate(todayFinal, firebaseMd5, delegate);
+                    } else {
+                        Log.v( TAG, "Already downloading image " + firebaseMd5);
                     }
                 }
             }

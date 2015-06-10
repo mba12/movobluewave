@@ -208,7 +208,7 @@ public class Home extends MenuActivity {
             }
 //            UserData myData = UserData.getUserData(c);
 
-            downloadMonthPhotos(calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
+//            downloadMonthPhotos(calendar.get(Calendar.MONTH), calendar.get(Calendar.YEAR));
 
 //            feawfe
         } else {
@@ -1071,20 +1071,20 @@ public class Home extends MenuActivity {
 
     }
 
-    public void downloadMonthPhotos(int month, int year){
-        int monthFix = month + 1;
-        Calendar thisMonth = Calendar.getInstance();
-        thisMonth.set(Calendar.MONTH, monthFix);
-//        thisMonth.add(Calendar.MONTH, 1);
-        thisMonth.set(Calendar.YEAR, year);
-
-        for(int i = 0; i < thisMonth.getActualMaximum(Calendar.DATE); i++){
-            thisMonth.set(Calendar.DATE, (i+1));
-            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis(), delegate);
-
-        }
-
-    }
+//    public void downloadMonthPhotos(int month, int year){
+//        int monthFix = month + 1;
+//        Calendar thisMonth = Calendar.getInstance();
+//        thisMonth.set(Calendar.MONTH, monthFix);
+////        thisMonth.add(Calendar.MONTH, 1);
+//        thisMonth.set(Calendar.YEAR, year);
+//
+//        for(int i = 0; i < thisMonth.getActualMaximum(Calendar.DATE); i++){
+//            thisMonth.set(Calendar.DATE, (i+1));
+//            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis(), delegate);
+//
+//        }
+//
+//    }
 
 
 
