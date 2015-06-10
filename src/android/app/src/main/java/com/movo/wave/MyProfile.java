@@ -80,186 +80,30 @@ public class MyProfile extends MenuActivity {
     String birth;
     String fullName;
     String gender;
+    SQLiteDatabase db;
+    DrawerLayout myProfileLayout;
 
+    UserData.UpdateDelegate delegate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_my_profile);
+        delegate = trackDelegate(new UserData.UpdateDelegate(this) {
+            @Override
+            public void onUpdate() {
+                MyProfile.this.onResume();
+                myProfileLayout.invalidate();
+            }
+        });
+        myProfileLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DatabaseHelper dbHelper = new DatabaseHelper(c);
+        db = dbHelper.getWritableDatabase();
 //        UserData myUserData = UserData.getUserData(c);
         edName = (EditText) findViewById(R.id.edName);
         profileSave = (Button) findViewById(R.id.profileSave);
         profileCancel = (Button) findViewById(R.id.profileCancel);
         profilePic = (ImageView) findViewById(R.id.profilePic);
-        height1 =  UserData.getUserData(c).getCurrentHeight1();
-        height2 =  UserData.getUserData(c).getCurrentHeight2();
-        weight =  UserData.getUserData(c).getCurrentWeight();
-        birth =  UserData.getUserData(c).getCurrentBirthdate();
-        fullName =  UserData.getUserData(c).getCurrentFullName();
-        gender =  UserData.getUserData(c).getCurrentGender();
-        Log.d(TAG, "User profile load "+
-                " "+height1+
-                " "+height2+
-                " "+weight+
-                " "+fullName+
-                " "+gender+
-                " "+birth);
-
-        try {
-            if (!fullName.equals("Error")) {
-                edName.setText(fullName);
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-        }
-        byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
-        if (prof != null && prof.length !=0 ) {
-            Glide.with(c)
-                    .load(prof)
-//                            .override(1080,1920)
-                    .thumbnail(0.1f)
-                    .centerCrop()
-                    .into(profilePic);
-//            profilePic.setImageBitmap(prof);
-        }
-
-        //---------------Set up Arraylists------------//
-        ArrayList<String> options=new ArrayList<String>();
-        options.add("Gender");
-        options.add("Male");
-        options.add("Female");
-
-        ArrayList<String> height1Options=new ArrayList<String>();
-//        height1.add("Select Height in Feet");
-        for(int i = 0;i<8;i++){
-            height1Options.add((i+1)+"");
-        }
-        ArrayList<String> height2Options=new ArrayList<String>();
-//        height2.add("Select Height in Inches");
-        for(int i = 0;i<12;i++){
-            height2Options.add((i) + "");
-        }
-        ArrayList<String> weightOptions=new ArrayList<String>();
-//        weight.add("Select Weight in Pounds");
-        for(int i = 50;i<=300;i=i+5){
-            weightOptions.add((i)+"");
-        }
-
-
-
-        mSpinner = (Spinner)findViewById(R.id.spGender);
-        mSpinnerHeight1 = (Spinner) findViewById(R.id.spHeight);
-        mSpinnerHeight2 = (Spinner) findViewById(R.id.spHeight2);
-        mSpinnerWeight = (Spinner) findViewById(R.id.spWeight);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,options);
-        mSpinner.setAdapter(adapter); // this will set list of values to spinner
-        ArrayAdapter<String> adapterHeight = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,height1Options);
-        mSpinnerHeight1.setAdapter(adapterHeight);
-        ArrayAdapter<String> adapterHeight2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,height2Options);
-        mSpinnerHeight2.setAdapter(adapterHeight2);
-        ArrayAdapter<String> adapterWeight = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,weightOptions);
-        mSpinnerWeight.setAdapter(adapterWeight);
-
-        try {
-            if (!gender.equals("Error")) {
-                mSpinner.setSelection(options.indexOf(gender));//set selected value in spinner
-            } else {
-                mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
-        }
-        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                // your code here
-                Log.d(TAG, "SELECTED GENDER");
-                gender = parentView.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-
-        });
-        try{
-            if(!height1.equals("Error")){
-                mSpinnerHeight1.setSelection(height1Options.indexOf(height1));//set selected value in spinner
-            }else{
-                mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
-        }
-
-//        mSpinnerHeight1.setSelection(options.indexOf("Gender"));//set selected value in spinner
-        mSpinnerHeight1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                // your code here
-                Log.d(TAG, "SELECTED HEIGHT1");
-                height1 = parentView.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-
-        });
-        try{
-            if(!height2.equals("Error")){
-                mSpinnerHeight2.setSelection(height2Options.indexOf(height2));//set selected value in spinner
-            }else{
-                mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
-        }
-//        mSpinnerHeight2.setSelection(options.indexOf("Gender"));//set selected value in spinner
-        mSpinnerHeight2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                // your code here
-                Log.d(TAG, "SELECTED HEIGHT2");
-                height2 = parentView.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-
-        });
-        try{
-            if(!weight.equals("Error")){
-                mSpinnerWeight.setSelection(weightOptions.indexOf(weight));//set selected value in spinner
-            }else{
-                mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
-            }
-        }catch(Exception e){
-            e.printStackTrace();
-            mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
-        }
-//        mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
-        mSpinnerWeight.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-                // your code here
-                Log.d(TAG, "SELECTED WEIGHT");
-                weight = parentView.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) {
-                // your code here
-            }
-
-        });
 
 
         //---------------Set up Arraylists------------//
@@ -585,9 +429,39 @@ public class MyProfile extends MenuActivity {
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        db.close();
+    }
+
+    @Override
     public void onResume() {
         super.onResume();  // Always call the superclass method first
-        byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
+
+        height1 =  UserData.getUserData(c).getCurrentHeight1();
+        height2 =  UserData.getUserData(c).getCurrentHeight2();
+        weight =  UserData.getUserData(c).getCurrentWeight();
+        birth =  UserData.getUserData(c).getCurrentBirthdate();
+        fullName =  UserData.getUserData(c).getCurrentFullName();
+        gender =  UserData.getUserData(c).getCurrentGender();
+        Log.d(TAG, "User profile load "+
+                " "+height1+
+                " "+height2+
+                " "+weight+
+                " "+fullName+
+                " "+gender+
+                " "+birth);
+
+
+
+        try {
+            if (!fullName.equals("Error")) {
+                edName.setText(fullName);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        byte[] prof =  UserData.getUserData(c).retrievePhoto( db, 0, delegate);
         if (prof != null && prof.length !=0 ) {
             Glide.with(c)
                     .load(prof)
@@ -597,6 +471,146 @@ public class MyProfile extends MenuActivity {
                     .into(profilePic);
 //            profilePic.setImageBitmap(prof);
         }
+
+        //---------------Set up Arraylists------------//
+        ArrayList<String> options=new ArrayList<String>();
+        options.add("Gender");
+        options.add("Male");
+        options.add("Female");
+
+        ArrayList<String> height1Options=new ArrayList<String>();
+//        height1.add("Select Height in Feet");
+        for(int i = 0;i<8;i++){
+            height1Options.add((i+1)+"");
+        }
+        ArrayList<String> height2Options=new ArrayList<String>();
+//        height2.add("Select Height in Inches");
+        for(int i = 0;i<12;i++){
+            height2Options.add((i) + "");
+        }
+        ArrayList<String> weightOptions=new ArrayList<String>();
+//        weight.add("Select Weight in Pounds");
+        for(int i = 50;i<=300;i=i+5){
+            weightOptions.add((i)+"");
+        }
+
+
+
+        mSpinner = (Spinner)findViewById(R.id.spGender);
+        mSpinnerHeight1 = (Spinner) findViewById(R.id.spHeight);
+        mSpinnerHeight2 = (Spinner) findViewById(R.id.spHeight2);
+        mSpinnerWeight = (Spinner) findViewById(R.id.spWeight);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,options);
+        mSpinner.setAdapter(adapter); // this will set list of values to spinner
+        ArrayAdapter<String> adapterHeight = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,height1Options);
+        mSpinnerHeight1.setAdapter(adapterHeight);
+        ArrayAdapter<String> adapterHeight2 = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,height2Options);
+        mSpinnerHeight2.setAdapter(adapterHeight2);
+        ArrayAdapter<String> adapterWeight = new ArrayAdapter<String>(getApplicationContext(), R.layout.spinner_layout,weightOptions);
+        mSpinnerWeight.setAdapter(adapterWeight);
+
+        try {
+            if (!gender.equals("Error")) {
+                mSpinner.setSelection(options.indexOf(gender));//set selected value in spinner
+            } else {
+                mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
+        }
+        mSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                Log.d(TAG, "SELECTED GENDER");
+                gender = parentView.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+        try{
+            if(!height1.equals("Error")){
+                mSpinnerHeight1.setSelection(height1Options.indexOf(height1));//set selected value in spinner
+            }else{
+                mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
+        }
+
+//        mSpinnerHeight1.setSelection(options.indexOf("Gender"));//set selected value in spinner
+        mSpinnerHeight1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                Log.d(TAG, "SELECTED HEIGHT1");
+                height1 = parentView.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+        try{
+            if(!height2.equals("Error")){
+                mSpinnerHeight2.setSelection(height2Options.indexOf(height2));//set selected value in spinner
+            }else{
+                mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
+        }
+//        mSpinnerHeight2.setSelection(options.indexOf("Gender"));//set selected value in spinner
+        mSpinnerHeight2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                Log.d(TAG, "SELECTED HEIGHT2");
+                height2 = parentView.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+        try{
+            if(!weight.equals("Error")){
+                mSpinnerWeight.setSelection(weightOptions.indexOf(weight));//set selected value in spinner
+            }else{
+                mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+            mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
+        }
+//        mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
+        mSpinnerWeight.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                Log.d(TAG, "SELECTED WEIGHT");
+                weight = parentView.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+
+        });
+
+
 
     }
 

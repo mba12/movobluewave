@@ -67,6 +67,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
@@ -101,6 +103,7 @@ public class Home extends MenuActivity {
     public static Home instance;
     DrawerLayout homeLayout;
     TextView curMonthDisplay;
+    ImageView profilePic;
 
     public enum ChartType {
         STEPS,
@@ -116,6 +119,7 @@ public class Home extends MenuActivity {
     RelativeLayout caloriesLayout;
     TextView caloriesText;
 
+    UserData.UpdateDelegate delegate;
 
     public static String TAG = "Movo Wave V2";
 
@@ -141,21 +145,27 @@ public class Home extends MenuActivity {
         db = null;
     }
 
-    public static Home getHome() {
-        if (instance == null) {
-            instance = new Home();
-        }
-        return instance;
-    }
+//    public static Home getHome() {
+//        if (instance == null) {
+//            instance = new Home();
+//        }
+//        return instance;
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Intent intentIncoming = getIntent();
-        instance = getHome();
+//        instance = getHome();
         LaunchAnimation.apply(this, intentIncoming);
 
-
+        delegate = trackDelegate( new UserData.UpdateDelegate(this) {
+            @Override
+            public void onUpdate() {
+                onResume();
+                homeLayout.invalidate();
+            }
+        });
 
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                         .setDefaultFontPath("fonts/gotham-book.otf")
@@ -164,7 +174,7 @@ public class Home extends MenuActivity {
         );
         initMenu(R.layout.activity_home);
         homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ImageView profilePic = (ImageView) findViewById(R.id.profilePic);
+        profilePic = (ImageView) findViewById(R.id.profilePic);
         stepsLayout = (RelativeLayout) findViewById(R.id.stepsLayout);
         milesLayout = (RelativeLayout) findViewById(R.id.milesLayout);
         caloriesLayout = (RelativeLayout) findViewById(R.id.caloriesLayout);
@@ -216,24 +226,7 @@ public class Home extends MenuActivity {
         yearChange = ""+ calendar.get(Calendar.YEAR);
         Firebase ref = new Firebase(UserData.firebase_url + "users/" +  UserData.getUserData(c).getCurUID() + "/steps/" + yearChange + "/" + monthChange);
 
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot snapshot) {
-                Log.d(TAG, "" + snapshot.getValue());
-//                        loginProgress.setVisibility(View.INVISIBLE);
-
-                UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChangefinal, calendar.get(Calendar.YEAR)+"", instance);
-
-                Log.d(TAG, "Inserting steps into database");
-
-
-            }
-
-            @Override
-            public void onCancelled(FirebaseError firebaseError) {
-                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
-            }
-        });
+        UserData.getUserData(c).insertStepsFromDB(ref, c, monthChangefinal, calendar.get(Calendar.YEAR)+"", delegate );
 
 
         curMonth = calendar.get(Calendar.MONTH);
@@ -385,20 +378,7 @@ public class Home extends MenuActivity {
 
         Log.d(TAG, "Cur user data: " +  UserData.getUserData(c).getCurUID());
 
-        try {
-            byte[] prof =  UserData.getUserData(c).retrievePhoto(0);
-            if (prof != null) {
-                Glide.with(c)
-                        .load(prof)
-//                            .override(1080,1920)
-                        .thumbnail(0.1f)
-                        .centerCrop()
-                        .into(profilePic);
 
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         stepsLayout.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 curChart = ChartType.STEPS;
@@ -493,6 +473,22 @@ public class Home extends MenuActivity {
     public void onResume() {
         super.onResume();  // Always call the superclass method first
         homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        try {
+            byte[] prof =  UserData.getUserData(c).retrievePhoto(db,0,delegate );
+            if (prof != null) {
+                Glide.with(c)
+                        .load(prof)
+//                            .override(1080,1920)
+                        .thumbnail(0.1f)
+                        .centerCrop()
+                        .into(profilePic);
+                Log.d(TAG, "Loading profile picture");
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         ArrayList<String> users = new ArrayList<String>();
         users =  UserData.getUserData(c).getUserList();
@@ -1069,7 +1065,7 @@ public class Home extends MenuActivity {
 
 
     public byte[] dailyPhotoFetch(long today) {
-        return UserData.getUserData(c).retrievePhoto(today);
+        return UserData.getUserData(c).retrievePhoto(db, today, delegate);
 
     }
 
@@ -1082,7 +1078,7 @@ public class Home extends MenuActivity {
 
         for(int i = 0; i < thisMonth.getActualMaximum(Calendar.DATE); i++){
             thisMonth.set(Calendar.DATE, (i+1));
-            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis());
+            UserData.getUserData(c).downloadPhotoForDate(thisMonth.getTimeInMillis(), delegate);
 
         }
 

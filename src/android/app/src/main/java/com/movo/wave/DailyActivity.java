@@ -17,6 +17,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -70,8 +71,13 @@ public class DailyActivity extends ActionBarActivity {
     Calendar monthCal;
     ImageView background;
     RelativeLayout wholeView;
+    UserData.UpdateDelegate delegate;
+    SQLiteDatabase db;
+    RelativeLayout drawer_layout_daily;
+
     boolean localFile;
     private static final int SELECT_PHOTO = 100;
+
 
 
     @Override
@@ -85,179 +91,28 @@ public class DailyActivity extends ActionBarActivity {
         );
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_daily);
-        Intent intent = getIntent();
-        LaunchAnimation.apply( this, intent );
-        c = this.getApplicationContext();
-
-        miles = (TextView) findViewById(R.id.tvMiles);
-        calories = (TextView) findViewById(R.id.tvCalories);
-        steps = (TextView) findViewById(R.id.tvSteps);
-        tvToday = (TextView) findViewById(R.id.tvCurDate);
-        wholeView = (RelativeLayout) findViewById(R.id.drawer_layout);
-        photo = (TextView) findViewById(R.id.tvPhoto);
-        background = (ImageView) findViewById(R.id.background);
-
-        photo.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-
-                startActivityForResult( MenuActivity.photoPickerIntent(), SELECT_PHOTO);
+        drawer_layout_daily = (RelativeLayout) findViewById(R.id.drawer_layout);
+        DatabaseHelper dbHelper = new DatabaseHelper(this);
+        db = dbHelper.getWritableDatabase();
+        delegate = new UserData.UpdateDelegate(this) {
+            @Override
+            public void onUpdate() {
+                DailyActivity.this.onResume();
+                drawer_layout_daily.invalidate();
             }
-        });
-
-        back = (ImageView) findViewById(R.id.tvBack);
-        back.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        };
 
 
 
 
 
-        if (null != intent) { //Null Checking
-            String date= intent.getStringExtra("date");
-            Long dateLong = Long.parseLong(date);
-//            Log.d(TAG, StrData);
-
-            today = new Date(dateLong);
-
-
-
-            monthCal = Calendar.getInstance();
-            monthCal.setTime(today);
-            SimpleDateFormat month_date = new SimpleDateFormat("MMM");
-            String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
-            tvToday.setText((month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH)).toUpperCase());
-//            monthCal.set(2015,calendar.get(today.getMonth()),i+1,0,0,0);
-            long monthRangeStart = dateLong;
-            long oneDayInMillis = 86400000;
-            long monthRangeStop = dateLong + oneDayInMillis;
-
-            DatabaseHelper mDbHelper = new DatabaseHelper(c);
-            SQLiteDatabase db = mDbHelper.getReadableDatabase();
-
-
-            wholeView.setOnTouchListener(new OnSwipeTouchListener(c){
-                @Override
-                public void onSwipeLeft() {
-                    Log.d(TAG, "Swipe Left");
-                    //this is forward a day
-                    Intent intent = new Intent(getApplicationContext(),
-                            DailyActivity.class);
-                    LaunchAnimation.SLIDE_LEFT.setIntent( intent );
-                    long timeTarget = today.getTime()+86400000;
-                    String tomorrow = timeTarget+"";
-                    intent.putExtra("date",tomorrow);
-                    Calendar todayTime = Calendar.getInstance();
-//                    todayTime.setTimeInMillis(today.getTime());
-
-                    if(todayTime.getTimeInMillis()<=timeTarget){
-                        //Do not pass go.
-                    }else {
-                        startActivity(intent);
-                        finish();
-                    }
-                }
-                @Override
-                public void onSwipeRight() {
-                    Log.d(TAG, "Swipe Right");
-                    //this is forward a day
-                    Intent intent = new Intent(getApplicationContext(),
-                            DailyActivity.class);
-
-                    LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
-                    String tomorrow = (today.getTime()-86400000)+"";
-                    intent.putExtra("date",tomorrow);
-                    startActivity(intent);
-                    finish();
-                }
-            });
-
-
-            try {
-                byte[] photo = dailyPhotoFetch(monthRangeStart);
-
-                if (photo != null) {
-                    Glide.with(c)
-                            .load(photo)
-//                            .override(1080,1920)
-                            .thumbnail(0.1f)
-                            .centerCrop()
-                            .into(background);
-//                    background.setImageBitmap(bm);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-
-
-            String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
-            ContentValues valuesReadSteps = new ContentValues();
-            Cursor curSteps = db.query(
-                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                    new String[] { Database.StepEntry.SYNC_ID, //blob
-                            Database.StepEntry.START, //int
-                            Database.StepEntry.END, //int
-                            Database.StepEntry.USER, //string
-                            Database.StepEntry.STEPS, //int
-                            Database.StepEntry.DEVICEID }, //blob                          // The columns to return
-                    selectionSteps,                                // The columns for the WHERE clause
-                    new String[] { monthRangeStart+"", monthRangeStop+"" },                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
-
-            curSteps.moveToFirst();
-            int stepsTaken=0;
-            if(curSteps.getCount()!=0) {
-
-
-                while (curSteps.isAfterLast() == false) {
-                    stepsTaken += curSteps.getInt(4);
-
-                    curSteps.moveToNext();
-//
-                }
-/*
-                // NOTE: saving for later. Michael
-                String height1 =  UserData.getUserData(c).getCurrentHeight1();
-                String height2 =  UserData.getUserData(c).getCurrentHeight2();
-                String weight =  UserData.getUserData(c).getCurrentWeight();
-                String birth =  UserData.getUserData(c).getCurrentBirthdate();
-                String gender =  UserData.getUserData(c).getCurrentGender();
-*/
-                steps.setText(stepsTaken + " STEPS");
-                Calculator calc = new Calculator();
-
-//                double caloriesUsed = calc.calculate_calories(stepsTaken, 72, 170, "Male", 1987, 24);
-                double caloriesUsed = calc.simple_calculate_calories(stepsTaken);
-
-//                    calculate_calories(int steps, int height, int weight, String gender, int birthYear, int minutes) {
-                calories.setText(String.format("%.1f CAL", caloriesUsed));
-
-                double milesTraveled = calc.calculate_distance(stepsTaken, 72);
-                miles.setText(String.format("%.1f MILES", milesTraveled));
-            }else{
-                steps.setText(0 + " STEPS");
-
-                calories.setText("0.0 CAL");
-
-
-                miles.setText("0.0 MILES");
-            }
 
 
 
 
-        }else{
-            //we shouldn't get here naturally unless the app was resumed in a weird state, close out of daily view
 
-            finish();
 
-        }
+
 
     }
 
@@ -486,10 +341,193 @@ public class DailyActivity extends ActionBarActivity {
 
 
     public byte[] dailyPhotoFetch(long today) {
-        return UserData.getUserData(c).retrievePhoto(today);
+        return UserData.getUserData(c).retrievePhoto(db, today, delegate);
 
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        delegate.disable();
+        db.close();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
+
+
+        Intent intent = getIntent();
+        LaunchAnimation.apply( this, intent );
+        c = this.getApplicationContext();
+
+        miles = (TextView) findViewById(R.id.tvMiles);
+        calories = (TextView) findViewById(R.id.tvCalories);
+        steps = (TextView) findViewById(R.id.tvSteps);
+        tvToday = (TextView) findViewById(R.id.tvCurDate);
+        wholeView = (RelativeLayout) findViewById(R.id.drawer_layout);
+        photo = (TextView) findViewById(R.id.tvPhoto);
+        background = (ImageView) findViewById(R.id.background);
+
+        photo.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                startActivityForResult( MenuActivity.photoPickerIntent(), SELECT_PHOTO);
+            }
+        });
+
+        back = (ImageView) findViewById(R.id.tvBack);
+        back.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+
+        if (null != intent) { //Null Checking
+            String date= intent.getStringExtra("date");
+            Long dateLong = Long.parseLong(date);
+//            Log.d(TAG, StrData);
+
+            today = new Date(dateLong);
+
+
+
+            monthCal = Calendar.getInstance();
+            monthCal.setTime(today);
+            SimpleDateFormat month_date = new SimpleDateFormat("MMM");
+            String month_name = monthCal.getDisplayName(monthCal.MONTH,Calendar.SHORT, Locale.US);
+            tvToday.setText((month_name+" "+monthCal.get(Calendar.DAY_OF_MONTH)).toUpperCase());
+//            monthCal.set(2015,calendar.get(today.getMonth()),i+1,0,0,0);
+            long monthRangeStart = dateLong;
+            long oneDayInMillis = 86400000;
+            long monthRangeStop = dateLong + oneDayInMillis;
+
+            DatabaseHelper mDbHelper = new DatabaseHelper(c);
+            SQLiteDatabase db = mDbHelper.getReadableDatabase();
+
+
+            wholeView.setOnTouchListener(new OnSwipeTouchListener(c){
+                @Override
+                public void onSwipeLeft() {
+                    Log.d(TAG, "Swipe Left");
+                    //this is forward a day
+                    Intent intent = new Intent(getApplicationContext(),
+                            DailyActivity.class);
+                    LaunchAnimation.SLIDE_LEFT.setIntent( intent );
+                    long timeTarget = today.getTime()+86400000;
+                    String tomorrow = timeTarget+"";
+                    intent.putExtra("date",tomorrow);
+                    Calendar todayTime = Calendar.getInstance();
+//                    todayTime.setTimeInMillis(today.getTime());
+
+                    if(todayTime.getTimeInMillis()<=timeTarget){
+                        //Do not pass go.
+                    }else {
+                        startActivity(intent);
+                        finish();
+                    }
+                }
+                @Override
+                public void onSwipeRight() {
+                    Log.d(TAG, "Swipe Right");
+                    //this is forward a day
+                    Intent intent = new Intent(getApplicationContext(),
+                            DailyActivity.class);
+
+                    LaunchAnimation.SLIDE_RIGHT.setIntent( intent );
+                    String tomorrow = (today.getTime()-86400000)+"";
+                    intent.putExtra("date",tomorrow);
+                    startActivity(intent);
+                    finish();
+                }
+            });
+
+
+            try {
+                byte[] photo = dailyPhotoFetch(monthRangeStart);
+
+                if (photo != null) {
+                    Glide.with(c)
+                            .load(photo)
+//                            .override(1080,1920)
+                            .thumbnail(0.1f)
+                            .centerCrop()
+                            .into(background);
+//                    background.setImageBitmap(bm);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+
+            String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
+            ContentValues valuesReadSteps = new ContentValues();
+            Cursor curSteps = db.query(
+                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                    new String[] { Database.StepEntry.SYNC_ID, //blob
+                            Database.StepEntry.START, //int
+                            Database.StepEntry.END, //int
+                            Database.StepEntry.USER, //string
+                            Database.StepEntry.STEPS, //int
+                            Database.StepEntry.DEVICEID }, //blob                          // The columns to return
+                    selectionSteps,                                // The columns for the WHERE clause
+                    new String[] { monthRangeStart+"", monthRangeStop+"" },                            // The values for the WHERE clause
+                    null,                                     // don't group the rows
+                    null,                                     // don't filter by row groups
+                    null                                 // The sort order
+            );
+
+            curSteps.moveToFirst();
+            int stepsTaken=0;
+            if(curSteps.getCount()!=0) {
+
+
+                while (curSteps.isAfterLast() == false) {
+                    stepsTaken += curSteps.getInt(4);
+
+                    curSteps.moveToNext();
+//
+                }
+/*
+                // NOTE: saving for later. Michael
+                String height1 =  UserData.getUserData(c).getCurrentHeight1();
+                String height2 =  UserData.getUserData(c).getCurrentHeight2();
+                String weight =  UserData.getUserData(c).getCurrentWeight();
+                String birth =  UserData.getUserData(c).getCurrentBirthdate();
+                String gender =  UserData.getUserData(c).getCurrentGender();
+*/
+                steps.setText(stepsTaken + " STEPS");
+                Calculator calc = new Calculator();
+
+//                double caloriesUsed = calc.calculate_calories(stepsTaken, 72, 170, "Male", 1987, 24);
+                double caloriesUsed = calc.simple_calculate_calories(stepsTaken);
+
+//                    calculate_calories(int steps, int height, int weight, String gender, int birthYear, int minutes) {
+                calories.setText(String.format("%.1f CAL", caloriesUsed));
+
+                double milesTraveled = calc.calculate_distance(stepsTaken, 72);
+                miles.setText(String.format("%.1f MILES", milesTraveled));
+            }else{
+                steps.setText(0 + " STEPS");
+
+                calories.setText("0.0 CAL");
+
+
+                miles.setText("0.0 MILES");
+            }
+
+
+
+
+        }else{
+            //we shouldn't get here naturally unless the app was resumed in a weird state, close out of daily view
+
+            finish();
+
+        }
+
+    }
 
 
     public static Date trim(Date date) {

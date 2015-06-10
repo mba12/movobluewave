@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
@@ -602,9 +603,9 @@ public class UserData extends Activity{
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //                    System.out.println(snapshot.getValue());
-                if(snapshot.getChildrenCount()==3){
+                if (snapshot.getChildrenCount() == 3) {
                     final BitmapFactory.Options options = new BitmapFactory.Options();
-                    ArrayList<String> result =((ArrayList<String>)snapshot.getValue());
+                    ArrayList<String> result = ((ArrayList<String>) snapshot.getValue());
                     byte[] decodedString = Base64.decode(result.get(2), Base64.NO_WRAP);
 
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
@@ -618,17 +619,17 @@ public class UserData extends Activity{
                     syncValues.put(Database.PhotoStore.USER, currentUID);
                     syncValues.put(Database.PhotoStore.MD5, md5);
                     String guid = UUID.randomUUID().toString();
-                    syncValues.put(Database.PhotoStore.GUID,guid);
+                    syncValues.put(Database.PhotoStore.GUID, guid);
                     long newRowId;
                     newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
                             null,
                             syncValues);
-                    Log.d(TAG, "Photo database add from firebase: "+newRowId);
+                    Log.d(TAG, "Photo database add from firebase: " + newRowId);
                     db.close();
 
                     storePhoto(decodedString, profile.getTimeInMillis(), md5);
 //
-                }else if(snapshot.getChildrenCount()>3){
+                } else if (snapshot.getChildrenCount() > 3) {
                     //multipart file upload
                     DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                     SQLiteDatabase db = mDbHelper.getWritableDatabase();
@@ -638,7 +639,7 @@ public class UserData extends Activity{
                         Calendar profile = Calendar.getInstance();
                         profile.setTimeInMillis(0);
                         String wholeString = "";
-                        for(int i =2;i<result.size();i++){
+                        for (int i = 2; i < result.size(); i++) {
                             wholeString += result.get(i);
 
 
@@ -651,7 +652,7 @@ public class UserData extends Activity{
                         syncValues.put(Database.PhotoStore.USER, currentUID);
 //                        syncValues.put(Database.PhotoStore.PHOTOBLOB, decodedString);
                         syncValues.put(Database.PhotoStore.MD5, md5);
-                        syncValues.put(Database.PhotoStore.GUID,UUID.randomUUID().toString());
+                        syncValues.put(Database.PhotoStore.GUID, UUID.randomUUID().toString());
                         long newRowId;
                         newRowId = db.insert(Database.PhotoStore.PHOTO_TABLE_NAME,
                                 null,
@@ -659,8 +660,8 @@ public class UserData extends Activity{
                         Log.d(TAG, "Photo database add from firebase: " + newRowId);
                         db.close();
 
-                        storePhoto(decodedString,0,md5 );
-                    }catch(Exception e){
+                        storePhoto(decodedString, 0, md5);
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
 
@@ -668,6 +669,7 @@ public class UserData extends Activity{
 
 
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
                 System.out.println("The read failed: " + firebaseError.getMessage());
@@ -675,7 +677,7 @@ public class UserData extends Activity{
         });
     }
 
-    public void downloadPhotoForDate(long today){
+    public void downloadPhotoForDate(long today, final UpdateDelegate delegate){
 
         Log.d(TAG, "Loading image from firebase");
         final Calendar monthCal = Calendar.getInstance();
@@ -693,10 +695,15 @@ public class UserData extends Activity{
             dayChange = String.valueOf(monthCal.get(Calendar.DATE));
         }
         //Checking firebase photo
+        Firebase ref;
+        if(today==0){
+            ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/profilepic/");
+        }else{
+            ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
+        }
 
-//        Log.d(TAG, "Loading image from firebase");
-        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+//        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.getValue() != null) {
@@ -786,9 +793,11 @@ public class UserData extends Activity{
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
-
                     }
+
+
+                    // Always a photo! Always update!
+                    delegate.notifyUpdate();
                 }
             }
 
@@ -855,98 +864,154 @@ public class UserData extends Activity{
         });
     }
 
+    /** Dispatch updates to UI thread
+     *
+     */
+    public static abstract class UpdateDelegate implements Runnable {
 
-    public void insertStepsFromDB(DataSnapshot snapshot, Context c, String curMonth, String curYear, Home home){
-        homeView = home;
-        Iterable<DataSnapshot> children = snapshot.getChildren();
-        DatabaseHelper mDbHelper = new DatabaseHelper(c);
-        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        private boolean active = true;
+        public final Handler UIHandler;
+        public UpdateDelegate( Context context ) {
+            UIHandler = new Handler( context.getMainLooper() );
+        }
 
-        for (DataSnapshot child : children) {
-            String date = child.getKey();
-            Iterable<DataSnapshot> syncEvents = child.getChildren();
-            for (DataSnapshot syncsForToday : syncEvents) {
-                String syncName = syncsForToday.getKey();
-                Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                for (DataSnapshot stepChunk : stepEvents) {
-                    String stepTime = stepChunk.getKey();
-                    Iterable<DataSnapshot> step = syncsForToday.getChildren();
-                    Object stepEvent = stepChunk.getValue();
-                    Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-                    monthMap = (Map<String, String>) stepChunk.getValue();
-                    Log.d(TAG, "Monthmap test" + monthMap);
-                    Calendar thisCal = Calendar.getInstance();
-                    thisCal.setTimeZone(TimeZone.getTimeZone("UTC"));
+        public synchronized void disable() {
+            active = false;
+        }
+
+        public final synchronized void run() {
+            if( active ) {
+                this.onUpdate();
+            }
+        }
+
+        /** Implement to receive updates
+         *
+         */
+        abstract public void onUpdate();
+
+        /** signal update to listener on UI thread
+         *
+         */
+        public final void notifyUpdate() {
+            UIHandler.post( this );
+        }
+    }
+
+
+    public void insertStepsFromDB(Firebase ref, Context c, final String curMonth, final String curYear, final UpdateDelegate delegate){
+        ref.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                Log.d(TAG, "" + snapshot.getValue());
+//                        loginProgress.setVisibility(View.INVISIBLE);
+
+//                UserData.getUserData(c).insertStepsFromDB(snapshot, c, monthChangefinal, calendar.get(Calendar.YEAR)+"", instance);
+
+                Iterable<DataSnapshot> children = snapshot.getChildren();
+                DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
+                SQLiteDatabase db = mDbHelper.getWritableDatabase();
+
+                for (DataSnapshot child : children) {
+                    String date = child.getKey();
+                    Iterable<DataSnapshot> syncEvents = child.getChildren();
+                    for (DataSnapshot syncsForToday : syncEvents) {
+                        String syncName = syncsForToday.getKey();
+                        Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
+                        for (DataSnapshot stepChunk : stepEvents) {
+                            String stepTime = stepChunk.getKey();
+                            Iterable<DataSnapshot> step = syncsForToday.getChildren();
+                            Object stepEvent = stepChunk.getValue();
+                            Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
+                            monthMap = (Map<String, String>) stepChunk.getValue();
+                            Log.d(TAG, "Monthmap test" + monthMap);
+                            Calendar thisCal = Calendar.getInstance();
+                            thisCal.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 //                    Date curDate = monthMap.get("starttime").toString();
-                    String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
-                    String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
+                            String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
+                            String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
 
 
-                    try {
-                       SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-                        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-                        Date curDateStart = sdf.parse(dateConcatStart);
+                            try {
+                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+                                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                                Date curDateStart = sdf.parse(dateConcatStart);
 
-                        Date curDateStop = sdf.parse(dateConcatStop);
+                                Date curDateStop = sdf.parse(dateConcatStop);
 //                        Log.d("TAG", "date is "+curDate);
-                        thisCal.setTime(curDateStart);
+                                thisCal.setTime(curDateStart);
 
-                        ContentValues values = new ContentValues();
-                        values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-                        values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                        values.put(Database.StepEntry.START, thisCal.getTimeInMillis());
-                        Log.d(TAG, "Inserting step count "+monthMap.get("count") + " into DB from firebase. Time zone set is "+thisCal.getTimeZone() + " And start is "+thisCal.getTime());
-                        thisCal.setTime(curDateStop);
-                        values.put(Database.StepEntry.END, thisCal.getTimeInMillis());
-                        values.put(Database.StepEntry.USER,  UserData.getUserData(c).getCurUID());
-                        values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-                        values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-                        values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                        //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-                        //TODO: add workout type
+                                ContentValues values = new ContentValues();
+                                values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+                                values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
+                                values.put(Database.StepEntry.START, thisCal.getTimeInMillis());
+                                Log.d(TAG, "Inserting step count "+monthMap.get("count") + " into DB from firebase. Time zone set is "+thisCal.getTimeZone() + " And start is "+thisCal.getTime());
+                                thisCal.setTime(curDateStop);
+                                values.put(Database.StepEntry.END, thisCal.getTimeInMillis());
+                                values.put(Database.StepEntry.USER,  UserData.getUserData(appContext).getCurUID());
+                                values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
+                                values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
+                                values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
+                                //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
+                                //TODO: add workout type
 
-                        long newRowId;
+                                long newRowId;
 
-                        newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
-                                null,
-                                values);
-                        Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+                                newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
+                                        null,
+                                        values);
+                                Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
 
 
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ;
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                ;
+                            }
+
+                        }
+
                     }
 
                 }
 
+                delegate.notifyUpdate();
+                db.close();
+                Log.d(TAG, "Refreshing home UI");
+
+                Log.d(TAG, "Inserting steps into database");
+
+
             }
 
-        }
-        refreshHome(homeView);
-        db.close();
-        Log.d(TAG, "Refreshing home UI");
 
-
-
-
-
-    }
-    public void refreshHome( Home home){
-        homeView = home;
-        homeView.runOnUiThread(new Runnable() {
             @Override
-            public void run() {
-                //bah.
-//                homeView.refreshCharts();
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.d(TAG, "The read failed: " + firebaseError.getMessage());
             }
         });
+//        homeView = home;
+
+
+
+
+
+
     }
+//    public void refreshHome( Home home){
+//        homeView = home;
+//        homeView.runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//                //bah.
+////                homeView.refreshCharts();
+//            }
+//        });
+//    }
 
 
 
-    public void shouldDownloadNewPhoto(long today,String md5In){
+    public void shouldDownloadNewPhoto(long today,String md5In, final UpdateDelegate delegate){
         final String md5 = md5In;
         final long todayFinal = today;
         final Calendar monthCal = Calendar.getInstance();
@@ -965,10 +1030,15 @@ public class UserData extends Activity{
         }
         //Checking firebase photo
 //        final String byteString = Base64.encodeToString(photo,Base64.NO_WRAP);
-
+        Firebase ref;
+        if(today==0){
+            ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/profilepic/1");
+        }else{
+            ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
+        }
         Log.d(TAG, "Checking md5 from firebase firebase");
-        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
-        ref.addListenerForSingleValueEvent(new ValueEventListener() {
+//        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
+        ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if(snapshot.getValue()!=null) {
@@ -978,7 +1048,7 @@ public class UserData extends Activity{
                         //md5s match, don't download
                     } else {
                         //download new image
-                        downloadPhotoForDate(todayFinal);
+                        downloadPhotoForDate(todayFinal, delegate);
                     }
                 }
             }
@@ -989,29 +1059,27 @@ public class UserData extends Activity{
         });
     }
 
-    public byte[] loadPhotoFromGuid(String guid){
-        final File dir = new File(appContext.getFilesDir() +"/");
-        File imageFile = new File(dir, guid);
-        int size = (int) imageFile.length();
-        byte[] bytes = new byte[size];
-        try {
-            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
-            buf.read(bytes, 0, bytes.length);
-            buf.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-        return bytes;
-    }
+//    public byte[] loadPhotoFromGuid(String guid){
+//        final File dir = new File(appContext.getFilesDir() +"/");
+//        File imageFile = new File(dir, guid);
+//        int size = (int) imageFile.length();
+//        byte[] bytes = new byte[size];
+//        try {
+//            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
+//            buf.read(bytes, 0, bytes.length);
+//            buf.close();
+//        } catch (FileNotFoundException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        } catch (IOException e) {
+//            // TODO Auto-generated catch block
+//            e.printStackTrace();
+//        }
+//        return bytes;
+//    }
 
-    public byte[] retrievePhoto(long date){
+    public byte[] retrievePhoto(final SQLiteDatabase db, long date, final UpdateDelegate delegate ){
         boolean localFile = false;
-        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-        SQLiteDatabase db = mDbHelper.getReadableDatabase();
         Date currentDay = new Date(date);
         byte[] returnByte=null;
         currentDay = DataUtilities.trim(currentDay);
@@ -1069,6 +1137,8 @@ public class UserData extends Activity{
                         e.printStackTrace();
                     }
                     returnByte = bytes;
+
+                    shouldDownloadNewPhoto(date, md5, delegate);
                 } else {
 //                    UserData.getUserData(appContext).downloadPhotoForDate(date);
                     return null;
@@ -1076,12 +1146,12 @@ public class UserData extends Activity{
 
 //
             }else {
-                shouldDownloadNewPhoto(date, "");
+                shouldDownloadNewPhoto(date, "", delegate );
                 return null;
 
             }
         }catch(Exception e){
-            shouldDownloadNewPhoto(date, "");
+            shouldDownloadNewPhoto(date, "", delegate);
             e.printStackTrace();
         }finally {
             curPhoto.close();
@@ -1091,92 +1161,6 @@ public class UserData extends Activity{
         return returnByte;
     }
 
-//    public void checkImageRotation(long date){
-//        DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
-//        SQLiteDatabase db = mDbHelper.getReadableDatabase();
-//        Date currentDay = new Date(date);
-//        currentDay = DataUtilities.trim(currentDay);
-//        String user =  UserData.getUserData(appContext).getCurUID();
-//        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
-//        Cursor curPhoto = db.query(
-//                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-//                new String[]{
-//                        Database.StepEntry.USER, //string
-//                        Database.PhotoStore.DATE, //int
-////                        Database.PhotoStore.PHOTOBLOB, //blob
-//                        Database.PhotoStore.MD5, //string
-//                        Database.PhotoStore.GUID},
-//                // The columns to return
-//                photo,                                // The columns for the WHERE clause
-//                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
-//                null,                                     // don't group the rows
-//                null,                                     // don't filter by row groups
-//                null                                 // The sort order
-//        );
-//        try{
-//            curPhoto.moveToFirst();
-//            if (curPhoto.getCount() != 0) {
-//
-//                String md5 = curPhoto.getString(2);
-//                String guid = curPhoto.getString(3);
-//
-//                Log.d(TAG, "Found photo for today "+md5);
-//                if (md5 != null) {
-//                    //pull photo from file via guid.
-//                    final File dir = new File(appContext.getFilesDir() +"/");
-//                    File imageFile = new File(dir, guid);
-//
-//                    ExifInterface ei = new ExifInterface(imageFile.getPath());
-//                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
-//
-//
-//                    int size = (int) imageFile.length();
-//                    byte[] bytes = new byte[size];
-//                    try {
-//                         BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
-//                        buf.read(bytes, 0, bytes.length);
-//                        buf.close();
-//                        Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-//                        ByteArrayOutputStream stream;
-//                        byte[] byteArray;
-//                        switch(orientation) {
-//                            case ExifInterface.ORIENTATION_ROTATE_90:
-//                                Log.d(TAG, "Image rotated 90");
-//                                bitmap = DataUtilities.RotateBitmap(bitmap, 90);
-//                                stream = new ByteArrayOutputStream();
-//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//                                byteArray = stream.toByteArray();
-//                                storePhoto(byteArray, date, md5);
-//                                break;
-//                            case ExifInterface.ORIENTATION_ROTATE_180:
-//                                Log.d(TAG, "Image rotated 180");
-//                                bitmap = DataUtilities.RotateBitmap(bitmap, 180);
-//                                stream = new ByteArrayOutputStream();
-//                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-//                                byteArray = stream.toByteArray();
-//                                storePhoto(byteArray, date, md5);
-//                                break;
-//                        }
-//
-//
-//
-//                    } catch (FileNotFoundException e) {
-//                        // TODO Auto-generated catch block
-//                        e.printStackTrace();
-//                    } catch (IOException e) {
-//                        // TODO Auto-generated catch block
-//                        e.printStackTrace();
-//                    }
-//                }
-//            }
-//        }catch(Exception e){
-//
-//            e.printStackTrace();
-//        }finally {
-//            curPhoto.close();
-//        }
-//
-//    }
 
 
     //overriden method
