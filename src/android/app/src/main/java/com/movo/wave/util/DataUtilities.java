@@ -43,7 +43,7 @@ public class DataUtilities {
 
     public static boolean uploadPhotoToFB(Firebase ref, String encodedImage){
 
-
+        ref.setValue(null);
 
         if(encodedImage.length()>1000000) {
             //multipart
@@ -58,7 +58,6 @@ public class DataUtilities {
 
             Log.d(TAG, "Starting image upload " + ref);
             ref.child(""+0).setValue(strings.size()+"");
-            ref.child(""+1).setValue(DataUtilities.getMD5EncryptedString(encodedImage));
             for(int i = 0;i<strings.size();i++){
                 ref.child(""+(i+2)).setValue(strings.get(i), new Firebase.CompletionListener() {
                     @Override
@@ -71,10 +70,13 @@ public class DataUtilities {
                 });
                 Log.d(TAG, "Image upload progress "+i+" "+ref.child(""+i));
             }
+
+            ref.child(""+1).setValue(DataUtilities.getMD5EncryptedString(encodedImage));
         }else{
             ref.child(""+0).setValue(1+"");
-            ref.child(""+1).setValue(DataUtilities.getMD5EncryptedString(encodedImage));
+
             ref.child(""+2).setValue(encodedImage);
+            ref.child(""+1).setValue(DataUtilities.getMD5EncryptedString(encodedImage));
         }
         return true;
     }

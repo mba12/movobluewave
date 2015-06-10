@@ -189,6 +189,8 @@ public class Home extends MenuActivity {
         DatabaseHelper mDbHelper = new DatabaseHelper(c);
         db = mDbHelper.getReadableDatabase();
 
+        UserData.addListener(delegate);
+
         mTitle = "Movo Wave";
         //Set up date works for calendar display
 
@@ -624,9 +626,9 @@ public class Home extends MenuActivity {
         double d = Math.pow(ten, exp);
         int divisor = Double.valueOf(d).intValue();
 
-        Log.d(TAG, "RoundUp Input: " +  value);
-        Log.d(TAG, "RoundUp digits: " +  digits);
-        Log.d(TAG, "RoundUp Divisor: " +  divisor);
+//        Log.d(TAG, "RoundUp Input: " +  value);
+//        Log.d(TAG, "RoundUp digits: " +  digits);
+//        Log.d(TAG, "RoundUp Divisor: " +  divisor);
         switch(digits) {
             case 1:
                 roundedTo = (float) (value + 1.0);
@@ -634,7 +636,7 @@ public class Home extends MenuActivity {
             default:
                 roundedTo = (value / divisor + 1) * divisor;
         }
-        Log.d(TAG, "RoundUp Value: " +  roundedTo);
+//        Log.d(TAG, "RoundUp Value: " +  roundedTo);
 
         return roundedTo;
     }

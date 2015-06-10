@@ -101,7 +101,7 @@ public class DailyActivity extends ActionBarActivity {
                 drawer_layout_daily.invalidate();
             }
         };
-
+        UserData.addListener(delegate);
 
 
 

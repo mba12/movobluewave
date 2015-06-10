@@ -3,23 +3,16 @@ package com.movo.wave;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
@@ -35,14 +28,15 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
@@ -83,6 +77,48 @@ public class UserData extends Activity{
         return instance;
     }
 
+    static private final Set<UpdateDelegate> listenerDelegates = new HashSet<>();
+    static private boolean notifyPending = false;
+    static private final Handler notifyHandler = new Handler();
+    static final long notifyDelay = 1000;
+
+    public static void addListener( UpdateDelegate delegate ) {
+        synchronized (listenerDelegates) {
+            listenerDelegates.add(delegate);
+        }
+    }
+
+    public static void removeListener( UpdateDelegate delegate ) {
+        synchronized (listenerDelegates) {
+            listenerDelegates.remove(delegate);
+        }
+    }
+
+    private static void notifyListeners() {
+        synchronized (listenerDelegates) {
+            final long now = new Date().getTime();
+
+            //Debounce notifications to once/notifyDelay time period.
+            if( ! notifyPending ) {
+
+                notifyHandler.postDelayed( new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (listenerDelegates) {
+
+                            for (final UpdateDelegate delegate : listenerDelegates) {
+                                delegate.notifyUpdate();
+                                //TODO find & remove stale delegates.
+                            }
+                            notifyPending = false;
+                        }
+                    }
+                }, notifyDelay );
+
+                notifyPending = true;
+            }
+        }
+    }
 
     private UserData(Context c) {
         appContext = c;
@@ -142,6 +178,7 @@ public class UserData extends Activity{
         prefs.edit().putBoolean("userExists", true).commit();
         prefs.edit().putString("currentUID", input).commit();
         currentUID = input;
+        notifyListeners();
         return currentUID;
     }
 
@@ -149,6 +186,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentToken", input).commit();
         currentToken = input;
+        notifyListeners();
         return currentToken;
     }
 
@@ -156,12 +194,14 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentBirthdate", input + "").commit();
         currentBirthdate = input+"";
+        notifyListeners();
         return currentToken;
     }
     public String setCurEmail(String input) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentEmail", input).commit();
         currentEmail = input;
+        notifyListeners();
         return currentEmail;
     }
 
@@ -169,6 +209,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentFullName", input).commit();
         currentFullName = input;
+        notifyListeners();
         return currentFullName;
 
     }
@@ -177,6 +218,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentHeight1", input).commit();
         currentHeight1 = input;
+        notifyListeners();
         return currentHeight1;
     }
 
@@ -184,6 +226,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentHeight2", input).commit();
         currentHeight2 = input;
+        notifyListeners();
         return currentHeight2;
     }
 
@@ -191,6 +234,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentWeight", input).commit();
         currentWeight = input;
+        notifyListeners();
         return currentWeight;
     }
 
@@ -198,12 +242,14 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentGender", input).commit();
         currentGender = input;
+        notifyListeners();
         return currentGender;
     }
     public String setCurUsername(String input) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentUsername", input).commit();
         currentUsername = input;
+        notifyListeners();
         return currentUsername;
     }
 
@@ -214,6 +260,7 @@ public class UserData extends Activity{
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(appContext);
         prefs.edit().putString("currentPW", input).commit();
         currentPW = input;
+        notifyListeners();
         return currentPW;
     }
 
@@ -250,6 +297,8 @@ public class UserData extends Activity{
                 updateHomePage();
                 status = true;
                 downloadMetadata(authData.getUid());
+
+                notifyListeners();
             }
 
             @Override
@@ -540,7 +589,10 @@ public class UserData extends Activity{
     }
 
     public void setCurrentUserRef(Firebase ref){
+
         currentUserRef = ref;
+
+        notifyListeners();
     }
 
     public void updateHomePage() {
@@ -827,6 +879,8 @@ public class UserData extends Activity{
                     setCurName(snapshot.child("currentFullName").getValue(String.class));
                     setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
                     setCurUsername(snapshot.child("currentUsername").getValue(String.class));
+
+                    notifyListeners();
                 }
             }
             @Override
@@ -855,6 +909,8 @@ public class UserData extends Activity{
                 setCurBirthdate(snapshot.child("currentBirthdate").getValue(String.class));
                 setCurUsername(snapshot.child("currentUsername").getValue(String.class));
                 addCurUserTolist();
+
+                notifyListeners();
             }
 
             @Override
@@ -1041,7 +1097,7 @@ public class UserData extends Activity{
         ref.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                if(snapshot.getValue()!=null) {
+                if (snapshot.getValue() != null) {
 //                    String md5 = DataUtilities.getMD5EncryptedString(byteString);
 
                     if (md5.equals(snapshot.getValue())) {
@@ -1052,6 +1108,7 @@ public class UserData extends Activity{
                     }
                 }
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
                 System.out.println("The read failed: " + firebaseError.getMessage());

@@ -96,6 +96,7 @@ public class MyProfile extends MenuActivity {
                 myProfileLayout.invalidate();
             }
         });
+        UserData.addListener(delegate);
         myProfileLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
         DatabaseHelper dbHelper = new DatabaseHelper(c);
         db = dbHelper.getWritableDatabase();
