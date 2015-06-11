@@ -360,7 +360,10 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
         var startTime = createDateFromString(String: isoStart)
         var stopTime = createDateFromString(String: isoStop)
         
-        var isDuplicate : Bool = duplicateDataCheck(serial, startTime, stopTime)
+        var isDuplicate : Bool = false
+        var entry : StepEntry?
+        
+        (isDuplicate, entry) = duplicateDataCheck(serial, startTime, stopTime)
         
         
         if(!isDuplicate){
@@ -376,9 +379,22 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
             newItem.ispushed = true
             newsteps = true
             
-        }else{
+        } else if let oldItem = entry {
+            //Firebase wants to replace our local DB object with new information
+            
             //NSLog("Duplicate entry found, not adding to coredata")
             //NSLog("Steps: %i Serial: %@ Start: %@ Stop: %@",countInt, serial,startTime,stopTime)
+            if (countInt > oldItem.count) {
+                oldItem.count = countInt
+                oldItem.user = uid
+                oldItem.syncid = syncId
+                oldItem.starttime = startTime
+                oldItem.endtime = stopTime
+                oldItem.serialnumber = serial
+                oldItem.ispushed = true
+                newsteps = true
+            }
+            
         }
         UserData.saveContext()
     }
@@ -426,7 +442,10 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
                         //this steps into the node title and gets the objects
                         //                            isoDate = isoDate + daySnap.key
                         if(daySnap.hasChildren()){
-                            newsteps = insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            var new = insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
+                            if (new) {
+                                newsteps = new
+                            }
                         }
                         
                     }
@@ -453,10 +472,13 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
     var count:Int = 0
     var uuid = NSUUID().UUIDString
     var syncUid = uuid
+    var entry : StepEntry?
+    var duplicate : Bool = false
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         for step in data {
             count += step.steps
-            if(!duplicateDataCheck(serial, step)){
+            (duplicate, entry) = duplicateDataCheck(serial, step)
+            if(!duplicate){
                 var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! StepEntry
                 newItem.count = Int16(step.steps)
                 newItem.user = uid
@@ -465,6 +487,16 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
                 newItem.endtime = step.end
                 newItem.serialnumber = String(serial)
                 newItem.ispushed = false
+            } else if let oldItem = entry {
+                
+                //we found an olditem with fewer steps
+                //update the steps for the old item and set it to push again
+                //otherwise, drop it
+                if (Int16(step.steps) > oldItem.count) {
+                    oldItem.count = Int16(step.steps)
+                    oldItem.ispushed = false
+                    
+                }
             }
             
             println("step: "+String(step.steps))
@@ -486,9 +518,10 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
 }
 
 
-func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -> Bool {
+func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -> (Bool, StepEntry?) {
     //should also check for current user
     var isDuplicate : Bool = false
+    var entry : StepEntry?
     if let currentUserId = UserData.getOrCreateUserData().getCurrentUID() {
         let predicate = NSPredicate(format:"%@ == starttime AND %@ == endtime AND %@ == serialnumber AND %@ == user", startTime, stopTime, serial, currentUserId)
     
@@ -498,14 +531,14 @@ func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -
             if(fetchResults.count > 0){
             
                 isDuplicate = true
-            
+                entry = fetchResults[0]
             }
         }
     }
-    return isDuplicate
+    return (isDuplicate, entry)
 }
 
-func duplicateDataCheck(serial:String, waveStep: WaveStep )->Bool{
+func duplicateDataCheck(serial:String, waveStep: WaveStep )-> (Bool, StepEntry?) {
     return duplicateDataCheck(serial , waveStep.start, waveStep.end)
 }
 
@@ -882,9 +915,9 @@ func getDisplayedViewController() -> UIViewController? {
 
 
 func login(email: String, password: String) {
-
-let ref = Firebase(url: UserData.getFirebase())
-//auth with email and pass that are in the input UI
+    
+    let ref = Firebase(url: UserData.getFirebase())
+    //auth with email and pass that are in the input UI
     ref.authUser(email, password: password,
         withCompletionBlock: { error, authData in
             
@@ -954,7 +987,7 @@ let ref = Firebase(url: UserData.getFirebase())
                 
                 UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
                 */
-
+                
                 UserData.getOrCreateUserData().downloadMetaData()
                 
                 
