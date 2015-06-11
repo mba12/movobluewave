@@ -497,11 +497,10 @@ class UserData {
         
         var firebaseImage:Firebase = Firebase(url:fbUploadRef)
         
-        
+        firebaseImage.setValue(nil)
         var size = (base64String as NSString).length
         var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
         firebaseImage.updateChildValues(["0":String(totalChunks)])
-        firebaseImage.updateChildValues(["1":md5Sum])
         
         
         var part = 2
@@ -515,6 +514,8 @@ class UserData {
             firebaseImage.updateChildValues([String(part):result])
             part += 1
         }
+        firebaseImage.updateChildValues(["1":md5Sum])
+
         println("Upload complete")
         
     }
