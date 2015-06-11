@@ -22,7 +22,8 @@ class UserData {
     private var currentUserEntry : UserEntry?
     
     
-    static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
+    // static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
+    static let currentFireBaseRef:String = "https://movowave.firebaseio.com/"
     static var delegate : UserMetaDataDelegate? = nil
     
     private init(){
