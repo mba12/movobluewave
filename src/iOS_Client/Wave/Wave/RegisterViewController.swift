@@ -128,7 +128,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     
                                     UserData.getOrCreateUserData().saveMetaDataToFirebase()
 
-                                    let url = NSURL(string: "https://devorders.getmovo.com/verify/user-signup?fullname=" + username + "&email=" + email)
+                                    let url = NSURL(string: "https://orders.getmovo.com/verify/user-signup?fullname=" + username + "&email=" + email)
                                     
                                     let task = NSURLSession.sharedSession().dataTaskWithURL(url!) {(data, response, error) in
                                         println(NSString(data: data, encoding: NSUTF8StringEncoding))
