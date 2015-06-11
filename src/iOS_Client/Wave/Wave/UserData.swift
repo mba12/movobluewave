@@ -12,6 +12,11 @@ import UIKit
 private var _UserData:UserData? = nil
 
 
+extension String {
+    func toDouble() -> Double? {
+        return NSNumberFormatter().numberFromString(self)?.doubleValue
+    }
+}
 
 protocol UserMetaDataDelegate {
     func refreshedMetadata()
@@ -22,7 +27,8 @@ class UserData {
     private var currentUserEntry : UserEntry?
     
     
-    static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
+    // static let currentFireBaseRef:String = "https://ss-movo-wave-v2.firebaseio.com/"
+    static let currentFireBaseRef:String = "https://movowave.firebaseio.com/"
     static var delegate : UserMetaDataDelegate? = nil
     
     private init(){
@@ -205,6 +211,15 @@ class UserData {
                 }
                 
             }
+            
+            if let birthdatems = snapshot.childSnapshotForPath("currentBirthdate").valueInExportFormat() as? String {
+                if (birthdatems != "Error") {
+                    if let birthdatemsD = birthdatems.toDouble()
+                    {
+                        self.setCurrentBirthdate(NSDate(timeIntervalSince1970: birthdatemsD/1000.0))
+                    }
+                }
+            }
           
             if let gender = (snapshot.childSnapshotForPath("currentGender").valueInExportFormat() as? String) {
                 self.setCurrentGender(gender)
@@ -257,6 +272,18 @@ class UserData {
             fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
         }
         
+        if let birthdate = getCurrentBirthdate() {
+            
+            //
+                var date : Double = birthdate.timeIntervalSince1970 as Double
+                date = date * 1000.0
+                let formatter = NSNumberFormatter()
+                formatter.maximumFractionDigits = 0
+                var bdString = formatter.stringFromNumber(date)
+                fbMetaRef.childByAppendingPath("currentBirthdate").setValue(bdString)
+        } else {
+            fbMetaRef.childByAppendingPath("currentBirthdate").setValue("Error")
+        }
         
         fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
         
@@ -497,11 +524,10 @@ class UserData {
         
         var firebaseImage:Firebase = Firebase(url:fbUploadRef)
         
-        
+        firebaseImage.setValue(nil)
         var size = (base64String as NSString).length
         var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
         firebaseImage.updateChildValues(["0":String(totalChunks)])
-        firebaseImage.updateChildValues(["1":md5Sum])
         
         
         var part = 2
@@ -515,6 +541,8 @@ class UserData {
             firebaseImage.updateChildValues([String(part):result])
             part += 1
         }
+        firebaseImage.updateChildValues(["1":md5Sum])
+
         println("Upload complete")
         
     }
