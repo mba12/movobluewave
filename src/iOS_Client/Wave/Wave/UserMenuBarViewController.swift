@@ -101,6 +101,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                     self.profilePictureButton.setImage(image, forState: UIControlState.Normal)
                     self.profilePictureButton.layer.cornerRadius = self.profilePictureButton.frame.size.width / 2;
                     self.profilePictureButton.clipsToBounds = true;
+                    self.profilePictureButton.imageView?.contentMode = UIViewContentMode.ScaleAspectFill
                 })
                 
             } else {

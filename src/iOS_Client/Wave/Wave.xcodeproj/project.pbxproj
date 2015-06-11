@@ -20,6 +20,7 @@
 		028CF2951B26147800D66EA8 /* Gotham-Book.otf in Resources */ = {isa = PBXBuildFile; fileRef = 028CF2941B26147800D66EA8 /* Gotham-Book.otf */; };
 		02A081941B0B8AB1000CD6E3 /* waveControlAndSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */; };
 		02CEFDF81B14E8F4001FE19F /* KeyboardSlideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */; };
+		02DF9A751B29C3BE00C951D7 /* rtlFlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02DF9A741B29C3BE00C951D7 /* rtlFlowLayout.swift */; };
 		4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */; };
 		4A2701961AFD401600848DCB /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701951AFD401600848DCB /* MenuViewController.swift */; };
 		4A2701981B00DE3800848DCB /* MyProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2701971B00DE3800848DCB /* MyProfileViewController.swift */; };
@@ -107,6 +108,7 @@
 		028CF2941B26147800D66EA8 /* Gotham-Book.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Gotham-Book.otf"; sourceTree = "<group>"; };
 		02A081931B0B8AB1000CD6E3 /* waveControlAndSync.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = waveControlAndSync.swift; path = ../../../iOS/waveControlAndSync/waveControlAndSync.swift; sourceTree = "<group>"; };
 		02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyboardSlideViewController.swift; sourceTree = "<group>"; };
+		02DF9A741B29C3BE00C951D7 /* rtlFlowLayout.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = rtlFlowLayout.swift; sourceTree = "<group>"; };
 		4A103A3E1AD4143200DC952D /* MainStoryboardViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainStoryboardViewController.swift; sourceTree = "<group>"; };
 		4A2701951AFD401600848DCB /* MenuViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		4A2701971B00DE3800848DCB /* MyProfileViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyProfileViewController.swift; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 				02CEFDF71B14E8F4001FE19F /* KeyboardSlideViewController.swift */,
 				0266F97A1B272625007956CB /* ImageSourceSelection.swift */,
 				0266F97C1B273955007956CB /* PasswordResetAlert.swift */,
+				02DF9A741B29C3BE00C951D7 /* rtlFlowLayout.swift */,
 			);
 			path = Wave;
 			sourceTree = "<group>";
@@ -396,6 +399,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				02DF9A751B29C3BE00C951D7 /* rtlFlowLayout.swift in Sources */,
 				4A2701D41B063CFB00848DCB /* PhotoStorage.swift in Sources */,
 				4A2701A01B00E51D00848DCB /* LoginViewController.swift in Sources */,
 				4A103A3F1AD4143200DC952D /* MainStoryboardViewController.swift in Sources */,
