@@ -709,7 +709,7 @@ public class UserData extends Activity{
         Log.d(TAG, "Loading image from firebase");
 //        fsaf
         Firebase ref = new Firebase(UserData.firebase_url + "users/" + currentUID + "/photos/profilepic");
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 //                    System.out.println(snapshot.getValue());
@@ -813,7 +813,7 @@ public class UserData extends Activity{
         }
 
 //        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange);
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.getValue() != null) {
@@ -1056,7 +1056,7 @@ public class UserData extends Activity{
 
 
     public void insertStepsFromDB(Firebase ref, Context c, final String curMonth, final String curYear, final UpdateDelegate delegate){
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 Log.d(TAG, "" + snapshot.getValue());
@@ -1194,7 +1194,7 @@ public class UserData extends Activity{
         }
         Log.d(TAG, "Checking md5 from firebase firebase");
 //        Firebase ref = new Firebase(UserData.firebase_url + "users/" + getCurUID() + "/photos/" + monthCal.get(Calendar.YEAR) + "/" + monthChange + "/" + dayChange + "/1");
-        ref.addValueEventListener(new ValueEventListener() {
+        ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
                 if (snapshot.getValue() != null) {
