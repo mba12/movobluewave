@@ -14,6 +14,7 @@ class LoginViewController: KeyboardSlideViewController {
     
     @IBOutlet weak var passText: UITextField!
     
+    var modalPopover : Bool = false
     
     @IBAction func login(sender: UIButton){
         
@@ -37,12 +38,13 @@ class LoginViewController: KeyboardSlideViewController {
                     
                     if error != nil {
                         // There was an error logging in to this account
-                        NSLog("Login failed")
-                        let alertController = UIAlertController(title: "Error", message:
-                            "Login failed, Please Try Again", preferredStyle: UIAlertControllerStyle.Alert)
-                        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
-                        
-                        self.presentViewController(alertController, animated: true, completion: nil)
+                        if (self.modalPopover) {
+                            self.modalPopover = false
+                            self.dismissViewControllerAnimated(true, completion: {self.presentError()})
+                        } else {
+                            self.presentError()
+                        }
+
                         
                     } else {
                         var providerData:NSDictionary = authData.providerData
@@ -115,7 +117,11 @@ class LoginViewController: KeyboardSlideViewController {
                     }
             })
             
-            
+
+            //present login message
+            let loginpop = UIAlertController(title: "Connecting", message: "Please wait...", preferredStyle: UIAlertControllerStyle.Alert)
+            modalPopover = true
+            self.presentViewController(loginpop, animated: true, completion: nil)
             
         }
         
@@ -130,6 +136,15 @@ class LoginViewController: KeyboardSlideViewController {
     @IBAction func forgotPasswordButtonPress(sender: AnyObject) {
         PasswordResetAlert.resetPasswordDialog(self)
         
+    }
+    
+    func presentError() {
+        NSLog("Login failed")
+        let alertController = UIAlertController(title: "Error", message:
+            "Login failed, Please Try Again", preferredStyle: UIAlertControllerStyle.Alert)
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
     }
     
 }

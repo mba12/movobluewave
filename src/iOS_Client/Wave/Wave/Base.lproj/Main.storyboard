@@ -619,7 +619,6 @@
                                 </state>
                                 <connections>
                                     <action selector="forgotPasswordButtonPress:" destination="Psc-5G-02Q" eventType="touchUpInside" id="TIG-TJ-YC6"/>
-                                    <action selector="login:" destination="Psc-5G-02Q" eventType="touchUpInside" id="j3n-x4-5NG"/>
                                 </connections>
                             </button>
                         </subviews>
