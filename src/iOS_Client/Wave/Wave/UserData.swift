@@ -12,6 +12,11 @@ import UIKit
 private var _UserData:UserData? = nil
 
 
+extension String {
+    func toDouble() -> Double? {
+        return NSNumberFormatter().numberFromString(self)?.doubleValue
+    }
+}
 
 protocol UserMetaDataDelegate {
     func refreshedMetadata()
@@ -206,6 +211,15 @@ class UserData {
                 }
                 
             }
+            
+            if let birthdatems = snapshot.childSnapshotForPath("currentBirthdate").valueInExportFormat() as? String {
+                if (birthdatems != "Error") {
+                    if let birthdatemsD = birthdatems.toDouble()
+                    {
+                        self.setCurrentBirthdate(NSDate(timeIntervalSince1970: birthdatemsD/1000.0))
+                    }
+                }
+            }
           
             if let gender = (snapshot.childSnapshotForPath("currentGender").valueInExportFormat() as? String) {
                 self.setCurrentGender(gender)
@@ -258,6 +272,18 @@ class UserData {
             fbMetaRef.childByAppendingPath("currentHeight2").setValue("Error")
         }
         
+        if let birthdate = getCurrentBirthdate() {
+            
+            //
+                var date : Double = birthdate.timeIntervalSince1970 as Double
+                date = date * 1000.0
+                let formatter = NSNumberFormatter()
+                formatter.maximumFractionDigits = 0
+                var bdString = formatter.stringFromNumber(date)
+                fbMetaRef.childByAppendingPath("currentBirthdate").setValue(bdString)
+        } else {
+            fbMetaRef.childByAppendingPath("currentBirthdate").setValue("Error")
+        }
         
         fbMetaRef.childByAppendingPath("currentUsername").setValue(getCurrentUserName())
         

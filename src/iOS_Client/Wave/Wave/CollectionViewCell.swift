@@ -49,7 +49,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
         
         contentView.addSubview(imageView)
     
-        let textFrame = CGRect(x: 0, y: 47.5-10, width: frame.size.width, height: 24)
+        let textFrame = CGRect(x: 0, y: (frame.size.width/2)-10, width: frame.size.width, height: 24)
         textLabel = UILabel(frame: textFrame)
         textLabel.font = UIFont(name: "Gotham", size: 18) //.systemFontOfSize(18)
         textLabel.textColor = UIColor.blackColor()
@@ -57,7 +57,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
         contentView.addSubview(textLabel)
         
         
-        let textFrame2 = CGRect(x: 0, y: (95-24-1), width: frame.size.width, height: 24)
+        let textFrame2 = CGRect(x: 0, y: (frame.size.width-24-1), width: frame.size.width, height: 24)
         textLabel2 = UILabel(frame: textFrame2)
         textLabel2.font = UIFont(name: "Gotham", size: 14) //.systemFontOfSize(18)
         textLabel2.textColor = UIColor.whiteColor()

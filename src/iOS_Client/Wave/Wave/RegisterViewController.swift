@@ -120,7 +120,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     stringRef = stringRef + authData.uid
                                     
                                     
-                                    var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: username, ref: stringRef)
+                                    var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: birthday, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: username, ref: stringRef)
                                     
                                     UserData.saveContext()
                                     

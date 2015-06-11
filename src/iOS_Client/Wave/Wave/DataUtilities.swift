@@ -149,6 +149,15 @@ func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double
     
     //validate derivative values
     var valid : Bool = true
+    let bypassAdvancedCalculator = true
+    if (bypassAdvancedCalculator) {
+        //WARN: valid set to false under all instances
+        //because at launch the more complicated
+        //calorie calculator results in questionable
+        //values
+        valid = false
+        
+    }
     
     //check weight
     if let w = weight {
@@ -183,8 +192,7 @@ func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double
     }
     
     if (valid) {
-        ret = Calculator.simple_calculate_calories(int: steps)
-        // ret = Calculator.calculate_calories(steps, height: Int(height*12.0), weight: weight!, gender: gender!, birthYear: birthYear, minutes: minutes)
+        ret = Calculator.calculate_calories(steps, height: Int(height*12.0), weight: weight!, gender: gender!, birthYear: birthYear, minutes: minutes)
     } else {
         ret = Calculator.simple_calculate_calories(int: steps)
     }
