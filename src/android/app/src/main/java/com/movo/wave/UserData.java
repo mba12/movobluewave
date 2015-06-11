@@ -68,7 +68,8 @@ public class UserData extends Activity{
     private Firebase loginRef;
     private Firebase currentUserRef;
     private Home homeView;
-    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
+//    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
+    final static String firebase_url = "https://movowave.firebaseio.com/";
 
 
 
@@ -135,7 +136,7 @@ public class UserData extends Activity{
 
                             for( final UpdateDelegate delegate : invalidDelegates) {
                                 listenerDelegates.remove( delegate );
-                                Log.d( TAG, "Removing invalidated delegate " + delegate );
+                                Log.d(TAG, "Removing invalidated delegate " + delegate );
                             }
 
                             Log.d( TAG, "Notified " + notifyCount + " UpdateDelegates listeners");
