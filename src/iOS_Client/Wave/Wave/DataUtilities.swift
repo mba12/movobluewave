@@ -183,7 +183,8 @@ func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double
     }
     
     if (valid) {
-        ret = Calculator.calculate_calories(steps, height: Int(height*12.0), weight: weight!, gender: gender!, birthYear: birthYear, minutes: minutes)
+        ret = Calculator.simple_calculate_calories(int: steps)
+        // ret = Calculator.calculate_calories(steps, height: Int(height*12.0), weight: weight!, gender: gender!, birthYear: birthYear, minutes: minutes)
     } else {
         ret = Calculator.simple_calculate_calories(int: steps)
     }
