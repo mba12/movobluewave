@@ -59,8 +59,6 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
         todayYear = cal.component(.CalendarUnitYear , fromDate: date)
         
-        resetDate(0)
-        
     }
     
     override func didReceiveMemoryWarning() {
@@ -86,7 +84,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             NSLog("MyLife we shouldn't enter this block, coredata should never be null")
         }
         
-        
+        resetDate(0)
     }
     
     func loadDataForYM(year: Int, month: Int) {
