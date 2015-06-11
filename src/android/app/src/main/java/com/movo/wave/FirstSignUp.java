@@ -203,7 +203,7 @@ public class FirstSignUp extends Activity {
 
                                                         try {
                                                             HttpClient httpclient = new DefaultHttpClient();
-                                                            String http = "https://devorders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail;
+                                                            String http = "https://orders.getmovo.com/verify/user-signup?fullname="+mUsername+"&email="+mEmail;
                                                             HttpGet request = new HttpGet();
                                                             URI website = new URI(http);
                                                             request.setURI(website);
