@@ -639,6 +639,10 @@ public class BLEAgent {
                         context = null;
                         UIHandler = null;
                         self.adapter = null;
+                        for( BLERequest request = agent.requestQueue.poll(); request != null; request = agent.requestQueue.poll() ) {
+                            lazyLog.e("Dropping request ", request);
+                            request.onFailure();
+                        }
                         for( BLEDevice dev : deviceMap.values()) {
                             lazyLog.e("BLEDevice Still in use! ", dev);
                         }
