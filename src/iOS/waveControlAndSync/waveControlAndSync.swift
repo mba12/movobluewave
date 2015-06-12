@@ -832,9 +832,14 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                         //it is unclear how the firmware operates: we know 0xFF in MSB
                         //indicates no data for that byte, but we don't know if 0xFF in 
                         //LSB also indicates no data
-                        var low = (chartData[i] != 0xFF) ? Int(chartData[i]):0
+                        //var low = (chartData[i] != 0xFF) ? Int(chartData[i]):0
+                        var low = Int(chartData[i])
                         var high = (chartData[i+1] != 0xFF) ? Int(chartData[i+1]):0
                         var count = low | (high<<8)
+                        //protect for "reserved data case"
+                        if (chartData[i+1] == 0xFF) {
+                            count = 0
+                        }
                         if (count > 0) {
                             chartArray.append(WaveStep(start: startTime, end: endTime, steps: count))
                         }
