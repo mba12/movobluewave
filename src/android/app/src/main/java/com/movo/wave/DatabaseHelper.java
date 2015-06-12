@@ -33,7 +33,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     Database.StepEntry.DEVICEID + TEXT_TYPE + COMMA_SEP +
                     Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.GUID + BLOB_TYPE +COMMA_SEP +
-                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT REPLACE" +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT IGNORE" +
                     " )";
     //Create table with unique key being the sync GUID
     private static final String SQL_CREATE_ENTRIES_SYNC =

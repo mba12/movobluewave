@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
@@ -1117,8 +1118,60 @@ public class UserData extends Activity{
                                 newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                                         null,
                                         values);
-                                Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+                                if( newRowId <= 0 ){
+                                    final String selectionSteps =  Database.StepEntry.START + "=? AND "+Database.StepEntry.DEVICEID +"=?";
+                                    Cursor localRow = db.query(
+                                            Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                                            new String[] {
+                                                    Database.StepEntry.GUID, //string
+                                                    Database.StepEntry.SYNC_ID, //blob
+                                                    Database.StepEntry.START, //int
+                                                    Database.StepEntry.END, //int
+                                                    Database.StepEntry.USER, //string
+                                                    Database.StepEntry.STEPS, //int
+                                                    Database.StepEntry.DEVICEID, //blob
+                                                    Database.StepEntry.GUID}, //blob                          // The columns to return
+                                            selectionSteps,                                // The columns for the WHERE clause
+                                            new String[] { values.getAsString(Database.StepEntry.START), values.getAsString(Database.StepEntry.DEVICEID) }, // The values for the WHERE clause
+                                            null,                                     // don't group the rows
+                                            null,                                     // don't filter by row groups
+                                            null                                 // The sort order
+                                    );
 
+                                    if( localRow.moveToNext() ) {
+                                        final ContentValues localValues = new ContentValues();
+                                        DatabaseUtils.cursorRowToContentValues( localRow, localValues);
+                                        if( "0".equals( localValues.getAsString(Database.StepEntry.IS_PUSHED) ) ){
+                                            //compare step counts
+                                            final int localSteps = localValues.getAsInteger(Database.StepEntry.STEPS);
+                                            final int remoteSteps = values.getAsInteger(Database.StepEntry.STEPS);
+                                            if( localSteps<= remoteSteps ) {
+                                                Log.i(TAG, "canceling upload of  " + localValues + " in favor of remote " + values);
+                                                newRowId = db.replace(Database.StepEntry.STEPS_TABLE_NAME,
+                                                        null,
+                                                        values );
+                                                if( newRowId < 0 ) {
+                                                    Log.e( TAG, "FAILED to replace local db entry!!!!!");
+                                                }
+                                            } else {
+                                                Log.d(TAG, "ignoring remote values " + values + " in favor of local " + localValues );
+                                            }
+                                        } else {
+                                            ///just overwrite since it claims to be in sync
+                                            Log.i(TAG, "replacing local values " + localValues + " in favor of remote " + values);
+                                            newRowId = db.replace(Database.StepEntry.STEPS_TABLE_NAME,
+                                                    null,
+                                                    values );
+                                            if( newRowId < 0 ) {
+                                                Log.e( TAG, "FAILED to replace local db entry!!!!!");
+                                            }
+                                        }
+                                    } else {
+                                        Log.e( TAG, "Conflict could not be resolved for " + values );
+                                    }
+                                } else {
+                                    Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+                                }
 
                             } catch (Exception e) {
                                 e.printStackTrace();
@@ -1154,6 +1207,29 @@ public class UserData extends Activity{
 
 
     }
+
+    public Cursor getStepsToUpload(SQLiteDatabase db, String userId) {
+        String selectionSteps = Database.StepEntry.USER + "=? AND " + Database.StepEntry.IS_PUSHED + "=0";
+        Cursor curSteps = db.query(
+                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
+                new String[]{Database.StepEntry.SYNC_ID, //blob 0
+                        Database.StepEntry.START, //int 1
+                        Database.StepEntry.END, //int 2
+                        Database.StepEntry.USER, //string 3
+                        Database.StepEntry.STEPS, //int 4
+                        Database.StepEntry.DEVICEID, //blob 5
+                        Database.StepEntry.GUID}, //blob 6                     // The columns to return
+                selectionSteps,                                // The columns for the WHERE clause
+                new String[]{userId},                            // The values for the WHERE clause
+                null,                                     // don't group the rows
+                null,                                     // don't filter by row groups
+                null                                 // The sort order
+        );
+        curSteps.moveToFirst();
+        return curSteps;
+    }
+
+
 //    public void refreshHome( Home home){
 //        homeView = home;
 //        homeView.runOnUiThread(new Runnable() {
