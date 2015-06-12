@@ -449,32 +449,10 @@ public class DailyActivity extends ActionBarActivity {
 
             String selectionSteps =  Database.StepEntry.START + " > ? AND "+Database.StepEntry.END + " < ?";
             ContentValues valuesReadSteps = new ContentValues();
-            Cursor curSteps = db.query(
-                    Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                    new String[] { Database.StepEntry.SYNC_ID, //blob
-                            Database.StepEntry.START, //int
-                            Database.StepEntry.END, //int
-                            Database.StepEntry.USER, //string
-                            Database.StepEntry.STEPS, //int
-                            Database.StepEntry.DEVICEID }, //blob                          // The columns to return
-                    selectionSteps,                                // The columns for the WHERE clause
-                    new String[] { monthRangeStart+"", monthRangeStop+"" },                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
+            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange(db,monthRangeStart, monthRangeStop );
 
-            curSteps.moveToFirst();
-            int stepsTaken=0;
-            if(curSteps.getCount()!=0) {
-
-
-                while (curSteps.isAfterLast() == false) {
-                    stepsTaken += curSteps.getInt(4);
-
-                    curSteps.moveToNext();
-//
-                }
+            if( curSteps != null && curSteps.moveToNext() ) {
+               int stepsTaken= curSteps.getInt(0);
 /*
                 // NOTE: saving for later. Michael
                 String height1 =  UserData.getUserData(c).getCurrentHeight1();

@@ -661,6 +661,7 @@ public class Home extends MenuActivity {
         final int windowMonth = window.get( Calendar.MONTH );
         final Calendar now = Calendar.getInstance();
         now.setTimeZone(TimeZone.getDefault());
+        lazyLog.d( "TimeZone: ", TimeZone.getDefault().getDisplayName() );
 
         while( window.get( Calendar.MONTH ) == windowMonth ) {
             final int windowDate = window.get(Calendar.DATE);
@@ -668,7 +669,7 @@ public class Home extends MenuActivity {
             window.add(Calendar.DATE, 1);
             final long maxTimestamp = window.getTimeInMillis();
 
-            Cursor curSteps = getStepsForDateRange(minTimestamp, maxTimestamp, UserData.getUserData(c).getCurUID());
+            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange(db, minTimestamp, maxTimestamp);
             Entry curEntry = null;
             if (curSteps != null && curSteps.moveToFirst()) {
 
@@ -914,7 +915,7 @@ public class Home extends MenuActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Cursor curSteps = getStepsForDateRange(monthRangeStart, monthRangeStop,  UserData.getUserData(c).getCurUID());
+            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange( db, monthRangeStart, monthRangeStop);
             curSteps.moveToFirst();
             if (curSteps != null && curSteps.moveToFirst()) {
                 int totalStepsForToday = curSteps.getInt(0);
@@ -999,23 +1000,6 @@ public class Home extends MenuActivity {
         chart.invalidate();
     }
 
-
-    public Cursor getStepsForDateRange(long monthRangeStart, long monthRangeStop, String userID) {
-
-        final String query = "SELECT SUM(" +Database.StepEntry.STEPS +
-                ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
-                Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
-                "<=? AND " + Database.StepEntry.USER + " =? ";
-
-        final String[] args = new String[]{
-                Long.toString(monthRangeStart),
-                Long.toString(monthRangeStop),
-                userID};
-
-        Cursor curSteps = db.rawQuery(query, args);
-
-        return curSteps;
-    }
 
     public Cursor getStepsForSync(String syncID) {
         String selectionSteps = Database.StepEntry.SYNC_ID + "=? AND " + Database.StepEntry.IS_PUSHED + "=?";

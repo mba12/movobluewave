@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import com.firebase.client.AuthData;
 import com.firebase.client.DataSnapshot;
@@ -20,6 +21,7 @@ import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
 import com.movo.wave.util.DataUtilities;
+import com.movo.wave.util.UTC;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
@@ -1056,7 +1058,29 @@ public class UserData extends Activity{
     }
 
 
+    public Cursor getStepsForDateRange(SQLiteDatabase db,long monthRangeStart, long monthRangeStop ) {
+        return getStepsForDateRange( db, monthRangeStart, monthRangeStop, getCurUID() );
+    }
+
+    static public Cursor getStepsForDateRange(SQLiteDatabase db,long monthRangeStart, long monthRangeStop, String userID) {
+
+        final String query = "SELECT SUM(" +Database.StepEntry.STEPS +
+                ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
+                Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
+                "<=? AND " + Database.StepEntry.USER + " =? ";
+
+        final String[] args = new String[]{
+                Long.toString(monthRangeStart),
+                Long.toString(monthRangeStop),
+                userID};
+
+        Cursor curSteps = db.rawQuery(query, args);
+
+        return curSteps;
+    }
+
     public void insertStepsFromDB(Firebase ref, Context c, final String curMonth, final String curYear, final UpdateDelegate delegate){
+        final String userID = getCurUID();
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
@@ -1069,57 +1093,61 @@ public class UserData extends Activity{
                 DatabaseHelper mDbHelper = new DatabaseHelper(appContext);
                 SQLiteDatabase db = mDbHelper.getWritableDatabase();
 
+                // D -> T -> SERIAL -> BLOB
+
                 for (DataSnapshot child : children) {
                     String date = child.getKey();
-                    Iterable<DataSnapshot> syncEvents = child.getChildren();
-                    for (DataSnapshot syncsForToday : syncEvents) {
-                        String syncName = syncsForToday.getKey();
-                        Iterable<DataSnapshot> stepEvents = syncsForToday.getChildren();
-                        for (DataSnapshot stepChunk : stepEvents) {
-                            String stepTime = stepChunk.getKey();
-                            Iterable<DataSnapshot> step = syncsForToday.getChildren();
-                            Object stepEvent = stepChunk.getValue();
-                            Map<String, String> monthMap = new HashMap<String, String>(); //day<minutes,steps>>
-                            monthMap = (Map<String, String>) stepChunk.getValue();
-                            Log.d(TAG, "Monthmap test" + monthMap);
+                    Iterable<DataSnapshot> startTimes = child.getChildren();
+                    for (DataSnapshot startTime : startTimes) {
+                        String time = startTime.getKey();
+                        Iterable<DataSnapshot> serials = startTime.getChildren();
+                        for (DataSnapshot serial : serials) {
+//                            String stepTime = serial.getKey();
+//                            Iterable<DataSnapshot> blob = serial.getChildren();
+//                            Object stepEvent = serial.getValue();
+                            Map<String, String> dataMap = new HashMap<String, String>(); //day<minutes,steps>>
+                            dataMap = (Map<String, String>) serial.getValue();
+                            Log.d(TAG, "Monthmap test" + dataMap);
                             Calendar thisCal = Calendar.getInstance();
                             thisCal.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 //                    Date curDate = monthMap.get("starttime").toString();
-                            String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("starttime").toString();
-                            String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + monthMap.get("endtime").toString();
+                            String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.START).toString();
+                            String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.END).toString();
 
 
                             try {
-                                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-                                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-                                Date curDateStart = sdf.parse(dateConcatStart);
+                                Date curDateStart = UTC.parse(dateConcatStart);
 
-                                Date curDateStop = sdf.parse(dateConcatStop);
+                                Date curDateStop = UTC.parse(dateConcatStop);
 //                        Log.d("TAG", "date is "+curDate);
                                 thisCal.setTime(curDateStart);
 
-                                ContentValues values = new ContentValues();
-                                values.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
-                                values.put(Database.StepEntry.STEPS, Integer.parseInt(monthMap.get("count").toString()));
-                                values.put(Database.StepEntry.START, thisCal.getTimeInMillis());
-                                Log.d(TAG, "Inserting step count "+monthMap.get("count") + " into DB from firebase. Time zone set is "+thisCal.getTimeZone() + " And start is "+thisCal.getTime());
+                                final ContentValues remoteValues = new ContentValues();
+                                remoteValues.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
+                                remoteValues.put(Database.StepEntry.STEPS, dataMap.get(Database.StepEntry.STEPS));
+                                remoteValues.put(Database.StepEntry.START, thisCal.getTimeInMillis());
                                 thisCal.setTime(curDateStop);
-                                values.put(Database.StepEntry.END, thisCal.getTimeInMillis());
-                                values.put(Database.StepEntry.USER,  UserData.getUserData(appContext).getCurUID());
-                                values.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
-                                values.put(Database.StepEntry.SYNC_ID, monthMap.get("syncid"));
-                                values.put(Database.StepEntry.DEVICEID, monthMap.get("deviceid"));
-                                //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
-                                //TODO: add workout type
-
+                                remoteValues.put(Database.StepEntry.END, thisCal.getTimeInMillis());
+                                remoteValues.put(Database.StepEntry.USER, userID);
+                                remoteValues.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
+                                remoteValues.put(Database.StepEntry.SYNC_ID, dataMap.get(Database.StepEntry.SYNC_ID) );
+                                remoteValues.put(Database.StepEntry.DEVICEID, dataMap.get(Database.StepEntry.DEVICEID));
                                 long newRowId;
 
                                 newRowId = db.insert(Database.StepEntry.STEPS_TABLE_NAME,
                                         null,
-                                        values);
+                                        remoteValues);
                                 if( newRowId <= 0 ){
-                                    final String selectionSteps =  Database.StepEntry.START + "=? AND "+Database.StepEntry.DEVICEID +"=?";
+                                    final String[] queryCriteria = new String[] {
+                                            remoteValues.getAsString(Database.StepEntry.START),
+                                            remoteValues.getAsString(Database.StepEntry.DEVICEID),
+                                            remoteValues.getAsString(Database.StepEntry.USER) };
+
+                                    final String selectionSteps =  Database.StepEntry.START + "=? AND "+
+                                            Database.StepEntry.DEVICEID +"=? AND " +
+                                            Database.StepEntry.USER + "=?";
+
                                     Cursor localRow = db.query(
                                             Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                                             new String[] {
@@ -1129,10 +1157,10 @@ public class UserData extends Activity{
                                                     Database.StepEntry.END, //int
                                                     Database.StepEntry.USER, //string
                                                     Database.StepEntry.STEPS, //int
-                                                    Database.StepEntry.DEVICEID, //blob
-                                                    Database.StepEntry.GUID}, //blob                          // The columns to return
-                                            selectionSteps,                                // The columns for the WHERE clause
-                                            new String[] { values.getAsString(Database.StepEntry.START), values.getAsString(Database.StepEntry.DEVICEID) }, // The values for the WHERE clause
+                                                    Database.StepEntry.DEVICEID,//string
+                                                    Database.StepEntry.IS_PUSHED}, //string},                          // The columns to return
+                                            selectionSteps, // The columns for the WHERE clause
+                                            queryCriteria, // The values for the WHERE clause
                                             null,                                     // don't group the rows
                                             null,                                     // don't filter by row groups
                                             null                                 // The sort order
@@ -1141,47 +1169,54 @@ public class UserData extends Activity{
                                     if( localRow.moveToNext() ) {
                                         final ContentValues localValues = new ContentValues();
                                         DatabaseUtils.cursorRowToContentValues( localRow, localValues);
-                                        if( "0".equals( localValues.getAsString(Database.StepEntry.IS_PUSHED) ) ){
-                                            //compare step counts
-                                            final int localSteps = localValues.getAsInteger(Database.StepEntry.STEPS);
-                                            final int remoteSteps = values.getAsInteger(Database.StepEntry.STEPS);
-                                            if( localSteps<= remoteSteps ) {
-                                                Log.i(TAG, "canceling upload of  " + localValues + " in favor of remote " + values);
-                                                newRowId = db.replace(Database.StepEntry.STEPS_TABLE_NAME,
-                                                        null,
-                                                        values );
-                                                if( newRowId < 0 ) {
-                                                    Log.e( TAG, "FAILED to replace local db entry!!!!!");
-                                                }
-                                            } else {
-                                                Log.d(TAG, "ignoring remote values " + values + " in favor of local " + localValues );
-                                            }
+
+                                        //compare step counts and merge intelligently
+                                        final boolean localPushed = ! "0".equals( localValues.getAsString(Database.StepEntry.IS_PUSHED) ) ;
+                                        final int localSteps = localValues.getAsInteger(Database.StepEntry.STEPS);
+                                        final int remoteSteps = remoteValues.getAsInteger(Database.StepEntry.STEPS);
+
+                                        //place new local values in this reference, if any
+                                        ContentValues replaceValues = null;
+
+                                        if( localSteps < remoteSteps ) {
+                                            Log.i(TAG, "replacing local values " + localValues + " in favor of remote " + remoteValues);
+                                            replaceValues = remoteValues;
+
+                                        } else if( localSteps == remoteSteps && ! localPushed ) {
+                                            Log.i(TAG, "Remote matches local, marking pushed: " + localValues);
+                                            localValues.put( Database.StepEntry.IS_PUSHED, "1");
+                                            replaceValues = localValues;
+
+                                        } else if( localSteps > remoteSteps && localPushed ) {
+                                            Log.w(TAG, "Looks like we're in a data race with another phone. (local) "
+                                                    + localSteps + " > (remote) " + remoteSteps + ". Re-flagging local entry for upload." );
+                                            localValues.put( Database.StepEntry.IS_PUSHED, "0");
+                                            replaceValues = localValues;
+
                                         } else {
-                                            ///just overwrite since it claims to be in sync
-                                            Log.i(TAG, "replacing local values " + localValues + " in favor of remote " + values);
+                                            Log.v(TAG, "Ignoring already synced values: " + remoteValues );
+                                        }
+
+                                        if( replaceValues != null ) {
                                             newRowId = db.replace(Database.StepEntry.STEPS_TABLE_NAME,
                                                     null,
-                                                    values );
+                                                    replaceValues );
                                             if( newRowId < 0 ) {
                                                 Log.e( TAG, "FAILED to replace local db entry!!!!!");
                                             }
                                         }
                                     } else {
-                                        Log.e( TAG, "Conflict could not be resolved for " + values );
+                                        Log.e(TAG, "Conflict could not be resolved for " + remoteValues);
                                     }
                                 } else {
-                                    Log.d(TAG, "Database insert result: " + newRowId + " for: " + values);
+                                    Log.d(TAG, "Database insert result: " + newRowId + " for: " + remoteValues);
                                 }
 
                             } catch (Exception e) {
                                 e.printStackTrace();
-                                ;
                             }
-
                         }
-
                     }
-
                 }
 
                 delegate.notifyUpdate();
@@ -1225,7 +1260,6 @@ public class UserData extends Activity{
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
         );
-        curSteps.moveToFirst();
         return curSteps;
     }
 
