@@ -76,7 +76,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                retrieveFBDataForYM(todayYear, todayMonth, self)
                 
             }
         } else {
@@ -380,7 +380,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                retrieveFBDataForYM(todayYear, todayMonth, self)
                 
             }
         } else {

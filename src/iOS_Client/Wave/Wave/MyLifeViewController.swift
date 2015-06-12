@@ -89,7 +89,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         NSLog("No user logged in")
                     } else {
                         NSLog("Grabbing user steps from firebase")
-                        retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                        retrieveFBDataForYM(todayYear, todayMonth, self)
                         
                     }
                 } else {
@@ -266,7 +266,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
+                retrieveFBDataForYM(todayYear, todayMonth, self)
                 
             }
         } else {
