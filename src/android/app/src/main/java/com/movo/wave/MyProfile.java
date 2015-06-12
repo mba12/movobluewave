@@ -114,7 +114,7 @@ public class MyProfile extends MenuActivity {
             if(!birth.equals("Error")&&(!birth.equals("null"))){
                 Calendar birthCal = Calendar.getInstance();
                 birthCal.setTimeInMillis(Long.parseLong(birth));
-                String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.MONTH)+1)+"-"+birthCal.get(Calendar.YEAR);
+                String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.DAY_OF_MONTH))+"-"+birthCal.get(Calendar.YEAR);
                 birthdateButton.setText(birthDisplay);
             }
         }catch(Exception e){
@@ -198,81 +198,6 @@ public class MyProfile extends MenuActivity {
             }
         });
     }
-    //    protected void onActivityResult(int requestCode, int resultCode,
-//                                    Intent imageReturnedIntent) {
-//        super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-//
-//        Log.d(TAG, "Recieved result intent from photo");
-//        switch(requestCode) {
-//            case SELECT_PHOTO:
-//                if(resultCode == RESULT_OK){
-//                    if( imageReturnedIntent == null ) {
-//                        Log.e( TAG, "NULL image intent result!");
-//                    }
-//                    Uri selectedImage = imageReturnedIntent.getData();
-//                    String[] filePathColumn = {MediaStore.Images.Media.DATA};
-//
-//                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//
-//                    Log.i( TAG, "Resolving URI: " + selectedImage);
-//
-//                    try {
-//                        final InputStream is = getContentResolver().openInputStream(selectedImage);
-//                        BitmapFactory.Options options = new BitmapFactory.Options();
-////                        options.inJustDecodeBounds = true;
-//                        int inSampleSize = 2;
-//                        options.inSampleSize = inSampleSize;
-////                        options.inSampleSize = 8;  //This will reduce the image size by a power of 8
-//                        BitmapFactory.decodeStream(is, null, options).compress(Bitmap.CompressFormat.JPEG, 50, baos);
-//                    }catch(Exception e){
-//                        e.printStackTrace();
-//                    }
-//                    byte[] b = baos.toByteArray();
-//                    String encodedImage = Base64.encodeToString(b, Base64.DEFAULT);
-//
-////                    UserData myData = UserData.getUserData(c);
-//                    String user =  UserData.getUserData(c).getCurUID();
-//
-//                    Firebase ref = new Firebase(UserData.firebase_url + "users/" + user + "/photos/profilepic");
-//
-//
-//
-//                    Calendar profile = Calendar.getInstance();
-//                    profile.setTimeInMillis(0); // user photos will be stored at the dawn of time.
-////                    Date curDay = trim(new Date(profile.getTimeInMillis()));
-//                    //db insert
-//                    //database insert
-//                    String md5 = DataUtilities.getMD5EncryptedString(encodedImage);
-//                    UserData.getUserData(c).storePhoto(baos, profile.getTimeInMillis(), md5);
-//
-//                    //end database insert
-//
-//                    //photo upload
-//                    DataUtilities.uploadPhotoToFB(ref, encodedImage);
-//
-//                    Log.d(TAG, "End image upload "+ref);
-//                    byte[] prof = UserData.getUserData(c).getCurUserPhoto();
-////                     myUserData.getCurUserPhoto(c);
-//                    if(prof != null && prof.length!=0){
-////                        profilePic.setImageBitmap(prof);
-//                        Glide.with(c)
-//                                .load(prof)
-////                            .override(1080,1920)
-//                                .thumbnail(0.1f)
-//                                .centerCrop()
-//                                .into(profilePic);
-//                    }
-////                    ref.setValue(encodedImage);
-//                }else {
-//                    final String error = "No photo selected";
-//                    Log.e( TAG, error );
-//                    Toast.makeText(c, error, Toast.LENGTH_SHORT).show();
-//                }
-//                break;
-//            default:
-//                Log.e(TAG, "Error, unexpected intent result for " + requestCode);
-//        }
-//    }
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
@@ -471,6 +396,17 @@ public class MyProfile extends MenuActivity {
                     .centerCrop()
                     .into(profilePic);
 //            profilePic.setImageBitmap(prof);
+        }
+        try{
+            if(!birth.equals("Error")&&(!birth.equals("null"))){
+                Calendar birthCal = Calendar.getInstance();
+                birthCal.setTimeInMillis(Long.parseLong(birth));
+                String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.DAY_OF_MONTH))+"-"+birthCal.get(Calendar.YEAR);
+                birthdateButton.setText(birthDisplay);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+
         }
 
         //---------------Set up Arraylists------------//

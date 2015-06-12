@@ -24,6 +24,7 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -366,17 +367,21 @@ public class BLEAgent {
             if( stale ) {
                 lazyLog.w( "Attempt to release stale device ", this);
             } else if( --refCount == 0 ) {
-                close();
-                stale = true;
-                synchronized (deviceMap) {
-                    deviceMap.remove(device.getAddress());
-                    if (self.currentDevice == this) {
-                        self.currentDevice = null;
-                    }
-                }
+                remove();
             }
 
             return ret;
+        }
+
+        private void remove() {
+            close();
+            stale = true;
+            synchronized (deviceMap) {
+                deviceMap.remove(device.getAddress());
+                if (self.currentDevice == this) {
+                    self.currentDevice = null;
+                }
+            }
         }
 
         /** synchronized getter for stale state. stale-> not accepted for BLERequests.
@@ -399,7 +404,11 @@ public class BLEAgent {
             this.device = device;
             // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
             this.gatt = device.connectGatt( context, true, self.gattCallback );
-            lazyLog.a( this.gatt != null, "BLEDevice failed at connectGatt()!");
+            if( this.gatt == null ) {
+                lazyLog.e( "BLEDevice failed at connectGatt()!");
+                //AH 20150612: this may not work as expected
+                remove();
+            }
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
         }
@@ -630,6 +639,10 @@ public class BLEAgent {
                         context = null;
                         UIHandler = null;
                         self.adapter = null;
+                        for( BLERequest request = agent.requestQueue.poll(); request != null; request = agent.requestQueue.poll() ) {
+                            lazyLog.e("Dropping request ", request);
+                            request.onFailure();
+                        }
                         for( BLEDevice dev : deviceMap.values()) {
                             lazyLog.e("BLEDevice Still in use! ", dev);
                         }
@@ -1063,11 +1076,21 @@ public class BLEAgent {
                 fifoOp( new SetupOp() {
                     @Override
                     public void run() {
-                        lazyLog.d( "enabling listening to device ",  device.device.getAddress()
-                               , " for service ", notifyUUID.first
-                               , " characteristic ", notifyUUID.second );
+                        if (device.isStale()) {
+                            lazyLog.w("ignoring stale device");
+                            nextRequest();
+                        } else if (device.gatt == null) {
+                            lazyLog.e("Strange, currentDevice.gatt is null, but device isn't stale. this should never happen. gaben-san please save us. ");
+                            nextRequest();
+                        } else if (device != currentDevice) {
+                            lazyLog.e( "Sounds like a data race: (final device) ", ((Object)device).toString(), " != (currentDevice) ", ((Object)currentDevice).toString());
+                        } else {
+                            lazyLog.d("enabling listening to device ", device.device.getAddress()
+                                    , " for service ", notifyUUID.first
+                                    , " characteristic ", notifyUUID.second);
 
-                        currentDevice.dispatchListenUUID(notifyUUID);
+                            device.dispatchListenUUID(notifyUUID);
+                        }
                     }
 
                     @Override
@@ -1135,12 +1158,16 @@ public class BLEAgent {
                     dev = new BLEDevice(device, now, lifeCycleCount);
                 }
 
-                dev.acquire();
-                lazyLog.a(currentRequest != null, "No active request!!!");
-                if (currentRequest != null && currentRequest.onReceive(dev)) {
-                    nextRequest();
+                if( ! dev.isStale() ) {
+                    dev.acquire();
+                    lazyLog.a(currentRequest != null, "No active request!!!");
+                    if (currentRequest != null && currentRequest.onReceive(dev)) {
+                        nextRequest();
+                    }
+                    dev.release();
+                } else {
+                    lazyLog.w( "Ignoring stale device", dev);
                 }
-                dev.release();
             }
         });
     }
