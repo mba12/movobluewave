@@ -23,6 +23,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     
     @IBOutlet weak var termsAndConditionsTextView: UITextView!
     
+    var modalPopover : Bool = false
 
     var datePicker : UIDatePicker
     var datePickerToolbar : UIToolbar
@@ -85,12 +86,14 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                     if (error != nil) {
                         // There was an error creating the account
                         // There was an error logging in to this account
-                        NSLog("User Creation failed")
-                        let alertController = UIAlertController(title: "Error", message:
-                            "Failed to create account: email address may already be in use, check internet connection and please try again", preferredStyle: UIAlertControllerStyle.Alert)
-                        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
                         
-                        self.presentViewController(alertController, animated: true, completion: nil)
+                        if (self.modalPopover) {
+                            self.modalPopover = false
+                            self.dismissViewControllerAnimated(true, completion: {self.presentError()})
+                        } else {
+                            self.presentError()
+                        }
+                        
                         
                     } else {
                         // We created a new user account
@@ -156,6 +159,10 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                         })
                     }
             })
+            //present login message
+            let loginpop = UIAlertController(title: "Connecting", message: "Please wait...", preferredStyle: UIAlertControllerStyle.Alert)
+            self.modalPopover = true
+            self.presentViewController(loginpop, animated: true, completion: nil)
             
         } else {
             let alertController = UIAlertController(title: "Error", message:
@@ -250,6 +257,14 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     }
     
     
-    
+    func presentError() {
+        NSLog("User Creation failed")
+        let alertController = UIAlertController(title: "Error", message:
+            "Failed to create account: email address may already be in use, check internet connection and please try again", preferredStyle: UIAlertControllerStyle.Alert)
+        alertController.addAction(UIAlertAction(title: "Dismiss", style: UIAlertActionStyle.Default,handler: nil))
+        
+        self.presentViewController(alertController, animated: true, completion: nil)
+        
+    }
 }
 

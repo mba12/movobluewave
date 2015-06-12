@@ -48,7 +48,11 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         // Do any additional setup after loading the view, typically from a nib.
         
         if let fn = UserData.getOrCreateUserData().getCurrentFullName() {
-            fullName.text = fn
+            if (fn != "Error") {
+                fullName.text = fn
+            } else {
+                //fullName.placeholder = "Add"
+            }
         }
         
         if let hf = UserData.getOrCreateUserData().getCurrentHeightFeet() {
@@ -65,7 +69,11 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         }
 
         if let g = UserData.getOrCreateUserData().getCurrentGender() {
-            gender.text = g
+            if (g != "Error") {
+                gender.text = g
+            } else {
+                //gender.placeholder = "Add"
+            }
             
             if (g == "Male") {
                 genderPicker.selectRow(1, inComponent: 0, animated: false)

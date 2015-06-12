@@ -43,7 +43,7 @@ class rtlFlowLayout : UICollectionViewFlowLayout {
             if (!isIPhone6P) {
                 self.itemSize = CGSize(width: 110, height: 110)
             } else {
-                self.itemSize = CGSize(width: 120, height: 120)
+                self.itemSize = CGSize(width: 110, height: 110)
             }
         }
         self.minimumInteritemSpacing = 7.5
