@@ -821,8 +821,10 @@ class UserData {
     
     static func storeImage(image: UIImage?, rawData: String?, date: NSDate?,  pushToFirebase : Bool, callbackDelegate: ImageUpdateDelegate?) {
         
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),  {
         //get system path to our image store
-        var (fullPath, relativePath) = getOrCreateDirectoryForImages()
+        var (fullPath, relativePath) = self.getOrCreateDirectoryForImages()
         
         //this is the store function so we will be saving the image to a GUID
         var uuid = NSUUID().UUIDString
@@ -887,14 +889,14 @@ class UserData {
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
                                     insertUpdateItem = fetchResults[0]
-                                    removeOldImage(fetchResults[0])
+                                    self.removeOldImage(fetchResults[0])
                                     
                                     
                                 } else {
                                     //error case
                                     println("Warning: Excess Images")
                                     insertUpdateItem = fetchResults[0]
-                                    removeOldImage(fetchResults[0])
+                                    self.removeOldImage(fetchResults[0])
                                 }
                                 
                                 
@@ -913,8 +915,8 @@ class UserData {
                                 newItem.user = uid
                                 //lets go ahead and store the file now
                                 //and update the local display
-                                data.writeToFile(filepath, atomically: true)
-                                dataThumb?.writeToFile(thumbfilepath, atomically: true)
+                                data.writeToFile(filepath, atomically: false)
+                                dataThumb?.writeToFile(thumbfilepath, atomically: false)
                                 
                                 if let delegate = callbackDelegate {
                                     if let realImage = image {
@@ -957,6 +959,8 @@ class UserData {
         if let delegate = callbackDelegate {
             //delegate.updatedImage(date, newImage: nil)
         }
+            
+        })
     }
     
     static func loadImageFromFile(date: NSDate?, callbackDelegate: ImageUpdateDelegate?, thumbNail: Bool) {
