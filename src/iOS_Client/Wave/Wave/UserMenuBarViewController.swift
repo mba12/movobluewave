@@ -100,6 +100,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 //then we have a new profile image
                 dispatch_async(dispatch_get_main_queue(),  {
                     self.profilePictureButton.setImage(image, forState: UIControlState.Normal)
+                    self.profilePictureButton.setImage(image, forState: UIControlState.Highlighted)
                     self.profilePictureButton.layer.cornerRadius = self.profilePictureButton.frame.size.width / 2;
                     self.profilePictureButton.clipsToBounds = true;
                     self.profilePictureButton.imageView?.contentMode = UIViewContentMode.ScaleAspectFill
