@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14C109" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="EIb-5E-vMu">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="7706" systemVersion="14D136" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="EIb-5E-vMu">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="7703"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
@@ -1928,8 +1928,8 @@
                             <imageView clipsSubviews="YES" multipleTouchEnabled="YES" alpha="0.49999999999999961" contentMode="center" fixedFrame="YES" image="logored" translatesAutoresizingMaskIntoConstraints="NO" id="3wf-ar-qpY">
                                 <rect key="frame" x="-18" y="-29" width="292" height="165"/>
                             </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="right" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4WT-YW-I8F">
-                                <rect key="frame" x="534" y="28" width="50" height="50"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="right" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="4WT-YW-I8F">
+                                <rect key="frame" x="534" y="29" width="50" height="50"/>
                                 <constraints>
                                     <constraint firstAttribute="width" secondItem="4WT-YW-I8F" secondAttribute="height" multiplier="1:1" id="dlI-tq-0EN"/>
                                     <constraint firstAttribute="width" constant="50" id="srS-6d-Cur">
@@ -1944,7 +1944,7 @@
                                 </connections>
                             </button>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="UserName" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7Hj-VI-haW">
-                                <rect key="frame" x="17" y="89" width="78" height="15"/>
+                                <rect key="frame" x="17" y="89" width="77.5" height="15"/>
                                 <fontDescription key="fontDescription" name="Gotham-Book" family="Gotham" pointSize="15"/>
                                 <color key="textColor" red="0.93725490199999995" green="0.93725490199999995" blue="0.95686274510000002" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
@@ -1969,6 +1969,19 @@
                                 <color key="progressTintColor" red="0.98431372549999996" green="0.0" blue="0.023529411760000001" alpha="1" colorSpace="calibratedRGB"/>
                                 <color key="trackTintColor" red="0.98431372549999996" green="0.0" blue="0.023529411760000001" alpha="1" colorSpace="calibratedRGB"/>
                             </progressView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="wkP-0d-m26">
+                                <rect key="frame" x="519" y="14" width="80" height="80"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="80" id="Czg-Yd-IAh"/>
+                                    <constraint firstAttribute="height" constant="80" id="R3q-jI-U94"/>
+                                </constraints>
+                                <state key="normal">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="statsButtonPress:" destination="qF1-ct-G6I" eventType="touchUpInside" id="MAH-Vw-XD6"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
@@ -1983,8 +1996,10 @@
                             <constraint firstAttribute="centerX" secondItem="zko-0h-Yyv" secondAttribute="centerX" id="dd4-ku-UiJ"/>
                             <constraint firstItem="Ig7-ot-TW2" firstAttribute="leading" secondItem="Qxp-Wh-8pS" secondAttribute="leadingMargin" id="nUi-rW-NgC"/>
                             <constraint firstAttribute="bottom" secondItem="Ig7-ot-TW2" secondAttribute="bottom" constant="20" symbolic="YES" id="s26-WI-AZ6"/>
+                            <constraint firstItem="4WT-YW-I8F" firstAttribute="centerY" secondItem="wkP-0d-m26" secondAttribute="centerY" id="veB-vN-Ji6"/>
                             <constraint firstItem="zko-0h-Yyv" firstAttribute="top" secondItem="9yH-Yd-2JZ" secondAttribute="bottom" constant="14" id="xhy-GL-ReG"/>
                             <constraint firstAttribute="width" secondItem="zko-0h-Yyv" secondAttribute="width" id="zLg-U2-Wih"/>
+                            <constraint firstItem="4WT-YW-I8F" firstAttribute="centerX" secondItem="wkP-0d-m26" secondAttribute="centerX" id="zMo-aA-od7"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
@@ -2255,11 +2270,11 @@
         <image name="user_icon_cir" width="96" height="96"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="qVh-tw-zPR"/>
-        <segue reference="1Av-rn-EMf"/>
         <segue reference="60l-AC-Hvq"/>
+        <segue reference="Ge0-sS-8AU"/>
         <segue reference="lVa-zE-MYI"/>
-        <segue reference="5Rn-yN-IPh"/>
+        <segue reference="ze8-RA-cod"/>
+        <segue reference="Ld4-Fc-WJ2"/>
         <segue reference="QFb-do-jEW"/>
     </inferredMetricsTieBreakers>
 </document>

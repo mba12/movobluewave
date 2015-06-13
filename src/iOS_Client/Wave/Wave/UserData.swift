@@ -170,7 +170,7 @@ class UserData {
 
     
     func downloadMetaData(){
-        NSLog("Downloading new metadata")
+        //NSLog("Downloading new metadata")
         var metaRef = getCurrentUserRef()
         metaRef = metaRef! + "/metadata"
         
@@ -464,9 +464,9 @@ class UserData {
     
     
     //passing in a nil date results in getting/setting the profile picture
-    static func getImageForDate(date: NSDate?, callbackDelegate: ImageUpdateDelegate) {
-        loadImageFromFile(date, callbackDelegate: callbackDelegate)
-        shouldDownloadNewImage(date, callbackDelegate: callbackDelegate)
+    static func getImageForDate(date: NSDate?, callbackDelegate: ImageUpdateDelegate, thumbnail: Bool) {
+        loadImageFromFile(date, callbackDelegate: callbackDelegate, thumbNail: thumbnail)
+        shouldDownloadNewImage(date, callbackDelegate: callbackDelegate, thumbNail: thumbnail)
     }
     
     
@@ -549,8 +549,8 @@ class UserData {
     
 
     //pass in a nil date for profile picutre
-    static func shouldDownloadNewImage(date:NSDate?, callbackDelegate: ImageUpdateDelegate?){
-        
+    static func shouldDownloadNewImage(date:NSDate?, callbackDelegate: ImageUpdateDelegate?, thumbNail : Bool){
+        let suffix = (thumbNail) ? ".thumb.jpg":""
         
         var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
         fbDownloadRef = fbDownloadRef + "/1"
@@ -560,7 +560,7 @@ class UserData {
             
             firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
                 //check MD5 and act on it
-                NSLog("returned")
+                //NSLog("returned")
                 if let downloadedMD5 = snapshot.value as? String{
                     
                     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
@@ -576,10 +576,14 @@ class UserData {
                                     if let md5 = fetchResults[0].md5 {
                                         if (md5 == downloadedMD5) {
                                             //don't download new
-                                            if let delegate = callbackDelegate{
-                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                            /* should have been already loaded
+                                            if let delegate = callbackDelegate{                                                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                                })
                                                 return
                                             }
+                                            */
+                                            return
                                         } else {
                                             //download replacement images
                                             UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
@@ -597,11 +601,16 @@ class UserData {
                                     if let md5 = fetchResults[0].md5 {
                                         if (md5 == downloadedMD5) {
                                             //don't download new
+                                            /* should have already been loaded
                                             if let delegate = callbackDelegate{
-                                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                                
+                                                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                                })
                                                 return
                                                 
-                                            }
+                                            } */
+                                            return
                                         } else {
                                             //download replacement images
                                             UserData.downloadPhotoFromFirebase(date, callbackDelegate: callbackDelegate)
@@ -634,19 +643,30 @@ class UserData {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
+                                    /*
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                            delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                            })
+                                        
                                         return
                                     }
                                     
-                                    
+                                    */
+                                    return
                                 }else{
                                     //warn
                                     println("Warning: Excess Images")
+                                    /*
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                            delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                            })
                                         return
                                     }
+                                    */
+                                    return
                                 }
                                 
                                 
@@ -656,7 +676,7 @@ class UserData {
                     
                 }
                 if let delegate = callbackDelegate{
-                    delegate.updatedImage(date, newImage: nil)
+                    //delegate.updatedImage(date, newImage: nil)
                 }
                 
                 }, withCancelBlock: { error in
@@ -674,22 +694,32 @@ class UserData {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
+                                    /*
                                     if let delegate = callbackDelegate{
-                                        
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                            delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        })
                                         return
                                     }
+                                    
+                                    */
                                     
                                 } else {
                                     //continue loading image from file
                                     println("Warning: Excess Images")
                                     
                                     //don't download new
+                                    /*
                                     if let delegate = callbackDelegate{
-                                        delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                            delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                                        })
                                         return
+                                        
+                                        
+                                        
                                     }
-                                    
+                                    */
                                 }
                             }
                             
@@ -698,7 +728,7 @@ class UserData {
                     }
                     
                     if let delegate = callbackDelegate{
-                        delegate.updatedImage(date, newImage: nil)
+                        //delegate.updatedImage(date, newImage: nil)
                     }
                     
             })
@@ -754,7 +784,7 @@ class UserData {
             }
 
             if let delegate = callbackDelegate {
-                delegate.updatedImage(date, newImage: nil)
+                //delegate.updatedImage(date, newImage: nil)
             }
             
             
@@ -798,21 +828,31 @@ class UserData {
         var uuid = NSUUID().UUIDString
         
         var dataN: NSData?
+        var dataThumb: NSData?
         var base64StringN : String?
         
         
         if let localImage = image {
             dataN = UIImageJPEGRepresentation(localImage, 1.0)
+            dataThumb = UIImageJPEGRepresentation(localImage, 0.5)
             if let imagedata = dataN {
                 base64StringN = imagedata.base64EncodedStringWithOptions(.allZeros)
             }
         } else if let unwrappedB64 = rawData {
             base64StringN = unwrappedB64
             dataN = NSData(base64EncodedString: unwrappedB64, options: .allZeros)
+            if let extractData = dataN {
+                if let tempImage = UIImage(data: extractData) {
+                    dataThumb = UIImageJPEGRepresentation(tempImage, 0.5)
+                }
+            }
         }
         
         let imagename = uuid + ".jpg"
+        let thumbname = imagename + ".thumb.jpg"
         let filepath = fullPath + imagename
+        let thumbfilepath = fullPath + thumbname
+        
         let shortfilepath = relativePath + imagename
         var insertUpdateItem : PhotoStorage?
         
@@ -874,7 +914,7 @@ class UserData {
                                 //lets go ahead and store the file now
                                 //and update the local display
                                 data.writeToFile(filepath, atomically: true)
-                                
+                                dataThumb?.writeToFile(thumbfilepath, atomically: true)
                                 
                                 if let delegate = callbackDelegate {
                                     if let realImage = image {
@@ -915,15 +955,16 @@ class UserData {
         }
         
         if let delegate = callbackDelegate {
-            delegate.updatedImage(date, newImage: nil)
+            //delegate.updatedImage(date, newImage: nil)
         }
     }
     
-    static func loadImageFromFile(date: NSDate?, callbackDelegate: ImageUpdateDelegate?) {
+    static func loadImageFromFile(date: NSDate?, callbackDelegate: ImageUpdateDelegate?, thumbNail: Bool) {
         //We want to store the image to the date
         //to be timezone independent
         //this means that we use the GMT NSDate for storage that corresponds to
         //the beginning of the day
+        let suffix = (thumbNail) ? ".thumb.jpg":""
         var storageDate : NSDate?
         if let unwrapDate = date {
             var cal = NSCalendar.currentCalendar()
@@ -946,9 +987,9 @@ class UserData {
                     if(fetchResults.count > 0){
                         //then we must delete the old image and replace
                         if (fetchResults.count == 1) {
-                            if let delegate = callbackDelegate{
-                                
-                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                            if let delegate = callbackDelegate{                                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                })
                                 return
                             }
                             
@@ -957,8 +998,9 @@ class UserData {
                             println("Warning: Excess Images")
                             
                             //don't download new
-                            if let delegate = callbackDelegate{
-                                delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath))
+                            if let delegate = callbackDelegate{                                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                                    delegate.updatedImage(date, newImage: UIImage(contentsOfFile: UserData.getDocumentsPath()+fetchResults[0].photopath+suffix))
+                                })
                                 return
                             }
                             
@@ -971,7 +1013,7 @@ class UserData {
         }
         
         if let delegate = callbackDelegate{
-            delegate.updatedImage(date, newImage: nil)
+            //delegate.updatedImage(date, newImage: nil)
         }
         
         

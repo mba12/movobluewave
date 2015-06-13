@@ -89,7 +89,13 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         NSLog("No user logged in")
                     } else {
                         NSLog("Grabbing user steps from firebase")
-                        retrieveFBDataForYM(todayYear, todayMonth, self)
+                        
+                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                            retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+
+                        })
+                        
+
                         
                     }
                 } else {
@@ -124,49 +130,61 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CollectionViewCell
 
         
-        
         cell.textLabel?.text = "\(indexPath.section):\(indexPath.row)"
         
         cell.textLabel?.text = "\(indexPath.row)"
-
-        
         //This display should be built from LOCAL TIME
         let cellCount = collectionView.numberOfItemsInSection(0)
         let cellDateNumber = abs(indexPath.row - cellCount)
         cell.textLabel?.text = "\(cellDateNumber)"
         
 
-        if let dateStart : NSDate = YMDLocalToNSDate(todayYear, todayMonth, cellDateNumber) {
+        if let dateStart : NSDate = YMDLocalToNSDate(self.todayYear, self.todayMonth, cellDateNumber) {
             
             if (cell.currentDate != dateStart) {
                 cell.currentDate = dateStart
-                cell.bgImageView.image = UIImage(named:"calendarbg")
+                //cell.bgImageView.image = UIImage(named:"calendarbg")
             }
             
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
-                UserData.getImageForDate(dateStart, callbackDelegate: cell)
-            })
             
-            
+            UserData.getImageForDate(dateStart, callbackDelegate: cell, thumbnail: true)
             if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(stepsForDayStarting(dateStart)) {
-                cell.textLabel2?.text = stepsstring
+                
+                dispatch_async(dispatch_get_main_queue(), {
+                    cell.textLabel2?.text = stepsstring
+                })
+                
             } else {
-                cell.textLabel2?.text = "0"
+                
+                
+                dispatch_async(dispatch_get_main_queue(), {
+                    cell.textLabel2?.text = "0"
+                })
+                
+                
+                
             }
+
             
         } else {
             cell.textLabel2?.text = "0"
-            cell.bgImageView.image = UIImage(named:"calendarbg")
+            var image = UIImage(named:"calendarbg")
+            cell.bgImageView.image = image
+
         }
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == cal.component(.CalendarUnitDay, fromDate: NSDate())) {
-                cell.imageView?.image = UIImage(named: "datebgwide")
-                cell.textLabel?.text = "Today"
+        if (self.cal.component(.CalendarUnitMonth, fromDate: NSDate()) == self.todayMonth && self.cal.component(.CalendarUnitYear, fromDate: NSDate()) == self.todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == self.cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+            
+
+            var image = UIImage(named: "datebgwide")
+            cell.imageView?.image = image
+            cell.textLabel?.text = "Today"
         
         } else {
-        
-            cell.imageView?.image = UIImage(named: "datebgcircle")
+
+            var image = UIImage(named: "datebgcircle")
+            cell.imageView?.image = image
+            
         }
-        
         return cell
     }
     
@@ -174,9 +192,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 
 
     override func viewDidAppear(animated: Bool) {
-        dispatch_async(dispatch_get_main_queue(), {
-            self.collectionView.reloadData()
-        })
+         self.collectionView.reloadData()
     }
     
     override func didReceiveMemoryWarning() {
@@ -253,9 +269,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + " " + yearName
-            self.collectionView.reloadData()
+            
         })
-        
+        self.collectionView.reloadData()
         //grab the data from Firebase for the month
         
         
@@ -266,7 +282,10 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYM(todayYear, todayMonth, self)
+                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                })
                 
             }
         } else {

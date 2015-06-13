@@ -452,7 +452,7 @@ func retrieveFBDataForYM(Year: Int, Month: Int, updateCallback: FBUpdateDelegate
         retrieveFBDataForYMDGMT(Year, Month, i, updateCallback)
         
     }
-    
+    UserData.getOrCreateUserData().downloadMetaData()
     
 }
 
@@ -526,7 +526,7 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
         })
     }
     //update our local metadata as well
-    UserData.getOrCreateUserData().downloadMetaData()
+
     
 }
 

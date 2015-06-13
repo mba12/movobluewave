@@ -170,7 +170,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
                 }
             })
             
-            UserData.getImageForDate(date, callbackDelegate: self)
+            UserData.getImageForDate(date, callbackDelegate: self, thumbnail: false)
             
         } else {
             /* failure case */

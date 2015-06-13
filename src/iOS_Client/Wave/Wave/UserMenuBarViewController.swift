@@ -25,7 +25,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
             })
         }
         UserData.delegate = self
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
         
     }
     
@@ -63,8 +63,9 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 self.userNameLabel.text = username
             })
         }
-        
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+            UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
+        })
         
     }
     
