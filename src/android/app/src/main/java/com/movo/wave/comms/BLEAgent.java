@@ -417,24 +417,23 @@ public class BLEAgent {
                 lazyLog.e( "BLEDevice failed at connectGatt()!");
                 //AH 20150612: this may not work as expected
                 remove();
-            } else if( this.gatt != oldGatt ) {
+            } else if( this.gatt != oldGatt && oldGatt != null ) {
                 lazyLog.w( "Swapping gatt objects live, may be strange! ", this );
-                if( oldGatt != null ) {
-                    final Handler safeHandlerRef = UIHandler;
-                    safeHandlerRef.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            lazyLog.i( "Disconnecting old gatt for ", BLEDevice.this );
-                            oldGatt.disconnect();;
-                            safeHandlerRef.postDelayed( new Runnable() {
-                                @Override
-                                public void run() {
-                                    lazyLog.i( "Closing old gatt for ", BLEDevice.this );
-                                    oldGatt.close();
-                                }
-                            },100);
-                        }
-                    });
+                final Handler safeHandlerRef = UIHandler;
+                safeHandlerRef.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i( "Disconnecting old gatt for ", BLEDevice.this );
+                        oldGatt.disconnect();;
+                        safeHandlerRef.postDelayed( new Runnable() {
+                            @Override
+                            public void run() {
+                                lazyLog.i( "Closing old gatt for ", BLEDevice.this );
+                                oldGatt.close();
+                            }
+                        },100);
+                    }
+                });
                 }
             }
         }
@@ -1332,7 +1331,7 @@ public class BLEAgent {
                     if(dev.device != device) {
                         lazyLog.e(dev.device == device, "BluetoothDevice objects don't match ",
                                 device, " != ", dev.device);
-                        lazyLog.a(dev.lifecycle==lifeCycleCount, " Device is from another age!!, ",
+                        lazyLog.a(dev.lifecycle == lifeCycleCount, " Device is from another age!!, ",
                                 dev.lifecycle, " != ", lifeCycleCount, " for ", dev);
 
                         dev.setDevice( device );
