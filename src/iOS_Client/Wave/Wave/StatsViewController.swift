@@ -76,8 +76,10 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
-                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                    
+                })
             }
         } else {
             //firebase ref is null from coredata
@@ -242,9 +244,10 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 self.caloriesCountLabel.text = "0.0"
             }
             
-        })
         
-        displayStepsChart()
+        
+            self.displayStepsChart()
+        })
         
     }
     
@@ -368,6 +371,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + " " + yearName
+        })
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), {
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
         
@@ -380,8 +386,10 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 NSLog("No user logged in")
             } else {
                 NSLog("Grabbing user steps from firebase")
-                retrieveFBDataForYMDGMT(todayYear, todayMonth, todayDate, self)
-                
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                    
+                })
             }
         } else {
             //firebase ref is null from coredata
@@ -393,10 +401,9 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     
     
     func UpdatedDataFromFirebase() {
-        dispatch_async(dispatch_get_main_queue(), {
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
             self.loadDataForYM(self.todayYear, month: self.todayMonth)
         })
-        
     }
     
     
