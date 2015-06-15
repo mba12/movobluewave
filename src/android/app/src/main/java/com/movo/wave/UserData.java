@@ -524,12 +524,14 @@ public class UserData extends Activity{
             currentUsername = prefs.getString("currentUsername", "Error");
 
 
+            notifyListeners();
 
            reAuthenticate(currentEmail, currentPW);
             return true;
 
 
         }
+
 
         return false;
 //        return true;
