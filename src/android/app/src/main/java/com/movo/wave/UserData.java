@@ -515,13 +515,13 @@ public class UserData extends Activity{
             currentEmail = userData.getString("currentEmail", "Error");
             currentPW = userData.getString("currentPW", "Error");
             currentToken = userData.getString("currentToken","Error");
-            currentHeight1 = prefs.getString("currentHeight1", "Error");
-            currentHeight2 = prefs.getString("currentHeight2", "Error");
-            currentWeight = prefs.getString("currentWeight", "Error");
-            currentGender = prefs.getString("currentGender", "Error");
-            currentFullName = prefs.getString("currentFullName", "Error");
-            currentBirthdate= prefs.getString("currentBirthdate", "Error");
-            currentUsername = prefs.getString("currentUsername", "Error");
+            currentHeight1 = userData.getString("currentHeight1", "Error");
+            currentHeight2 = userData.getString("currentHeight2", "Error");
+            currentWeight = userData.getString("currentWeight", "Error");
+            currentGender = userData.getString("currentGender", "Error");
+            currentFullName = userData.getString("currentFullName", "Error");
+            currentBirthdate= userData.getString("currentBirthdate", "Error");
+            currentUsername = userData.getString("currentUsername", "Error");
 
 
             notifyListeners();
