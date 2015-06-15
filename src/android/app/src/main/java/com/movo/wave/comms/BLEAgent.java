@@ -214,7 +214,7 @@ public class BLEAgent {
                                 device.connectionState = newState;
                                 if( device != currentDevice &&
                                         newState != BluetoothGatt.STATE_DISCONNECTED ) {
-                                    lazyLog.i( "Disconnecting from errant device: ", address );
+                                    lazyLog.i( "ignoring unexpected device: ", address );
                                     //gatt.disconnect();
                                 }
                             } else {
@@ -1019,9 +1019,11 @@ public class BLEAgent {
      */
     private void setDevice( final BLEDevice device ) {
 
+        final BLERequest request = currentRequest;
+
         //disconnect
         if( device != currentDevice && currentDevice != null && device != null ) {
-            fifoOp(new AssertionOp( currentDevice, currentRequest, new SetupOp() {
+            fifoOp(new AssertionOp(currentDevice, request, new SetupOp() {
                 @Override
                 public void run() {
 
@@ -1039,11 +1041,21 @@ public class BLEAgent {
                 public boolean onConnectionStateChange(int status, int newState) {
 
                     final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
-                    currentDevice.connectionState = newState;
+                    device.connectionState = newState;
                     if (!ret) {
                         lazyLog.w("Not disconnected??!? ", describeState(newState));
                         lazyLog.w("Retrying disconnect...", currentDevice.device.getAddress());
-                        currentDevice.gatt.disconnect();
+                        UIHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (currentDevice == device) {
+                                    lazyLog.i("Trying disconnect now ", device);
+                                    device.gatt.disconnect();
+                                } else {
+                                    lazyLog.e("Aborting disconnect, devices mismatch: ", device, currentDevice);
+                                }
+                            }
+                        });
                     } else {
                         lazyLog.d("Disconnected from ", currentDevice.device.getAddress());
                     }
@@ -1075,7 +1087,17 @@ public class BLEAgent {
                         device.connectionState = newState;
                         if (!ret) {
                             lazyLog.i( "Retrying connection. received: ", describeState(newState));
-                            currentDevice.gatt.connect();
+                            UIHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (currentDevice == device) {
+                                        lazyLog.i("Trying connect now ", device);
+                                        device.gatt.connect();
+                                    } else {
+                                        lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
+                                    }
+                                }
+                            });
                         } else {
                             lazyLog.d( "Connected to device ", device.device.getAddress());
                         }
@@ -1094,7 +1116,7 @@ public class BLEAgent {
 
             // discover devices
             if (!device.servicesDiscovered) {
-                fifoOp( new AssertionOp( device, currentRequest, new SetupOp() {
+                fifoOp( new AssertionOp( device, request, new SetupOp() {
                     @Override
                     public void run() {
                         lazyLog.d( "Discovering services for device "
@@ -1112,7 +1134,18 @@ public class BLEAgent {
                         } else {
                             lazyLog.w( "Failed to discover services for device ",
                                     device.device.getAddress(), ". retrying..." );
-                            device.gatt.discoverServices();
+
+                            UIHandler.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (currentDevice == device) {
+                                        lazyLog.i("Trying discoverServices now ", device);
+                                        device.gatt.discoverServices();
+                                    } else {
+                                        lazyLog.e("Aborting discoverServices, devices mismatch: ", device, currentDevice);
+                                    }
+                                }
+                            });
                         }
                         return ret;
                     }
@@ -1169,7 +1202,7 @@ public class BLEAgent {
                 }
              */
             for(final Pair<UUID, UUID> notifyUUID : insertUUIDs) {
-                fifoOp( new AssertionOp( device, currentRequest, new SetupOp() {
+                fifoOp( new AssertionOp( device, request, new SetupOp() {
                     @Override
                     public void run() {
                         if (device.isStale()) {
@@ -1218,7 +1251,18 @@ public class BLEAgent {
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED:
                                 currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
-                                currentDevice.gatt.connect();
+                                lazyLog.i("retrying failed connection. received: ", describeState(newState));
+                                UIHandler.post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (currentDevice == device) {
+                                            lazyLog.i("Trying connect now ", device);
+                                            device.gatt.connect();
+                                        } else {
+                                            lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
+                                        }
+                                    }
+                                });
                                 break;
                         }
                         return false;
