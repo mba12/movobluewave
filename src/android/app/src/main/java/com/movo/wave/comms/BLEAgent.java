@@ -333,8 +333,8 @@ public class BLEAgent {
      */
     public static class BLEDevice {
         public final int lifecycle;
-        public final BluetoothDevice device;
-        protected final BluetoothGatt gatt;
+        public BluetoothDevice device;
+        protected BluetoothGatt gatt;
 
         protected boolean servicesDiscovered = false;
         protected int connectionState = BluetoothGatt.STATE_DISCONNECTED;
@@ -401,6 +401,15 @@ public class BLEAgent {
         private BLEDevice( final BluetoothDevice device, final Date seen, int lifecycle ) {
             this.lifecycle = lifecycle;
             this.lastSeen = seen;
+            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
+            setDevice(device);
+            this.notifyUUIDs = new HashSet<>();
+            this.pendingUUID = null;
+        }
+
+        protected synchronized void setDevice( final BluetoothDevice device ) {
+            final BluetoothGatt oldGatt = gatt;
+
             this.device = device;
             // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
             this.gatt = device.connectGatt( context, true, self.gattCallback );
@@ -408,9 +417,26 @@ public class BLEAgent {
                 lazyLog.e( "BLEDevice failed at connectGatt()!");
                 //AH 20150612: this may not work as expected
                 remove();
+            } else if( this.gatt != oldGatt ) {
+                lazyLog.w( "Swapping gatt objects live, may be strange! ", this );
+                if( oldGatt != null ) {
+                    final Handler safeHandlerRef = UIHandler;
+                    safeHandlerRef.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            lazyLog.i( "Disconnecting old gatt for ", BLEDevice.this );
+                            oldGatt.disconnect();;
+                            safeHandlerRef.postDelayed( new Runnable() {
+                                @Override
+                                public void run() {
+                                    lazyLog.i( "Closing old gatt for ", BLEDevice.this );
+                                    oldGatt.close();
+                                }
+                            },100);
+                        }
+                    });
+                }
             }
-            this.notifyUUIDs = new HashSet<>();
-            this.pendingUUID = null;
         }
 
         /** Set of (notify enabled) characteristics.
@@ -1013,6 +1039,11 @@ public class BLEAgent {
         }
     }
 
+    /** Retry time out incase we're helping persist a priority inversion in galaxy S4 error handling.
+     *
+     */
+    final static int opRetryDelay=100;
+
     /** make the specified device active
      * Pushes AsyncOps to the opstack
      * @param device device to activate.
@@ -1045,7 +1076,7 @@ public class BLEAgent {
                     if (!ret) {
                         lazyLog.w("Not disconnected??!? ", describeState(newState));
                         lazyLog.w("Retrying disconnect...", currentDevice.device.getAddress());
-                        UIHandler.post(new Runnable() {
+                        UIHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 if (currentDevice == device) {
@@ -1055,7 +1086,7 @@ public class BLEAgent {
                                     lazyLog.e("Aborting disconnect, devices mismatch: ", device, currentDevice);
                                 }
                             }
-                        });
+                        }, opRetryDelay);
                     } else {
                         lazyLog.d("Disconnected from ", currentDevice.device.getAddress());
                     }
@@ -1087,7 +1118,7 @@ public class BLEAgent {
                         device.connectionState = newState;
                         if (!ret) {
                             lazyLog.i( "Retrying connection. received: ", describeState(newState));
-                            UIHandler.post(new Runnable() {
+                            UIHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     if (currentDevice == device) {
@@ -1097,7 +1128,7 @@ public class BLEAgent {
                                         lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
                                     }
                                 }
-                            });
+                            }, opRetryDelay);
                         } else {
                             lazyLog.d( "Connected to device ", device.device.getAddress());
                         }
@@ -1135,7 +1166,7 @@ public class BLEAgent {
                             lazyLog.w( "Failed to discover services for device ",
                                     device.device.getAddress(), ". retrying..." );
 
-                            UIHandler.post(new Runnable() {
+                            UIHandler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     if (currentDevice == device) {
@@ -1145,7 +1176,7 @@ public class BLEAgent {
                                         lazyLog.e("Aborting discoverServices, devices mismatch: ", device, currentDevice);
                                     }
                                 }
-                            });
+                            }, opRetryDelay);
                         }
                         return ret;
                     }
@@ -1228,8 +1259,18 @@ public class BLEAgent {
                         final boolean ret = status == BluetoothGatt.GATT_SUCCESS;
                         currentDevice.completeListenUUID( status );
                         if( ! ret ) {
-                            lazyLog.w( "retrying notification for ", notifyUUID);
-                            currentDevice.dispatchListenUUID( notifyUUID );
+                            lazyLog.w("retrying notification for ", notifyUUID);
+                            UIHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (currentDevice == device) {
+                                        lazyLog.i("Trying connect now ", device);
+                                        device.dispatchListenUUID(notifyUUID);
+                                    } else {
+                                        lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
+                                    }
+                                }
+                            }, opRetryDelay);
                         } else {
                             lazyLog.d( "enabled listening to device "
                                    ,  device.device.getAddress()
@@ -1247,12 +1288,13 @@ public class BLEAgent {
                                 newState, " (", status, ")" );
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
-                                run();
+                                currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
+                                UIHandler.postDelayed(this, opRetryDelay);
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED:
                                 currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
                                 lazyLog.i("retrying failed connection. received: ", describeState(newState));
-                                UIHandler.post(new Runnable() {
+                                UIHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         if (currentDevice == device) {
@@ -1262,7 +1304,7 @@ public class BLEAgent {
                                             lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
                                         }
                                     }
-                                });
+                                }, opRetryDelay);
                                 break;
                         }
                         return false;
@@ -1292,6 +1334,8 @@ public class BLEAgent {
                                 device, " != ", dev.device);
                         lazyLog.a(dev.lifecycle==lifeCycleCount, " Device is from another age!!, ",
                                 dev.lifecycle, " != ", lifeCycleCount, " for ", dev);
+
+                        dev.setDevice( device );
                     }
                     dev.lastSeen = now;
                 } else {
