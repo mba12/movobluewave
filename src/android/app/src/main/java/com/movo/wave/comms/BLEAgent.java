@@ -418,23 +418,22 @@ public class BLEAgent {
                 //AH 20150612: this may not work as expected
                 remove();
             } else if( this.gatt != oldGatt && oldGatt != null ) {
-                lazyLog.w( "Swapping gatt objects live, may be strange! ", this );
+                lazyLog.w("Swapping gatt objects live, may be strange! ", this);
                 final Handler safeHandlerRef = UIHandler;
                 safeHandlerRef.post(new Runnable() {
                     @Override
                     public void run() {
-                        lazyLog.i( "Disconnecting old gatt for ", BLEDevice.this );
-                        oldGatt.disconnect();;
-                        safeHandlerRef.postDelayed( new Runnable() {
+                        lazyLog.i("Disconnecting old gatt for ", BLEDevice.this);
+                        oldGatt.disconnect();
+                        safeHandlerRef.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                lazyLog.i( "Closing old gatt for ", BLEDevice.this );
+                                lazyLog.i("Closing old gatt for ", BLEDevice.this);
                                 oldGatt.close();
                             }
-                        },100);
+                        }, 100);
                     }
                 });
-                }
             }
         }
 
@@ -464,7 +463,7 @@ public class BLEAgent {
          * @param notifyUUID service-characteristic pair for which to disable notification.
          */
         private void stopListenUUID( final Pair<UUID, UUID > notifyUUID ) {
-            notifyUUIDs.remove( notifyUUID );
+            notifyUUIDs.remove(notifyUUID);
 
             final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
 
@@ -517,9 +516,11 @@ public class BLEAgent {
             );
             if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
                 notifyUUIDs.add(pendingUUID);
-            } else {
+            } else if( pendingUUID != null) {
                 lazyLog.e( "Error, non-success gatt status (", gattStatus, ") for service ",
                         pendingUUID.first, " characteristic ", pendingUUID.second );
+            } else {
+                lazyLog.e("completeListenUUID() call without pending op, ", this, " status ", gattStatus);
             }
             pendingUUID = null;
         }
