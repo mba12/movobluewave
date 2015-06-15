@@ -772,6 +772,97 @@ public class BLEAgent {
         }
     }
 
+    /** Class to catch and log errors while proxying other ops
+     *
+     */
+    public static class AssertionOp implements AsyncOp {
+        final static LazyLogger lazyLog = new LazyLogger("AssertionOp", BLEAgent.lazyLog );
+        final BLEDevice device;
+        final BLERequest request;
+        final AsyncOp op;
+
+        public AssertionOp( final BLEDevice device, final BLERequest request, final AsyncOp op ) {
+            this.device = device;
+            this.request = request;
+            this.op = op;
+        }
+
+        private boolean checkAssertions() {
+            boolean ret = true;
+            do {
+                if (device != BLEAgent.self.currentDevice) {
+                    lazyLog.e( "BLEAgent::currentDevice not equal to assertion device ", BLEAgent.self.currentDevice, " != ", device );
+                    ret = false;
+                }
+
+                if(request != BLEAgent.self.currentRequest ) {
+                    lazyLog.e( "BLEAgent::currentRequest not equal to assertion request", BLEAgent.self.currentRequest, " != ", request );
+                    ret = false;
+                }
+
+                if( this != BLEAgent.self.currentOp ) {
+                    lazyLog.e( "BLEAgent::currentOp not equal to assertion request", BLEAgent.self.currentOp, " != ", this );
+                    ret = false;
+                }
+            } while( false );
+
+            return ret;
+        }
+
+        private boolean invalidateOnError() {
+            final boolean ret = ! checkAssertions();
+            if( ret ) {
+                lazyLog.e( "Aborting request ", request );
+                BLEAgent.self.nextRequest();
+            }
+            return ret;
+        }
+
+        @Override
+        public boolean onConnectionStateChange(int status, int newState) {
+            return invalidateOnError() || op.onConnectionStateChange( status, newState );
+        }
+
+        @Override
+        public boolean onServicesDiscovered(int status) {
+            return invalidateOnError() || op.onServicesDiscovered( status );
+        }
+
+        @Override
+        public boolean onCharacteristicRead(BluetoothGattCharacteristic characteristic, int status) {
+            return invalidateOnError() || op.onCharacteristicRead( characteristic, status );
+        }
+
+        @Override
+        public boolean onCharacteristicWrite(BluetoothGattCharacteristic characteristic, int status) {
+            return invalidateOnError() || op.onCharacteristicWrite( characteristic, status );
+        }
+
+        @Override
+        public boolean onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
+            return invalidateOnError() || op.onCharacteristicChanged( characteristic );
+        }
+
+        @Override
+        public boolean onDescriptorRead(BluetoothGattDescriptor descriptor, int status) {
+            return invalidateOnError() || op.onDescriptorRead( descriptor, status );
+        }
+
+        @Override
+        public boolean onDescriptorWrite(BluetoothGattDescriptor descriptor, int status) {
+            return invalidateOnError() || op.onDescriptorWrite( descriptor, status );
+        }
+
+        @Override
+        public void run() {
+            if( invalidateOnError() ) {
+                lazyLog.e("not starting op ", op, " due to aborting ", request);
+            } else {
+                op.run();
+            }
+        }
+    }
+
     /**
      * Just name tag override for now....
      */
@@ -846,9 +937,9 @@ public class BLEAgent {
             } while( true );
 
             currentRequest = request;
-            lazyLog.d( "BLEAgent: Preparing request: ", currentRequest );
+            lazyLog.d("BLEAgent: Preparing request: ", currentRequest);
 
-            stackOp(new SetupOp() {
+            stackOp(new AssertionOp( request.device, request, new SetupOp() {
                 @Override
                 public void run() {
                     if( currentRequest != request )
@@ -899,7 +990,7 @@ public class BLEAgent {
                     }
                     return false;
                 }
-            });
+            }));
 
             buildOps();
 
@@ -930,7 +1021,7 @@ public class BLEAgent {
 
         //disconnect
         if( device != currentDevice && currentDevice != null && device != null ) {
-            fifoOp(new SetupOp() {
+            fifoOp(new AssertionOp( currentDevice, currentRequest, new SetupOp() {
                 @Override
                 public void run() {
 
@@ -958,7 +1049,7 @@ public class BLEAgent {
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
-            });
+            }));
         }
 
 
@@ -970,7 +1061,12 @@ public class BLEAgent {
                     public void run() {
                         lazyLog.d( "Connecting to device ", device.device.getAddress());
                         currentDevice = device;
-                        lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
+                        if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                            lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
+                        } else {
+                            lazyLog.v( "already connected to ", device );
+                            nextOp();
+                        }
                     }
 
                     @Override
@@ -998,7 +1094,7 @@ public class BLEAgent {
 
             // discover devices
             if (!device.servicesDiscovered) {
-                fifoOp( new SetupOp() {
+                fifoOp( new AssertionOp( device, currentRequest, new SetupOp() {
                     @Override
                     public void run() {
                         lazyLog.d( "Discovering services for device "
@@ -1027,7 +1123,7 @@ public class BLEAgent {
                         run();
                         return super.onConnectionStateChange(status, newState);
                     }
-                });
+                }));
             }
 
             // enable notifications (FIXME: abstract)
@@ -1073,7 +1169,7 @@ public class BLEAgent {
                 }
              */
             for(final Pair<UUID, UUID> notifyUUID : insertUUIDs) {
-                fifoOp( new SetupOp() {
+                fifoOp( new AssertionOp( device, currentRequest, new SetupOp() {
                     @Override
                     public void run() {
                         if (device.isStale()) {
@@ -1127,7 +1223,7 @@ public class BLEAgent {
                         }
                         return false;
                     }
-                });
+                }));
             }
         }
 
