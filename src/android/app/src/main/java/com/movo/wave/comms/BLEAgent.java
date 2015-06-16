@@ -450,6 +450,15 @@ public class BLEAgent {
             return gatt;
         }
 
+        protected synchronized boolean connectGatt( ) {
+            final boolean ret;
+            if( this.gatt == null ) {
+                ret = getGatt() != null;
+            } else {
+                ret = getGatt().connect();
+            }
+            return ret;
+        }
 
         /** Set of (notify enabled) characteristics.
          * Sync on UI thread
@@ -525,12 +534,16 @@ public class BLEAgent {
                 final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                         notifyDescriptorUUID);
 
-                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                if( descriptor != null ) {
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
-                lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
-                        , notifyUUID.first, " characteristic ", notifyUUID.second);
+                    lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
+                            , notifyUUID.first, " characteristic ", notifyUUID.second);
 
-                pendingUUID = notifyUUID;
+                    pendingUUID = notifyUUID;
+                } else {
+                    lazyLog.e( "Failed to get descriptor, ", notifyUUID);
+                }
             } else {
                 lazyLog.e("Failed to get characteristic, ", notifyUUID);
             }
@@ -541,9 +554,6 @@ public class BLEAgent {
          * @param gattStatus callback return value
          */
         private void completeListenUUID( final int gattStatus ) {
-            lazyLog.a(pendingUUID != null,
-                    "Error, complete listen to UUID with no dispatch!!!"
-            );
             if( pendingUUID != null) {
                 if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
                     notifyUUIDs.add(pendingUUID);
@@ -1255,12 +1265,7 @@ public class BLEAgent {
                         introspector.paranoia();
 
                         if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                            final BluetoothGatt gatt = device.getGatt();
-                            if (gatt != null) {
-                                lazyLog.a( gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
-                            } else {
-                                lazyLog.e( "Expected gatt for device ", device);
-                            }
+                            lazyLog.a( device.connectGatt(), "gatt-connect to device: ", device.device.getAddress());
                         } else {
                             lazyLog.v( "already connected to ", device );
                             nextOp();
@@ -1280,12 +1285,7 @@ public class BLEAgent {
                                 public void run() {
                                     if (currentDevice == device) {
                                         lazyLog.i("Trying connect now ", device);
-                                        final BluetoothGatt gatt = device.getGatt();
-                                        if (gatt != null) {
-                                            gatt.connect();
-                                        } else {
-                                            lazyLog.e( "Expected gatt for ", device);
-                                        }
+                                        lazyLog.a( device.connectGatt(), "Failed to request gatt connection ", device );
                                     } else {
                                         lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
                                     }
@@ -1464,14 +1464,13 @@ public class BLEAgent {
                                 UIHandler.postDelayed(this, opRetryDelay);
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED:
-                                currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
                                 lazyLog.i("retrying failed connection. received: ", describeState(newState));
                                 UIHandler.postDelayed(new Runnable() {
                                     @Override
                                     public void run() {
                                         if (currentDevice == device) {
                                             lazyLog.i("Trying connect now ", device);
-                                            device.gatt.connect();
+                                            lazyLog.a(device.connectGatt(), "Failed to request gatt connection ", device);
                                         } else {
                                             lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
                                         }
