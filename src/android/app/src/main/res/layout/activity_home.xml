@@ -25,7 +25,16 @@
             android:id="@+id/topBarLayout"
             android:layout_width="fill_parent"
             android:layout_height="66dip"
-            android:padding="7dip">
+            android:padding="7dip"
+            android:background="#000000">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView"
+                android:src="@drawable/logored"
+                android:layout_centerInParent="true"
+                android:alpha="0.5" />
 
             <ProgressBar
                 style="@android:style/Widget.ProgressBar.Horizontal"
@@ -60,7 +69,8 @@
                 android:scaleType="fitXY"
                 android:layout_alignParentLeft="true"
                 android:layout_centerVertical="true"
-                android:background="@android:color/black"/>
+                android:background="@android:color/black"
+                android:src="@drawable/user_icon_cir" />
 
             <TextView
                 android:id="@+id/nameText"
@@ -68,7 +78,8 @@
                 android:layout_height="wrap_content"
                 android:paddingLeft="7dip"
                 android:layout_toRightOf="@id/profilePic"
-                android:text="Username Here" />
+                android:text="Username Here"
+                android:textColor="#ffffff" />
 
             <ImageView
                 android:id="@+id/blueCircle"

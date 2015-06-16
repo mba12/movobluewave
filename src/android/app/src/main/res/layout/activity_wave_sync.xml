@@ -118,7 +118,7 @@
                 android:layout_centerHorizontal="true"
                 android:gravity="center"
                 android:textSize="20sp"
-                android:text="Turn Wave Bluetooth ON:\nHold the button for 3 seconds until a blue light flashes."/>
+                android:text="Turn Wave Bluetooth ON:\nPress the button until\nthe light shows blue."/>
             <ImageView
                 android:id="@+id/movoButton"
                 android:layout_centerHorizontal="true"
