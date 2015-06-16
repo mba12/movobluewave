@@ -403,7 +403,6 @@ public class BLEAgent {
         private BLEDevice( final BluetoothDevice device, final Date seen, int lifecycle ) {
             this.lifecycle = lifecycle;
             this.lastSeen = seen;
-            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
             setDevice(device);
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
@@ -414,12 +413,8 @@ public class BLEAgent {
 
             this.device = device;
             // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
-            this.gatt = device.connectGatt( context, false, self.gattCallback );
-            if( this.gatt == null ) {
-                lazyLog.e( "BLEDevice failed at connectGatt()!");
-                //AH 20150612: this may not work as expected
-                remove();
-            } else if( this.gatt != oldGatt && oldGatt != null ) {
+            this.gatt = null;
+            if( this.gatt != oldGatt && oldGatt != null ) {
                 lazyLog.w("Swapping gatt objects live, may be strange! ", this);
                 final Handler safeHandlerRef = UIHandler;
                 safeHandlerRef.post(new Runnable() {
@@ -438,6 +433,23 @@ public class BLEAgent {
                 });
             }
         }
+
+        protected synchronized BluetoothGatt getGatt( ) {
+            if( this.gatt == null ) {
+                // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
+                this.gatt = device.connectGatt(context, true, self.gattCallback);
+                if (this.gatt == null) {
+                    lazyLog.e("BLEDevice failed at connectGatt()!");
+                    //AH 20150612: this may not work as expected
+                    remove();
+                } else {
+                    lazyLog.i( "Opened gatt object for device: ", this);
+                    introspector.introspect( device, gatt );
+                }
+            }
+            return gatt;
+        }
+
 
         /** Set of (notify enabled) characteristics.
          * Sync on UI thread
@@ -532,20 +544,23 @@ public class BLEAgent {
          */
         private void close() {
             // see discussion at https://code.google.com/p/android/issues/detail?id=58607
-            UIHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    lazyLog.i("Close: Disconnecting ", device.getAddress());
-                    gatt.disconnect();
-                }
-            });
-            UIHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    lazyLog.i("Close: closing ", device.getAddress());
-                    gatt.close();
-                }
-            },100);
+            final BluetoothGatt oldGatt = gatt;
+            if( oldGatt != null ) {
+                UIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i("Close: Disconnecting ", device.getAddress());
+                        oldGatt.disconnect();
+                    }
+                });
+                UIHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i("Close: closing ", device.getAddress());
+                        oldGatt.close();
+                    }
+                }, 100);
+            }
         }
     }
 
@@ -833,16 +848,6 @@ public class BLEAgent {
                     ret = false;
                 }
 
-                /*if( device != null || device.gatt != null ) {
-                    final int connectionState = device.gatt.getConnectionState(device.device);
-
-                    if (device.connectionState != connectionState) {
-                        lazyLog.e("BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState);
-                        ret = false;
-                    }
-                } else {
-                    lazyLog.e( "Null gatt pointer");
-                }*/
             } while( false );
 
             return ret;
@@ -1142,9 +1147,11 @@ public class BLEAgent {
                     bleDevice.setDevice( device );
                 }
                 if( bleDevice.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                    lazyLog.e( "Device state is not connected ", bleDevice.connectionState, " ", mac);
-
-                    bleDevice.gatt.disconnect();
+                    lazyLog.e("Device state is not connected ", bleDevice.connectionState, " ", mac);
+                    final BluetoothGatt gatt = bleDevice.getGatt();
+                    if( gatt != null ) {
+                        gatt.disconnect();
+                    }
                 }
             }
         }
@@ -1167,41 +1174,50 @@ public class BLEAgent {
 
         //disconnect
         if( device != currentDevice && currentDevice != null && device != null ) {
-            fifoOp(new AssertionOp(currentDevice, request, new SetupOp() {
+            final BLEDevice oldDevice = currentDevice;
+            fifoOp(new AssertionOp(oldDevice, request, new SetupOp() {
                 @Override
                 public void run() {
 
-                    lazyLog.d("Disconnecting from device: ", currentDevice.device.getAddress());
+                    lazyLog.d("Disconnecting from device: ", oldDevice.device.getAddress());
 
                     // disable notifications
-                    for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
-                        currentDevice.stopListenUUID(notifyUUID);
+                    for (Pair<UUID, UUID> notifyUUID : oldDevice.notifyUUIDs) {
+                        oldDevice.stopListenUUID(notifyUUID);
                     }
 
-                    currentDevice.gatt.disconnect();
+                    final BluetoothGatt gatt = oldDevice.getGatt();
+                    if (gatt != null) {
+                        gatt.disconnect();
+                    }
                 }
 
                 @Override
                 public boolean onConnectionStateChange(int status, int newState) {
 
                     final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
-                    device.connectionState = newState;
+                    oldDevice.connectionState = newState;
                     if (!ret) {
                         lazyLog.w("Not disconnected??!? ", describeState(newState));
-                        lazyLog.w("Retrying disconnect...", currentDevice.device.getAddress());
+                        lazyLog.w("Retrying disconnect...", oldDevice.device.getAddress());
                         UIHandler.postDelayed(new Runnable() {
                             @Override
                             public void run() {
-                                if (currentDevice == device) {
-                                    lazyLog.i("Trying disconnect now ", device);
-                                    device.gatt.disconnect();
+                                if (currentDevice == oldDevice) {
+                                    lazyLog.i("Trying disconnect now ", oldDevice);
+                                    final BluetoothGatt gatt = oldDevice.getGatt();
+                                    if (gatt != null) {
+                                        gatt.disconnect();
+                                    } else {
+                                        lazyLog.e("Expected gatt for ", oldDevice);
+                                    }
                                 } else {
-                                    lazyLog.e("Aborting disconnect, devices mismatch: ", device, currentDevice);
+                                    lazyLog.e("Aborting disconnect, devices mismatch: ", currentDevice, oldDevice);
                                 }
                             }
                         }, opRetryDelay);
                     } else {
-                        lazyLog.d("Disconnected from ", currentDevice.device.getAddress());
+                        lazyLog.d("Disconnected from ", oldDevice.device.getAddress());
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
@@ -1221,7 +1237,12 @@ public class BLEAgent {
                         introspector.paranoia();
 
                         if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                            lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
+                            final BluetoothGatt gatt = device.getGatt();
+                            if (gatt != null) {
+                                lazyLog.a( gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
+                            } else {
+                                lazyLog.e( "Expected gatt for device ", device);
+                            }
                         } else {
                             lazyLog.v( "already connected to ", device );
                             nextOp();
@@ -1241,7 +1262,12 @@ public class BLEAgent {
                                 public void run() {
                                     if (currentDevice == device) {
                                         lazyLog.i("Trying connect now ", device);
-                                        device.gatt.connect();
+                                        final BluetoothGatt gatt = device.getGatt();
+                                        if (gatt != null) {
+                                            gatt.connect();
+                                        } else {
+                                            lazyLog.e( "Expected gatt for ", device);
+                                        }
                                     } else {
                                         lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
                                     }
@@ -1270,7 +1296,12 @@ public class BLEAgent {
                     public void run() {
                         lazyLog.d( "Discovering services for device "
                                ,  device.device.getAddress());
-                        device.gatt.discoverServices();
+                        final BluetoothGatt gatt = device.getGatt();
+                        if( gatt != null ) {
+                            gatt.discoverServices();
+                        } else {
+                            lazyLog.e( "Expected gatt for ", device);
+                        }
                     }
 
                     @Override
@@ -1289,7 +1320,12 @@ public class BLEAgent {
                                 public void run() {
                                     if (currentDevice == device) {
                                         lazyLog.i("Trying discoverServices now ", device);
-                                        device.gatt.discoverServices();
+                                        final BluetoothGatt gatt = device.getGatt();
+                                        if( gatt != null ) {
+                                            gatt.discoverServices();
+                                        } else {
+                                            lazyLog.e( "Expected gatt for ", device);
+                                        }
                                     } else {
                                         lazyLog.e("Aborting discoverServices, devices mismatch: ", device, currentDevice);
                                     }
@@ -1357,7 +1393,7 @@ public class BLEAgent {
                         if (device.isStale()) {
                             lazyLog.w("ignoring stale device");
                             nextRequest();
-                        } else if (device.gatt == null) {
+                        } else if (device.getGatt() == null) {
                             lazyLog.e("Strange, currentDevice.gatt is null, but device isn't stale. this should never happen. gaben-san please save us. ");
                             nextRequest();
                         } else if (device != currentDevice) {
@@ -1458,9 +1494,8 @@ public class BLEAgent {
                     dev.lastSeen = now;
                 } else {
                     dev = new BLEDevice(device, now, lifeCycleCount);
+                    lazyLog.a( dev.gatt == null, " Gatt should be NULL when first created!");
                 }
-
-                introspector.introspect( dev.device, dev.gatt );
 
                 if( ! dev.isStale() ) {
                     dev.acquire();
