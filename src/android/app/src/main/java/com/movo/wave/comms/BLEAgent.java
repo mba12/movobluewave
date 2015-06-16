@@ -414,7 +414,7 @@ public class BLEAgent {
 
             this.device = device;
             // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
-            this.gatt = device.connectGatt( context, true, self.gattCallback );
+            this.gatt = device.connectGatt( context, false, self.gattCallback );
             if( this.gatt == null ) {
                 lazyLog.e( "BLEDevice failed at connectGatt()!");
                 //AH 20150612: this may not work as expected
