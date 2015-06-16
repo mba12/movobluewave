@@ -482,15 +482,19 @@ public class BLEAgent {
          * @param notifyUUID service-characteristic pair for which to disable notification.
          */
         private void stopListenUUID( final Pair<UUID, UUID > notifyUUID ) {
-            notifyUUIDs.remove(notifyUUID);
+            if( notifyUUID == null ) {
+                lazyLog.e( "Null notifyUUID at stopListenUUID()" );
+            } else {
+                notifyUUIDs.remove(notifyUUID);
 
-            final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
-            final BluetoothGatt gatt = getGatt();
-            if( gatt != null ) {
-                lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
-                        "Failed to disable notification for service: ", notifyUUID.first,
-                        " characteristic: ", notifyUUID.second
-                );
+                final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic(notifyUUID);
+                final BluetoothGatt gatt = getGatt();
+                if (gatt != null) {
+                    lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
+                            "Failed to disable notification for service: ", notifyUUID.first,
+                            " characteristic: ", notifyUUID.second
+                    );
+                }
             }
         }
 
@@ -528,7 +532,7 @@ public class BLEAgent {
 
                 pendingUUID = notifyUUID;
             } else {
-                lazyLog.e( "Failed to get characteristic, ", notifyUUID);
+                lazyLog.e("Failed to get characteristic, ", notifyUUID);
             }
         }
 
@@ -540,11 +544,13 @@ public class BLEAgent {
             lazyLog.a(pendingUUID != null,
                     "Error, complete listen to UUID with no dispatch!!!"
             );
-            if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
-                notifyUUIDs.add(pendingUUID);
-            } else if( pendingUUID != null) {
-                lazyLog.e( "Error, non-success gatt status (", gattStatus, ") for service ",
-                        pendingUUID.first, " characteristic ", pendingUUID.second );
+            if( pendingUUID != null) {
+                if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
+                    notifyUUIDs.add(pendingUUID);
+                } else {
+                    lazyLog.e("Error, non-success gatt status (", gattStatus, ") for service ",
+                            pendingUUID.first, " characteristic ", pendingUUID.second);
+                }
             } else {
                 lazyLog.e("completeListenUUID() call without pending op, ", this, " status ", gattStatus);
             }
