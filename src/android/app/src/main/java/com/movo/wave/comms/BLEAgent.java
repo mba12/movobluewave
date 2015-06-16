@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EmptyStackException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -122,6 +123,7 @@ public class BLEAgent {
     private static int refCount = 0;
     private static Semaphore mutex = new Semaphore( 1 );
     private static int lifeCycleCount = 0;
+    private static BluetoothManager btManager;
 
     /** Singleton initializer for framework;
      *
@@ -136,7 +138,7 @@ public class BLEAgent {
             if (context == null) {
                 context = ctx;
                 UIHandler = new Handler(ctx.getMainLooper());
-                final BluetoothManager btManager =
+                btManager =
                         (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
                 self.adapter = btManager.getAdapter();
 
@@ -831,11 +833,16 @@ public class BLEAgent {
                     ret = false;
                 }
 
-                final int connectionState = device.gatt.getConnectionState(device.device);
-                if( device.connectionState != connectionState ) {
-                    lazyLog.e( "BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState );
-                    ret = false;
-                }
+                /*if( device != null || device.gatt != null ) {
+                    final int connectionState = device.gatt.getConnectionState(device.device);
+
+                    if (device.connectionState != connectionState) {
+                        lazyLog.e("BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState);
+                        ret = false;
+                    }
+                } else {
+                    lazyLog.e( "Null gatt pointer");
+                }*/
             } while( false );
 
             return ret;
@@ -845,7 +852,11 @@ public class BLEAgent {
             final boolean ret = ! checkAssertions();
             if( ret ) {
                 lazyLog.e( "Aborting request ", request );
-                BLEAgent.self.nextRequest();
+                request.close();
+                request.onFailure();
+                if( self.currentRequest == request ) {
+                    self.nextRequest();
+                }
             }
             return ret;
         }
@@ -1045,6 +1056,102 @@ public class BLEAgent {
         }
     }
 
+    /** Deeply pessimistic introspection code for not trusting android at all
+     *
+     */
+    static class Introspector {
+        private final HashMap<String, BluetoothGatt> macGattMap = new HashMap<>();
+        private final HashMap<BluetoothGatt, HashSet<String>> gattMacMap = new HashMap<>();
+
+        private static final LazyLogger lazyLog = new LazyLogger("BLE Introspector", BLEAgent.lazyLog);
+
+        public void introspect( BluetoothDevice device, BluetoothGatt gatt ) {
+            final String mac = device.getAddress();
+            final BluetoothGatt oldGatt = macGattMap.put(mac, gatt);
+            if( oldGatt != null ) {
+                lazyLog.i("Replacing gatt object for mac ", mac, " ", oldGatt, " -> ", gatt );
+            }
+
+            HashSet<String> macSet = gattMacMap.get( gatt );
+
+            if( macSet == null ) {
+                lazyLog.i( "New gatt object: ", gatt );
+                macSet = new HashSet<>();
+                gattMacMap.put( gatt, macSet );
+            }
+            if( macSet.add(mac)) {
+                lazyLog.i( "Adding new association for gatt ", gatt, " -> ", mac );
+            }
+            if( macSet.size() != 1 ) {
+                lazyLog.w( "Gatt object ", gatt, " backs ", macSet.size(), " devices:");
+                for( final String prevMac : macSet ) {
+                    lazyLog.w("Gatt object ", gatt, " -> ", prevMac );
+                }
+            }
+
+            if( UIHandler != null ) {
+                UIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        paranoia();
+                    }
+                });
+            } else {
+                lazyLog.i( "Can't be paranoid without UI thread");
+            }
+        }
+
+        private void paranoia() {
+            if( btManager == null ) {
+                lazyLog.w("Can't be paranoid with null btManager");
+                return;
+            }
+
+            for( final BluetoothDevice device : btManager.getConnectedDevices(BluetoothProfile.GATT) ) {
+                final String mac = device.getAddress();
+                final BLEDevice bleDevice = deviceMap.get( mac );
+
+                // really surprising state
+                if( bleDevice == null ) {
+                    lazyLog.e( "PARANOIA: Connected to untracked device ", mac, " -> ", device);
+                    final BluetoothGatt gatt = macGattMap.get( mac );
+                    if( gatt != null ) {
+                        lazyLog.i("Have a gatt for device, let's try to disconnect....");
+                        final Handler safeHandlerRef = UIHandler;
+                        safeHandlerRef.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                lazyLog.i("Disconnecting gatt for ", mac);
+                                gatt.disconnect();
+                                safeHandlerRef.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        lazyLog.i("Closing old gatt for ", mac);
+                                        gatt.close();
+                                    }
+                                }, 100);
+                            }
+                        });
+                    }
+                    continue;
+                }
+
+                // less surprising states
+                if( bleDevice.device != device ) {
+                    lazyLog.e( "Devices don't match ", device , " != ", bleDevice.device, " updating..." );
+                    bleDevice.setDevice( device );
+                }
+                if( bleDevice.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                    lazyLog.e( "Device state is not connected ", bleDevice.connectionState, " ", mac);
+
+                    bleDevice.gatt.disconnect();
+                }
+            }
+        }
+    }
+
+    final static private Introspector introspector = new Introspector();
+
     /** Retry time out incase we're helping persist a priority inversion in galaxy S4 error handling.
      *
      */
@@ -1111,11 +1218,7 @@ public class BLEAgent {
                         lazyLog.d( "Connecting to device ", device.device.getAddress());
                         currentDevice = device;
 
-                        final int connectionState = device.gatt.getConnectionState(device.device);
-                        if( device.connectionState != connectionState ) {
-                            lazyLog.e( "BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState );
-                            device.connectionState = connectionState;
-                        }
+                        introspector.paranoia();
 
                         if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
                             lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
@@ -1130,6 +1233,8 @@ public class BLEAgent {
                         boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
                         device.connectionState = newState;
                         if (!ret) {
+                            introspector.paranoia();
+
                             lazyLog.i( "Retrying connection. received: ", describeState(newState));
                             UIHandler.postDelayed(new Runnable() {
                                 @Override
@@ -1354,6 +1459,8 @@ public class BLEAgent {
                 } else {
                     dev = new BLEDevice(device, now, lifeCycleCount);
                 }
+
+                introspector.introspect( dev.device, dev.gatt );
 
                 if( ! dev.isStale() ) {
                     dev.acquire();
