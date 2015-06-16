@@ -830,6 +830,12 @@ public class BLEAgent {
                     lazyLog.e( "BLEAgent::currentOp not equal to assertion request", BLEAgent.self.currentOp, " != ", this );
                     ret = false;
                 }
+
+                final int connectionState = device.gatt.getConnectionState(device.device);
+                if( device.connectionState != connectionState ) {
+                    lazyLog.e( "BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState );
+                    ret = false;
+                }
             } while( false );
 
             return ret;
@@ -1104,6 +1110,13 @@ public class BLEAgent {
                     public void run() {
                         lazyLog.d( "Connecting to device ", device.device.getAddress());
                         currentDevice = device;
+
+                        final int connectionState = device.gatt.getConnectionState(device.device);
+                        if( device.connectionState != connectionState ) {
+                            lazyLog.e( "BLEAgent::connectionState not equal to connectionState", device.connectionState, " != ", connectionState );
+                            device.connectionState = connectionState;
+                        }
+
                         if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
                             lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
                         } else {
