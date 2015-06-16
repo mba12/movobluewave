@@ -461,8 +461,13 @@ public class BLEAgent {
 
         public BluetoothGattCharacteristic getCharacteristic( final Pair<UUID,UUID> uuidPair ) {
             // lookup service & characteristic (FIXME: null check)
-            final BluetoothGattService service =
-                    gatt.getService( uuidPair.first );
+            final BluetoothGattService service;
+            final BluetoothGatt gatt = getGatt();
+            if( gatt != null ) {
+                service = gatt.getService(uuidPair.first);
+            } else {
+                service = null;
+            }
             if( service != null ) {
                 final BluetoothGattCharacteristic characteristic =
                         service.getCharacteristic(uuidPair.second);
@@ -480,11 +485,13 @@ public class BLEAgent {
             notifyUUIDs.remove(notifyUUID);
 
             final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
-
-            lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
-                    "Failed to disable notification for service: ", notifyUUID.first,
-                    " characteristic: ", notifyUUID.second
-            );
+            final BluetoothGatt gatt = getGatt();
+            if( gatt != null ) {
+                lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
+                        "Failed to disable notification for service: ", notifyUUID.first,
+                        " characteristic: ", notifyUUID.second
+                );
+            }
         }
 
         private static final UUID notifyDescriptorUUID =
@@ -504,20 +511,25 @@ public class BLEAgent {
 
             final BluetoothGattCharacteristic characteristic = getCharacteristic( notifyUUID );
 
-            // check for notification failure
-            lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
-                    "Failed to disable notification for service: ", notifyUUID.first,
-                    " characteristic: ", notifyUUID.second);
+            if( characteristic != null ) {
 
-            final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    notifyDescriptorUUID );
+                // check for notification failure
+                lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
+                        "Failed to disable notification for service: ", notifyUUID.first,
+                        " characteristic: ", notifyUUID.second);
 
-            descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
+                final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                        notifyDescriptorUUID);
 
-            lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
-                    , notifyUUID.first, " characteristic ", notifyUUID.second);
+                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
-            pendingUUID = notifyUUID;
+                lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
+                        , notifyUUID.first, " characteristic ", notifyUUID.second);
+
+                pendingUUID = notifyUUID;
+            } else {
+                lazyLog.e( "Failed to get characteristic, ", notifyUUID);
+            }
         }
 
         /** stashes the current UUID pair as active.
