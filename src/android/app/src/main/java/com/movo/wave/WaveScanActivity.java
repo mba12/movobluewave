@@ -164,7 +164,7 @@ public class WaveScanActivity extends MenuActivity {
                 } else {
                     acquire();
                     // query device serial && gatt attributes
-                    BLEAgent.handle(new WaveRequest.ReadSerial(device, 10000) {
+                    BLEAgent.handle(new WaveRequest.ReadSerial(device, 30000) {
 
                         @Override
                         public boolean dispatch(BLEAgent agent) {

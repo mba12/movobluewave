@@ -189,7 +189,7 @@ public class WaveAgent {
 
         public BLEAgent.BLEDevice device = null;
         public WaveInfo info;
-        final public int timeout = 10000;
+        final public int timeout;
         public Date deviceDate = null;
         public Date localDate = null;
         private int dataTotal = 0;
@@ -288,7 +288,8 @@ public class WaveAgent {
          *
          * @param callback notification callback.
          */
-        private DataSync( final Callback callback ) {
+        private DataSync( final Callback callback, int timeout ) {
+            this.timeout = timeout;
             this.callback = callback;
         }
 
@@ -304,7 +305,7 @@ public class WaveAgent {
         public static DataSync byAddress( final int timeout,
                                           final String address,
                                           final Callback callback ) {
-            final DataSync ret = new DataSync( callback );
+            final DataSync ret = new DataSync( callback, timeout );
 
             BLEAgent.handle(new BLEAgent.BLERequestScanForAddress(timeout, address) {
                 @Override
@@ -331,7 +332,7 @@ public class WaveAgent {
         public static DataSync bySerial(final int timeout,
                                         final String serial,
                                         final Callback callback ) {
-            final DataSync ret = new DataSync( callback );
+            final DataSync ret = new DataSync( callback, timeout );
 
             WaveAgent.scanForWaveDevices( timeout, new WaveScanCallback() {
                 @Override
@@ -388,7 +389,8 @@ public class WaveAgent {
          * @param device communications target.
          * @param callback notification callback.
          */
-        public DataSync( final BLEAgent.BLEDevice device, final Callback callback ) {
+        public DataSync( final BLEAgent.BLEDevice device, final Callback callback, int timeout ) {
+            this.timeout = timeout;
             this.device = device;
             this.callback = callback;
             nextState(true);

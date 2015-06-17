@@ -551,7 +551,7 @@ public class SyncDataActivity extends MenuActivity {
             syncCancel.setVisibility( View.INVISIBLE );
             syncCancel.setEnabled(false);
 
-            sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
+            sync = WaveAgent.DataSync.byInfo( 30000, info, syncCallback );
             updateSyncProgress( 0 );
             updateSyncState( sync.getState() );
             info = null;
