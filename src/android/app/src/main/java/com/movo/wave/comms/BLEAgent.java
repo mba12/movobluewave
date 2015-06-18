@@ -330,6 +330,8 @@ public class BLEAgent {
         }
     };
 
+
+
     /**
      *  Represents A BLE device and connection state
      */
@@ -1194,6 +1196,225 @@ public class BLEAgent {
      */
     final static int opRetryDelay=100;
 
+    /** Class for connecting/retrying connecting to gatt
+     *
+     */
+    static class GattConnectOp extends SetupOp {
+        final BLERequest request;
+
+        final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
+            @Override
+            public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+                //check for timeout. TODO: op check?
+                if( ! opActive() ) {
+                    lazyLog.w("Not in current request or op, stopping scan");
+                    self.adapter.stopLeScan(this);
+                } else {
+                    lazyLog.d( "scan saw: ", bluetoothDevice, " while trying to connect to ", request.device.device );
+                }
+            }
+        };
+
+        final Handler safeHandlerRef;
+        final int retryPeriod;
+
+        AsyncOp childOp;
+
+        /** Check to see if we're the active op. may only be accurate on UI thread.
+         *
+         * @return boolean indication
+         */
+        private boolean opActive() {
+            return request == self.currentRequest && self.currentOp == this;
+        }
+
+        private synchronized boolean setChild( AsyncOp child ) {
+            final boolean ret = childOp == null;
+            if( ret ) {
+                childOp = child;
+                lazyLog.i( "GattConnectOp::setChild() starting child ", child );
+                safeHandlerRef.postDelayed(child, opRetryDelay);
+            } else {
+                lazyLog.e("GattConnectOp::setChild() already have child ", childOp, ", ignoring ", child);
+            }
+            return ret;
+        }
+
+        private synchronized  boolean clearChild( AsyncOp child ) {
+            final boolean ret = childOp == child;
+            if( ret ) {
+                childOp = null;
+                lazyLog.d("GattConnectOp::clearChild() clearing child ", child);
+            } else {
+                lazyLog.w( "GattConnectOp::clearChild() mismatch! current: ", childOp, ", ignoring ", child);
+            }
+            return ret;
+        }
+
+        private void updateDeviceState( int status, int newState ) {
+            lazyLog.d( request.device.device, " state change: ", describeState( request.device.connectionState ),
+                    " -> ", describeState( newState ) );
+            request.device.connectionState = newState;
+        }
+
+        /** Queue a connect child op, if no op queued
+         *
+         * @return success
+         */
+        private boolean queueConnect() {
+            return setChild( new SetupOp() {
+                @Override
+                public void run() {
+                    if (opActive()) {
+                        lazyLog.a(request.device.connectGatt(), "GattConnectOp::retryConnect() request.device.connectGatt() failed!", request.device.device);
+
+                        // queue timeout for retry
+                        final AsyncOp expectedChild = this;
+
+                        safeHandlerRef.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (opActive() && clearChild(expectedChild)) {
+                                    retryConnect();
+                                    lazyLog.i("GattConnectOp::retryConnect() connect timeout", request.device.device);
+                                }
+                            }
+                        }, retryPeriod);
+
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() aborting since op is not active", request.device.device);
+                    }
+                }
+
+                @Override
+                public boolean onConnectionStateChange(int status, int newState) {
+                    switch ( newState ) {
+                        case BluetoothGatt.STATE_CONNECTED:
+                            // done!
+                            clearChild( this );
+                            return true;
+                        case BluetoothGatt.STATE_CONNECTING:
+                            // not done, but wait to see what happens
+                            return false;
+                        default:
+                            // badness, immediately retry....
+                            if( clearChild( this ) )
+                                retryConnect();
+                            return false;
+                    }
+                }
+            });
+        }
+
+        private boolean queueDisconnect(final BluetoothGatt gatt) {
+            return setChild(new SetupOp() {
+                @Override
+                public void run() {
+                    if (!opActive()) {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated since op is not active", request.device.device);
+                    } else if (request.device.connectionState == BluetoothGatt.STATE_CONNECTED) {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated since gatt is connected!", request.device.device);
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() cancel open(gatt.disconnect())...", request.device.device);
+                        gatt.disconnect();
+
+                        if( clearChild( this ) )
+                            queueClose(gatt);
+                    }
+                }
+
+                @Override
+                public boolean onConnectionStateChange(int status, int newState) {
+                    switch ( newState ) {
+                        case BluetoothGatt.STATE_CONNECTED:
+                            // done!
+                            clearChild( this );
+                            return true;
+                        case BluetoothGatt.STATE_DISCONNECTED:
+                            // done!
+                            if( clearChild( this ) )
+                                queueClose(gatt);
+                            break;
+                        case BluetoothGatt.STATE_DISCONNECTING:
+                            // not done, but wait to see what happens
+                            break;
+                        default:
+                            // badness, immediately retry....
+                            if( clearChild( this ) )
+                                queueDisconnect( gatt );
+                            break;
+                    }
+                    return false;
+                }
+            }); //END disconnect SetupOp
+        }
+
+        private boolean queueClose(final BluetoothGatt gatt) {
+            return setChild(new SetupOp() {
+                public void run() {
+                    // always close after disconnect()
+                    lazyLog.i("GattConnectOp::retryConnect() gatt.close()...", request.device.device);
+                    if( request.device.gatt == gatt ) {
+                        request.device.gatt = null;
+                    }
+                    gatt.close();
+                    if (opActive() && clearChild( this ) ) {
+                        queueConnect();
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated due as op no longer active", request.device.device);
+                    }
+                }
+            }); //END close runnable
+        }
+
+        private void retryConnect() {
+            if( request.device.gatt == null ) {
+                queueConnect();
+            } else {
+                queueDisconnect(request.device.gatt );
+            }
+        }
+
+        private GattConnectOp( final BLERequest request, final Handler handler, final int retryPeriod ) {
+            this.request = request;
+            safeHandlerRef = handler;
+            this.retryPeriod = retryPeriod;
+        }
+
+        @Override
+        public void run() {
+            if( request.device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                //introspector.paranoia();
+                self.adapter.startLeScan(callback);
+                lazyLog.i("GattConnectOp::run() STARTING connect ", request.device.device);
+                retryConnect();
+            } else {
+                lazyLog.i( "GattConnectOp::run() already connected ", request.device.device );
+                self.nextOp();
+            }
+        }
+
+        @Override
+        public boolean onConnectionStateChange(int status, int newState) {
+            updateDeviceState(status, newState);
+            //introspector.paranoia();
+            final boolean ret;
+
+            if (childOp == null) {
+                lazyLog.w("GattConnectOp connection state change without child!");
+                ret = super.onConnectionStateChange(status, newState);
+            } else {
+                ret = childOp.onConnectionStateChange(status, newState);
+            }
+
+            if( ret ){
+                lazyLog.i("GattConnectOp::run() Done connect ", request.device.device);
+                self.adapter.stopLeScan(callback);
+            }
+            return ret;
+        }
+    }
+
     /** make the specified device active
      * Pushes AsyncOps to the opstack
      * @param device device to activate.
@@ -1256,77 +1477,17 @@ public class BLEAgent {
 
 
         if( device != null ) {
+            //change current device pointer
+            fifoOp( new SetupOp() {
+                @Override
+                public void run() {
+                    currentDevice = device;
+                    nextOp();
+                }
+            });
+
             // connect
-            if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
-                    @Override
-                    public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
-
-                        //check for timeout. TODO: op check?
-                        if( request != currentRequest ) {
-                            lazyLog.w("Not in current request, stopping scan");
-                            adapter.stopLeScan(this);
-                        } else {
-                            lazyLog.d( "scan saw: ", bluetoothDevice, " while trying to connect to ", device );
-                        }
-                    }
-                };
-                fifoOp(new SetupOp() {
-                    @Override
-                    public void run() {
-                        if( self.currentOp != this ) {
-                            lazyLog.w("Ooops, looks like i shouldn't run ", device.device );
-                            return;
-                        }
-                        lazyLog.d( "Connecting to device ", device.device.getAddress());
-                        currentDevice = device;
-
-                        introspector.paranoia();
-
-                        if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                            adapter.startLeScan( callback );
-                            lazyLog.a( device.connectGatt(), "gatt-connect to device: ", device.device.getAddress());
-                        } else {
-                            lazyLog.v( "already connected to ", device );
-                            nextOp();
-                        }
-                    }
-
-                    @Override
-                    public boolean onConnectionStateChange(int status, int newState) {
-                        boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
-                        device.connectionState = newState;
-                        if (!ret) {
-                            introspector.paranoia();
-
-                            lazyLog.i( "Retrying connection. received: ", describeState(newState));
-                            UIHandler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (currentDevice == device) {
-                                        lazyLog.i("Trying connect now ", device);
-                                        lazyLog.a( device.connectGatt(), "Failed to request gatt connection ", device );
-                                    } else {
-                                        lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
-                                    }
-                                }
-                            }, opRetryDelay);
-                        } else {
-                            lazyLog.d( "Connected to device ", device.device.getAddress());
-                            adapter.stopLeScan( callback );
-                        }
-                        return ret;
-                    }
-                });
-            } else {
-                fifoOp( new SetupOp() {
-                    @Override
-                    public void run() {
-                        currentDevice = device;
-                        nextOp();
-                    }
-                });
-            }
+            fifoOp( new GattConnectOp( request, UIHandler, 5000 ));
 
             // discover devices
             if (!device.servicesDiscovered) {
