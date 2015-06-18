@@ -1090,13 +1090,15 @@ public class BLEAgent {
     }
 
     /** Deeply pessimistic introspection code for not trusting android at all
-     *
+     *  TODO: use hashcode instead of object tracking
+     *  TODO: track MAC->BluetoothDevice
      */
     static class Introspector {
         private final HashMap<String, BluetoothGatt> macGattMap = new HashMap<>();
         private final HashMap<BluetoothGatt, HashSet<String>> gattMacMap = new HashMap<>();
 
         private static final LazyLogger lazyLog = new LazyLogger("BLE Introspector", BLEAgent.lazyLog);
+
 
         public void introspect( BluetoothDevice device, BluetoothGatt gatt ) {
             final String mac = device.getAddress();
@@ -1256,15 +1258,33 @@ public class BLEAgent {
         if( device != null ) {
             // connect
             if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
+                    @Override
+                    public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+
+                        //check for timeout. TODO: op check?
+                        if( request != currentRequest ) {
+                            lazyLog.w("Not in current request, stopping scan");
+                            adapter.stopLeScan(this);
+                        } else {
+                            lazyLog.d( "scan saw: ", bluetoothDevice, " while trying to connect to ", device );
+                        }
+                    }
+                };
                 fifoOp(new SetupOp() {
                     @Override
                     public void run() {
+                        if( self.currentOp != this ) {
+                            lazyLog.w("Ooops, looks like i shouldn't run ", device.device );
+                            return;
+                        }
                         lazyLog.d( "Connecting to device ", device.device.getAddress());
                         currentDevice = device;
 
                         introspector.paranoia();
 
                         if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                            adapter.startLeScan( callback );
                             lazyLog.a( device.connectGatt(), "gatt-connect to device: ", device.device.getAddress());
                         } else {
                             lazyLog.v( "already connected to ", device );
@@ -1293,6 +1313,7 @@ public class BLEAgent {
                             }, opRetryDelay);
                         } else {
                             lazyLog.d( "Connected to device ", device.device.getAddress());
+                            adapter.stopLeScan( callback );
                         }
                         return ret;
                     }
