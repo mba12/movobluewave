@@ -283,7 +283,7 @@ public class Home extends MenuActivity {
             String uid = UserData.getUserData(c).getCurrentUser();
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-            if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+            if("Error".equals(UserData.getUserData(c).getCurrentUsername())){
                 currentUserTV.setText( "" );
             }else{
                 currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
