@@ -521,7 +521,7 @@ public class WaveAgent {
                     @Override
                     protected void onComplete(boolean success,
                                               WaveRequest.WaveDataPoint[] data) {
-                        receiveData( data, cal );
+                        receiveData( success, data, cal );
                     }
                 });
 
@@ -533,33 +533,36 @@ public class WaveAgent {
          *
          * @param response array of WaveDataPoints or null for failure.
          */
-        private void receiveData( final WaveRequest.WaveDataPoint[] response, final Calendar cal ) {
+        private void receiveData( final boolean success, final WaveRequest.WaveDataPoint[] response, final Calendar cal ) {
             progress();
-            if( response != null) {
+            if( success ) {
                 dataSuccess += 1;
-                boolean dump = false;
 
-                for (WaveRequest.WaveDataPoint point : response) {
+                if( response != null) {
+                    boolean dump = false;
+
+                    for (WaveRequest.WaveDataPoint point : response) {
 
 
-                    if( point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED ) {
-                        //skip reserved values.
+                        if (point.mode == WaveRequest.WaveDataPoint.Mode.RESERVED) {
+                            //skip reserved values.
 
-                        //lazyLog.v("Dropping point(mode): ", point );
-                        continue;
-                    } else if( point.date.compareTo( deviceDate ) > 0 ) {
-                        //skip future data.
-                        lazyLog.w("Dropping point(future date): ", point);
-                        continue;
+                            //lazyLog.v("Dropping point(mode): ", point );
+                            continue;
+                        } else if (point.date.compareTo(deviceDate) > 0) {
+                            //skip future data.
+                            lazyLog.w("Dropping point(future date): ", point);
+                            continue;
+                        }
+                        data.add(point);
                     }
-                    data.add(point);
-                }
-                if( dump ) {
-                    lazyLog.i( "DUMP START: ", UTC.isoFormat(cal) );
-                    for (WaveRequest.WaveDataPoint point : data) {
-                        lazyLog.i( "DUMP: ", point );
+                    if (dump) {
+                        lazyLog.i("DUMP START: ", UTC.isoFormat(cal));
+                        for (WaveRequest.WaveDataPoint point : data) {
+                            lazyLog.i("DUMP: ", point);
+                        }
+                        lazyLog.i("DUMP END: ", UTC.isoFormat(cal));
                     }
-                    lazyLog.i( "DUMP END: ", UTC.isoFormat(cal) );
                 }
             } else {
                 dataFailure += 1;

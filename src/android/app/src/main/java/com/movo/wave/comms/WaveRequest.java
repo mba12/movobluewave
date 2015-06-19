@@ -772,7 +772,7 @@ public class WaveRequest {
         public ReadData(final BLEAgent.BLEDevice device,
                         final int timeout,
                         final Date date){
-            this( device, timeout, date.getTime() );
+            this(device, timeout, date.getTime());
         }
 
         /** Create a new request at the given Calendar
@@ -840,11 +840,17 @@ public class WaveRequest {
                     lazyLog.d(  "Failed to get data " + UTC.isoFormat( cal ) );
                     break;
                 }
-                lazyLog.a( MarshalByte.SIZE.parse( response ) == 99,
-                        "Data length doesn't match spec: 99!=",
-                        MarshalByte.SIZE.parse( response ) );
-
-                final int qty = (MarshalByte.SIZE.parse(response) - 3)/2;
+                final int size = MarshalByte.SIZE.parse( response );
+                if( size == 0 ) {
+                    lazyLog.w( "Data by date for ", UTC.isoFormat( cal ), " returned no data points.");
+                    break;
+                } else if( size != 99 ) {
+                    success = false;
+                    lazyLog.e("Data length doesn't match spec: 99!=",
+                            size );
+                    break;
+                }
+                final int qty = (size - 3) / 2;
 
                 lazyLog.d(  "Data by date for ", UTC.isoFormat( cal ), " returned ", qty,
                         " data points." );
@@ -852,7 +858,8 @@ public class WaveRequest {
                 success &= ( qty >= 0 );
 
                 if( ! success ) {
-                    lazyLog.d("No data points for ", cal);
+                    //NOTE: size parsing should preclude this block from being called.
+                    lazyLog.e("No data points for ", cal);
                     break;
                 }
 
