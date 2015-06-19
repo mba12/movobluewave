@@ -17,6 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String INTEGER_TYPE = " INTEGER";
 //    private static final String STEP_TYPE = " INTEGER";
     private static final String BLOB_TYPE = " BLOB";
+    private static final String NOT_NULL = " NOT NULL";
 
     private static final String COMMA_SEP = ",";
 
@@ -24,16 +25,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String SQL_CREATE_ENTRIES_STEPS =
             "CREATE TABLE " + Database.StepEntry.STEPS_TABLE_NAME + " (" +
                     Database.StepEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL," +
-                    Database.StepEntry.SYNC_ID + BLOB_TYPE + COMMA_SEP +
-                    Database.StepEntry.START + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.END + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.STEPS + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.USER + TEXT_TYPE + COMMA_SEP +
-                    Database.StepEntry.IS_PUSHED + INTEGER_TYPE + COMMA_SEP +
-                    Database.StepEntry.DEVICEID + TEXT_TYPE + COMMA_SEP +
+                    Database.StepEntry.SYNC_ID + BLOB_TYPE + NOT_NULL + COMMA_SEP +
+                    Database.StepEntry.START + INTEGER_TYPE + NOT_NULL + COMMA_SEP +
+                    Database.StepEntry.END + INTEGER_TYPE + NOT_NULL +COMMA_SEP +
+                    Database.StepEntry.STEPS + INTEGER_TYPE + NOT_NULL + COMMA_SEP +
+                    Database.StepEntry.USER + TEXT_TYPE + NOT_NULL + COMMA_SEP +
+                    Database.StepEntry.IS_PUSHED + INTEGER_TYPE + NOT_NULL + COMMA_SEP +
+                    Database.StepEntry.DEVICEID + TEXT_TYPE + NOT_NULL + COMMA_SEP +
                     Database.StepEntry.WORKOUT_TYPE + BLOB_TYPE + COMMA_SEP +
                     Database.StepEntry.GUID + BLOB_TYPE +COMMA_SEP +
-                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START+","+Database.StepEntry.DEVICEID +" ) ON CONFLICT REPLACE" +
+                    " CONSTRAINT uniqueTime UNIQUE ( "+Database.StepEntry.START + COMMA_SEP+
+                    Database.StepEntry.DEVICEID + COMMA_SEP +
+                    Database.StepEntry.USER + " ) ON CONFLICT IGNORE" +
                     " )";
     //Create table with unique key being the sync GUID
     private static final String SQL_CREATE_ENTRIES_SYNC =

@@ -285,10 +285,17 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     var dateStringTimeOnly = dateFormatFBTimeNode(fetchResults[i].starttime)
                     var appendString = dateStringFB
                     let step = fetchResults[i]
-                    appendString = appendString + "/"
-                    appendString = appendString + fetchResults[i].syncid
+                    
+                    /* 
+                        Firebase format change to:
+                            Y/M/Day/Time/serial/steps/{meta}
+
+                    */
+                    
                     appendString = appendString + "/"
                     appendString = appendString + dateStringTimeOnly
+                    appendString = appendString + "/"
+                    appendString = appendString + step.serialnumber
                     appendString = appendString + "/"
                     
                     var syncAppend = "steps/"
@@ -298,11 +305,14 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     //                    syncAppend =
                     //                    syncAppend = syncAppend + dateStringTimeOnly
                     
+                    
+                    //appendString = appendString + fetchResults[i].syncid
+                    
                     var daySyncRef = refSync.childByAppendingPath(syncAppend)
                     var dayRef = refSteps.childByAppendingPath(appendString)
                     
 
-                    var stepFields = ["count":String(step.count),"deviceid":String(step.serialnumber),"starttime": dateFormatFBTimeNode(step.starttime),"endtime": dateFormatFBTimeNode(step.endtime)]
+                    var stepFields = ["count":String(step.count),"deviceid": step.serialnumber, "syncid":step.syncid, "starttime": dateFormatFBTimeNode(step.starttime),"endtime": dateFormatFBTimeNode(step.endtime)]
                     
                     
                     
@@ -347,16 +357,48 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
 }
 
 
-func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syncId:String, String isoDate:String) -> Bool {
+func insertStepsFromFirebase(FDataSnapshot stepSnapshot:FDataSnapshot, String isoDate:String) -> Bool {
     var newsteps = false
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-        var stepsChild:FDataSnapshot = daySnapshot.childSnapshotForPath("count")
-        //        println(stepsChild.value)
-        var countString = daySnapshot.childSnapshotForPath("count").valueInExportFormat() as? NSString
-        var countInt:Int16 = Int16(countString!.integerValue)
-        var isoStart:String = isoDate + (daySnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String)!
-        var isoStop:String = isoDate + (daySnapshot.childSnapshotForPath("endtime").valueInExportFormat() as? String)!
-        var serial:String = (daySnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String)!
+        var valid = true
+        var countInt : Int16 = 0
+        var isoStart : String = ""
+        var isoStop : String = ""
+        var serial : String = ""
+        var syncId : String = ""
+        
+        if let countString = stepSnapshot.childSnapshotForPath("count").valueInExportFormat() as? NSString {
+            countInt = Int16(countString.integerValue)
+        } else {
+            valid = false
+        }
+        
+        if let isoStartS = stepSnapshot.childSnapshotForPath("starttime").valueInExportFormat() as? String {
+            isoStart = isoDate + isoStartS
+        } else {
+            valid = false
+        }
+        
+        if let isoStopS = stepSnapshot.childSnapshotForPath("endtime").valueInExportFormat() as? String {
+            isoStop = isoDate + isoStopS
+        }
+
+        if let ser = stepSnapshot.childSnapshotForPath("deviceid").valueInExportFormat() as? String {
+            serial = ser
+        } else {
+            valid = false
+        }
+        
+        if let sync = stepSnapshot.childSnapshotForPath("syncid").valueInExportFormat() as? String {
+            syncId = sync
+        } else {
+            valid = false
+        }
+        
+        if (!valid) {
+            //nothing valid received
+            return false
+        }
         var startTime = createDateFromString(String: isoStart)
         var stopTime = createDateFromString(String: isoStop)
         
@@ -403,6 +445,18 @@ func insertStepsFromFirebase(FDataSnapshot daySnapshot:FDataSnapshot, String syn
 }
 
 
+func retrieveFBDataForYM(Year: Int, Month: Int, updateCallback: FBUpdateDelegate?) {
+    var days = daysInMonth(Year, Month)
+    
+    for (var i = 1; i <= days; i++) {
+        retrieveFBDataForYMDGMT(Year, Month, i, updateCallback)
+        
+    }
+    UserData.getOrCreateUserData().downloadMetaData()
+    
+}
+
+
 func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FBUpdateDelegate?) {
     if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
         var newsteps = false
@@ -411,44 +465,53 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
         if(Month<10){
             month = "0" + (String(Month))
         }else{
-            month = String(Day)
+            month = String(Month)
         }
-        var fbMonthRef = fbUserRef + "/steps/"
-        fbMonthRef = fbMonthRef + year
-        fbMonthRef = fbMonthRef + "/"
-        fbMonthRef = fbMonthRef + month
-        fbMonthRef = fbMonthRef + "/"
+        var day : String = ""
+        if (Day < 10) {
+            day = "0" + (String(Day))
+        } else {
+            day = String(Day)
+        }
+        
+        var fbDayRef = fbUserRef + "/steps/"
+        fbDayRef = fbDayRef + year
+        fbDayRef = fbDayRef + "/"
+        fbDayRef = fbDayRef + month
+        fbDayRef = fbDayRef + "/"
+        fbDayRef = fbDayRef + day
+        
         var iso8601String:String = year
         iso8601String = iso8601String + "-"
         iso8601String = iso8601String + month
         iso8601String = iso8601String + "-"
+        iso8601String = iso8601String + day
         
         
-        var fbMonth = Firebase(url:fbMonthRef)
-        fbMonth.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            var monthItr = snapshot.children
-            while let monthSnap = monthItr.nextObject() as? FDataSnapshot{
-                //monthSnap grabs the individual days, calling .key on it will return the day #
-                var isoDate = iso8601String
-                isoDate = isoDate + monthSnap.key
-                var dayItr = monthSnap.children
-                while let rest = dayItr.nextObject() as? FDataSnapshot {
-                    
-                    //this is the root node for a steps object
-                    var syncId = rest.key
-                    //                    NSLog("Syncid is %@",syncId!)
-                    var itr2 = rest.children
-                    while let daySnap = itr2.nextObject() as? FDataSnapshot{
-                        //this steps into the node title and gets the objects
-                        //                            isoDate = isoDate + daySnap.key
-                        if(daySnap.hasChildren()){
-                            var new = insertStepsFromFirebase(FDataSnapshot: daySnap, String:syncId, String:isoDate)
-                            if (new) {
-                                newsteps = new
-                            }
+        /*
+        Firebase format change to:
+        Y/M/Day/Time/serial/steps/{meta}
+        
+        */
+        
+        var fbDay = Firebase(url:fbDayRef)
+        fbDay.observeSingleEventOfType(.Value, withBlock: { snapshot in
+            var dayItr = snapshot.children
+            while let daySnap = dayItr.nextObject() as? FDataSnapshot{
+                //dayItr has the individual hours, daySnap iterates through it
+                //calling .key on it will return the start time value
+                //calling children on it will return the set of serial numbers on that hour
+                var serialStepSetItr = daySnap.children
+                //this should be each day
+                while let rest = serialStepSetItr.nextObject() as? FDataSnapshot {
+                    if(rest.hasChildren()){
+                        var new = insertStepsFromFirebase(FDataSnapshot: rest, String:iso8601String)
+                        if (new) {
+                            newsteps = new
                         }
-                        
                     }
+                        
+            
                 }
                 
             }
@@ -463,7 +526,7 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
         })
     }
     //update our local metadata as well
-    UserData.getOrCreateUserData().downloadMetaData()
+
     
 }
 
@@ -1000,5 +1063,15 @@ func login(email: String, password: String) {
 
 
 
+func daysInMonth(Year: Int, Month: Int) -> Int {
+    var days = 31
+    var cal = NSCalendar.currentCalendar()
+    if let date = YMDLocalToNSDate(Year, Month, 1) {
+        days = cal.rangeOfUnit(.CalendarUnitDay,
+            inUnit: .CalendarUnitMonth,
+            forDate: date).toRange()!.endIndex-1
+    }
 
+    return days
+}
 

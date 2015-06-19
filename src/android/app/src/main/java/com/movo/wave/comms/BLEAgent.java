@@ -22,8 +22,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EmptyStackException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -121,6 +123,7 @@ public class BLEAgent {
     private static int refCount = 0;
     private static Semaphore mutex = new Semaphore( 1 );
     private static int lifeCycleCount = 0;
+    private static BluetoothManager btManager;
 
     /** Singleton initializer for framework;
      *
@@ -135,7 +138,7 @@ public class BLEAgent {
             if (context == null) {
                 context = ctx;
                 UIHandler = new Handler(ctx.getMainLooper());
-                final BluetoothManager btManager =
+                btManager =
                         (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
                 self.adapter = btManager.getAdapter();
 
@@ -213,7 +216,7 @@ public class BLEAgent {
                                 device.connectionState = newState;
                                 if( device != currentDevice &&
                                         newState != BluetoothGatt.STATE_DISCONNECTED ) {
-                                    lazyLog.i( "Disconnecting from errant device: ", address );
+                                    lazyLog.i( "ignoring unexpected device: ", address );
                                     //gatt.disconnect();
                                 }
                             } else {
@@ -327,13 +330,15 @@ public class BLEAgent {
         }
     };
 
+
+
     /**
      *  Represents A BLE device and connection state
      */
     public static class BLEDevice {
         public final int lifecycle;
-        public final BluetoothDevice device;
-        protected final BluetoothGatt gatt;
+        public BluetoothDevice device;
+        protected BluetoothGatt gatt;
 
         protected boolean servicesDiscovered = false;
         protected int connectionState = BluetoothGatt.STATE_DISCONNECTED;
@@ -366,17 +371,21 @@ public class BLEAgent {
             if( stale ) {
                 lazyLog.w( "Attempt to release stale device ", this);
             } else if( --refCount == 0 ) {
-                close();
-                stale = true;
-                synchronized (deviceMap) {
-                    deviceMap.remove(device.getAddress());
-                    if (self.currentDevice == this) {
-                        self.currentDevice = null;
-                    }
-                }
+                remove();
             }
 
             return ret;
+        }
+
+        private void remove() {
+            close();
+            stale = true;
+            synchronized (deviceMap) {
+                deviceMap.remove(device.getAddress());
+                if (self.currentDevice == this) {
+                    self.currentDevice = null;
+                }
+            }
         }
 
         /** synchronized getter for stale state. stale-> not accepted for BLERequests.
@@ -396,12 +405,61 @@ public class BLEAgent {
         private BLEDevice( final BluetoothDevice device, final Date seen, int lifecycle ) {
             this.lifecycle = lifecycle;
             this.lastSeen = seen;
-            this.device = device;
-            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
-            this.gatt = device.connectGatt( context, true, self.gattCallback );
-            lazyLog.a( this.gatt != null, "BLEDevice failed at connectGatt()!");
+            setDevice(device);
             this.notifyUUIDs = new HashSet<>();
             this.pendingUUID = null;
+        }
+
+        protected synchronized void setDevice( final BluetoothDevice device ) {
+            final BluetoothGatt oldGatt = gatt;
+
+            this.device = device;
+            // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
+            this.gatt = null;
+            if( this.gatt != oldGatt && oldGatt != null ) {
+                lazyLog.w("Swapping gatt objects live, may be strange! ", this);
+                final Handler safeHandlerRef = UIHandler;
+                safeHandlerRef.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i("Disconnecting old gatt for ", BLEDevice.this);
+                        oldGatt.disconnect();
+                        safeHandlerRef.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                lazyLog.i("Closing old gatt for ", BLEDevice.this);
+                                oldGatt.close();
+                            }
+                        }, 100);
+                    }
+                });
+            }
+        }
+
+        protected synchronized BluetoothGatt getGatt( ) {
+            if( this.gatt == null ) {
+                // important to actually connect: http://stackoverflow.com/questions/25848764/onservicesdiscoveredbluetoothgatt-gatt-int-status-is-never-called
+                this.gatt = device.connectGatt(context, true, self.gattCallback);
+                if (this.gatt == null) {
+                    lazyLog.e("BLEDevice failed at connectGatt()!");
+                    //AH 20150612: this may not work as expected
+                    remove();
+                } else {
+                    lazyLog.i( "Opened gatt object for device: ", this);
+                    introspector.introspect( device, gatt );
+                }
+            }
+            return gatt;
+        }
+
+        protected synchronized boolean connectGatt( ) {
+            final boolean ret;
+            if( this.gatt == null ) {
+                ret = getGatt() != null;
+            } else {
+                ret = getGatt().connect();
+            }
+            return ret;
         }
 
         /** Set of (notify enabled) characteristics.
@@ -414,8 +472,13 @@ public class BLEAgent {
 
         public BluetoothGattCharacteristic getCharacteristic( final Pair<UUID,UUID> uuidPair ) {
             // lookup service & characteristic (FIXME: null check)
-            final BluetoothGattService service =
-                    gatt.getService( uuidPair.first );
+            final BluetoothGattService service;
+            final BluetoothGatt gatt = getGatt();
+            if( gatt != null ) {
+                service = gatt.getService(uuidPair.first);
+            } else {
+                service = null;
+            }
             if( service != null ) {
                 final BluetoothGattCharacteristic characteristic =
                         service.getCharacteristic(uuidPair.second);
@@ -430,14 +493,20 @@ public class BLEAgent {
          * @param notifyUUID service-characteristic pair for which to disable notification.
          */
         private void stopListenUUID( final Pair<UUID, UUID > notifyUUID ) {
-            notifyUUIDs.remove( notifyUUID );
+            if( notifyUUID == null ) {
+                lazyLog.e( "Null notifyUUID at stopListenUUID()" );
+            } else {
+                notifyUUIDs.remove(notifyUUID);
 
-            final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic( notifyUUID );
-
-            lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
-                    "Failed to disable notification for service: ", notifyUUID.first,
-                    " characteristic: ", notifyUUID.second
-            );
+                final BluetoothGattCharacteristic notifyCharacteristic = getCharacteristic(notifyUUID);
+                final BluetoothGatt gatt = getGatt();
+                if (gatt != null) {
+                    lazyLog.a(gatt.setCharacteristicNotification(notifyCharacteristic, false),
+                            "Failed to disable notification for service: ", notifyUUID.first,
+                            " characteristic: ", notifyUUID.second
+                    );
+                }
+            }
         }
 
         private static final UUID notifyDescriptorUUID =
@@ -457,20 +526,29 @@ public class BLEAgent {
 
             final BluetoothGattCharacteristic characteristic = getCharacteristic( notifyUUID );
 
-            // check for notification failure
-            lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
-                    "Failed to disable notification for service: ", notifyUUID.first,
-                    " characteristic: ", notifyUUID.second);
+            if( characteristic != null ) {
 
-            final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    notifyDescriptorUUID );
+                // check for notification failure
+                lazyLog.a(gatt.setCharacteristicNotification(characteristic, true),
+                        "Failed to disable notification for service: ", notifyUUID.first,
+                        " characteristic: ", notifyUUID.second);
 
-            descriptor.setValue( BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE );
+                final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                        notifyDescriptorUUID);
 
-            lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
-                    , notifyUUID.first, " characteristic ", notifyUUID.second);
+                if( descriptor != null ) {
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 
-            pendingUUID = notifyUUID;
+                    lazyLog.a(gatt.writeDescriptor(descriptor), " Write notify descriptor for service "
+                            , notifyUUID.first, " characteristic ", notifyUUID.second);
+
+                    pendingUUID = notifyUUID;
+                } else {
+                    lazyLog.e( "Failed to get descriptor, ", notifyUUID);
+                }
+            } else {
+                lazyLog.e("Failed to get characteristic, ", notifyUUID);
+            }
         }
 
         /** stashes the current UUID pair as active.
@@ -478,14 +556,15 @@ public class BLEAgent {
          * @param gattStatus callback return value
          */
         private void completeListenUUID( final int gattStatus ) {
-            lazyLog.a(pendingUUID != null,
-                    "Error, complete listen to UUID with no dispatch!!!"
-            );
-            if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
-                notifyUUIDs.add(pendingUUID);
+            if( pendingUUID != null) {
+                if( gattStatus == BluetoothGatt.GATT_SUCCESS ) {
+                    notifyUUIDs.add(pendingUUID);
+                } else {
+                    lazyLog.e("Error, non-success gatt status (", gattStatus, ") for service ",
+                            pendingUUID.first, " characteristic ", pendingUUID.second);
+                }
             } else {
-                lazyLog.e( "Error, non-success gatt status (", gattStatus, ") for service ",
-                        pendingUUID.first, " characteristic ", pendingUUID.second );
+                lazyLog.e("completeListenUUID() call without pending op, ", this, " status ", gattStatus);
             }
             pendingUUID = null;
         }
@@ -495,20 +574,23 @@ public class BLEAgent {
          */
         private void close() {
             // see discussion at https://code.google.com/p/android/issues/detail?id=58607
-            UIHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    lazyLog.i("Close: Disconnecting ", device.getAddress());
-                    gatt.disconnect();
-                }
-            });
-            UIHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    lazyLog.i("Close: closing ", device.getAddress());
-                    gatt.close();
-                }
-            },100);
+            final BluetoothGatt oldGatt = gatt;
+            if( oldGatt != null ) {
+                UIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i("Close: Disconnecting ", device.getAddress());
+                        oldGatt.disconnect();
+                    }
+                });
+                UIHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        lazyLog.i("Close: closing ", device.getAddress());
+                        oldGatt.close();
+                    }
+                }, 100);
+            }
         }
     }
 
@@ -630,6 +712,10 @@ public class BLEAgent {
                         context = null;
                         UIHandler = null;
                         self.adapter = null;
+                        for( BLERequest request = agent.requestQueue.poll(); request != null; request = agent.requestQueue.poll() ) {
+                            lazyLog.e("Dropping request ", request);
+                            request.onFailure();
+                        }
                         for( BLEDevice dev : deviceMap.values()) {
                             lazyLog.e("BLEDevice Still in use! ", dev);
                         }
@@ -759,6 +845,102 @@ public class BLEAgent {
         }
     }
 
+    /** Class to catch and log errors while proxying other ops
+     *
+     */
+    public static class AssertionOp implements AsyncOp {
+        final static LazyLogger lazyLog = new LazyLogger("AssertionOp", BLEAgent.lazyLog );
+        final BLEDevice device;
+        final BLERequest request;
+        final AsyncOp op;
+
+        public AssertionOp( final BLEDevice device, final BLERequest request, final AsyncOp op ) {
+            this.device = device;
+            this.request = request;
+            this.op = op;
+        }
+
+        private boolean checkAssertions() {
+            boolean ret = true;
+            do {
+                if (device != BLEAgent.self.currentDevice) {
+                    lazyLog.e( "BLEAgent::currentDevice not equal to assertion device ", BLEAgent.self.currentDevice, " != ", device );
+                    ret = false;
+                }
+
+                if(request != BLEAgent.self.currentRequest ) {
+                    lazyLog.e( "BLEAgent::currentRequest not equal to assertion request", BLEAgent.self.currentRequest, " != ", request );
+                    ret = false;
+                }
+
+                if( this != BLEAgent.self.currentOp ) {
+                    lazyLog.e( "BLEAgent::currentOp not equal to assertion request", BLEAgent.self.currentOp, " != ", this );
+                    ret = false;
+                }
+
+            } while( false );
+
+            return ret;
+        }
+
+        private boolean invalidateOnError() {
+            final boolean ret = ! checkAssertions();
+            if( ret ) {
+                lazyLog.e( "Aborting request ", request );
+                request.close();
+                request.onFailure();
+                if( self.currentRequest == request ) {
+                    self.nextRequest();
+                }
+            }
+            return ret;
+        }
+
+        @Override
+        public boolean onConnectionStateChange(int status, int newState) {
+            return invalidateOnError() || op.onConnectionStateChange( status, newState );
+        }
+
+        @Override
+        public boolean onServicesDiscovered(int status) {
+            return invalidateOnError() || op.onServicesDiscovered( status );
+        }
+
+        @Override
+        public boolean onCharacteristicRead(BluetoothGattCharacteristic characteristic, int status) {
+            return invalidateOnError() || op.onCharacteristicRead( characteristic, status );
+        }
+
+        @Override
+        public boolean onCharacteristicWrite(BluetoothGattCharacteristic characteristic, int status) {
+            return invalidateOnError() || op.onCharacteristicWrite( characteristic, status );
+        }
+
+        @Override
+        public boolean onCharacteristicChanged(BluetoothGattCharacteristic characteristic) {
+            return invalidateOnError() || op.onCharacteristicChanged( characteristic );
+        }
+
+        @Override
+        public boolean onDescriptorRead(BluetoothGattDescriptor descriptor, int status) {
+            return invalidateOnError() || op.onDescriptorRead( descriptor, status );
+        }
+
+        @Override
+        public boolean onDescriptorWrite(BluetoothGattDescriptor descriptor, int status) {
+            return invalidateOnError() || op.onDescriptorWrite( descriptor, status );
+        }
+
+        @Override
+        public void run() {
+            if( invalidateOnError() ) {
+                lazyLog.e("not starting op ", op, " due to aborting ", request);
+            } else {
+                op.run();
+            }
+        }
+    }
+
     /**
      * Just name tag override for now....
      */
@@ -833,9 +1015,9 @@ public class BLEAgent {
             } while( true );
 
             currentRequest = request;
-            lazyLog.d( "BLEAgent: Preparing request: ", currentRequest );
+            lazyLog.d("BLEAgent: Preparing request: ", currentRequest);
 
-            stackOp(new SetupOp() {
+            stackOp(new AssertionOp( request.device, request, new SetupOp() {
                 @Override
                 public void run() {
                     if( currentRequest != request )
@@ -886,7 +1068,7 @@ public class BLEAgent {
                     }
                     return false;
                 }
-            });
+            }));
 
             buildOps();
 
@@ -909,88 +1091,417 @@ public class BLEAgent {
         }
     }
 
+    /** Deeply pessimistic introspection code for not trusting android at all
+     *  TODO: use hashcode instead of object tracking
+     *  TODO: track MAC->BluetoothDevice
+     */
+    static class Introspector {
+        private final HashMap<String, BluetoothGatt> macGattMap = new HashMap<>();
+        private final HashMap<BluetoothGatt, HashSet<String>> gattMacMap = new HashMap<>();
+
+        private static final LazyLogger lazyLog = new LazyLogger("BLE Introspector", BLEAgent.lazyLog);
+
+
+        public void introspect( BluetoothDevice device, BluetoothGatt gatt ) {
+            final String mac = device.getAddress();
+            final BluetoothGatt oldGatt = macGattMap.put(mac, gatt);
+            if( oldGatt != null ) {
+                lazyLog.i("Replacing gatt object for mac ", mac, " ", oldGatt, " -> ", gatt );
+            }
+
+            HashSet<String> macSet = gattMacMap.get( gatt );
+
+            if( macSet == null ) {
+                lazyLog.i( "New gatt object: ", gatt );
+                macSet = new HashSet<>();
+                gattMacMap.put( gatt, macSet );
+            }
+            if( macSet.add(mac)) {
+                lazyLog.i( "Adding new association for gatt ", gatt, " -> ", mac );
+            }
+            if( macSet.size() != 1 ) {
+                lazyLog.w( "Gatt object ", gatt, " backs ", macSet.size(), " devices:");
+                for( final String prevMac : macSet ) {
+                    lazyLog.w("Gatt object ", gatt, " -> ", prevMac );
+                }
+            }
+
+            if( UIHandler != null ) {
+                UIHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        paranoia();
+                    }
+                });
+            } else {
+                lazyLog.i( "Can't be paranoid without UI thread");
+            }
+        }
+
+        private void paranoia() {
+            if( btManager == null ) {
+                lazyLog.w("Can't be paranoid with null btManager");
+                return;
+            }
+
+            for( final BluetoothDevice device : btManager.getConnectedDevices(BluetoothProfile.GATT) ) {
+                final String mac = device.getAddress();
+                final BLEDevice bleDevice = deviceMap.get( mac );
+
+                // really surprising state
+                if( bleDevice == null ) {
+                    lazyLog.e( "PARANOIA: Connected to untracked device ", mac, " -> ", device);
+                    final BluetoothGatt gatt = macGattMap.get( mac );
+                    if( gatt != null ) {
+                        lazyLog.i("Have a gatt for device, let's try to disconnect....");
+                        final Handler safeHandlerRef = UIHandler;
+                        safeHandlerRef.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                lazyLog.i("Disconnecting gatt for ", mac);
+                                gatt.disconnect();
+                                safeHandlerRef.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        lazyLog.i("Closing old gatt for ", mac);
+                                        gatt.close();
+                                    }
+                                }, 100);
+                            }
+                        });
+                    }
+                    continue;
+                }
+
+                // less surprising states
+                if( bleDevice.device != device ) {
+                    lazyLog.e( "Devices don't match ", device , " != ", bleDevice.device, " updating..." );
+                    bleDevice.setDevice( device );
+                }
+                if( bleDevice.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                    lazyLog.e("Device state is not connected ", bleDevice.connectionState, " ", mac);
+                    final BluetoothGatt gatt = bleDevice.getGatt();
+                    if( gatt != null ) {
+                        gatt.disconnect();
+                    }
+                }
+            }
+        }
+    }
+
+    final static private Introspector introspector = new Introspector();
+
+    /** Retry time out incase we're helping persist a priority inversion in galaxy S4 error handling.
+     *
+     */
+    final static int opRetryDelay=100;
+
+    /** Class for connecting/retrying connecting to gatt
+     *
+     */
+    static class GattConnectOp extends SetupOp {
+        final BLERequest request;
+
+        final BluetoothAdapter.LeScanCallback callback = new BluetoothAdapter.LeScanCallback() {
+            @Override
+            public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
+                //check for timeout. TODO: op check?
+                if( ! opActive() ) {
+                    lazyLog.w("Not in current request or op, stopping scan");
+                    self.adapter.stopLeScan(this);
+                } else {
+                    lazyLog.d( "scan saw: ", bluetoothDevice, " while trying to connect to ", request.device.device );
+                }
+            }
+        };
+
+        final Handler safeHandlerRef;
+        final int retryPeriod;
+
+        AsyncOp childOp;
+
+        /** Check to see if we're the active op. may only be accurate on UI thread.
+         *
+         * @return boolean indication
+         */
+        private boolean opActive() {
+            return request == self.currentRequest && self.currentOp == this;
+        }
+
+        private synchronized boolean setChild( AsyncOp child ) {
+            final boolean ret = childOp == null;
+            if( ret ) {
+                childOp = child;
+                lazyLog.i( "GattConnectOp::setChild() starting child ", child );
+                safeHandlerRef.postDelayed(child, opRetryDelay);
+            } else {
+                lazyLog.e("GattConnectOp::setChild() already have child ", childOp, ", ignoring ", child);
+            }
+            return ret;
+        }
+
+        private synchronized  boolean clearChild( AsyncOp child ) {
+            final boolean ret = childOp == child;
+            if( ret ) {
+                childOp = null;
+                lazyLog.d("GattConnectOp::clearChild() clearing child ", child);
+            } else {
+                lazyLog.w( "GattConnectOp::clearChild() mismatch! current: ", childOp, ", ignoring ", child);
+            }
+            return ret;
+        }
+
+        private void updateDeviceState( int status, int newState ) {
+            lazyLog.d( request.device.device, " state change: ", describeState( request.device.connectionState ),
+                    " -> ", describeState( newState ) );
+            request.device.connectionState = newState;
+        }
+
+        /** Queue a connect child op, if no op queued
+         *
+         * @return success
+         */
+        private boolean queueConnect() {
+            return setChild( new SetupOp() {
+                @Override
+                public void run() {
+                    if (opActive()) {
+                        lazyLog.a(request.device.connectGatt(), "GattConnectOp::retryConnect() request.device.connectGatt() failed!", request.device.device);
+
+                        // queue timeout for retry
+                        final AsyncOp expectedChild = this;
+
+                        safeHandlerRef.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (opActive() && clearChild(expectedChild)) {
+                                    retryConnect();
+                                    lazyLog.i("GattConnectOp::retryConnect() connect timeout", request.device.device);
+                                }
+                            }
+                        }, retryPeriod);
+
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() aborting since op is not active", request.device.device);
+                    }
+                }
+
+                @Override
+                public boolean onConnectionStateChange(int status, int newState) {
+                    switch ( newState ) {
+                        case BluetoothGatt.STATE_CONNECTED:
+                            // done!
+                            clearChild( this );
+                            return true;
+                        case BluetoothGatt.STATE_CONNECTING:
+                            // not done, but wait to see what happens
+                            return false;
+                        default:
+                            // badness, immediately retry....
+                            if( clearChild( this ) )
+                                retryConnect();
+                            return false;
+                    }
+                }
+            });
+        }
+
+        private boolean queueDisconnect(final BluetoothGatt gatt) {
+            return setChild(new SetupOp() {
+                @Override
+                public void run() {
+                    if (!opActive()) {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated since op is not active", request.device.device);
+                    } else if (request.device.connectionState == BluetoothGatt.STATE_CONNECTED) {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated since gatt is connected!", request.device.device);
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() cancel open(gatt.disconnect())...", request.device.device);
+                        gatt.disconnect();
+
+                        if( clearChild( this ) )
+                            queueClose(gatt);
+                    }
+                }
+
+                @Override
+                public boolean onConnectionStateChange(int status, int newState) {
+                    switch ( newState ) {
+                        case BluetoothGatt.STATE_CONNECTED:
+                            // done!
+                            clearChild( this );
+                            return true;
+                        case BluetoothGatt.STATE_DISCONNECTED:
+                            // done!
+                            if( clearChild( this ) )
+                                queueClose(gatt);
+                            break;
+                        case BluetoothGatt.STATE_DISCONNECTING:
+                            // not done, but wait to see what happens
+                            break;
+                        default:
+                            // badness, immediately retry....
+                            if( clearChild( this ) )
+                                queueDisconnect( gatt );
+                            break;
+                    }
+                    return false;
+                }
+            }); //END disconnect SetupOp
+        }
+
+        private boolean queueClose(final BluetoothGatt gatt) {
+            return setChild(new SetupOp() {
+                public void run() {
+                    // always close after disconnect()
+                    lazyLog.i("GattConnectOp::retryConnect() gatt.close()...", request.device.device);
+                    if( request.device.gatt == gatt ) {
+                        request.device.gatt = null;
+                    }
+                    gatt.close();
+                    if (opActive() && clearChild( this ) ) {
+                        queueConnect();
+                    } else {
+                        lazyLog.i("GattConnectOp::retryConnect() terminated due as op no longer active", request.device.device);
+                    }
+                }
+            }); //END close runnable
+        }
+
+        private void retryConnect() {
+            if( request.device.gatt == null ) {
+                queueConnect();
+            } else {
+                queueDisconnect(request.device.gatt );
+            }
+        }
+
+        private GattConnectOp( final BLERequest request, final Handler handler, final int retryPeriod ) {
+            this.request = request;
+            safeHandlerRef = handler;
+            this.retryPeriod = retryPeriod;
+        }
+
+        @Override
+        public void run() {
+            if( request.device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
+                //introspector.paranoia();
+                self.adapter.startLeScan(callback);
+                lazyLog.i("GattConnectOp::run() STARTING connect ", request.device.device);
+                retryConnect();
+            } else {
+                lazyLog.i( "GattConnectOp::run() already connected ", request.device.device );
+                self.nextOp();
+            }
+        }
+
+        @Override
+        public boolean onConnectionStateChange(int status, int newState) {
+            updateDeviceState(status, newState);
+            //introspector.paranoia();
+            final boolean ret;
+
+            if (childOp == null) {
+                lazyLog.w("GattConnectOp connection state change without child!");
+                ret = super.onConnectionStateChange(status, newState);
+            } else {
+                ret = childOp.onConnectionStateChange(status, newState);
+            }
+
+            if( ret ){
+                lazyLog.i("GattConnectOp::run() Done connect ", request.device.device);
+                self.adapter.stopLeScan(callback);
+            }
+            return ret;
+        }
+    }
+
     /** make the specified device active
      * Pushes AsyncOps to the opstack
      * @param device device to activate.
      */
     private void setDevice( final BLEDevice device ) {
 
+        final BLERequest request = currentRequest;
+
         //disconnect
         if( device != currentDevice && currentDevice != null && device != null ) {
-            fifoOp(new SetupOp() {
+            final BLEDevice oldDevice = currentDevice;
+            fifoOp(new AssertionOp(oldDevice, request, new SetupOp() {
                 @Override
                 public void run() {
 
-                    lazyLog.d("Disconnecting from device: ", currentDevice.device.getAddress());
+                    lazyLog.d("Disconnecting from device: ", oldDevice.device.getAddress());
 
                     // disable notifications
-                    for (Pair<UUID, UUID> notifyUUID : currentDevice.notifyUUIDs) {
-                        currentDevice.stopListenUUID(notifyUUID);
+                    for (Pair<UUID, UUID> notifyUUID : oldDevice.notifyUUIDs) {
+                        oldDevice.stopListenUUID(notifyUUID);
                     }
 
-                    currentDevice.gatt.disconnect();
+                    final BluetoothGatt gatt = oldDevice.getGatt();
+                    if (gatt != null) {
+                        gatt.disconnect();
+                    }
                 }
 
                 @Override
                 public boolean onConnectionStateChange(int status, int newState) {
 
                     final boolean ret = newState == BluetoothGatt.STATE_DISCONNECTED;
-                    currentDevice.connectionState = newState;
+                    oldDevice.connectionState = newState;
                     if (!ret) {
                         lazyLog.w("Not disconnected??!? ", describeState(newState));
-                        lazyLog.w("Retrying disconnect...", currentDevice.device.getAddress());
-                        currentDevice.gatt.disconnect();
+                        lazyLog.w("Retrying disconnect...", oldDevice.device.getAddress());
+                        UIHandler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (currentDevice == oldDevice) {
+                                    lazyLog.i("Trying disconnect now ", oldDevice);
+                                    final BluetoothGatt gatt = oldDevice.getGatt();
+                                    if (gatt != null) {
+                                        gatt.disconnect();
+                                    } else {
+                                        lazyLog.e("Expected gatt for ", oldDevice);
+                                    }
+                                } else {
+                                    lazyLog.e("Aborting disconnect, devices mismatch: ", currentDevice, oldDevice);
+                                }
+                            }
+                        }, opRetryDelay);
                     } else {
-                        lazyLog.d("Disconnected from ", currentDevice.device.getAddress());
+                        lazyLog.d("Disconnected from ", oldDevice.device.getAddress());
                     }
                     return newState == BluetoothGatt.STATE_DISCONNECTED;
                 }
-            });
+            }));
         }
 
 
         if( device != null ) {
-            // connect
-            if( device.connectionState != BluetoothGatt.STATE_CONNECTED ) {
-                fifoOp(new SetupOp() {
-                    @Override
-                    public void run() {
-                        lazyLog.d( "Connecting to device ", device.device.getAddress());
-                        currentDevice = device;
-                        lazyLog.a(device.gatt.connect(), "gatt-connect to device: ", device.device.getAddress());
-                    }
+            //change current device pointer
+            fifoOp( new SetupOp() {
+                @Override
+                public void run() {
+                    currentDevice = device;
+                    nextOp();
+                }
+            });
 
-                    @Override
-                    public boolean onConnectionStateChange(int status, int newState) {
-                        boolean ret = newState == BluetoothGatt.STATE_CONNECTED;
-                        device.connectionState = newState;
-                        if (!ret) {
-                            lazyLog.i( "Retrying connection. received: ", describeState(newState));
-                            currentDevice.gatt.connect();
-                        } else {
-                            lazyLog.d( "Connected to device ", device.device.getAddress());
-                        }
-                        return ret;
-                    }
-                });
-            } else {
-                fifoOp( new SetupOp() {
-                    @Override
-                    public void run() {
-                        currentDevice = device;
-                        nextOp();
-                    }
-                });
-            }
+            // connect
+            fifoOp( new GattConnectOp( request, UIHandler, 5000 ));
 
             // discover devices
             if (!device.servicesDiscovered) {
-                fifoOp( new SetupOp() {
+                fifoOp( new AssertionOp( device, request, new SetupOp() {
                     @Override
                     public void run() {
                         lazyLog.d( "Discovering services for device "
                                ,  device.device.getAddress());
-                        device.gatt.discoverServices();
+                        final BluetoothGatt gatt = device.getGatt();
+                        if( gatt != null ) {
+                            gatt.discoverServices();
+                        } else {
+                            lazyLog.e( "Expected gatt for ", device);
+                        }
                     }
 
                     @Override
@@ -1003,7 +1514,23 @@ public class BLEAgent {
                         } else {
                             lazyLog.w( "Failed to discover services for device ",
                                     device.device.getAddress(), ". retrying..." );
-                            device.gatt.discoverServices();
+
+                            UIHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (currentDevice == device) {
+                                        lazyLog.i("Trying discoverServices now ", device);
+                                        final BluetoothGatt gatt = device.getGatt();
+                                        if( gatt != null ) {
+                                            gatt.discoverServices();
+                                        } else {
+                                            lazyLog.e( "Expected gatt for ", device);
+                                        }
+                                    } else {
+                                        lazyLog.e("Aborting discoverServices, devices mismatch: ", device, currentDevice);
+                                    }
+                                }
+                            }, opRetryDelay);
                         }
                         return ret;
                     }
@@ -1014,7 +1541,7 @@ public class BLEAgent {
                         run();
                         return super.onConnectionStateChange(status, newState);
                     }
-                });
+                }));
             }
 
             // enable notifications (FIXME: abstract)
@@ -1060,14 +1587,24 @@ public class BLEAgent {
                 }
              */
             for(final Pair<UUID, UUID> notifyUUID : insertUUIDs) {
-                fifoOp( new SetupOp() {
+                fifoOp( new AssertionOp( device, request, new SetupOp() {
                     @Override
                     public void run() {
-                        lazyLog.d( "enabling listening to device ",  device.device.getAddress()
-                               , " for service ", notifyUUID.first
-                               , " characteristic ", notifyUUID.second );
+                        if (device.isStale()) {
+                            lazyLog.w("ignoring stale device");
+                            nextRequest();
+                        } else if (device.getGatt() == null) {
+                            lazyLog.e("Strange, currentDevice.gatt is null, but device isn't stale. this should never happen. gaben-san please save us. ");
+                            nextRequest();
+                        } else if (device != currentDevice) {
+                            lazyLog.e( "Sounds like a data race: (final device) ", ((Object)device).toString(), " != (currentDevice) ", ((Object)currentDevice).toString());
+                        } else {
+                            lazyLog.d("enabling listening to device ", device.device.getAddress()
+                                    , " for service ", notifyUUID.first
+                                    , " characteristic ", notifyUUID.second);
 
-                        currentDevice.dispatchListenUUID(notifyUUID);
+                            device.dispatchListenUUID(notifyUUID);
+                        }
                     }
 
                     @Override
@@ -1076,8 +1613,18 @@ public class BLEAgent {
                         final boolean ret = status == BluetoothGatt.GATT_SUCCESS;
                         currentDevice.completeListenUUID( status );
                         if( ! ret ) {
-                            lazyLog.w( "retrying notification for ", notifyUUID);
-                            currentDevice.dispatchListenUUID( notifyUUID );
+                            lazyLog.w("retrying notification for ", notifyUUID);
+                            UIHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (currentDevice == device) {
+                                        lazyLog.i("Trying connect now ", device);
+                                        device.dispatchListenUUID(notifyUUID);
+                                    } else {
+                                        lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
+                                    }
+                                }
+                            }, opRetryDelay);
                         } else {
                             lazyLog.d( "enabled listening to device "
                                    ,  device.device.getAddress()
@@ -1095,16 +1642,27 @@ public class BLEAgent {
                                 newState, " (", status, ")" );
                         switch (newState) {
                             case BluetoothGatt.STATE_CONNECTED:
-                                run();
+                                currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
+                                UIHandler.postDelayed(this, opRetryDelay);
                                 break;
                             case BluetoothGatt.STATE_DISCONNECTED:
-                                currentDevice.completeListenUUID( BluetoothGatt.GATT_FAILURE );
-                                currentDevice.gatt.connect();
+                                lazyLog.i("retrying failed connection. received: ", describeState(newState));
+                                UIHandler.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        if (currentDevice == device) {
+                                            lazyLog.i("Trying connect now ", device);
+                                            lazyLog.a(device.connectGatt(), "Failed to request gatt connection ", device);
+                                        } else {
+                                            lazyLog.e("Aborting connect, devices mismatch: ", device, currentDevice);
+                                        }
+                                    }
+                                }, opRetryDelay);
                                 break;
                         }
                         return false;
                     }
-                });
+                }));
             }
         }
 
@@ -1127,20 +1685,27 @@ public class BLEAgent {
                     if(dev.device != device) {
                         lazyLog.e(dev.device == device, "BluetoothDevice objects don't match ",
                                 device, " != ", dev.device);
-                        lazyLog.a(dev.lifecycle==lifeCycleCount, " Device is from another age!!, ",
+                        lazyLog.a(dev.lifecycle == lifeCycleCount, " Device is from another age!!, ",
                                 dev.lifecycle, " != ", lifeCycleCount, " for ", dev);
+
+                        dev.setDevice( device );
                     }
                     dev.lastSeen = now;
                 } else {
                     dev = new BLEDevice(device, now, lifeCycleCount);
+                    lazyLog.a( dev.gatt == null, " Gatt should be NULL when first created!");
                 }
 
-                dev.acquire();
-                lazyLog.a(currentRequest != null, "No active request!!!");
-                if (currentRequest != null && currentRequest.onReceive(dev)) {
-                    nextRequest();
+                if( ! dev.isStale() ) {
+                    dev.acquire();
+                    lazyLog.a(currentRequest != null, "No active request!!!");
+                    if (currentRequest != null && currentRequest.onReceive(dev)) {
+                        nextRequest();
+                    }
+                    dev.release();
+                } else {
+                    lazyLog.w( "Ignoring stale device", dev);
                 }
-                dev.release();
             }
         });
     }

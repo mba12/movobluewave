@@ -25,7 +25,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
             })
         }
         UserData.delegate = self
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
         
     }
     
@@ -63,8 +63,9 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 self.userNameLabel.text = username
             })
         }
-        
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
+            UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
+        })
         
     }
     
@@ -99,6 +100,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
                 //then we have a new profile image
                 dispatch_async(dispatch_get_main_queue(),  {
                     self.profilePictureButton.setImage(image, forState: UIControlState.Normal)
+                    self.profilePictureButton.setImage(image, forState: UIControlState.Highlighted)
                     self.profilePictureButton.layer.cornerRadius = self.profilePictureButton.frame.size.width / 2;
                     self.profilePictureButton.clipsToBounds = true;
                     self.profilePictureButton.imageView?.contentMode = UIViewContentMode.ScaleAspectFill

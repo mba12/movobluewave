@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -25,6 +26,7 @@ import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
 import com.movo.wave.comms.WaveRequest;
+import com.movo.wave.util.DatabaseHandle;
 import com.movo.wave.util.LazyLogger;
 import com.movo.wave.util.NotificationPublisher;
 import com.movo.wave.util.UTC;
@@ -185,78 +187,80 @@ public class SyncDataActivity extends MenuActivity {
 
     static long MAX_TIME_DELTA = 100*60*60*24*7;
 
-    public void insertStepsIntoFirebase(List<WaveRequest.WaveDataPoint> points, String serialNumber, String syncId){
+    public void insertStepsIntoFirebase(SQLiteDatabase db, final String curUser, String syncId){
 
-//                    Date curDate = new Date(stepTime);
+        Cursor cur =  UserData.getUserData(c).getStepsToUpload(db, curUser);
 
-//                    cal.setTimeZone();
+        final DatabaseHandle dbHandle = new DatabaseHandle(c);
 
-//                    cal.set(Calendar.YEAR, curDate.getYear());
-//                    cal.set(Calendar.MONTH, curDate.getMonth());
-//                    cal.set(Calendar.DATE, curDate.getDate());
-//                    cal.set(Calendar.HOUR_OF_DAY, curDate.getHours());
-//                    cal.set(Calendar.MINUTE, curDate.getMinutes());
-        for (WaveRequest.WaveDataPoint point : points) {
+        while(cur.moveToNext()) {
+            final ContentValues localValues = new ContentValues();
+            DatabaseUtils.cursorRowToContentValues( cur, localValues );
 
-            if(point.value!=0) {
-                //****************Date stuff*****************//
-                Date stepTime = point.date;
-                Long stepTimeLong = stepTime.getTime();
-                Calendar cal = UTC.newCal();
+            final String deviceSerial = localValues.getAsString(Database.StepEntry.DEVICEID);
 
-                cal.setTimeInMillis(stepTimeLong);
-                cal.set(Calendar.SECOND, 0);
-                cal.set(Calendar.MILLISECOND, 0);
+            Map<String, Object> stepMap = new HashMap<String, Object>();
+            stepMap.put(Database.StepEntry.START, UTC.isoFormatShort(localValues.getAsLong(Database.StepEntry.START)));
+            stepMap.put(Database.StepEntry.END, UTC.isoFormatShort(localValues.getAsLong(Database.StepEntry.END)));
+            stepMap.put(Database.StepEntry.STEPS, localValues.getAsString(Database.StepEntry.STEPS));
+            stepMap.put(Database.StepEntry.DEVICEID, localValues.getAsString(Database.StepEntry.DEVICEID) );
+            stepMap.put(Database.StepEntry.SYNC_ID, localValues.getAsString(Database.StepEntry.SYNC_ID ) );
 
-                long THIRTY_MINUTES_IN_MILLIS = 1800000;//millisecs
-                long endLong = point.date.getTime();
-                endLong = endLong + THIRTY_MINUTES_IN_MILLIS;
-
-                String monthChange = "";
-                String dayChange = "";
-                if ((cal.get(Calendar.MONTH)) < 11) {
-                    monthChange = "0" + (cal.get(Calendar.MONTH) + 1);
-                } else {
-                    monthChange = String.valueOf(cal.get(Calendar.MONTH) + 1);
-                }
-                if ((cal.get(Calendar.DATE)) < 10) {
-                    dayChange = "0" + (cal.get(Calendar.DATE));
-                } else {
-                    dayChange = String.valueOf(cal.get(Calendar.DATE));
-                }
-                String startTime = UTC.isoFormatShort(stepTimeLong);
-                String endTime = UTC.isoFormatShort(endLong);
-
-                //*******************************************//
-
-
-                Map minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
-                Map<String, String> stepData = new HashMap<String, String>();
-//                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-                stepData.put(Database.StepEntry.START, startTime);
-                stepData.put(Database.StepEntry.END, endTime);
-//                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-                stepData.put(Database.StepEntry.STEPS, String.valueOf(point.value));
-                stepData.put(Database.StepEntry.DEVICEID, serialNumber);
-
-
-                minuteMap.put(startTime, stepData);
-
-
-                Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
-                refStep2.updateChildren(minuteMap);
-
-//            refStep2.setValue(minuteMap);
-                Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + UserData.getUserData(c).getCurUID() + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + syncId + "/");//to modify child node
-                refSyncSteps.updateChildren(minuteMap);
-
+            Long stepTimeLong = localValues.getAsLong(Database.StepEntry.START);
+//        Long stepTimeLong = stepTime.getTime();
+            Calendar cal = UTC.newCal();
+            cal.setTimeInMillis(stepTimeLong);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+//            long endLong = Long.parseLong(cur.getString(2));
+            String monthChange = "";
+            String dayChange = "";
+            if ((cal.get(Calendar.MONTH)) < 11) {
+                monthChange = "0" + (cal.get(Calendar.MONTH) + 1);
+            } else {
+                monthChange = String.valueOf(cal.get(Calendar.MONTH) + 1);
             }
-//            ContentValues values = new ContentValues();
-//            values.put(Database.StepEntry.STEPS, point.value);
-//            values.put(Database.StepEntry.START, point.date.getTime());
-//            values.put(Database.StepEntry.END,endLong);
+            if ((cal.get(Calendar.DATE)) < 10) {
+                dayChange = "0" + (cal.get(Calendar.DATE));
+            } else {
+                dayChange = String.valueOf(cal.get(Calendar.DATE));
+            }
+            String startTime = UTC.isoFormatShort(stepTimeLong);
+//            String endTime = UTC.isoFormatShort(endLong);
+
+            Map minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
+
+            minuteMap.put(deviceSerial, stepMap);
+
+            dbHandle.acquire();
+
+            Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curUser + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" +startTime +"/");//to modify child node
+            refStep2.updateChildren(minuteMap, new Firebase.CompletionListener() {
+                @Override
+                public void onComplete(FirebaseError firebaseError, Firebase firebase) {
+                    if (firebaseError != null) {
+                        lazyLog.w("Data could not be saved. " + firebaseError.getMessage());
+                    } else {
+                        lazyLog.d("Data saved successfully.");
+
+                        localValues.put( Database.StepEntry.IS_PUSHED, "1");
+                        final long row = dbHandle.db.replace( Database.StepEntry.STEPS_TABLE_NAME, null, localValues );
+                        if( row < 0 ) {
+                            lazyLog.e( "Can't mark step entry uploaded in database!!!!! ", row, " ", curUser, " ", localValues.getAsString( Database.StepEntry.START));
+                        }
+                    }
+
+                    dbHandle.release();
+                }
+            });
+
+            Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
+            refSyncSteps.updateChildren(minuteMap);
+
+            //FIXME: Implement barrier to only mark synced locally when both FB calls complete successfully.
         }
 
+        cur.close();
     }
 
 
@@ -280,7 +284,7 @@ public class SyncDataActivity extends MenuActivity {
             syncValues.put(Database.SyncEntry.SYNC_START, start.getTime());
             syncValues.put(Database.SyncEntry.SYNC_END, stop.getTime());
             syncValues.put(Database.SyncEntry.USER, currentUserId);
-            syncValues.put(Database.SyncEntry.STATUS, 0);
+//            syncValues.put(Database.SyncEntry.STATUS, 0);
             long newRowId;
             newRowId = db.insert(Database.SyncEntry.SYNC_TABLE_NAME,
                     null,
@@ -331,161 +335,8 @@ public class SyncDataActivity extends MenuActivity {
             cur.close();
             //*****************steps***********************//
 
-            insertStepsIntoFirebase(data, sync.info.serial, syncUniqueID);
+            insertStepsIntoFirebase(db, currentUserId, syncUniqueID);
 
-//            Cursor curSteps = getStepsForSync(syncUniqueID);
-//
-//
-//            Map<String, Map<String, Map<String, Object>>> monthMap = new HashMap<String, Map<String, Map<String, Object>>>(); //day<minutes,steps>>
-////                    List<Object>[] monthList = new List[];
-//            Map<String, Map<String, String>> minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
-//            Map<String, Map<String, String>> dayMap = new HashMap<String, Map<String, String>>(); //day<minutes,steps>>
-//
-//            Calendar cal = UTC.newCal();
-//
-//            ArrayList list = new ArrayList();
-//            int date = -1;
-//            int oldDate = -1;
-//            String username = "";
-//            while (curSteps.isAfterLast() == false) {
-//                if (Integer.parseInt(curSteps.getString(4)) != 0) {
-//                    username = curSteps.getString(3);
-//
-//
-//                    long stepTime = Long.parseLong(curSteps.getString(2));
-////
-////                    Date curDate = new Date(stepTime);
-//
-//                    cal.setTimeInMillis(stepTime);
-//
-//                    cal.set(Calendar.SECOND, 0);
-//                    cal.set(Calendar.MILLISECOND, 0);
-////                    String dayMinute = (curDate.getMinutes() + (curDate.getHours() * 60)) + "";
-//
-//                    if ((date != cal.get(Calendar.DATE)) && (date != -1)) {
-//                        String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-//                        String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-//                        oldDate = date;
-//                        String monthChange = "";
-//                        String dayChange = "";
-//                        if((cal.get(Calendar.MONTH))<11){
-//                            monthChange = "0"+(cal.get(Calendar.MONTH)+1);
-//                        }else{
-//                            monthChange = String.valueOf(cal.get(Calendar.MONTH)+1);
-//                        }
-//                        if((cal.get(Calendar.DATE))<11){
-//                            dayChange = "0"+(cal.get(Calendar.DATE)+1);
-//                        }else{
-//                            dayChange = String.valueOf(cal.get(Calendar.DATE)+1);
-//                        }
-//                        Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
-//                        refStep2.setValue(minuteMap, new Firebase.CompletionListener() {
-//                            @Override
-//                            public void onComplete(FirebaseError firebaseError, Firebase firebase) {
-//                                if (firebaseError != null) {
-//                                    System.out.println("Step Data could not be saved. " + firebaseError.getMessage());
-//                                } else {
-//                                    System.out.println("Step Data saved successfully.");
-//
-//                                }
-//                            }
-//                        });
-//                        Firebase refSyncSteps =  new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
-//                        refSyncSteps.setValue(minuteMap);
-//
-//                        minuteMap = new HashMap<String, Map<String, String>>(); //minutes, steps
-//                        Map<String, String> stepData = new HashMap<String, String>();
-////                            stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-//                        stepData.put(Database.StepEntry.START, startTime);
-//                        stepData.put(Database.StepEntry.END, endTime);
-////                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-//                        stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-//                        stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
-//
-//
-//                        minuteMap.put(startTime, stepData);
-//
-//                        date = cal.get(Calendar.DATE);
-//
-//                    //this else block is the 1st case scenario, init minutemap and move on
-//                    } else {
-//                        //if steps is not 0 add to map
-//
-//                        if (Integer.parseInt(curSteps.getString(4)) != 0) {
-//                            oldDate = date;
-//                            String startTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(1)));
-//                            String endTime = UTC.isoFormatShort(Long.parseLong(curSteps.getString(2)));
-//                            Map<String, String> stepData = new HashMap<String, String>();
-//    //                        stepData.put(Database.StepEntry.SYNC_ID, curSteps.getString(0));
-//                            stepData.put(Database.StepEntry.START, startTime);
-//                            stepData.put(Database.StepEntry.END, endTime);
-//    //                            stepData.put(Database.StepEntry.USER, curSteps.getString(3));
-//                            stepData.put(Database.StepEntry.STEPS, curSteps.getString(4));
-//                            stepData.put(Database.StepEntry.DEVICEID, curSteps.getString(5));
-//
-//
-//
-//                            minuteMap.put(startTime, stepData);
-//                            date = cal.get(Calendar.DATE);
-//                        }
-//
-//
-//                    }
-//                }
-//
-//
-////                        Firebase refStep2 = new Firebase("https://ss-movo-wave-v2.firebaseio.com/users/" +curSteps.getString(3) + "/steps/"+curDate.getYear()+"/"+curDate.getMonth()+"/"+curDate.getDate());
-//////                            refStep2.updateChildren( minuteMap);
-////                        list.add(curDate.getDate()+"",stepData);
-//
-////
-////
-//
-//                curSteps.moveToNext();
-//
-//            }
-//            try {
-//                curSteps.moveToLast();
-//                long stepTime = Long.parseLong(curSteps.getString(2));
-////
-////                    Date curDate = new Date(stepTime);
-//
-//                cal.setTimeInMillis(stepTime);
-////                    cal.setTimeZone();
-//
-////                    cal.set(Calendar.YEAR, curDate.getYear());
-////                    cal.set(Calendar.MONTH, curDate.getMonth());
-////                    cal.set(Calendar.DATE, curDate.getDate());
-////                    cal.set(Calendar.HOUR_OF_DAY, curDate.getHours());
-////                    cal.set(Calendar.MINUTE, curDate.getMinutes());
-//                cal.set(Calendar.SECOND, 0);
-//                cal.set(Calendar.MILLISECOND, 0);
-//
-//                String monthChange = "";
-//                String dayChange = "";
-//                if((cal.get(Calendar.MONTH))<11){
-//                    monthChange = "0"+(cal.get(Calendar.MONTH)+1);
-//                }else{
-//                    monthChange = String.valueOf(cal.get(Calendar.MONTH)+1);
-//                }
-//                if((cal.get(Calendar.DATE))<11){
-//                    dayChange = "0"+(cal.get(Calendar.DATE)+1);
-//                }else{
-//                    dayChange = String.valueOf(cal.get(Calendar.DATE)+1);
-//                }
-//
-//                Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0)); //to modify child node
-//                refStep2.setValue(minuteMap);
-//                Firebase refSyncSteps =  new Firebase(UserData.firebase_url + "users/" + curSteps.getString(3) + "/sync/"+syncUniqueID+"/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange).child(curSteps.getString(0));
-//                refSyncSteps.setValue(minuteMap);
-//
-////                    refStep.setValue(list);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                lazyLog.d("No new entries to upload");
-//                Toast.makeText(c, "No new steps to add.", Toast.LENGTH_SHORT).show();
-//            }
-//            curSteps.close();
         } else {
             lazyLog.d("SYNC FAILED!" + sync);
         }
@@ -510,6 +361,7 @@ public class SyncDataActivity extends MenuActivity {
         values.put(Database.StepEntry.IS_PUSHED, 0);
         values.put(Database.StepEntry.SYNC_ID, guid);
         values.put(Database.StepEntry.DEVICEID, deviceSerial);
+
 //        values.put(Database.StepEntry.WORKOUT_TYPE, point.Mode.);
         //TODO: add workout type
 
@@ -531,7 +383,9 @@ public class SyncDataActivity extends MenuActivity {
              */
 
             //Locate conflicting row
-            String selectionSteps =  Database.StepEntry.START + "=? AND "+Database.StepEntry.DEVICEID +"=?";
+            String selectionSteps =  Database.StepEntry.START + "=? AND " +
+                    Database.StepEntry.DEVICEID +" =?  AND " +
+                    Database.StepEntry.USER + " =?";
             Cursor curSteps = db.query(
                     Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
                     new String[] {
@@ -541,10 +395,9 @@ public class SyncDataActivity extends MenuActivity {
                             Database.StepEntry.END, //int
                             Database.StepEntry.USER, //string
                             Database.StepEntry.STEPS, //int
-                            Database.StepEntry.DEVICEID, //blob
-                            Database.StepEntry.GUID}, //blob                          // The columns to return
+                            Database.StepEntry.DEVICEID}, //string                          // The columns to return
                     selectionSteps,                                // The columns for the WHERE clause
-                    new String[] { String.valueOf(startLong), deviceSerial }, // The values for the WHERE clause
+                    new String[] { String.valueOf(startLong), deviceSerial, userID }, // The values for the WHERE clause
                     null,                                     // don't group the rows
                     null,                                     // don't filter by row groups
                     null                                 // The sort order
@@ -698,7 +551,7 @@ public class SyncDataActivity extends MenuActivity {
             syncCancel.setVisibility( View.INVISIBLE );
             syncCancel.setEnabled(false);
 
-            sync = WaveAgent.DataSync.byInfo( 10000, info, syncCallback );
+            sync = WaveAgent.DataSync.byInfo( 30000, info, syncCallback );
             updateSyncProgress( 0 );
             updateSyncState( sync.getState() );
             info = null;

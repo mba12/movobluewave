@@ -115,7 +115,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         
         
         datePickerToolbar.sizeToFit()
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
         
         
     }
@@ -124,7 +124,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         super.viewWillAppear(animated)
         datePickerFirstResponder = false
         genderPickerFirstResponder = false
-        UserData.getImageForDate(nil, callbackDelegate: self)
+        UserData.getImageForDate(nil, callbackDelegate: self, thumbnail: false)
     }
     
     

@@ -28,6 +28,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
         bgImageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
         bgImageView.contentMode = UIViewContentMode.ScaleAspectFill
         bgImageView.clipsToBounds = true
+        
         bgImageView.image = UIImage(named:"calendarbg")
         contentView.addSubview(bgImageView)
 
@@ -80,13 +81,25 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
                     setImage = true
                 }
             }
+            /*
             if ( (unwrappedDate == currentDate) && !setImage) {
+                var newImage = UIImage(named: "calendarbg")
                 dispatch_async(dispatch_get_main_queue(),  {
-                    self.bgImageView.image = UIImage(named: "calendarbg")
+                    self.bgImageView.image = newImage
                 })
             }
+            */
         }
     
+    }
+    
+    override func prepareForReuse() {
+            var image = UIImage(named: "calendarbg")
+            self.bgImageView.image = image
+
+            textLabel.text = ""
+            textLabel2.text = ""
+
     }
     
 }
