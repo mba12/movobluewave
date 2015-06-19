@@ -19,7 +19,6 @@
         <RelativeLayout
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
-            android:layout_above="@+id/stepsContainer"
             android:background="@drawable/gradientrevision"
             android:orientation="horizontal" >
 
