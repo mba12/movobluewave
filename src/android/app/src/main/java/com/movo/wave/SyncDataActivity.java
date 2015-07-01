@@ -1,20 +1,27 @@
 package com.movo.wave;
 
 import android.app.AlarmManager;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
+import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -47,9 +54,9 @@ import java.util.concurrent.TimeUnit;
 public class SyncDataActivity extends MenuActivity {
 
     private SQLiteDatabase db;
-
+    String TAG = "SyncDataActivity";
     boolean destroyed = false;
-
+    String inputNameText = "";
 
     public static final LazyLogger lazyLog = new LazyLogger( "SyncDataActivity",
             MenuActivity.lazyLog );
@@ -102,7 +109,7 @@ public class SyncDataActivity extends MenuActivity {
         }
 
         @Override
-        public void complete(WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
+        public void complete(final WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
             syncState.setText( resources.getString(R.string.sync_sql_save) );
             onSyncComplete(sync, data);
             updateSyncState(WaveAgent.DataSync.SyncState.COMPLETE);
@@ -124,14 +131,100 @@ public class SyncDataActivity extends MenuActivity {
                             finish();
                         }
                     });
+
+
+
+
                 }else{
                     //sync succeed
 
                     setContentView(R.layout.sync_finish);
+
+
+                    String currentUser = UserData.getUserData(c).getCurUID();
+                    final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+                    boolean userSyncPrompt = prefs.getBoolean(currentUser+sync.info.mac+"syncPrompt", false);
+                    if(!userSyncPrompt){
+
+                        AlertDialog.Builder builder = new AlertDialog.Builder(SyncDataActivity.this);
+                        builder.setTitle("Would you like to rename your Wave?");
+
+
+
+                        builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                Log.d(TAG, "User clicked rename wave");
+
+
+                                AlertDialog.Builder builder2 = new AlertDialog.Builder(SyncDataActivity.this);
+                                builder2.setTitle("Rename Wave?");
+
+                                final EditText input = new EditText(SyncDataActivity.this);
+                                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                                builder2.setView(input);
+
+
+                                builder2.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        DatabaseHelper mDbHelper = new DatabaseHelper(c);
+                                        db = mDbHelper.getWritableDatabase();
+                                        inputNameText = input.getText().toString();
+                                        if(!inputNameText.equals("")) {
+                                            String currentUser = UserData.getUserData(c).getCurUID();
+                                            sync.info.setName(currentUser, inputNameText);
+                                            sync.info.store(db);
+                                            prefs.edit().putBoolean(currentUser+sync.info.mac+"syncPrompt",true);
+                                        }else{
+                                            Toast.makeText(SyncDataActivity.this, "Name cannot be blank!", Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        Log.v("Wave name set is ", inputNameText);
+                                        db.close();
+                                        db = null;
+
+                                    }
+                                });
+
+
+                                builder2.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        dialog.cancel();
+                                        String currentUser = UserData.getUserData(c).getCurUID();
+                                        prefs.edit().putBoolean(currentUser+sync.info.mac+"syncPrompt",true).commit();
+                                    }
+                                });
+
+                                builder2.show();
+
+
+
+
+                            }
+                        });
+
+
+                        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                String currentUser = UserData.getUserData(c).getCurUID();
+                                prefs.edit().putBoolean(currentUser+sync.info.mac+"syncPrompt",true).commit();
+                                dialog.cancel();
+                            }
+                        });
+
+                        builder.show();
+                    }
                     Button ok = (Button) findViewById(R.id.btnOk);
                     ok.setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
+
                             finish();
+
+
                         }
                     });
                 }

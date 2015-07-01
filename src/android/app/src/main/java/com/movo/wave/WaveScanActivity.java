@@ -1,19 +1,27 @@
 package com.movo.wave;
 
+import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.text.InputType;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.movo.wave.comms.BLEAgent;
 import com.movo.wave.comms.WaveAgent;
@@ -24,6 +32,8 @@ import com.movo.wave.util.LazyLogger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+
+import static android.widget.AdapterView.OnItemLongClickListener;
 
 /**
  * Created by Alex Haase on 3/23/2015.
@@ -80,6 +90,7 @@ public class WaveScanActivity extends MenuActivity {
     ArrayAdapter<WaveAdapter> newWaveAdapter;
     ListView knownWaveList;
     ListView newWaveList;
+    String inputNameText = "";
 
     enum ScanState {
         WAITING,
@@ -185,7 +196,8 @@ public class WaveScanActivity extends MenuActivity {
                                 info.serial = serial;
                                 info.queried = new Date();
                                 info.store( db );
-                                addInfo( info );
+
+                                addInfo(info);
                             } else {
                                 lazyLog.e( "Failed to query device: " + info.mac );
                             }
@@ -323,6 +335,63 @@ public class WaveScanActivity extends MenuActivity {
                 intent.putExtra(SyncDataActivity.EXTRA_WAVE_MAC, adapter.info.mac);
                 intent.putExtra(SyncDataActivity.EXTRA_WAVE_USER_ID, currentUser);
                 startActivity(intent);
+            }
+        });
+        knownWaveList.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+            public boolean onItemLongClick(AdapterView<?> arg0, View arg1,
+                                           int position, long id) {
+
+                final WaveAdapter adapter = knownWaves.get(position);
+
+                final String currentUser = UserData.getUserData(c).getCurUID();
+                Intent intent = new Intent(c, SyncDataActivity.class);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_MAC, adapter.info.mac);
+                intent.putExtra(SyncDataActivity.EXTRA_WAVE_USER_ID, currentUser);
+                adapter.info.getName(currentUser);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(WaveScanActivity.this);
+                builder.setTitle("Rename Wave?");
+
+                final EditText input = new EditText(WaveScanActivity.this);
+                input.setInputType(InputType.TYPE_CLASS_TEXT);
+                builder.setView(input);
+                final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(c);
+                String waveName = prefs.getString(adapter.info.mac, "");
+                Log.v("Wave name is", waveName);
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        inputNameText = input.getText().toString();
+
+                        if(!inputNameText.equals("")) {
+                            String currentUser = UserData.getUserData(c).getCurUID();
+                            adapter.info.setName(currentUser, inputNameText);
+                            adapter.info.store(db);
+                            prefs.edit().putBoolean(currentUser+adapter.info.mac+"syncPrompt",true);
+                        }else{
+                            Toast.makeText(WaveScanActivity.this, "Name cannot be blank!", Toast.LENGTH_SHORT).show();
+                        }
+                        Log.v("Wave name set is ", inputNameText);
+
+
+                    }
+                });
+
+
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
+
+
+
+                return true;
             }
         });
 
