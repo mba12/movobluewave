@@ -400,7 +400,10 @@ func insertStepsFromFirebase(FDataSnapshot stepSnapshot:FDataSnapshot, String is
             return false
         }
         var startTime = createDateFromString(String: isoStart)
-        var stopTime = createDateFromString(String: isoStop)
+        var stopTime = startTime.dateByAddingTimeInterval(1800) // 1800 is 30 minutes in seconds
+        
+        // NOTE: this causes a bug. Needs to use calendar arithmetic
+        // var stopTime = createDateFromString(String: isoStop)
         
         var isDuplicate : Bool = false
         var entry : StepEntry?
