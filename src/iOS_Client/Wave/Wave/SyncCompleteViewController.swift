@@ -28,4 +28,9 @@ class SyncCompleteViewController : UIViewController {
         syncStatusVC?.uploadDataVC?.complete(sender)
         performSegueWithIdentifier("Upload Data", sender: self)
     }
+    
+    override func viewDidLoad() {
+        
+        
+    }
 }
