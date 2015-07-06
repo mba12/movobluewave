@@ -199,7 +199,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     func updateDevicesList() {
         //update our list of devices
-        
+        waveDeviceTableView.layer.removeAllAnimations()
         knownDevices = [String]()
         unknownDevices = [String]()
         if let uid = UserData.getOrCreateUserData().getCurrentUID() {
@@ -219,8 +219,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                         unknownDevices.append(serial)
                     }
                 }
+                
             }
-        }
+                   }
         
     }
     
@@ -327,13 +328,24 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     cell.NameLabel.text = knownDevices[row]
                     
                 }
+                cell.contentView.layer.opacity = 0.1
+                UIView.animateWithDuration(1.0, delay:0, options: .Repeat | .Autoreverse, animations: {
+                    cell.contentView.layer.opacity = 1
+                    }, completion: nil)
             }
         } else {
             if (row < unknownDevices.count) {
                 cell.NameLabel.text = unknownDevices[row]
+                if(!(knownDevices.count>0)){
+                    cell.contentView.layer.opacity = 0.1
+                    UIView.animateWithDuration(1.0, delay:0, options: .Repeat | .Autoreverse, animations: {
+                        cell.contentView.layer.opacity = 1
+                        }, completion: nil)
+                }
             }
             
         }
+
         cell.backgroundColor = UIColor.clearColor()
         return cell
     }
