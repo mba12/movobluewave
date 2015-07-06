@@ -14,6 +14,9 @@ import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -289,6 +292,20 @@ public class WaveScanActivity extends MenuActivity {
             newWaves.add(adapter);
             newWaveAdapter.notifyDataSetChanged();
         }
+        
+        //create blinking animation for known/unknown waves. If known wave is present, blink it. If only unknown waves, blink them instead.
+        final Animation animation = new AlphaAnimation(1, 0); // Change alpha from fully visible to invisible
+        animation.setDuration(1000); // duration - whole second
+        animation.setInterpolator(new LinearInterpolator()); // do not alter animation rate
+        animation.setRepeatCount(Animation.INFINITE); // Repeat animation infinitely
+        animation.setRepeatMode(Animation.REVERSE); // Reverse animation at the end so the button will fade back in
+        if(knownWaves.size()>0){
+
+            knownWaveList.startAnimation(animation);
+        }else if(newWaves.size()>0){
+
+            newWaveList.startAnimation(animation);
+        }
     }
 
     @Override
@@ -300,7 +317,7 @@ public class WaveScanActivity extends MenuActivity {
         resources = getResources();
         scanProgress = (ProgressBar) findViewById( R.id.waveScanProgress);
         scanStatus = (TextView) findViewById(R.id.waveScanStatus);
-        scanButton = (Button) findViewById(R.id.waveScanButton);;
+        scanButton = (Button) findViewById(R.id.waveScanButton);
 
         scanButton.setOnClickListener( new View.OnClickListener() {
             @Override
@@ -424,6 +441,9 @@ public class WaveScanActivity extends MenuActivity {
                 addInfo( adapter );
             }
         });
+
+
+
     }
 
     @Override
