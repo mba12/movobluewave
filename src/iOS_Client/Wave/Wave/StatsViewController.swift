@@ -27,6 +27,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     var milesDataSet : LineChartDataSet?
     var caloriesDataSet : LineChartDataSet?
     var xVals : [String]?
+    var updatingDataLock = false
     
     @IBOutlet weak var chartView: LineChartView!
     @IBOutlet weak var containerView: UIView!
@@ -247,6 +248,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         
             self.displayStepsChart()
+             self.updatingDataLock = false
         })
         
     }
@@ -326,11 +328,20 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     }
     
     @IBAction func backButtonPress(sender: AnyObject) {
-                resetDate(-1)
+        
+        if(!updatingDataLock){
+            updatingDataLock = true
+            resetDate(-1)
+            
+        }
     }
     
     @IBAction func forewardButtonPress(sender: AnyObject) {
-                resetDate(1)
+        if(!updatingDataLock){
+            updatingDataLock = true
+             resetDate(1)
+        }
+       
     }
     
     
@@ -388,6 +399,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
                 NSLog("Grabbing user steps from firebase")
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
                     retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                   
                     
                 })
             }
@@ -395,6 +407,10 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             //firebase ref is null from coredata
             NSLog("MyLife we shouldn't enter this block, coredata should never be null")
         }
+//        backButton.enabled = true
+        
+//        forwardButton.enabled = true
+
         
         
     }
