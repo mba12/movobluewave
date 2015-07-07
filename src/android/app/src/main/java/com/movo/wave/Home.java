@@ -838,8 +838,6 @@ public class Home extends MenuActivity {
             View gridView;
             LayoutInflater inflater = (LayoutInflater) c.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-
-
             if (convertView == null) {
 
                 gridView = new View(c);
@@ -915,12 +913,27 @@ public class Home extends MenuActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange( db, monthRangeStart, monthRangeStop);
+            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange(db, monthRangeStart, monthRangeStop);
             curSteps.moveToFirst();
+
+            // NOTE: MBA debug code below
+//            String tzTest = TimeZone.getDefault().getDisplayName();
+//            Calendar mbaCalStartRange = Calendar.getInstance();
+//            mbaCalStartRange.setTimeZone(TimeZone.getDefault());
+//            mbaCalStartRange.setTimeInMillis(monthRangeStart);
+//            String startRange = UTC.isoFormat(mbaCalStartRange);
+//
+//            Calendar mbaCalEndRange = Calendar.getInstance();
+//            mbaCalEndRange.setTimeZone(TimeZone.getDefault());
+//            mbaCalEndRange.setTimeInMillis(monthRangeStop);
+//            String endRange = UTC.isoFormat(mbaCalEndRange);
+
             if (curSteps != null && curSteps.moveToFirst()) {
                 int totalStepsForToday = curSteps.getInt(0);
 
                 steps.setText(totalStepsForToday + "");
+                // Log.d(TAG, "MBA: " + startRange + " :: " + endRange + " :: " + totalStepsForToday );
+
             } else {
                 steps.setText(0 + "");
             }

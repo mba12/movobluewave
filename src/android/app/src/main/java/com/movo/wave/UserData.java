@@ -36,6 +36,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -1066,6 +1067,12 @@ public class UserData extends Activity{
 
     static public Cursor getStepsForDateRange(SQLiteDatabase db,long monthRangeStart, long monthRangeStop, String userID) {
 
+        // Log.d(TAG, "MBA DB_QUERY: " + query);
+        // Log.d(TAG, "MBA DB_QUERY_PARAMS: " + userID + " :: " + UTC.isoFormat(monthRangeStart) + " :: " +
+        //        UTC.isoFormat(monthRangeStop) );
+
+        // debugSteps( db, monthRangeStart, monthRangeStop, userID);
+
         final String query = "SELECT SUM(" +Database.StepEntry.STEPS +
                 ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
                 Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
@@ -1079,6 +1086,34 @@ public class UserData extends Activity{
         Cursor curSteps = db.rawQuery(query, args);
 
         return curSteps;
+    }
+
+    // NOTE: MBA debug code below
+    static private void debugSteps(SQLiteDatabase db,long monthRangeStart, long monthRangeStop, String userID) {
+
+        final String query = "SELECT " + Database.StepEntry.STEPS + ", " + Database.StepEntry.START + ", " + Database.StepEntry.END +
+                " FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
+                Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
+                "<=? AND " + Database.StepEntry.USER + " =? ";
+
+        final String[] args = new String[]{
+                Long.toString(monthRangeStart),
+                Long.toString(monthRangeStop),
+                userID};
+
+        Cursor curSteps = db.rawQuery(query, args);
+
+        curSteps.moveToFirst();
+        while (!curSteps.isAfterLast()) {
+            int debugSteps = curSteps.getInt(0);
+            long start = curSteps.getLong(1);
+            long stop = curSteps.getLong(2);
+            String startStr = UTC.isoFormat(start);
+            String stopStr = UTC.isoFormat(stop);
+            Log.d(TAG, "MBA:\t" + start + "\t" + startStr + "\t" + + stop + "\t" + stopStr + "\t" + debugSteps );
+            curSteps.moveToNext();
+        }
+        curSteps.close();
     }
 
     public void insertStepsFromDB(Firebase ref, Context c, final String curMonth, final String curYear, final UpdateDelegate delegate){
@@ -1115,21 +1150,26 @@ public class UserData extends Activity{
 
 //                    Date curDate = monthMap.get("starttime").toString();
                             String dateConcatStart = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.START).toString();
-                            String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.END).toString();
 
+                            // T23:30:00Z
+                            // NOTE: when entering the last 30 minutes in a day from 11:30PM to 12:00AM the date needs to get incremented to the next day
+                            // String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.END).toString();
 
                             try {
                                 Date curDateStart = UTC.parse(dateConcatStart);
 
-                                Date curDateStop = UTC.parse(dateConcatStop);
-//                        Log.d("TAG", "date is "+curDate);
+                                // Date curDateStop = UTC.parse(dateConcatStop);
+//                              Log.d("TAG", "date is "+curDate);
                                 thisCal.setTime(curDateStart);
 
                                 final ContentValues remoteValues = new ContentValues();
                                 remoteValues.put(Database.StepEntry.GUID, UUID.randomUUID().toString());
                                 remoteValues.put(Database.StepEntry.STEPS, dataMap.get(Database.StepEntry.STEPS));
                                 remoteValues.put(Database.StepEntry.START, thisCal.getTimeInMillis());
-                                thisCal.setTime(curDateStop);
+
+                                //thisCal.setTime(curDateStop); // NOTE: This causes a bug at the 23:30 to 24:00 segment because the calendar day isn't incremented also
+                                thisCal.add(GregorianCalendar.MINUTE, 30);
+
                                 remoteValues.put(Database.StepEntry.END, thisCal.getTimeInMillis());
                                 remoteValues.put(Database.StepEntry.USER, userID);
                                 remoteValues.put(Database.StepEntry.IS_PUSHED, 1); //this is downloaded from the cloud, it obviously has been pushed.
