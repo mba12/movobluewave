@@ -284,6 +284,8 @@ public class WaveScanActivity extends MenuActivity {
      * @param adapter
      */
     private void addInfo( WaveAdapter adapter ) {
+        knownWaveList.clearAnimation();
+        newWaveList.clearAnimation();
         if( adapter.knownToUser() ) {
             //TODO: Sort by date.
             knownWaves.add(adapter);
@@ -292,7 +294,7 @@ public class WaveScanActivity extends MenuActivity {
             newWaves.add(adapter);
             newWaveAdapter.notifyDataSetChanged();
         }
-        
+
         //create blinking animation for known/unknown waves. If known wave is present, blink it. If only unknown waves, blink them instead.
         final Animation animation = new AlphaAnimation(1, 0); // Change alpha from fully visible to invisible
         animation.setDuration(1000); // duration - whole second
