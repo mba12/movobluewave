@@ -400,10 +400,18 @@ func insertStepsFromFirebase(FDataSnapshot stepSnapshot:FDataSnapshot, String is
             return false
         }
         var startTime = createDateFromString(String: isoStart)
-        var stopTime = startTime.dateByAddingTimeInterval(1800) // 1800 is 30 minutes in seconds
+
+        var stopTime = createDateFromString(String: isoStop)
         
-        // NOTE: this causes a bug. Needs to use calendar arithmetic
-        // var stopTime = createDateFromString(String: isoStop)
+        
+        
+        //RKY/PG Handle date roll over by assuming that all devices will report timestamps <= 24hrs, so a
+        //date truncated end time that is "before" the date truncated start time indicates that we have rolled
+        //over a 24hr period, and should add 24hrs worth of seconds to the date expanded stopTime in order to 
+        //extract the correct stopTime.
+        if(stopTime.laterDate(startTime) == startTime) {
+            stopTime = stopTime.dateByAddingTimeInterval(60*60*24)
+        }
         
         var isDuplicate : Bool = false
         var entry : StepEntry?
