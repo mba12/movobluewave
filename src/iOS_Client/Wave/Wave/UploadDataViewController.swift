@@ -329,8 +329,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     
                 }
                 cell.contentView.layer.opacity = 0.1
-                UIView.animateWithDuration(1.0, delay:0, options: .Repeat | .Autoreverse, animations: {
-                    cell.contentView.layer.opacity = 1
+                UIView.animateWithDuration(1.0,
+                    delay:0,
+                    options: .Repeat | .Autoreverse | .AllowUserInteraction,
+                    animations: {
+                        cell.contentView.layer.opacity = 1
                     }, completion: nil)
             }
         } else {
@@ -338,8 +341,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 cell.NameLabel.text = unknownDevices[row]
                 if(!(knownDevices.count>0)){
                     cell.contentView.layer.opacity = 0.1
-                    UIView.animateWithDuration(1.0, delay:0, options: .Repeat | .Autoreverse, animations: {
-                        cell.contentView.layer.opacity = 1
+                    UIView.animateWithDuration(1.0,
+                        delay:0,
+                        options: .Repeat | .Autoreverse | .AllowUserInteraction,
+                        animations: {
+                            cell.contentView.layer.opacity = 1
                         }, completion: nil)
                 }
             }
