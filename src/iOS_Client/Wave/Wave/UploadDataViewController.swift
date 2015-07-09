@@ -322,7 +322,12 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             if (row < knownDevices.count) {
                 let movonames = NSUserDefaults.standardUserDefaults()
                 if let name = movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + knownDevices[row]){
-                    cell.NameLabel.text = name
+                    if(!(name == "")){
+                        cell.NameLabel.text = name
+                    }else{
+                        cell.NameLabel.text = knownDevices[row]
+                        
+                    }
                     
                 }else{
                     cell.NameLabel.text = knownDevices[row]
