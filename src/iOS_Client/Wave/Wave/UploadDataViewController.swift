@@ -143,13 +143,16 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             dispatch_sync(dispatch_get_main_queue(), {
                 //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
                 //self.dismissViewControllerAnimated(false, completion: nil)
+                self.syncStatusVC?.performSegueWithIdentifier("SyncFailure", sender: self)
                 
             })
         }
     }
 
     func promptUserForRename(serial: NSString?){
-        var serialString = serial! as? String
+        if let serialString = serial{
+            
+        
         let movonames = NSUserDefaults.standardUserDefaults()
         
             var alert = UIAlertController(title: "Rename Wave?", message: "Would you like to rename your wave?", preferredStyle: UIAlertControllerStyle.Alert)
@@ -164,8 +167,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                         //self!.displayLabel.text = enteredText
                         
                         let defaults = NSUserDefaults.standardUserDefaults()
-                        defaults.setObject(enteredText, forKey: UserData.getOrCreateUserData().getCurrentUID()! + serialString!)
-                        NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString!)
+                        defaults.setObject(enteredText, forKey: UserData.getOrCreateUserData().getCurrentUID()! + (serialString as String))
+                        NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
                         //                            NSLog("device serial @% ", deviceSerialIn)
                     }
                     //                    }
@@ -176,10 +179,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             alert.addTextFieldWithConfigurationHandler({(textField: UITextField!) in
                 textField.placeholder = "Enter text:"
             })
-            movonames.setObject("true", forKey: UserData.getOrCreateUserData().getCurrentUID()! + serialString! + "renamePrompt")
+            movonames.setObject("true", forKey: UserData.getOrCreateUserData().getCurrentUID()! + (serialString as String) + "renamePrompt")
             self.presentViewController(alert, animated: true, completion: nil)
-            
+            }
         }
+        
 
     
         
@@ -291,21 +295,21 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         var locationInView = longPress.locationInView(waveDeviceTableView)
         
         var indexPath = waveDeviceTableView.indexPathForRowAtPoint(locationInView)
-        NSLog("Long press detected %@", indexPath!);
+
         //get device identifier
-        let section = indexPath?.section
-        let row = indexPath?.row
-        if(section==0){
-            if(row < knownDevices.count){
-                //this is in the known devices list
-                let deviceSerial = knownDevices[row!];
-                promptUserForRename(deviceSerial)
-                
-                
-                
+        if let section = indexPath?.section{
+            if let row = indexPath?.row{
+                if(section==0){
+                    if(row < knownDevices.count){
+                        //this is in the known devices list
+                        let deviceSerial = knownDevices[row];
+                        promptUserForRename(deviceSerial)
+                        
+                        
+                        
+                    }
+                }
             }
-        }else{
-            
         }
         
         
@@ -321,14 +325,21 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         if (section == 0) {
             if (row < knownDevices.count) {
                 let movonames = NSUserDefaults.standardUserDefaults()
-                if let name = movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + knownDevices[row]){
-                    if(!(name == "")){
-                        cell.NameLabel.text = name
+                if let uid = UserData.getOrCreateUserData().getCurrentUID(){
+                    
+                    
+                    if let name = movonames.stringForKey(uid + knownDevices[row]){
+                        if(!(name == "")){
+                            cell.NameLabel.text = name
+                        }else{
+                            cell.NameLabel.text = knownDevices[row]
+                            
+                        }
+                        
                     }else{
                         cell.NameLabel.text = knownDevices[row]
                         
                     }
-                    
                 }else{
                     cell.NameLabel.text = knownDevices[row]
                     
