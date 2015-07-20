@@ -129,10 +129,15 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 //self.dismissViewControllerAnimated(false, completion: nil)
                 self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
                 let movonames = NSUserDefaults.standardUserDefaults()
-                if let name = movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + serial + "renamePrompt"){
-                    //we've already asked to rename the wave. don't prompt user.
+                if let namePrompt = (movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + serial + "renamePrompt")){
+                    //This user has already been prompted to name this device.
                 }else{
-                    self.promptUserForRename(serial)
+                    if let userId = UserData.getOrCreateUserData().getCurrentUID(){
+                        self.promptUserForRename(serial)
+                        movonames.setObject("true", forKey: userId + (serial as String) + "renamePrompt")
+        
+                    }
+
                 }
 
                
@@ -170,12 +175,15 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                         if let userId = UserData.getOrCreateUserData().getCurrentUID(){
                             defaults.setObject(enteredText, forKey: userId + (serialString as String))
                             NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
-                           
+                            dispatch_async(dispatch_get_main_queue(), {
+                                //use of a bang here, wil
+                                self!.waveDeviceTableView.reloadData()
+                            })
                             
                         }
-                        //                            NSLog("device serial @% ", deviceSerialIn)
+                       
                     }
-                    //                    }
+
                 })
             alert.addAction(action)
             
@@ -183,11 +191,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             alert.addTextFieldWithConfigurationHandler({(textField: UITextField!) in
                 textField.placeholder = "Enter text:"
             })
-            if let userId = UserData.getOrCreateUserData().getCurrentUID(){
-
-                movonames.setObject("true", forKey: userId + (serialString as String) + "renamePrompt")
-                self.presentViewController(alert, animated: true, completion: nil)
-            }
+                            self.presentViewController(alert, animated: true, completion: nil)
+            
             }
         }
         
@@ -232,7 +237,8 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 }
                 
             }
-                   }
+        }
+        
         
     }
     
