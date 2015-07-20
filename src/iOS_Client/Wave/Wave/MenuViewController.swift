@@ -89,7 +89,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         if (menu[row] != "FAQ" && menu[row] != "Contact") {
             performSegueWithIdentifier(menu[row], sender:self)
         } else if (menu[row] == "FAQ") {
-            UIApplication.sharedApplication().openURL(NSURL(string: "http://www.getmovo.com/appfaq")!)
+            UIApplication.sharedApplication().openURL(NSURL(string: "http://www.getmovo.com/appfaqbt")!)
             
         } else if (menu[row] == "Contact") {
             var username = ""

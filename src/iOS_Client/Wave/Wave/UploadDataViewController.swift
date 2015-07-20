@@ -23,6 +23,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     var knownDevices : [String] = [String]()
     var unknownDevices : [String] = [String]()
     
+    var knownDeviceIndices : [Int] = [Int]()
+    var unknownDeviceIndices : [Int] = [Int]()
+    
     @IBAction func cancel(sender: AnyObject?){
         dismissViewControllerAnimated(true, completion: nil)
         waveSync.scan(false)
@@ -60,6 +63,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveSync.scan(true)
         setupNotificationSet()
         updateDevicesList()
+        
     }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -129,10 +133,15 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 //self.dismissViewControllerAnimated(false, completion: nil)
                 self.syncStatusVC?.performSegueWithIdentifier("SyncComplete", sender: self)
                 let movonames = NSUserDefaults.standardUserDefaults()
-                if let name = movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + serial + "renamePrompt"){
-                    //we've already asked to rename the wave. don't prompt user.
+                if let namePrompt = (movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + serial + "renamePrompt")){
+                    //This user has already been prompted to name this device.
                 }else{
-                    self.promptUserForRename(serial)
+                    if let userId = UserData.getOrCreateUserData().getCurrentUID(){
+                        self.promptUserForRename(serial)
+                        movonames.setObject("true", forKey: userId + (serial as String) + "renamePrompt")
+        
+                    }
+
                 }
 
                
@@ -143,13 +152,16 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             dispatch_sync(dispatch_get_main_queue(), {
                 //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
                 //self.dismissViewControllerAnimated(false, completion: nil)
+                self.syncStatusVC?.performSegueWithIdentifier("SyncFailure", sender: self)
                 
             })
         }
     }
 
     func promptUserForRename(serial: NSString?){
-        var serialString = serial! as? String
+        if let serialString = serial{
+            
+        
         let movonames = NSUserDefaults.standardUserDefaults()
         
             var alert = UIAlertController(title: "Rename Wave?", message: "Would you like to rename your wave?", preferredStyle: UIAlertControllerStyle.Alert)
@@ -164,11 +176,18 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                         //self!.displayLabel.text = enteredText
                         
                         let defaults = NSUserDefaults.standardUserDefaults()
-                        defaults.setObject(enteredText, forKey: UserData.getOrCreateUserData().getCurrentUID()! + serialString!)
-                        NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString!)
-                        //                            NSLog("device serial @% ", deviceSerialIn)
+                        if let userId = UserData.getOrCreateUserData().getCurrentUID(){
+                            defaults.setObject(enteredText, forKey: userId + (serialString as String))
+                            NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
+                            dispatch_async(dispatch_get_main_queue(), {
+                                //use of a bang here, wil
+                                self!.waveDeviceTableView.reloadData()
+                            })
+                            
+                        }
+                       
                     }
-                    //                    }
+
                 })
             alert.addAction(action)
             
@@ -176,10 +195,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             alert.addTextFieldWithConfigurationHandler({(textField: UITextField!) in
                 textField.placeholder = "Enter text:"
             })
-            movonames.setObject("true", forKey: UserData.getOrCreateUserData().getCurrentUID()! + serialString! + "renamePrompt")
-            self.presentViewController(alert, animated: true, completion: nil)
+                            self.presentViewController(alert, animated: true, completion: nil)
             
+            }
         }
+        
 
     
         
@@ -202,8 +222,12 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveDeviceTableView.layer.removeAllAnimations()
         knownDevices = [String]()
         unknownDevices = [String]()
+        
+        knownDeviceIndices = [Int]()
+        unknownDeviceIndices = [Int]()
+        
         if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-            for dev in waveSync.waveController!.connectedSerials {
+            for (index,dev) in enumerate(waveSync.waveController!.connectedSerials) {
                 //for each device in the connected serials list
                 //we need to see if it is in the known devices list
                 
@@ -214,14 +238,17 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     var serial = "".join(array.map{ String($0, radix: 16, uppercase: true)})
                     if (isKnownDevice(uid, serial)) {
                         knownDevices.append(serial)
+                        knownDeviceIndices.append(index)
                         
                     } else {
                         unknownDevices.append(serial)
+                        unknownDeviceIndices.append(index)
                     }
                 }
                 
             }
-                   }
+        }
+        
         
     }
     
@@ -291,21 +318,21 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         var locationInView = longPress.locationInView(waveDeviceTableView)
         
         var indexPath = waveDeviceTableView.indexPathForRowAtPoint(locationInView)
-        NSLog("Long press detected %@", indexPath!);
+
         //get device identifier
-        let section = indexPath?.section
-        let row = indexPath?.row
-        if(section==0){
-            if(row < knownDevices.count){
-                //this is in the known devices list
-                let deviceSerial = knownDevices[row!];
-                promptUserForRename(deviceSerial)
-                
-                
-                
+        if let section = indexPath?.section{
+            if let row = indexPath?.row{
+                if(section==0){
+                    if(row < knownDevices.count){
+                        //this is in the known devices list
+                        let deviceSerial = knownDevices[row];
+                        promptUserForRename(deviceSerial)
+                        
+                        
+                        
+                    }
+                }
             }
-        }else{
-            
         }
         
         
@@ -321,9 +348,22 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         if (section == 0) {
             if (row < knownDevices.count) {
                 let movonames = NSUserDefaults.standardUserDefaults()
-                if let name = movonames.stringForKey(UserData.getOrCreateUserData().getCurrentUID()! + knownDevices[row]){
-                    cell.NameLabel.text = name
+                if let uid = UserData.getOrCreateUserData().getCurrentUID(){
                     
+                    
+                    if let name = movonames.stringForKey(uid + knownDevices[row]){
+                        if(!(name == "")){
+//                            cell.NameLabel.text = name + knownDevices[row]
+                            cell.NameLabel.text = name
+                        }else{
+                            cell.NameLabel.text = knownDevices[row]
+                            
+                        }
+                        
+                    }else{
+                        cell.NameLabel.text = knownDevices[row]
+                        
+                    }
                 }else{
                     cell.NameLabel.text = knownDevices[row]
                     
@@ -361,8 +401,30 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
         let row = indexPath.row
-        if (row < waveSync.waveController!.connectedSerials.count) {
-            if let id = waveSync.waveController!.connectedSerials.allKeys[row] as? String {
+        let section = indexPath.section
+        
+        var connectedIndex = waveSync.waveController!.connectedSerials.count
+        
+        if( section == 0 ) {
+            if( row < knownDeviceIndices.count ){
+                connectedIndex = knownDeviceIndices[row]
+                
+            } else {
+                //ERROR
+            }
+        } else if( section == 1 ) {
+            if( row < unknownDeviceIndices.count ){
+                connectedIndex = unknownDeviceIndices[row]
+            } else {
+                //ERROR
+            }
+        } else {
+            //FIXME: ERRROR, section should never be higher than 2.
+        }
+        
+        
+        if (connectedIndex < waveSync.waveController!.connectedSerials.count) {
+            if let id = waveSync.waveController!.connectedSerials.allKeys[connectedIndex] as? String {
                 waveSync.attemptSync(deviceId: id)
                 performSegueWithIdentifier("SyncStatus", sender: self)
             }
