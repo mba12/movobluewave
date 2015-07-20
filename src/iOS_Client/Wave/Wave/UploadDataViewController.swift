@@ -23,6 +23,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     var knownDevices : [String] = [String]()
     var unknownDevices : [String] = [String]()
     
+    var knownDeviceIndices : [Int] = [Int]()
+    var unknownDeviceIndices : [Int] = [Int]()
+    
     @IBAction func cancel(sender: AnyObject?){
         dismissViewControllerAnimated(true, completion: nil)
         waveSync.scan(false)
@@ -60,6 +63,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveSync.scan(true)
         setupNotificationSet()
         updateDevicesList()
+        
     }
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -218,8 +222,12 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         waveDeviceTableView.layer.removeAllAnimations()
         knownDevices = [String]()
         unknownDevices = [String]()
+        
+        knownDeviceIndices = [Int]()
+        unknownDeviceIndices = [Int]()
+        
         if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-            for dev in waveSync.waveController!.connectedSerials {
+            for (index,dev) in enumerate(waveSync.waveController!.connectedSerials) {
                 //for each device in the connected serials list
                 //we need to see if it is in the known devices list
                 
@@ -230,9 +238,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     var serial = "".join(array.map{ String($0, radix: 16, uppercase: true)})
                     if (isKnownDevice(uid, serial)) {
                         knownDevices.append(serial)
+                        knownDeviceIndices.append(index)
                         
                     } else {
                         unknownDevices.append(serial)
+                        unknownDeviceIndices.append(index)
                     }
                 }
                 
@@ -343,6 +353,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     
                     if let name = movonames.stringForKey(uid + knownDevices[row]){
                         if(!(name == "")){
+//                            cell.NameLabel.text = name + knownDevices[row]
                             cell.NameLabel.text = name
                         }else{
                             cell.NameLabel.text = knownDevices[row]
@@ -390,8 +401,30 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         tableView.deselectRowAtIndexPath(indexPath, animated: true)
         
         let row = indexPath.row
-        if (row < waveSync.waveController!.connectedSerials.count) {
-            if let id = waveSync.waveController!.connectedSerials.allKeys[row] as? String {
+        let section = indexPath.section
+        
+        var connectedIndex = waveSync.waveController!.connectedSerials.count
+        
+        if( section == 0 ) {
+            if( row < knownDeviceIndices.count ){
+                connectedIndex = knownDeviceIndices[row]
+                
+            } else {
+                //ERROR
+            }
+        } else if( section == 1 ) {
+            if( row < unknownDeviceIndices.count ){
+                connectedIndex = unknownDeviceIndices[row]
+            } else {
+                //ERROR
+            }
+        } else {
+            //FIXME: ERRROR, section should never be higher than 2.
+        }
+        
+        
+        if (connectedIndex < waveSync.waveController!.connectedSerials.count) {
+            if let id = waveSync.waveController!.connectedSerials.allKeys[connectedIndex] as? String {
                 waveSync.attemptSync(deviceId: id)
                 performSegueWithIdentifier("SyncStatus", sender: self)
             }
