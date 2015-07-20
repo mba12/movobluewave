@@ -167,8 +167,12 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                         //self!.displayLabel.text = enteredText
                         
                         let defaults = NSUserDefaults.standardUserDefaults()
-                        defaults.setObject(enteredText, forKey: UserData.getOrCreateUserData().getCurrentUID()! + (serialString as String))
-                        NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
+                        if let userId = UserData.getOrCreateUserData().getCurrentUID(){
+                            defaults.setObject(enteredText, forKey: userId + (serialString as String))
+                            NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
+                           
+                            
+                        }
                         //                            NSLog("device serial @% ", deviceSerialIn)
                     }
                     //                    }
@@ -179,8 +183,11 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             alert.addTextFieldWithConfigurationHandler({(textField: UITextField!) in
                 textField.placeholder = "Enter text:"
             })
-            movonames.setObject("true", forKey: UserData.getOrCreateUserData().getCurrentUID()! + (serialString as String) + "renamePrompt")
-            self.presentViewController(alert, animated: true, completion: nil)
+            if let userId = UserData.getOrCreateUserData().getCurrentUID(){
+
+                movonames.setObject("true", forKey: userId + (serialString as String) + "renamePrompt")
+                self.presentViewController(alert, animated: true, completion: nil)
+            }
             }
         }
         
