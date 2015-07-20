@@ -45,7 +45,7 @@ public abstract class MenuActivity extends ActionBarActivity {
             @Override
             public Intent select(Context context) {
                 final Intent uriIntent = new Intent( Intent.ACTION_VIEW,
-                        Uri.parse("http://www.getmovo.com/appfaq"));
+                        Uri.parse("http://www.getmovo.com/appfaqbt"));
                 return uriIntent;
             }
         },
