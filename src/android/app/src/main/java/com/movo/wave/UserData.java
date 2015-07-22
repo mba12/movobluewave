@@ -1153,12 +1153,12 @@ public class UserData extends Activity{
 
                             // T23:30:00Z
                             // NOTE: when entering the last 30 minutes in a day from 11:30PM to 12:00AM the date needs to get incremented to the next day
-                            // String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.END).toString();
+                             String dateConcatStop = curYear + "-" + curMonth + "-" + date + "" + dataMap.get(Database.StepEntry.END).toString();
 
                             try {
                                 Date curDateStart = UTC.parse(dateConcatStart);
 
-                                // Date curDateStop = UTC.parse(dateConcatStop);
+                                Date curDateStop = UTC.parse(dateConcatStop);
 //                              Log.d("TAG", "date is "+curDate);
                                 thisCal.setTime(curDateStart);
 
@@ -1167,8 +1167,13 @@ public class UserData extends Activity{
                                 remoteValues.put(Database.StepEntry.STEPS, dataMap.get(Database.StepEntry.STEPS));
                                 remoteValues.put(Database.StepEntry.START, thisCal.getTimeInMillis());
 
-                                //thisCal.setTime(curDateStop); // NOTE: This causes a bug at the 23:30 to 24:00 segment because the calendar day isn't incremented also
-                                thisCal.add(GregorianCalendar.MINUTE, 30);
+                                thisCal.setTime(curDateStop); // NOTE: This causes a bug at the 23:30 to 24:00 segment because the calendar day isn't incremented also
+
+                                if(curDateStop.getTime() < curDateStart.getTime()){
+                                    //start time is later than stop time, this isn't correct,
+                                    thisCal.add(GregorianCalendar.DATE, 1);
+                                }
+//                                thisCal.add(GregorianCalendar.MINUTE, 30);
 
                                 remoteValues.put(Database.StepEntry.END, thisCal.getTimeInMillis());
                                 remoteValues.put(Database.StepEntry.USER, userID);
