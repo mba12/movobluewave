@@ -75,7 +75,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
             validation = false
         }
         
-        if (!isValidBirthDate(birthday)) {
+        if (birthday == nil || !isValidBirthDate(birthday)) {
             validation = false
         }
         
