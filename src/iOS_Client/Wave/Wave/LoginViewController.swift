@@ -52,7 +52,7 @@ class LoginViewController: KeyboardSlideViewController {
                         
                         if(tempPasswordBool){
                             //true if password is temp, do password reset prompt.
-                            PasswordResetAlert.presentSetPasswordDialog(self, userEmail: email, oldPassword: password)
+                            PasswordResetAlert.presentSetPasswordDialog(self, userEmail: email!, oldPassword: password!)
                         }
                         authData.uid
                         
@@ -63,11 +63,11 @@ class LoginViewController: KeyboardSlideViewController {
                         /* So what do we need to do? */
                         
                         /* 1 - get the user entry that corresponds to this email */
-                        if let userentry : UserEntry = fetchUserByEmail(email) {
+                        if let userentry : UserEntry = fetchUserByEmail(email!) {
                             //in this case, the user is an existing user
                             //accept the new password
                             //and attempt to load the user
-                            userentry.pw = password
+                            userentry.pw = password!
                             UserData.saveContext()
                             UserData.getOrCreateUserData().loadUser(userentry)
                             
@@ -81,7 +81,7 @@ class LoginViewController: KeyboardSlideViewController {
                             stringRef = stringRef + authData.uid
 
                             
-                            var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
+                            var userentry = UserData.getOrCreateUserData().createUser(email!, pw: password!, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
                             
                             UserData.saveContext()
                             
@@ -100,13 +100,13 @@ class LoginViewController: KeyboardSlideViewController {
                         
                         UserData.getOrCreateUserData().setCurrentUserRef(stringRef)
                         */
-                        NSLog("We logged in as %@: %@",email, authData.uid)
+                        NSLog("We logged in as %@: %@",email!, authData.uid)
 
                         
                         self.performSegueWithIdentifier("tabBar", sender: self)
                         if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
                             if let tabbarVC = application.tabBarController {
-                                println("setting selected index")
+                                print("setting selected index")
                                 tabbarVC.selectedIndex = 1
                             }
                         }

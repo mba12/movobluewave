@@ -94,7 +94,7 @@ public class ChartLegend: ChartComponentBase
                 continue;
             }
             
-            var size = (labels[i] as NSString!).sizeWithAttributes([NSFontAttributeName: font]);
+            let size = (labels[i] as NSString!).sizeWithAttributes([NSFontAttributeName: font]);
             
             if (size.width > maxW)
             {
@@ -133,7 +133,7 @@ public class ChartLegend: ChartComponentBase
                     width += formSize + formToTextSpace;
                 }
                 
-                var size = (labels[i] as NSString!).sizeWithAttributes([NSFontAttributeName: labelFont]);
+                let size = (labels[i] as NSString!).sizeWithAttributes([NSFontAttributeName: labelFont]);
                 
                 width += size.width;
                 height += size.height;
@@ -165,8 +165,8 @@ public class ChartLegend: ChartComponentBase
 
     public func calculateDimensions(labelFont: UIFont)
     {
-        var maxEntrySize = getMaximumEntrySize(labelFont);
-        var fullSize = getFullSize(labelFont);
+        let maxEntrySize = getMaximumEntrySize(labelFont);
+        let fullSize = getFullSize(labelFont);
         
         if (position == .RightOfChart
             || position == .RightOfChartCenter

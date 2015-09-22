@@ -18,7 +18,7 @@ class SyncCompleteViewController : UIViewController {
         performSegueWithIdentifier("UploadComplete", sender: self)
         if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
             if let tabbarVC = application.tabBarController {
-                println("setting selected index")
+                print("setting selected index")
                 tabbarVC.selectedIndex = 1
             }
         }

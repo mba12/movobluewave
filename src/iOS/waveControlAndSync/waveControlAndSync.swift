@@ -157,7 +157,7 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
     required init(delegate: waveSyncManagerDelegate) {
         callbackDelegate = delegate
         operationQueue = {
-            var queue = NSOperationQueue()
+            let queue = NSOperationQueue()
             queue.name = "Sync Queue"
             queue.maxConcurrentOperationCount = 1
             return queue
@@ -190,7 +190,7 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
     func attemptSync(deviceId: NSString? = nil) {
         //creates a new waveSyncOperation and adds it to the sync operation queue
         
-        var waveSync = waveSyncOperation(syncManager: self, deviceId: deviceId, timeout: 5000.0)
+        let waveSync = waveSyncOperation(syncManager: self, deviceId: deviceId, timeout: 5000.0)
         waveSync.completionBlock = {
             if (waveSync.cancelled) {
                 //Our wave sync operation
@@ -230,10 +230,10 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
 
     func connectedWaveDeviceSerialString(id: NSString) -> NSString? {
         if let data : NSData = waveController!.connectedSerials.valueForKey(id as String) as? NSData {
-            var count = data.length
+            let count = data.length
             var array = [UInt8](count: count, repeatedValue: 0)
             data.getBytes(&array, length: count)
-            return "".join(array.map{ String($0, radix: 16, uppercase: true)})
+            return array.map{ String($0, radix: 16, uppercase: true)}.joinWithSeparator("")
         }
         return nil
     }
@@ -289,7 +289,7 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
     
     
     func bluetoothManagerStateChange(state: CBCentralManagerState) {
-        println(state)
+        print(state)
         if (state == CBCentralManagerState.PoweredOn && shouldScan) {
             waveController!.requestConnection()
             scanning = true
@@ -301,7 +301,7 @@ class waveSyncManager : NSObject, waveControlAndSyncDelegate {
     /* Internal Methods */
     func reportedTimeDelta(delta: NSTimeInterval) {
         
-        println("Time Delta: " + delta.description)
+        print("Time Delta: " + delta.description)
         
     }
     
@@ -342,7 +342,7 @@ class waveSyncOperation : NSOperation {
         if (self.status == .Idle) {
             //if status is Idle we need to request system time
             //and kick off the process
-            deviceId = syncManager.waveController!.getTime(id: deviceId)
+            deviceId = syncManager.waveController!.getTime(deviceId)
             self.status = .Start
             syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: self.deviceId, completeRatio: 1.0)
         }
@@ -356,11 +356,11 @@ class waveSyncOperation : NSOperation {
             //because NSTimer doesn't play well with NSOperations
             NSThread.sleepForTimeInterval(0.01)
             if (NSDate().compare(timeoutDate) == NSComparisonResult.OrderedDescending) {
-                println("SYNC TIMEOUT")
+                print("SYNC TIMEOUT")
                 cancel()
             }
         }
-        println("Completed Operation")
+        print("Completed Operation")
     }
     
     func isComplete() -> Bool {
@@ -416,20 +416,20 @@ class waveSyncOperation : NSOperation {
                     if let timestamp = message.data![0] as? WaveYMDHMSDOW {
                         //this will let us compare the date the device has with our current date
                         var timestampDate = waveYMDHMSDOWGMTToNSDate(timestamp)
-                        println("WAVE DEVICE TIME: "+timestampDate.description)
+                        print("WAVE DEVICE TIME: "+timestampDate.description)
                         var delta = NSDate().timeIntervalSinceDate(timestampDate)
                         self.status = WaveSyncStatus.VerifingDate
                         syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
                         syncManager.reportedTimeDelta(delta)
                         
-                        println("Time delta: " + delta.description)
+                        print("Time delta: " + delta.description)
                         if (abs(delta) > 30*60) {
                             //if delta is greater than 30 minutes
                             self.status = WaveSyncStatus.SettingDate
                             syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 1.0)
                             
                             var currentTime : WaveYMDHMSDOW = nSDateToWaveYMDHMSDOWGMT(NSDate())
-                            syncManager.waveController?.setTime(id: deviceId, Year: currentTime.Year, Month: currentTime.Month, Day: currentTime.Day, Hours: currentTime.Hours, Minutes: currentTime.Minutes, Seconds: currentTime.Seconds, DOW: currentTime.DOW)
+                            syncManager.waveController?.setTime(deviceId, Year: currentTime.Year, Month: currentTime.Month, Day: currentTime.Day, Hours: currentTime.Hours, Minutes: currentTime.Minutes, Seconds: currentTime.Seconds, DOW: currentTime.DOW)
                         } else {
                             self.status = WaveSyncStatus.DownloadingData
                             syncManager.callbackDelegate.syncStatusUpdate(self.status, deviceId: deviceId, completeRatio: 0.0)
@@ -481,16 +481,16 @@ class waveSyncOperation : NSOperation {
                         if (newdata.count > 0) {
                             for x in newdata {
                                 stepcount += x.steps
-                                println(String(x.steps) + " steps at: " + x.start.description + " - " + x.end.description)
+                                print(String(x.steps) + " steps at: " + x.start.description + " - " + x.end.description)
                             }
                             var firstStep = (message.data! as! [WaveStep])[0].start
                             var finalStep = (message.data! as! [WaveStep]).last?.end
-                            println("Counted "+String(stepcount)+" steps from: "+dateFormatter.stringFromDate(firstStep)+" to "+dateFormatter.stringFromDate(finalStep!))
-                            println(""+firstStep.description+" to "+finalStep!.description)
+                            print("Counted "+String(stepcount)+" steps from: "+dateFormatter.stringFromDate(firstStep)+" to "+dateFormatter.stringFromDate(finalStep!))
+                            print(""+firstStep.description+" to "+finalStep!.description)
                         
                         } else {
                             //still success, just nothing to print
-                            println("Received Chart with no steps")
+                            print("Received Chart with no steps")
                         }
                     }
                     
@@ -526,7 +526,7 @@ class waveSyncOperation : NSOperation {
                 }
         }
 
-        println("WaveSyncOperation Received Message")
+        print("WaveSyncOperation Received Message")
         
         
     }
@@ -536,9 +536,9 @@ class waveSyncOperation : NSOperation {
     //then we use parameter Int as starting from 7 days ago until day == 7 (now)
     func requestDataForDay(day: Int) {
         
-        var waveDate : WaveYMDHMSDOW = nSDateToWaveYMDHMSDOWGMT(NSDate(timeInterval: NSTimeInterval(-60*60*24*(7-day)), sinceDate: startSync))
+        let waveDate : WaveYMDHMSDOW = nSDateToWaveYMDHMSDOWGMT(NSDate(timeInterval: NSTimeInterval(-60*60*24*(7-day)), sinceDate: startSync))
         
-        syncManager.waveController!.getChart(id: deviceId, Year: waveDate.Year, Month: waveDate.Month, Day: waveDate.Day)
+        syncManager.waveController!.getChart(deviceId, Year: waveDate.Year, Month: waveDate.Month, Day: waveDate.Day)
     }
 }
 
@@ -593,7 +593,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         connectedSerials = NSMutableDictionary()
         outputBuffer = NSMutableData()
         operationQueue = {
-            var queue = NSOperationQueue()
+            let queue = NSOperationQueue()
             queue.name = "Command Queue"
             queue.maxConcurrentOperationCount = 1
             return queue
@@ -610,7 +610,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     func requestConnection() -> Bool {
         if (centralManager!.state == CBCentralManagerState.PoweredOn) {
             scanning = true
-            let serviceUUIDs:[AnyObject] = [CBUUID(string: "180A")]
+            let serviceUUIDs:[CBUUID]? = [CBUUID(string: "180A")]
             centralManager!.scanForPeripheralsWithServices(serviceUUIDs, options: [ CBCentralManagerScanOptionAllowDuplicatesKey : true ])
             return true
         }
@@ -627,8 +627,8 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
         var wavePeripheral:CBPeripheral?
         wavePeripheral = wavePeripherals.valueForKey(id as String) as? CBPeripheral
         if (wavePeripheral != nil) {
-            println("Disconnecting Peripheral")
-            centralManager!.cancelPeripheralConnection(wavePeripheral)
+            print("Disconnecting Peripheral")
+            centralManager!.cancelPeripheralConnection(wavePeripheral!)
 
         }
         
@@ -637,7 +637,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //request to disconnect all devices
     func disconnectWaveDevices() {
         for (id, wavePeripheral) in wavePeripherals {
-            centralManager!.cancelPeripheralConnection(wavePeripheral as? CBPeripheral )
+            centralManager!.cancelPeripheralConnection((wavePeripheral as? CBPeripheral)! )
         }
     }
     
@@ -652,7 +652,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //request chart from a particular ID
     func getChart(id: NSString?=nil, Year: Int, Month: Int, Day: Int) -> NSString? {
         
-        if (!checkYMDHMSDOW(Year, Month, Day)) {
+        if (!checkYMDHMSDOW(Year, Month: Month, Day: Day)) {
             return nil
         }
         
@@ -681,7 +681,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //including day of week
     func setTime(id: NSString?=nil, Year: Int, Month: Int, Day: Int, Hours: Int, Minutes: Int, Seconds: Int, DOW: Int) -> NSString? {
         
-        if (!checkYMDHMSDOW(Year, Month, Day, Hours: Hours, Minutes: Minutes, Seconds: Seconds, DOW: DOW)) {
+        if (!checkYMDHMSDOW(Year, Month: Month, Day: Day, Hours: Hours, Minutes: Minutes, Seconds: Seconds, DOW: DOW)) {
             return nil
         }
         var xor : UInt8 = UInt8(Year) ^ UInt8(Month) ^ UInt8(Day) ^ UInt8(Hours) ^ UInt8(Minutes) ^ UInt8(Seconds) ^ UInt8(DOW)
@@ -724,7 +724,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                     }
                     
                     //we should parse the commands here rather than requiring an intermediary
-                    var count = command.outputData.length
+                    let count = command.outputData.length
                     var array = [UInt8](count: count, repeatedValue: 0)
                     command.outputData.getBytes(&array, length: count)
                     if let responseCode = WaveCommandResponseCodes(rawValue: Int(array[0])) {
@@ -778,11 +778,11 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     
 
     func checksum(array: [UInt8]) -> Bool {
-        var datalen = Int(array[1])
+        let datalen = Int(array[1])
         if (array.count < (datalen + 3)) {
             return false
         }
-        var checksum = array[datalen+2]
+        let checksum = array[datalen+2]
         
         var xor = array[2]
         for (var i = 1; i<datalen; i++) {
@@ -817,7 +817,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                 var Month : Int = Int(chartData[1])
                 var Day : Int = Int(chartData[2])
                 
-                if (checkYMDHMSDOW(Year, Month, Day, Hours: nil, Minutes: nil, Seconds: nil, DOW: nil)) {
+                if (checkYMDHMSDOW(Year, Month: Month, Day: Day, Hours: nil, Minutes: nil, Seconds: nil, DOW: nil)) {
                     /* Valid time stamp */
                     
                     /* This is the layer where we will translate from Wave Date/Time stamps to system date time
@@ -898,14 +898,14 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                 //checksum valid
                 //therefore parse datetime - for now we'll use our custom type
                 var timeRaw = Array(array[2..<(Int(array[1]+2))])
-                var Year = Int(timeRaw[0])
-                var Month = Int(timeRaw[1])
-                var Day = Int(timeRaw[2])
-                var Hours = Int(timeRaw[3])
-                var Minutes = Int(timeRaw[4])
-                var Seconds = Int(timeRaw[5])
-                var DOW = Int(timeRaw[6])
-                if (checkYMDHMSDOW(Year, Month, Day, Hours: Hours, Minutes: Minutes, Seconds: Seconds, DOW: DOW)) {
+                let Year = Int(timeRaw[0])
+                let Month = Int(timeRaw[1])
+                let Day = Int(timeRaw[2])
+                let Hours = Int(timeRaw[3])
+                let Minutes = Int(timeRaw[4])
+                let Seconds = Int(timeRaw[5])
+                let DOW = Int(timeRaw[6])
+                if (checkYMDHMSDOW(Year, Month: Month, Day: Day, Hours: Hours, Minutes: Minutes, Seconds: Seconds, DOW: DOW)) {
                     self.callbackDelegate.receivedMessage(WaveMessageResponse(code: WaveCommandResponseCodes.GetTimeSuccess, data: [WaveYMDHMSDOW(Year: Year, Month: Month, Day: Day, Hours: Hours, Minutes: Minutes, Seconds: Seconds, DOW: DOW)], mode: nil) , id: id)
                 }
                 success = true
@@ -968,7 +968,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
 //Delegate Callbacks from CoreBluetooth
 
     //if user turns power on/off for bluetooth, the UI should know
-    func centralManagerDidUpdateState(central: CBCentralManager!) {
+    func centralManagerDidUpdateState(central: CBCentralManager) {
         callbackDelegate.bluetoothManagerStateChange(central.state)
         
     }
@@ -976,10 +976,10 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //for any discovered peripheral, we want to check if its name matches the required device name.
     //our sample devices are "808A", but that will be changing.
     //in principle this should get called for each peripheral that we discover
-    func centralManager(central: CBCentralManager!, didDiscoverPeripheral peripheral: CBPeripheral!, advertisementData: [NSObject : AnyObject]!, RSSI: NSNumber!) {
+    func centralManager(central: CBCentralManager, didDiscoverPeripheral peripheral: CBPeripheral, advertisementData: [String : AnyObject], RSSI: NSNumber) {
 
         peripheral.delegate = self
-        if ((peripheral.name != nil)) {println(peripheral.name)}
+        if ((peripheral.name != nil)) {print(peripheral.name)}
         
         if ((peripheral.name != nil) &&  ( /* (peripheral.name == "808A") || */ (peripheral.name == "Wave")) && (connectingPeripherals.valueForKey(peripheral.identifier.UUIDString) == nil)) {
             //found a match, attempt to connect
@@ -992,7 +992,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //since we are only connecting to peripherals that match the correct name
     //anything that detects we need to immediately discover services
     //notify our callback delegate of the connection and ID
-    func centralManager(centeral: CBCentralManager!, didConnectPeripheral peripheral: CBPeripheral!) {
+    func centralManager(centeral: CBCentralManager, didConnectPeripheral peripheral: CBPeripheral) {
         wavePeripherals.setObject(peripheral, forKey: peripheral.identifier.UUIDString)
         peripheral.discoverServices(nil)
         callbackDelegate.connectedWaveDevice(peripheral.identifier.UUIDString)
@@ -1002,7 +1002,7 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     //this should let us handle disconnections properly
     //right now we just want to remove the device from our list of wavePeripherals if it is a known device
     //and if it is a known device, we let the UI know.
-    func centralManager(central: CBCentralManager!, didDisconnectPeripheral peripheral: CBPeripheral!, error: NSError!) {
+    func centralManager(central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: NSError?) {
         var wavePeripheral : CBPeripheral?
         wavePeripheral = wavePeripherals.valueForKey(peripheral.identifier.UUIDString) as? CBPeripheral
         if (peripheral == wavePeripheral) {
@@ -1017,16 +1017,16 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     }
     
     //TODO: gracefully handle failed connections to peripherals
-    func centralManager(central: CBCentralManager!, didFailToConnectPeripheral peripheral: CBPeripheral!, error: NSError!) {
+    func centralManager(central: CBCentralManager, didFailToConnectPeripheral peripheral: CBPeripheral, error: NSError?) {
         connectingPeripherals.removeObjectForKey(peripheral.identifier.UUIDString)
     }
     
-    func peripheral(peripheral: CBPeripheral!, didDiscoverServices error: NSError!) {
+    func peripheral(peripheral: CBPeripheral, didDiscoverServices error: NSError?) {
         if let actualError = error{
             //may require error handling
         }
         else {
-            for service in peripheral.services as! [CBService]!{
+            for service in peripheral.services as [CBService]!{
                 peripheral.discoverCharacteristics(nil, forService: service)
             }
         }
@@ -1035,45 +1035,45 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     
     //capture the write characteristic for the Wave Device
     //and attach a notify request to the read characteristic
-    func peripheral(peripheral: CBPeripheral!, didDiscoverCharacteristicsForService service: CBService!, error: NSError!) {
+    func peripheral(peripheral: CBPeripheral, didDiscoverCharacteristicsForService service: CBService, error: NSError?) {
         if let actualError = error{
         }
         else {
             if service.UUID == CBUUID(string: "FFE0"){
-                for characteristic in service.characteristics as! [CBCharacteristic]{
+                for characteristic in service.characteristics as [CBCharacteristic]! {
                     switch characteristic.UUID.UUIDString{
                     case "FFE4":
                         //Set notification on notification characteristic
-                        println("Found a general notify characteristic")
+                        print("Found a general notify characteristic")
                         peripheral.setNotifyValue(true, forCharacteristic: characteristic)
                         notifyCharacteristics.setObject(characteristic, forKey: peripheral.identifier.UUIDString)
                     default:
-                        println(characteristic.UUID.UUIDString)
+                        print(characteristic.UUID.UUIDString)
                     }
                 }
             } else if service.UUID == CBUUID(string: "FFE5") {
-                for characteristic in service.characteristics as! [CBCharacteristic]{
+                for characteristic in service.characteristics as [CBCharacteristic]! {
                     switch characteristic.UUID.UUIDString{
                     case "FFE9":
                         // Save our write characteristic
-                        println("Found a write characteristic")
+                        print("Found a write characteristic")
                         writeCharacteristics.setObject(characteristic, forKey: peripheral.identifier.UUIDString)
                         //writeCharacteristic = characteristic
                         peripheral.discoverDescriptorsForCharacteristic(characteristic)
                     default:
-                        println(characteristic.UUID.UUIDString)
+                        print(characteristic.UUID.UUIDString)
                     }
                 }
                 
             } else if service.UUID == CBUUID(string: "180A") {
-                println("found device information")
-                for charateristic in service.characteristics as! [CBCharacteristic] {
-                    println(charateristic.UUID)
+                print("found device information")
+                for charateristic in service.characteristics as [CBCharacteristic]! {
+                    print(charateristic.UUID)
                 }
                 
             } else {
-                println("Unknown service")
-                println(service.UUID)
+                print("Unknown service")
+                print(service.UUID)
             }
             
             
@@ -1086,49 +1086,49 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     }
     
     //not used
-    func peripheral(peripheral: CBPeripheral!, didDiscoverDescriptorsForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
-        for descriptor in characteristic.descriptors as! [CBDescriptor] {
-            print("found descriptor")
-            println(descriptor.UUID)
+    func peripheral(peripheral: CBPeripheral, didDiscoverDescriptorsForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
+        for descriptor in characteristic.descriptors as [CBDescriptor]! {
+            print("found descriptor", terminator: "")
+            print(descriptor.UUID)
         }
     }
     
     //receive update notifications
     //retrieve data from the read characteristic
-    func peripheral(peripheral: CBPeripheral!, didUpdateValueForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
+    func peripheral(peripheral: CBPeripheral, didUpdateValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
         if let actualError = error{
         }else {
             switch characteristic.UUID.UUIDString{
             case "FFE4":
-                println(characteristic.UUID)
+                print(characteristic.UUID)
             #if os(iOS)
-                var data : NSData! = characteristic.value
+                let data : NSData! = characteristic.value
             #elseif os(OSX)
                 var data : NSData! = characteristic.value()
             #endif
                 if (data != nil) {
-                    var count = data.length
+                    let count = data.length
                     var array = [UInt8](count: count, repeatedValue: 0)
                     data.getBytes(&array, length: count)
-                    println(array.map{ String($0, radix: 16, uppercase: false)})
+                    print(array.map{ String($0, radix: 16, uppercase: false)})
                     //callbackDelegate.receivedMessage(data, id: peripheral.identifier.UUIDString)
                     if (operationQueue.operationCount > 0) {
                         (operationQueue.operations[0] as! waveOperation).insertData(data)
                     }
                     //                    println(array)
                 } else {
-                    println( characteristic.value )
+                    print( characteristic.value )
                 }
                 
             default:
-                println(characteristic.UUID)
+                print(characteristic.UUID)
             #if os(iOS)
-                var data : NSData! = characteristic.value
+                let data : NSData! = characteristic.value
             #elseif os(OSX)
                 var data : NSData! = characteristic.value()
             #endif
                 
-                println(NSString(data: data, encoding: NSUTF8StringEncoding));
+                print(NSString(data: data, encoding: NSUTF8StringEncoding));
                 //                println(characteristic.value())
             }
         }
@@ -1136,43 +1136,43 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     }
     
     //confirmation that command completed
-    func peripheral(peripheral: CBPeripheral!, didWriteValueForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
-        println(characteristic.UUID)
-        println(characteristic.value)
-        println("Command complete")
+    func peripheral(peripheral: CBPeripheral, didWriteValueForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
+        print(characteristic.UUID)
+        print(characteristic.value)
+        print("Command complete")
         callbackDelegate.requestComplete(error)
         
     }
     
     //unlikely, not implemented
-    func peripheral(peripheral: CBPeripheral!, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic!, error: NSError!) {
-        println("Received Update Notification")
-        println(characteristic.UUID.UUIDString)
+    func peripheral(peripheral: CBPeripheral, didUpdateNotificationStateForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
+        print("Received Update Notification")
+        print(characteristic.UUID.UUIDString)
         #if os(iOS)
-            var data : NSData! = characteristic.value
+            let data : NSData! = characteristic.value
         #elseif os(OSX)
             var data : NSData! = characteristic.value()
         #endif
         
         if (data != nil) {
-            var count = data.length
+            let count = data.length
             var array = [UInt8](count: count, repeatedValue: 0)
             data.getBytes(&array, length: count)
-            println(array.map{ String($0, radix: 16, uppercase: false)})
+            print(array.map{ String($0, radix: 16, uppercase: false)})
         } else {
         #if os(iOS)
-            var data : NSData! = characteristic.value
+            let data : NSData? = characteristic.value
         #elseif os(OSX)
-            var data : NSData! = characteristic.value()
+            var data : NSData? = characteristic.value()
         #endif
             
-            println(data)
+            print(data)
         }
         
         if (characteristic.UUID.UUIDString == "FFE4") {
             //attempt to get serial number
-            println("Requesting Serial number")
-            getSerial(id: peripheral.identifier.UUIDString)
+            print("Requesting Serial number")
+            getSerial(peripheral.identifier.UUIDString)
             
         }
     }
@@ -1223,18 +1223,18 @@ class waveOperation : NSOperation {
             if (outputData.length > lastlength) {
                 lastlength = outputData.length
                 timeoutDate = NSDate().dateByAddingTimeInterval(timeout/1000.0)
-                println("restarted timer")
+                print("restarted timer")
             } else if (NSDate().compare(timeoutDate) == NSComparisonResult.OrderedDescending) {
-                println("TIMEOUT")
+                print("TIMEOUT")
                 cancel()
             }
         }
-        println("Completed Operation")
+        print("Completed Operation")
         
     }
     
     func cancelTask() {
-        println("Canceled Task")
+        print("Canceled Task")
         cancel()
     }
     
@@ -1265,7 +1265,7 @@ class waveOperation : NSOperation {
             //we need to decode the first byte to get command / response, and the second to figure out the length of data expected
             
             self.commandType = array[0]
-            var testCommand : WaveCommandResponseCodes? = WaveCommandResponseCodes(rawValue: Int(self.commandType))
+            let testCommand : WaveCommandResponseCodes? = WaveCommandResponseCodes(rawValue: Int(self.commandType))
             if (testCommand != nil) {
                 switch testCommand! {
                 case .SetPasswordSuccess:
@@ -1418,37 +1418,37 @@ class WaveStep : NSObject {
 
 
 func waveYMDHMSDOWGMTToNSDate(dateIn: WaveYMDHMSDOW) -> NSDate {
-    var startTimeComponents = NSDateComponents()
-    var calendar = NSCalendar.currentCalendar()
+    let startTimeComponents = NSDateComponents()
+    let calendar = NSCalendar.currentCalendar()
     calendar.timeZone = NSTimeZone(forSecondsFromGMT: 0)
-    startTimeComponents.setValue(dateIn.Day, forComponent: NSCalendarUnit.CalendarUnitDay)
-    startTimeComponents.setValue(2000+dateIn.Year, forComponent: NSCalendarUnit.CalendarUnitYear)
-    startTimeComponents.setValue(dateIn.Month, forComponent: NSCalendarUnit.CalendarUnitMonth)
-    startTimeComponents.setValue(dateIn.Hours, forComponent: NSCalendarUnit.CalendarUnitHour)
-    startTimeComponents.setValue(dateIn.Minutes, forComponent: NSCalendarUnit.CalendarUnitMinute)
-    startTimeComponents.setValue(dateIn.Seconds, forComponent: NSCalendarUnit.CalendarUnitSecond)
-    var startTime : NSDate = calendar.dateFromComponents(startTimeComponents)!
+    startTimeComponents.setValue(dateIn.Day, forComponent: NSCalendarUnit.Day)
+    startTimeComponents.setValue(2000+dateIn.Year, forComponent: NSCalendarUnit.Year)
+    startTimeComponents.setValue(dateIn.Month, forComponent: NSCalendarUnit.Month)
+    startTimeComponents.setValue(dateIn.Hours, forComponent: NSCalendarUnit.Hour)
+    startTimeComponents.setValue(dateIn.Minutes, forComponent: NSCalendarUnit.Minute)
+    startTimeComponents.setValue(dateIn.Seconds, forComponent: NSCalendarUnit.Second)
+    let startTime : NSDate = calendar.dateFromComponents(startTimeComponents)!
     return startTime
 }
 
 func nSDateToWaveYMDHMSDOWGMT(dateIn: NSDate) -> WaveYMDHMSDOW {
     
-    var calendar = NSCalendar.currentCalendar()
+    let calendar = NSCalendar.currentCalendar()
     calendar.timeZone = NSTimeZone(forSecondsFromGMT: 0)
-    var day = calendar.component(NSCalendarUnit.CalendarUnitDay, fromDate: dateIn)
-    var month = calendar.component(NSCalendarUnit.CalendarUnitMonth, fromDate: dateIn)
-    var year = calendar.component(NSCalendarUnit.CalendarUnitYear, fromDate: dateIn)-2000
-    var dow = calendar.component(NSCalendarUnit.CalendarUnitWeekday, fromDate: dateIn)
+    let day = calendar.component(NSCalendarUnit.Day, fromDate: dateIn)
+    let month = calendar.component(NSCalendarUnit.Month, fromDate: dateIn)
+    let year = calendar.component(NSCalendarUnit.Year, fromDate: dateIn)-2000
+    var dow = calendar.component(NSCalendarUnit.Weekday, fromDate: dateIn)
     //adjust to Monday = 1 rather than Sunday = 1
     dow = dow - 1
     if (dow == 0) {
         dow = 7
     }
-    var hours = calendar.component(NSCalendarUnit.CalendarUnitHour, fromDate: dateIn)
-    var minutes = calendar.component(NSCalendarUnit.CalendarUnitMinute, fromDate: dateIn)
-    var seconds = calendar.component(NSCalendarUnit.CalendarUnitSecond, fromDate: dateIn)
+    let hours = calendar.component(NSCalendarUnit.Hour, fromDate: dateIn)
+    let minutes = calendar.component(NSCalendarUnit.Minute, fromDate: dateIn)
+    let seconds = calendar.component(NSCalendarUnit.Second, fromDate: dateIn)
     
-    var time = WaveYMDHMSDOW(Year: year, Month: month, Day: day, Hours: hours, Minutes: minutes, Seconds: seconds, DOW: dow)
+    let time = WaveYMDHMSDOW(Year: year, Month: month, Day: day, Hours: hours, Minutes: minutes, Seconds: seconds, DOW: dow)
     return time
 }
 

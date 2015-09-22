@@ -32,7 +32,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     var birthdateDate : NSDate!
     
     
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         datePicker = UIDatePicker()
         datePickerToolbar = UIToolbar()
         super.init(coder: aDecoder)
@@ -44,18 +44,18 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         let ref = Firebase(url: UserData.getFirebase())
         //auth with email and pass that are in the input UI
         
-        var email = emailText.text
-        var password = passText.text
-        var confirmPass = confirmPassText.text
-        var username = usernameText.text
+        let email = emailText.text
+        let password = passText.text
+        let confirmPass = confirmPassText.text
+        let username = usernameText.text
         
-        var birthday = birthdateDate
+        let birthday = birthdateDate
         
         var validation = true
         
-        if ( !isValidEmail(email) ) {
+        if ( !isValidEmail(email!) ) {
             validation = false
-            println("Email validation failed")
+            print("Email validation failed")
         }
         
 //WARN: bad email validation check
@@ -111,7 +111,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     self.presentViewController(alertController, animated: true, completion: nil)
                                     
                                 } else {
-                                    NSLog("We logged in as %@: %@",email, authData.uid)
+                                    NSLog("We logged in as %@: %@",email!, authData.uid)
                                     
                                     ///
                                     //in this case, the user does not exist locally
@@ -123,7 +123,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     stringRef = stringRef + authData.uid
                                     
                                     
-                                    var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: birthday, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: username, ref: stringRef)
+                                    let userentry = UserData.getOrCreateUserData().createUser(email!, pw: password!, uid: authData.uid, birth: birthday, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: username, ref: stringRef)
                                     
                                     UserData.saveContext()
                                     
@@ -131,10 +131,10 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     
                                     UserData.getOrCreateUserData().saveMetaDataToFirebase()
 
-                                    let url = NSURL(string: "https://orders.getmovo.com/verify/user-signup?fullname=" + username + "&email=" + email)
+                                    let url = NSURL(string: "https://orders.getmovo.com/verify/user-signup?fullname=" + username! + "&email=" + email!)
                                     
                                     let task = NSURLSession.sharedSession().dataTaskWithURL(url!) {(data, response, error) in
-                                        println(NSString(data: data, encoding: NSUTF8StringEncoding))
+                                        print(NSString(data: data!, encoding: NSUTF8StringEncoding))
                                     }
                                     
                                     task.resume()
@@ -148,7 +148,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
                                     self.performSegueWithIdentifier("tabBar", sender: self)
                                     if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
                                         if let tabbarVC = application.tabBarController {
-                                            println("setting selected index")
+                                            print("setting selected index")
                                             tabbarVC.selectedIndex = 1
                                         }
                                     }
@@ -189,7 +189,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
         
         let htmlString : NSString = "<center><font face='Gotham' color='white'>By proceeding, you also agree to Movo's <a href='http://www.getmovo.com/terms'>Terms of Service </a> and <a href='http://www.getmovo.com/privacy'>Privacy Policy</a>.</font></center>"
 
-        let encodedString = NSAttributedString(data: htmlString.dataUsingEncoding(NSUnicodeStringEncoding)!, options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType], documentAttributes: nil, error: nil)
+        let encodedString = try? NSAttributedString(data: htmlString.dataUsingEncoding(NSUnicodeStringEncoding)!, options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType], documentAttributes: nil)
         termsAndConditionsTextView.attributedText = encodedString
     }
     
@@ -197,7 +197,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     
     func dateSelection(sender: UIDatePicker) {
         
-        println("Got Date")
+        print("Got Date")
         
         
     }
@@ -209,7 +209,7 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     }
     
     func birthdateResponderEnd(sender: UITextField) {
-        var ndf = NSDateFormatter()
+        let ndf = NSDateFormatter()
         ndf.dateStyle = NSDateFormatterStyle.MediumStyle
         birthdate.text =   ndf.stringFromDate(datePicker.date)
         birthdateDate = datePicker.date
@@ -233,16 +233,16 @@ class RegisterViewController: KeyboardSlideViewController, UIPickerViewDelegate 
     
     override func keyboardWillShow(notification: NSNotification) {
         super.keyboardWillShow(notification)
-        println("In keyboard will show")
+        print("In keyboard will show")
         
         if (datePickerFirstResponder) {
             datePickerToolbar.removeFromSuperview()
-            var keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
-            var windowheight = self.view.frame.height
+            let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
+            let windowheight = self.view.frame.height
             datePickerToolbar = UIToolbar(frame: CGRectMake(0, windowheight-keyboardSize!.height-44 , keyboardSize!.width, 44))
             datePickerToolbar.sizeToFit()
-            var flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
-            var button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
+            let flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
+            let button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
             
             datePickerToolbar.setItems([flex, button], animated: true)
             self.view.addSubview(datePickerToolbar)

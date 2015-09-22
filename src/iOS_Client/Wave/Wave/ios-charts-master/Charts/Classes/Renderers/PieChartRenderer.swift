@@ -39,11 +39,11 @@ public class PieChartRenderer: ChartDataRendererBase
         _chart = chart;
     }
     
-    public override func drawData(#context: CGContext)
+    public override func drawData(context context: CGContext)
     {
         if (_chart !== nil)
         {
-            var pieData = _chart.data;
+            let pieData = _chart.data;
             
             if (pieData != nil)
             {
@@ -58,7 +58,7 @@ public class PieChartRenderer: ChartDataRendererBase
         }
     }
     
-    internal func drawDataSet(#context: CGContext, dataSet: PieChartDataSet)
+    internal func drawDataSet(context context: CGContext, dataSet: PieChartDataSet)
     {
         var angle = _chart.rotationAngle;
         
@@ -66,18 +66,18 @@ public class PieChartRenderer: ChartDataRendererBase
         
         var entries = dataSet.yVals;
         var drawAngles = _chart.drawAngles;
-        var circleBox = _chart.circleBox;
-        var radius = _chart.radius;
-        var innerRadius = drawHoleEnabled && holeTransparent ? radius * holeRadiusPercent : 0.0;
+        let circleBox = _chart.circleBox;
+        let radius = _chart.radius;
+        let innerRadius = drawHoleEnabled && holeTransparent ? radius * holeRadiusPercent : 0.0;
         
         CGContextSaveGState(context);
         
         for (var j = 0; j < entries.count; j++)
         {
-            var newangle = drawAngles[cnt];
-            var sliceSpace = dataSet.sliceSpace;
+            let newangle = drawAngles[cnt];
+            let sliceSpace = dataSet.sliceSpace;
             
-            var e = entries[j];
+            let e = entries[j];
             
             // draw only if the value is greater than zero
             if ((abs(e.value) > 0.000001))
@@ -85,16 +85,16 @@ public class PieChartRenderer: ChartDataRendererBase
                 if (!_chart.needsHighlight(xIndex: e.xIndex,
                     dataSetIndex: _chart.data!.indexOfDataSet(dataSet)))
                 {
-                    var startAngle = angle + sliceSpace / 2.0;
+                    let startAngle = angle + sliceSpace / 2.0;
                     var sweepAngle = newangle * _animator.phaseY
                         - sliceSpace / 2.0;
                     if (sweepAngle < 0.0)
                     {
                         sweepAngle = 0.0;
                     }
-                    var endAngle = startAngle + sweepAngle;
+                    let endAngle = startAngle + sweepAngle;
                     
-                    var path = CGPathCreateMutable();
+                    let path = CGPathCreateMutable();
                     CGPathMoveToPoint(path, nil, circleBox.midX, circleBox.midY);
                     CGPathAddArc(path, nil, circleBox.midX, circleBox.midY, radius, startAngle * ChartUtils.Math.FDEG2RAD, endAngle * ChartUtils.Math.FDEG2RAD, false);
                     CGPathCloseSubpath(path);
@@ -120,13 +120,13 @@ public class PieChartRenderer: ChartDataRendererBase
         CGContextRestoreGState(context);
     }
     
-    public override func drawValues(#context: CGContext)
+    public override func drawValues(context context: CGContext)
     {
-        var center = _chart.centerCircleBox;
+        let center = _chart.centerCircleBox;
         
         // get whole the radius
         var r = _chart.radius;
-        var rotationAngle = _chart.rotationAngle;
+        let rotationAngle = _chart.rotationAngle;
         var drawAngles = _chart.drawAngles;
         var absoluteAngles = _chart.absoluteAngles;
         
@@ -139,32 +139,32 @@ public class PieChartRenderer: ChartDataRendererBase
         
         r -= off; // offset to keep things inside the chart
         
-        var data: ChartData! = _chart.data;
+        let data: ChartData! = _chart.data;
         if (data === nil)
         {
             return;
         }
         
-        var defaultValueFormatter = _chart.valueFormatter;
+        let defaultValueFormatter = _chart.valueFormatter;
         
         var dataSets = data.dataSets;
-        var drawXVals = drawXLabelsEnabled;
+        let drawXVals = drawXLabelsEnabled;
         
         var cnt = 0;
         
         for (var i = 0; i < dataSets.count; i++)
         {
-            var dataSet = dataSets[i] as! PieChartDataSet;
+            let dataSet = dataSets[i] as! PieChartDataSet;
             
-            var drawYVals = dataSet.isDrawValuesEnabled;
+            let drawYVals = dataSet.isDrawValuesEnabled;
             
             if (!drawYVals && !drawXVals)
             {
                 continue;
             }
             
-            var valueFont = dataSet.valueFont;
-            var valueTextColor = dataSet.valueTextColor;
+            let valueFont = dataSet.valueFont;
+            let valueTextColor = dataSet.valueTextColor;
             
             var formatter = dataSet.valueFormatter;
             if (formatter === nil)
@@ -177,17 +177,17 @@ public class PieChartRenderer: ChartDataRendererBase
             for (var j = 0, maxEntry = Int(min(ceil(CGFloat(entries.count) * _animator.phaseX), CGFloat(entries.count))); j < maxEntry; j++)
             {
                 // offset needed to center the drawn text in the slice
-                var offset = drawAngles[cnt] / 2.0;
+                let offset = drawAngles[cnt] / 2.0;
                 
                 // calculate the text position
-                var x = (r * cos(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.x);
+                let x = (r * cos(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.x);
                 var y = (r * sin(((rotationAngle + absoluteAngles[cnt] - offset) * _animator.phaseY) * ChartUtils.Math.FDEG2RAD) + center.y);
                 
-                var value = usePercentValuesEnabled ? entries[j].value / _chart.yValueSum * 100.0 : entries[j].value;
+                let value = usePercentValuesEnabled ? entries[j].value / _chart.yValueSum * 100.0 : entries[j].value;
                 
-                var val = formatter!.stringFromNumber(value)!;
+                let val = formatter!.stringFromNumber(value)!;
                 
-                var lineHeight = valueFont.lineHeight;
+                let lineHeight = valueFont.lineHeight;
                 y -= lineHeight;
                 
                 // draw everything, depending on settings
@@ -217,22 +217,22 @@ public class PieChartRenderer: ChartDataRendererBase
         }
     }
     
-    public override func drawExtras(#context: CGContext)
+    public override func drawExtras(context context: CGContext)
     {
         drawHole(context: context);
         drawCenterText(context: context);
     }
     
     /// draws the hole in the center of the chart and the transparent circle / hole
-    private func drawHole(#context: CGContext)
+    private func drawHole(context context: CGContext)
     {
         if (_chart.drawHoleEnabled)
         {
             CGContextSaveGState(context);
             
-            var radius = _chart.radius;
-            var holeRadius = radius * holeRadiusPercent;
-            var center = _chart.centerCircleBox;
+            let radius = _chart.radius;
+            let holeRadius = radius * holeRadiusPercent;
+            let center = _chart.centerCircleBox;
             
             if (holeColor !== nil && holeColor != UIColor.clearColor())
             {
@@ -243,7 +243,7 @@ public class PieChartRenderer: ChartDataRendererBase
             
             if (transparentCircleRadiusPercent > holeRadiusPercent)
             {
-                var secondHoleRadius = radius * transparentCircleRadiusPercent;
+                let secondHoleRadius = radius * transparentCircleRadiusPercent;
                 
                 // make transparent
                 CGContextSetFillColorWithColor(context, holeColor!.colorWithAlphaComponent(CGFloat(0x60) / CGFloat(0xFF)).CGColor);
@@ -257,21 +257,21 @@ public class PieChartRenderer: ChartDataRendererBase
     }
     
     /// draws the description text in the center of the pie chart makes most sense when center-hole is enabled
-    private func drawCenterText(#context: CGContext)
+    private func drawCenterText(context context: CGContext)
     {
         if (drawCenterTextEnabled && centerText != nil && centerText.lengthOfBytesUsingEncoding(NSUTF16StringEncoding) > 0)
         {
-            var center = _chart.centerCircleBox;
-            var innerRadius = drawHoleEnabled && holeTransparent ? _chart.radius * holeRadiusPercent : _chart.radius;
-            var boundingRect = CGRect(x: center.x - innerRadius, y: center.y - innerRadius, width: innerRadius * 2.0, height: innerRadius * 2.0);
+            let center = _chart.centerCircleBox;
+            let innerRadius = drawHoleEnabled && holeTransparent ? _chart.radius * holeRadiusPercent : _chart.radius;
+            let boundingRect = CGRect(x: center.x - innerRadius, y: center.y - innerRadius, width: innerRadius * 2.0, height: innerRadius * 2.0);
             
-            var centerTextNs = self.centerText as NSString;
+            let centerTextNs = self.centerText as NSString;
             
-            var paragraphStyle = NSParagraphStyle.defaultParagraphStyle().mutableCopy() as! NSMutableParagraphStyle;
+            let paragraphStyle = NSParagraphStyle.defaultParagraphStyle().mutableCopy() as! NSMutableParagraphStyle;
             paragraphStyle.lineBreakMode = .ByTruncatingTail;
             paragraphStyle.alignment = .Center;
             
-            var textSize = centerTextNs.sizeWithAttributes([NSFontAttributeName: centerTextFont, NSParagraphStyleAttributeName: paragraphStyle]);
+            let textSize = centerTextNs.sizeWithAttributes([NSFontAttributeName: centerTextFont, NSParagraphStyleAttributeName: paragraphStyle]);
             
             var drawingRect = boundingRect;
             drawingRect.origin.y += (boundingRect.size.height - textSize.height) / 2.0;
@@ -279,7 +279,7 @@ public class PieChartRenderer: ChartDataRendererBase
             
             CGContextSaveGState(context);
 
-            var clippingPath = CGPathCreateWithEllipseInRect(boundingRect, nil);
+            let clippingPath = CGPathCreateWithEllipseInRect(boundingRect, nil);
             CGContextBeginPath(context);
             CGContextAddPath(context, clippingPath);
             CGContextClip(context);
@@ -290,7 +290,7 @@ public class PieChartRenderer: ChartDataRendererBase
         }
     }
     
-    public override func drawHighlighted(#context: CGContext, indices: [ChartHighlight])
+    public override func drawHighlighted(context context: CGContext, indices: [ChartHighlight])
     {
         if (_chart.data === nil)
         {
@@ -299,18 +299,18 @@ public class PieChartRenderer: ChartDataRendererBase
         
         CGContextSaveGState(context);
         
-        var rotationAngle = _chart.rotationAngle;
+        let rotationAngle = _chart.rotationAngle;
         var angle = CGFloat(0.0);
         
         var drawAngles = _chart.drawAngles;
         var absoluteAngles = _chart.absoluteAngles;
         
-        var innerRadius = drawHoleEnabled && holeTransparent ? _chart.radius * holeRadiusPercent : 0.0;
+        let innerRadius = drawHoleEnabled && holeTransparent ? _chart.radius * holeRadiusPercent : 0.0;
         
         for (var i = 0; i < indices.count; i++)
         {
             // get the index to highlight
-            var xIndex = indices[i].xIndex;
+            let xIndex = indices[i].xIndex;
             if (xIndex >= drawAngles.count)
             {
                 continue;
@@ -327,19 +327,19 @@ public class PieChartRenderer: ChartDataRendererBase
             
             angle *= _animator.phaseY;
             
-            var sliceDegrees = drawAngles[xIndex];
+            let sliceDegrees = drawAngles[xIndex];
             
-            var set = _chart.data?.getDataSetByIndex(indices[i].dataSetIndex) as! PieChartDataSet!;
+            let set = _chart.data?.getDataSetByIndex(indices[i].dataSetIndex) as! PieChartDataSet!;
             
             if (set === nil)
             {
                 continue;
             }
             
-            var shift = set.selectionShift;
-            var circleBox = _chart.circleBox;
+            let shift = set.selectionShift;
+            let circleBox = _chart.circleBox;
             
-            var highlighted = CGRect(
+            let highlighted = CGRect(
                 x: circleBox.origin.x - shift,
                 y: circleBox.origin.y - shift,
                 width: circleBox.size.width + shift * 2.0,
@@ -349,15 +349,15 @@ public class PieChartRenderer: ChartDataRendererBase
             
             // redefine the rect that contains the arc so that the highlighted pie is not cut off
             
-            var startAngle = angle + set.sliceSpace / 2.0;
+            let startAngle = angle + set.sliceSpace / 2.0;
             var sweepAngle = sliceDegrees * _animator.phaseY - set.sliceSpace / 2.0;
             if (sweepAngle < 0.0)
             {
                 sweepAngle = 0.0;
             }
-            var endAngle = startAngle + sweepAngle;
+            let endAngle = startAngle + sweepAngle;
             
-            var path = CGPathCreateMutable();
+            let path = CGPathCreateMutable();
             CGPathMoveToPoint(path, nil, highlighted.midX, highlighted.midY);
             CGPathAddArc(path, nil, highlighted.midX, highlighted.midY, highlighted.size.width / 2.0, startAngle * ChartUtils.Math.FDEG2RAD, endAngle * ChartUtils.Math.FDEG2RAD, false);
             CGPathCloseSubpath(path);

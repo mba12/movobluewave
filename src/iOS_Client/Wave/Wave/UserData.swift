@@ -105,11 +105,11 @@ class UserData {
     static func getOrCreateCurrentUser() -> CurrentUser? {
         var createNewCurrentUser = false
         let fetchRequest = NSFetchRequest(entityName: "CurrentUser")
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [CurrentUser] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [CurrentUser] {
             if (fetchResults.count == 1) {
                 return fetchResults[0]
             } else if (fetchResults.count > 1) {
-                var toRtn = fetchResults[0]
+                let toRtn = fetchResults[0]
                 clearExcessItems(fetchResults)
                 return toRtn
             } else {
@@ -135,7 +135,10 @@ class UserData {
     }
     
     static func saveContext() {
-        (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save(nil)
+        do {
+            try (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.save()
+        } catch _ {
+        }
     }
     
     func createUser(email:String, pw:String, uid:String?, birth:NSDate?, heightfeet:Int?, heightinches:Int?, weightlbs:Int?, gender:String?, fullName:String?, user:String?, ref:String) -> UserEntry {
@@ -143,7 +146,7 @@ class UserData {
         
         let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         let managedContext = appDelegate.managedObjectContext
-        var newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! UserEntry
+        let newItem = NSEntityDescription.insertNewObjectForEntityForName("UserEntry", inManagedObjectContext: appDelegate.managedObjectContext!) as! UserEntry
         
         newItem.id = uid
         newItem.email = email
@@ -163,7 +166,10 @@ class UserData {
         newItem.username = user
         newItem.reference = ref
         
-        appDelegate.managedObjectContext!.save(nil)
+        do {
+            try appDelegate.managedObjectContext!.save()
+        } catch _ {
+        }
         return newItem
         
     }
@@ -174,7 +180,7 @@ class UserData {
         var metaRef = getCurrentUserRef()
         metaRef = metaRef! + "/metadata"
         
-        var fbMeta = Firebase(url:metaRef)
+        let fbMeta = Firebase(url:metaRef)
         fbMeta.observeSingleEventOfType(.Value, withBlock: { snapshot in
 //            var metaObjects = snapshot.children
             if let username = (snapshot.childSnapshotForPath("currentUsername").valueInExportFormat() as? String) {
@@ -191,22 +197,22 @@ class UserData {
             
             if let weight = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String) {
                 if((weight) != "Error"){
-                    var weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
-                    var weightInt = weightIn.toInt()
+                    let weightIn = (snapshot.childSnapshotForPath("currentWeight").valueInExportFormat() as? String)!
+                    let weightInt = Int(weightIn)
                     self.setCurrentWeight(weightInt!)
                 }
             }
             if let heightft = snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String {
                 if(heightft != "Error"){
-                    var height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
-                    var height1Int = height1In.toInt()
+                    let height1In = (snapshot.childSnapshotForPath("currentHeight1").valueInExportFormat() as? String)!
+                    let height1Int = Int(height1In)
                     self.setCurrentHeightFeet(height1Int!)
                 }
             }
             if let heightin = snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String {
                 if(heightin != "Error"){
-                    var height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
-                    var height2Int = height2In.toInt()
+                    let height2In = (snapshot.childSnapshotForPath("currentHeight2").valueInExportFormat() as? String)!
+                    let height2Int = Int(height2In)
                     self.setCurrentHeightInches(height2Int!)
                 }
                 
@@ -232,7 +238,7 @@ class UserData {
             }
             
             }, withCancelBlock: { error in
-                println(error.description)
+                print(error.description)
                 
                 
         })
@@ -244,7 +250,7 @@ class UserData {
         NSLog("Saving metadata to firebase")
         var stringRef = getCurrentUserRef()
         stringRef = stringRef! + "/metadata"
-        var fbMetaRef:Firebase = Firebase(url: stringRef)
+        let fbMetaRef:Firebase = Firebase(url: stringRef)
         if (getCurrentFullName() != nil) {
             fbMetaRef.childByAppendingPath("currentFullName").setValue(getCurrentFullName())
         } else {
@@ -279,7 +285,7 @@ class UserData {
                 date = date * 1000.0
                 let formatter = NSNumberFormatter()
                 formatter.maximumFractionDigits = 0
-                var bdString = formatter.stringFromNumber(date)
+                let bdString = formatter.stringFromNumber(date)
                 fbMetaRef.childByAppendingPath("currentBirthdate").setValue(bdString)
         } else {
             fbMetaRef.childByAppendingPath("currentBirthdate").setValue("Error")
@@ -481,9 +487,9 @@ class UserData {
         if let downloadDate = date {
             var cal = NSCalendar.currentCalendar()
             
-            var todayDate = cal.component(.CalendarUnitDay , fromDate: downloadDate)
-            var todayMonth = cal.component(.CalendarUnitMonth , fromDate: downloadDate)
-            var todayYear = cal.component(.CalendarUnitYear , fromDate: downloadDate)
+            var todayDate = cal.component(.Day , fromDate: downloadDate)
+            var todayMonth = cal.component(.Month , fromDate: downloadDate)
+            var todayYear = cal.component(.Year , fromDate: downloadDate)
             
             var month = ""
             var day = ""
@@ -498,10 +504,10 @@ class UserData {
                 day = String(todayDate)
             }
             fbDownloadRef = fbDownloadRef! + String(todayYear) + "/" + month + "/" + day
-            storageDate = YMDGMTToNSDate(todayYear, todayMonth, todayDate)
+            storageDate = YMDGMTToNSDate(todayYear, month: todayMonth, day: todayDate)
         } else {
             fbDownloadRef = fbDownloadRef! + "profilepic"
-            storageDate = YMDGMTToNSDate(1970, 1, 1)
+            storageDate = YMDGMTToNSDate(1970, month: 1, day: 1)
         }
         
         
@@ -511,7 +517,7 @@ class UserData {
     static func uploadPhotoToFirebase(base64StringIn:String, date:NSDate?){
         var base64String = base64StringIn
         
-        var md5Sum = base64String.md5()
+        let md5Sum = base64String.md5()
         
         
         
@@ -522,19 +528,19 @@ class UserData {
         
         
         
-        var firebaseImage:Firebase = Firebase(url:fbUploadRef)
+        let firebaseImage:Firebase = Firebase(url:fbUploadRef)
         
         firebaseImage.setValue(nil)
-        var size = (base64String as NSString).length
-        var totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
+        let size = (base64String as NSString).length
+        let totalChunks = (size / photoMaximumSizeChunk) + ( (size%photoMaximumSizeChunk != 0) ? 1:0)
         firebaseImage.updateChildValues(["0":String(totalChunks)])
         
         
         var part = 2
         while (!base64String.isEmpty) {
-            var size = (base64String as NSString).length
-            var index = advance(base64String.startIndex, ( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
-            var result:String = base64String.substringToIndex(index)
+            let size = (base64String as NSString).length
+            let index = base64String.startIndex.advancedBy(( ( size > photoMaximumSizeChunk) ? photoMaximumSizeChunk:size ))
+            let result:String = base64String.substringToIndex(index)
             let range = base64String.startIndex..<index
             base64String.removeRange(range)
             
@@ -543,7 +549,7 @@ class UserData {
         }
         firebaseImage.updateChildValues(["1":md5Sum])
 
-        println("Upload complete")
+        print("Upload complete")
         
     }
     
@@ -554,7 +560,7 @@ class UserData {
         
         var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
         fbDownloadRef = fbDownloadRef + "/1"
-        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        let firebaseImage:Firebase = Firebase(url:fbDownloadRef)
 
         if let storeDate = storageDate {
             
@@ -568,7 +574,7 @@ class UserData {
                         
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
                         fetchRequest.predicate = predicate
-                        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
@@ -597,7 +603,7 @@ class UserData {
                                     
                                 } else {
                                     //error case
-                                    println("Warning: Excess Images")
+                                    print("Warning: Excess Images")
                                     if let md5 = fetchResults[0].md5 {
                                         if (md5 == downloadedMD5) {
                                             //don't download new
@@ -639,7 +645,7 @@ class UserData {
                         
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
                         fetchRequest.predicate = predicate
-                        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
@@ -656,7 +662,7 @@ class UserData {
                                     return
                                 }else{
                                     //warn
-                                    println("Warning: Excess Images")
+                                    print("Warning: Excess Images")
                                     /*
                                     if let delegate = callbackDelegate{
                                         
@@ -681,7 +687,7 @@ class UserData {
                 
                 }, withCancelBlock: { error in
                     
-                    println(error.description)
+                    print(error.description)
                     //continue loading image from file
                     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
                         let predicate = NSPredicate(format:"%@ == user AND %@ == date", uid, storeDate)
@@ -690,7 +696,7 @@ class UserData {
                         fetchRequest.predicate = predicate
                         
                         
-                        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
@@ -706,7 +712,7 @@ class UserData {
                                     
                                 } else {
                                     //continue loading image from file
-                                    println("Warning: Excess Images")
+                                    print("Warning: Excess Images")
                                     
                                     //don't download new
                                     /*
@@ -743,7 +749,7 @@ class UserData {
     static func downloadPhotoFromFirebase(date:NSDate?, callbackDelegate: ImageUpdateDelegate?){
 
         var (fbDownloadRef, storageDate) = buildFBPictureDownloadFromDate(date)
-        var firebaseImage:Firebase = Firebase(url:fbDownloadRef)
+        let firebaseImage:Firebase = Firebase(url:fbDownloadRef)
         firebaseImage.observeSingleEventOfType(.Value, withBlock: { snapshot in
 
             var encodedData : String?
@@ -758,7 +764,7 @@ class UserData {
                   
       
                 }else{
-                    var count = numberOfImageBlobs.toInt()
+                    let count = Int(numberOfImageBlobs)
                     var rawData = ""
                     //i = 2 to skip the first and second nodes, as they're metadata.
                     for(var i = 0; i < count; i++){
@@ -797,7 +803,7 @@ class UserData {
     }
     
     static func getDocumentsPath() -> String {
-        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] as! String
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.DocumentDirectory, .UserDomainMask, true)[0] 
         return documentsPath
     }
     
@@ -805,8 +811,14 @@ class UserData {
 
         let fullPhotoPath = UserData.getDocumentsPath()+"/Photos/"
         let relativePath = "/Photos/"
-        if (NSFileManager.defaultManager().createDirectoryAtPath(fullPhotoPath, withIntermediateDirectories: true, attributes: nil, error: nil)) {
-            println("Photo dir created")
+        do {
+            
+            try NSFileManager.defaultManager().createDirectoryAtPath(fullPhotoPath, withIntermediateDirectories: true, attributes: nil)
+            print("Photo dir created")
+            
+        }
+        catch _ {
+        
         }
         
         return (fullPhotoPath, relativePath)
@@ -814,7 +826,10 @@ class UserData {
     
     
     static func removeOldImage(oldPhoto: PhotoStorage) {
-        NSFileManager.defaultManager().removeItemAtPath(oldPhoto.photopath, error: nil)
+        do {
+            try NSFileManager.defaultManager().removeItemAtPath(oldPhoto.photopath)
+        } catch _ {
+        }
     }
     
     
@@ -838,11 +853,11 @@ class UserData {
             dataN = UIImageJPEGRepresentation(localImage, 1.0)
             dataThumb = UIImageJPEGRepresentation(localImage, 0.5)
             if let imagedata = dataN {
-                base64StringN = imagedata.base64EncodedStringWithOptions(.allZeros)
+                base64StringN = imagedata.base64EncodedStringWithOptions([])
             }
         } else if let unwrappedB64 = rawData {
             base64StringN = unwrappedB64
-            dataN = NSData(base64EncodedString: unwrappedB64, options: .allZeros)
+            dataN = NSData(base64EncodedString: unwrappedB64, options: [])
             if let extractData = dataN {
                 if let tempImage = UIImage(data: extractData) {
                     dataThumb = UIImageJPEGRepresentation(tempImage, 0.5)
@@ -865,12 +880,12 @@ class UserData {
         var storageDate : NSDate?
         if let unwrapDate = date {
             var cal = NSCalendar.currentCalendar()
-            var thisDate = cal.component(.CalendarUnitDay , fromDate: unwrapDate)
-            var thisMonth = cal.component(.CalendarUnitMonth , fromDate: unwrapDate)
-            var thisYear = cal.component(.CalendarUnitYear , fromDate: unwrapDate)
-            storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+            var thisDate = cal.component(.Day , fromDate: unwrapDate)
+            var thisMonth = cal.component(.Month , fromDate: unwrapDate)
+            var thisYear = cal.component(.Year , fromDate: unwrapDate)
+            storageDate = YMDGMTToNSDate(thisYear, month: thisMonth, day: thisDate)
         } else {
-            storageDate = YMDGMTToNSDate(1970, 1, 1)
+            storageDate = YMDGMTToNSDate(1970, month: 1, day: 1)
         }
         if let data = dataN {
             if let base64String = base64StringN {
@@ -884,7 +899,7 @@ class UserData {
                         let fetchRequest = NSFetchRequest(entityName: "PhotoStorage")
                         fetchRequest.predicate = predicate
                         
-                        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [PhotoStorage] {
                             if(fetchResults.count > 0){
                                 //then we must delete the old image and replace
                                 if (fetchResults.count == 1) {
@@ -894,7 +909,7 @@ class UserData {
                                     
                                 } else {
                                     //error case
-                                    println("Warning: Excess Images")
+                                    print("Warning: Excess Images")
                                     insertUpdateItem = fetchResults[0]
                                     self.removeOldImage(fetchResults[0])
                                 }
@@ -925,7 +940,7 @@ class UserData {
                                         delegate.updatedImage(date, newImage: realImage)
                                     }
                                 }
-                                let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                                let base64String = data.base64EncodedStringWithOptions([])
                                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0),  {
                                     newItem.md5 = base64String.md5()
                                     UserData.saveContext()
@@ -934,7 +949,7 @@ class UserData {
                                         //pass through the unadulterated date to uploadImage
                                         //which will do the same conversion
                                         
-                                        let base64String = data.base64EncodedStringWithOptions(.allZeros)
+                                        let base64String = data.base64EncodedStringWithOptions([])
                                         UserData.uploadPhotoToFirebase(base64String, date: date)
                                     }
                                 })
@@ -948,7 +963,7 @@ class UserData {
                                 
                                 
                             } else {
-                                println("failed to update image")
+                                print("failed to update image")
                             }
                         }
                     }
@@ -972,12 +987,12 @@ class UserData {
         var storageDate : NSDate?
         if let unwrapDate = date {
             var cal = NSCalendar.currentCalendar()
-            var thisDate = cal.component(.CalendarUnitDay , fromDate: unwrapDate)
-            var thisMonth = cal.component(.CalendarUnitMonth , fromDate: unwrapDate)
-            var thisYear = cal.component(.CalendarUnitYear , fromDate: unwrapDate)
-            storageDate = YMDGMTToNSDate(thisYear, thisMonth, thisDate)
+            var thisDate = cal.component(.Day , fromDate: unwrapDate)
+            var thisMonth = cal.component(.Month , fromDate: unwrapDate)
+            var thisYear = cal.component(.Year , fromDate: unwrapDate)
+            storageDate = YMDGMTToNSDate(thisYear, month: thisMonth, day: thisDate)
         } else {
-            storageDate = YMDGMTToNSDate(1970, 1, 1)
+            storageDate = YMDGMTToNSDate(1970, month: 1, day: 1)
         }
         if let storeDate : NSDate = storageDate {
             if let uid = UserData.getOrCreateUserData().getCurrentUID() {
@@ -987,7 +1002,7 @@ class UserData {
                 fetchRequest.predicate = predicate
                 
                 
-                if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [PhotoStorage] {
+                if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [PhotoStorage] {
                     if(fetchResults.count > 0){
                         //then we must delete the old image and replace
                         if (fetchResults.count == 1) {
@@ -999,7 +1014,7 @@ class UserData {
                             
                         } else {
                             //continue loading image from file
-                            println("Warning: Excess Images")
+                            print("Warning: Excess Images")
                             
                             //don't download new
                             if let delegate = callbackDelegate{                                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
@@ -1035,7 +1050,7 @@ extension String {
         
         CC_MD5(str!, strLen, result)
         
-        var hash = NSMutableString()
+        let hash = NSMutableString()
         for i in 0..<digestLen {
             hash.appendFormat("%02x", result[i])
         }

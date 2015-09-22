@@ -36,8 +36,8 @@ public class Calculator {
         // milesper10k = (height / 60) * 3.92
         // miles = (steps / 10000) * milesper10k
         
-        var milesPer10k = (Double(height) / 60.0) * 3.92;
-        var miles = ( Double(steps) / 10000.0) * milesPer10k;
+        let milesPer10k = (Double(height) / 60.0) * 3.92;
+        let miles = ( Double(steps) / 10000.0) * milesPer10k;
         return miles;
     }
     
@@ -48,40 +48,40 @@ public class Calculator {
     public static func calculate_calories(steps:Int, height:Int, weight:Int, gender:String,
                                      birthYear:Int, minutes:Int) -> Double {
         var calories:Double = 0;
-        var cm:Double = convert_inches_to_cm(Double(height));
-        var kg:Double = convert_lbs_to_kgs(double: Double(weight));
-        var distance:Double = calculate_distance(steps, height: height);
+        let cm:Double = convert_inches_to_cm(Double(height));
+        let kg:Double = convert_lbs_to_kgs(double: Double(weight));
+        let distance:Double = calculate_distance(steps, height: height);
 
         // These flags are deprecated - xcode suggestion does not work
-        let flags: NSCalendarUnit = .DayCalendarUnit | .MonthCalendarUnit | .YearCalendarUnit;
+        let flags: NSCalendarUnit = [.NSDayCalendarUnit, .NSMonthCalendarUnit, .NSYearCalendarUnit];
         let date = NSDate();
         let components = NSCalendar.currentCalendar().components(flags, fromDate: date)
     
         let year = components.year
     
-        var age:Int = Int(year) - birthYear;
+        let age:Int = Int(year) - birthYear;
     
         // round to nearest 0.5 = math.round(met / 0.5) * 0.5
         // get index between 0-7 = rounded * 2 - 3, clamp to 0 and 7 (rounded values expected are between 1.5 and 5)
         var met:Double = calculate_met(Double(distance), minutes: Double(minutes), steps: Double(steps), cm: Double(cm));
-        var index:Int = Int(met);
+        let index:Int = Int(met);
         met = MET_TABLE[index]; // this line performs the lookup in the table above to get the MET value
     
     
         var bmr:Double = 0.0;
         if (gender == MALE) {
             // this formula is used if the person is MALE
-            var part1:Double = Double(weight) * LB_TO_KG * MALE_BMR_WEIGHT;
-            var part2 = MALE_BMR_HEIGHT * IN_TO_CM;
+            let part1:Double = Double(weight) * LB_TO_KG * MALE_BMR_WEIGHT;
+            let part2 = MALE_BMR_HEIGHT * IN_TO_CM;
             bmr =  part1 + Double(height) * part2 - Double(age) * MALE_BMR_AGE + MALE_BMR_CONST;
         } else {
             // this formula is used if the person is FEMALE or has not identified a gender
-            var fpart1:Double = Double(weight) * LB_TO_KG * FEMALE_BMR_WEIGHT;
+            let fpart1:Double = Double(weight) * LB_TO_KG * FEMALE_BMR_WEIGHT;
             bmr = fpart1 + Double(height) * FEMALE_BMR_HEIGHT * IN_TO_CM - Double(age) * FEMALE_BMR_AGE + FEMALE_BMR_CONST;
         }
     
         bmr = calculate_bmr(kg, height_cm: cm, age: Double(age), gender: gender);
-        var t:Double = Double(minutes) / 60.0;   // NOTE: this should be 1 for hourly data
+        let t:Double = Double(minutes) / 60.0;   // NOTE: this should be 1 for hourly data
     
         // final calculation following the formula: BMR / 24 * T (in this case 1 hour) * MET
         calories = bmr / 24.0 * met * t;
@@ -114,9 +114,9 @@ public class Calculator {
         // Would be preferable to have hour by hour data on steps to better know walking intensity.
         var avg_speed:Double = distance / minutes / 60.0;
         
-        var value:Double = Double(round(  (  (steps / 10000.00) * (cm / MET_HEIGHT_DIVISOR) * MET_MILE_CONSTANT) / 0.50  )) * ROUND_FACTOR * 2.0 - 3.0;
+        let value:Double = Double(round(  (  (steps / 10000.00) * (cm / MET_HEIGHT_DIVISOR) * MET_MILE_CONSTANT) / 0.50  )) * ROUND_FACTOR * 2.0 - 3.0;
     
-        var met:Double = clamp(value, min: 0.0, max: 7);
+        let met:Double = clamp(value, min: 0.0, max: 7);
         return met;
     }
     

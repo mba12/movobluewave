@@ -13,29 +13,29 @@ import CoreData
 let photoMaximumSizeChunk : Int = 1000000
 
 func YMDLocalToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
-    var calendar = NSCalendar.currentCalendar()
+    let calendar = NSCalendar.currentCalendar()
     calendar.timeZone = NSTimeZone.localTimeZone()
-    var startTimeComponents = NSDateComponents()
-    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.CalendarUnitDay)
-    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.CalendarUnitYear)
-    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.CalendarUnitMonth)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
+    let startTimeComponents = NSDateComponents()
+    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.Day)
+    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.Year)
+    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.Month)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Hour)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Minute)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Second)
     
     return calendar.dateFromComponents(startTimeComponents)
 }
 
 func YMDGMTToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
-    var calendar = NSCalendar.currentCalendar()
+    let calendar = NSCalendar.currentCalendar()
     calendar.timeZone = NSTimeZone(forSecondsFromGMT: 0)
-    var startTimeComponents = NSDateComponents()
-    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.CalendarUnitDay)
-    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.CalendarUnitYear)
-    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.CalendarUnitMonth)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitHour)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitMinute)
-    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.CalendarUnitSecond)
+    let startTimeComponents = NSDateComponents()
+    startTimeComponents.setValue(day, forComponent: NSCalendarUnit.Day)
+    startTimeComponents.setValue(year, forComponent: NSCalendarUnit.Year)
+    startTimeComponents.setValue(month, forComponent: NSCalendarUnit.Month)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Hour)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Minute)
+    startTimeComponents.setValue(0, forComponent: NSCalendarUnit.Second)
     
     return calendar.dateFromComponents(startTimeComponents)
     
@@ -47,14 +47,14 @@ func YMDGMTToNSDate(year: Int, month: Int, day: Int) -> NSDate? {
 
 
 func stepsForDayStarting(dateStart: NSDate) -> Int {
-    var dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
-    return getStepsForTimeInterval(dateStart, dateStop)
+    let dateStop = dateStart.dateByAddingTimeInterval(60*60*24); //24hrs
+    return getStepsForTimeInterval(dateStart, dateStop: dateStop)
 }
 
 
 func caloriesForDayStarting(dateStart: NSDate) -> Double {
-    var dateStop = dateStart.dateByAddingTimeInterval(60*60*24)
-    return getCaloriesForTimeInterval(dateStart, dateStop)
+    let dateStop = dateStart.dateByAddingTimeInterval(60*60*24)
+    return getCaloriesForTimeInterval(dateStart, dateStop: dateStop)
 }
 
 func getStepsForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Int {
@@ -65,10 +65,10 @@ func getStepsForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Int {
         
         let fetchRequest = NSFetchRequest(entityName: "StepEntry")
         fetchRequest.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [StepEntry] {
             if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
-                var resultsCount = fetchResults.count
+                print("Count %i",fetchResults.count)
+                let resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount);i++){
                     //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
                     totalStepsForInterval = totalStepsForInterval + Int(fetchResults[i].count)
@@ -90,13 +90,13 @@ func getCaloriesForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Double {
         
         let fetchRequest = NSFetchRequest(entityName: "StepEntry")
         fetchRequest.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [StepEntry] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [StepEntry] {
             if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
+                print("Count %i",fetchResults.count)
                 var resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount);i++){
                     //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                    totalCalForTimeInterval += calcCaloriesForTimeInterval(Int(fetchResults[i].count), fetchResults[i].endtime.timeIntervalSinceDate(fetchResults[i].starttime))
+                    totalCalForTimeInterval += calcCaloriesForTimeInterval(Int(fetchResults[i].count), duration: fetchResults[i].endtime.timeIntervalSinceDate(fetchResults[i].starttime))
                     
                 }
             }
@@ -130,16 +130,16 @@ func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double
     }
     
     //collect weight
-    var weight : Int? = UserData.getOrCreateUserData().getCurrentWeight()
+    let weight : Int? = UserData.getOrCreateUserData().getCurrentWeight()
     
     //collect gender
-    var gender : String? = UserData.getOrCreateUserData().getCurrentGender()
+    let gender : String? = UserData.getOrCreateUserData().getCurrentGender()
 
     //collect birthYear
     if let birthDate : NSDate = UserData.getOrCreateUserData().getCurrentBirthdate() {
-        birthYear = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: birthDate)
+        birthYear = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: birthDate)
         
-        var test = NSCalendar.currentCalendar().component(NSCalendarUnit.CalendarUnitYear, fromDate: NSDate())
+        let test = NSCalendar.currentCalendar().component(NSCalendarUnit.Year, fromDate: NSDate())
         
         //reject <1 year old as not being valid with the detailed calorie equation
         if (birthYear == test) {
@@ -202,32 +202,32 @@ func calcCaloriesForTimeInterval(steps: Int, duration: NSTimeInterval) -> Double
 
 
 func dateFormatFBRootNode( dateIn:NSDate)->String{
-    var dateFormatter = NSDateFormatter()
+    let dateFormatter = NSDateFormatter()
     dateFormatter.dateFormat = "yyyy/MM/dd"
     dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
     dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
     dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-    var dateStringOut = dateFormatter.stringFromDate(dateIn)
+    let dateStringOut = dateFormatter.stringFromDate(dateIn)
     return dateStringOut
 }
 
 func dateFormatFBTimeNode( dateIn:NSDate)->String{
-    var dateFormatter = NSDateFormatter()
+    let dateFormatter = NSDateFormatter()
     dateFormatter.dateFormat = "'T'HH:mm:ss'Z"
     dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
     dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
     dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-    var dateStringOut = dateFormatter.stringFromDate(dateIn)
+    let dateStringOut = dateFormatter.stringFromDate(dateIn)
     return dateStringOut
 }	
 
 func dateToStringFormat( dateIn:NSDate)->String{
-    var dateFormatter = NSDateFormatter()
+    let dateFormatter = NSDateFormatter()
     dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z"
     dateFormatter.timeZone = NSTimeZone(forSecondsFromGMT: 0)
     dateFormatter.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
     dateFormatter.locale = NSLocale(localeIdentifier: "en_US_POSIX")
-    var dateStringOut = dateFormatter.stringFromDate(dateIn)
+    let dateStringOut = dateFormatter.stringFromDate(dateIn)
     return dateStringOut
 }
 
@@ -239,7 +239,7 @@ func createDateFromString(String isoString:String) -> NSDate{
     form.calendar = NSCalendar(calendarIdentifier: NSCalendarIdentifierISO8601)!
     form.locale = NSLocale(localeIdentifier: "en_US_POSIX")
     
-    var dateReturn = form.dateFromString(isoString)
+    let dateReturn = form.dateFromString(isoString)
     return dateReturn!
     
     
@@ -255,16 +255,16 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
         firebaseURL = firebaseURL + "users/"
         
         firebaseURL = firebaseURL + uid
-        var firebaseStepsURL = firebaseURL + "/steps/"
-        var refSteps = Firebase(url:firebaseStepsURL)
+        let firebaseStepsURL = firebaseURL + "/steps/"
+        let refSteps = Firebase(url:firebaseStepsURL)
         var firebaseSyncURL = firebaseURL + "/sync/"
         firebaseSyncURL = firebaseSyncURL + syncUid
         firebaseSyncURL = firebaseSyncURL + "/"
-        var refSync = Firebase(url:firebaseSyncURL)
+        let refSync = Firebase(url:firebaseSyncURL)
         
         /* This isn't really what syncStart & syncStop should mean */
-        var syncStart = ["starttime":dateToStringFormat(whence)]
-        var syncStop = ["endtime":dateToStringFormat(NSDate())]
+        let syncStart = ["starttime":dateToStringFormat(whence)]
+        let syncStop = ["endtime":dateToStringFormat(NSDate())]
         
         refSync.updateChildValues(syncStart)
         refSync.updateChildValues(syncStop)
@@ -274,15 +274,15 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
         let predicate = NSPredicate(format:"0 == ispushed AND %@ == user", uid)
         let fetchRequestSteps = NSFetchRequest(entityName: "StepEntry")
         fetchRequestSteps.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestSteps, error: nil) as? [StepEntry] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestSteps)) as? [StepEntry] {
             
             
             if(fetchResults.count > 0){
-                println("Count %i",fetchResults.count)
-                var resultsCount = fetchResults.count
+                print("Count %i",fetchResults.count)
+                let resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount);i++){
-                    var dateStringFB = dateFormatFBRootNode(fetchResults[i].starttime)
-                    var dateStringTimeOnly = dateFormatFBTimeNode(fetchResults[i].starttime)
+                    let dateStringFB = dateFormatFBRootNode(fetchResults[i].starttime)
+                    let dateStringTimeOnly = dateFormatFBTimeNode(fetchResults[i].starttime)
                     var appendString = dateStringFB
                     let step = fetchResults[i]
                     
@@ -308,11 +308,11 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     
                     //appendString = appendString + fetchResults[i].syncid
                     
-                    var daySyncRef = refSync.childByAppendingPath(syncAppend)
-                    var dayRef = refSteps.childByAppendingPath(appendString)
+                    let daySyncRef = refSync.childByAppendingPath(syncAppend)
+                    let dayRef = refSteps.childByAppendingPath(appendString)
                     
 
-                    var stepFields = ["count":String(step.count),"deviceid": step.serialnumber, "syncid":step.syncid, "starttime": dateFormatFBTimeNode(step.starttime),"endtime": dateFormatFBTimeNode(step.endtime)]
+                    let stepFields = ["count":String(step.count),"deviceid": step.serialnumber, "syncid":step.syncid, "starttime": dateFormatFBTimeNode(step.starttime),"endtime": dateFormatFBTimeNode(step.endtime)]
                     
                     
                     
@@ -320,9 +320,9 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     dayRef.updateChildValues(stepFields, withCompletionBlock: {
                         (error:NSError?, ref:Firebase!) in
                         if (error != nil) {
-                            println("Steps could not be saved to FB.")
+                            print("Steps could not be saved to FB.")
                         } else {
-                            println("Steps saved successfully to FB!")
+                            print("Steps saved successfully to FB!")
                             step.ispushed = true
                             UserData.saveContext()
                         }
@@ -331,9 +331,9 @@ func uploadSyncResultsToFirebase(syncUid: String, whence: NSDate){
                     daySyncRef.updateChildValues(stepFields, withCompletionBlock: {
                             (error:NSError?, ref:Firebase!) in
                         if (error != nil) {
-                            println("Sync could not be saved to FB.")
+                            print("Sync could not be saved to FB.")
                         } else {
-                            println("Sync saved successfully to FB!")
+                            print("Sync saved successfully to FB!")
                             }
                         })
 
@@ -416,7 +416,7 @@ func insertStepsFromFirebase(FDataSnapshot stepSnapshot:FDataSnapshot, String is
         var isDuplicate : Bool = false
         var entry : StepEntry?
         
-        (isDuplicate, entry) = duplicateDataCheck(serial, startTime, stopTime)
+        (isDuplicate, entry) = duplicateDataCheck(serial, startTime: startTime, stopTime: stopTime)
         
         
         if(!isDuplicate){
@@ -457,10 +457,10 @@ func insertStepsFromFirebase(FDataSnapshot stepSnapshot:FDataSnapshot, String is
 
 
 func retrieveFBDataForYM(Year: Int, Month: Int, updateCallback: FBUpdateDelegate?) {
-    var days = daysInMonth(Year, Month)
+    var days = daysInMonth(Year, Month: Month)
     
     for (var i = 1; i <= days; i++) {
-        retrieveFBDataForYMDGMT(Year, Month, i, updateCallback)
+        retrieveFBDataForYMDGMT(Year, Month: Month, Day: i, updateCallback: updateCallback)
         
     }
     UserData.getOrCreateUserData().downloadMetaData()
@@ -469,9 +469,9 @@ func retrieveFBDataForYM(Year: Int, Month: Int, updateCallback: FBUpdateDelegate
 
 
 func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FBUpdateDelegate?) {
-    if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
+    if let fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String?{
         var newsteps = false
-        var year:String = String(Year)
+        let year:String = String(Year)
         var month:String = ""
         if(Month<10){
             month = "0" + (String(Month))
@@ -505,18 +505,18 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
         
         */
         
-        var fbDay = Firebase(url:fbDayRef)
+        let fbDay = Firebase(url:fbDayRef)
         fbDay.observeSingleEventOfType(.Value, withBlock: { snapshot in
-            var dayItr = snapshot.children
+            let dayItr = snapshot.children
             while let daySnap = dayItr.nextObject() as? FDataSnapshot{
                 //dayItr has the individual hours, daySnap iterates through it
                 //calling .key on it will return the start time value
                 //calling children on it will return the set of serial numbers on that hour
-                var serialStepSetItr = daySnap.children
+                let serialStepSetItr = daySnap.children
                 //this should be each day
                 while let rest = serialStepSetItr.nextObject() as? FDataSnapshot {
                     if(rest.hasChildren()){
-                        var new = insertStepsFromFirebase(FDataSnapshot: rest, String:iso8601String)
+                        let new = insertStepsFromFirebase(FDataSnapshot: rest, String:iso8601String)
                         if (new) {
                             newsteps = new
                         }
@@ -533,7 +533,7 @@ func retrieveFBDataForYMDGMT(Year: Int, Month: Int, Day: Int, updateCallback: FB
             }
             
             }, withCancelBlock: { error in
-                println(error.description)
+                print(error.description)
         })
     }
     //update our local metadata as well
@@ -551,7 +551,7 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
     if let uid = UserData.getOrCreateUserData().getCurrentUID() {
         for step in data {
             count += step.steps
-            (duplicate, entry) = duplicateDataCheck(serial, step)
+            (duplicate, entry) = duplicateDataCheck(serial, waveStep: step)
             if(!duplicate){
                 var newItem = NSEntityDescription.insertNewObjectForEntityForName("StepEntry", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! StepEntry
                 newItem.count = Int16(step.steps)
@@ -573,7 +573,7 @@ func insertSyncDataInDB(serial: String, data: [WaveStep], syncStartTime: NSDate)
                 }
             }
             
-            println("step: "+String(step.steps))
+            print("step: "+String(step.steps))
         }
         
         
@@ -601,7 +601,7 @@ func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -
     
         let fetchRequestDupeCheck = NSFetchRequest(entityName: "StepEntry")
         fetchRequestDupeCheck.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [StepEntry] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck)) as? [StepEntry] {
             if(fetchResults.count > 0){
             
                 isDuplicate = true
@@ -613,7 +613,7 @@ func duplicateDataCheck(serial: NSString, startTime: NSDate, stopTime: NSDate) -
 }
 
 func duplicateDataCheck(serial:String, waveStep: WaveStep )-> (Bool, StepEntry?) {
-    return duplicateDataCheck(serial , waveStep.start, waveStep.end)
+    return duplicateDataCheck(serial , startTime: waveStep.start, stopTime: waveStep.end)
 }
 
 //WARN: needs return function, and both need to be called correctly!
@@ -626,46 +626,46 @@ func uploadMetadataToFirebase() {
         ref = ref + "/"
         ref = ref + "metadata/"
         
-        var fbMetadataRef = Firebase(url: ref)
+        let fbMetadataRef = Firebase(url: ref)
         
         let predicate = NSPredicate(format:"%@ == id",uid)
         let fetchRequestDupeCheck = NSFetchRequest(entityName: "UserEntry")
         fetchRequestDupeCheck.predicate = predicate
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck, error: nil) as? [UserEntry] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequestDupeCheck)) as? [UserEntry] {
             if(fetchResults.count == 1){
                 
                 NSLog("Updaing values at %@",ref)
                 if let fn = fetchResults[0].fullname {
-                    var nameUp = ["currentFullName": String(fn)]
+                    let nameUp = ["currentFullName": String(fn)]
                     fbMetadataRef.updateChildValues(nameUp)
                 }
                 
                 if let bt = fetchResults[0].birthdate {
-                    var birthTime:NSTimeInterval = bt.timeIntervalSince1970
-                    var birthLong:Int32 = Int32(birthTime);
-                    var birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
+                    let birthTime:NSTimeInterval = bt.timeIntervalSince1970
+                    let birthLong:Int32 = Int32(birthTime);
+                    let birthUp  = ["currentBirthdate" : String(birthLong)] //dates are saved as long on firebase
                     fbMetadataRef.updateChildValues(birthUp)
                 }
 
                 
                 
                 let hf = fetchResults[0].heightfeet
-                var heightFtUp = ["currentHeight1": String(hf)]
+                let heightFtUp = ["currentHeight1": String(hf)]
                 fbMetadataRef.updateChildValues(heightFtUp)
                 
                 
                 let hi = fetchResults[0].heightinches
-                var heightInchesUp = ["currentHeight2": String(hi)]
+                let heightInchesUp = ["currentHeight2": String(hi)]
                 fbMetadataRef.updateChildValues(heightInchesUp)
                 
                 
                 let w = fetchResults[0].weight
-                var weightUp = ["currentWeight": String(w)]
+                let weightUp = ["currentWeight": String(w)]
                 fbMetadataRef.updateChildValues(weightUp)
                 
                 
                 if let g = fetchResults[0].gender {
-                    var genderUp = ["currentGender": String(g)]
+                    let genderUp = ["currentGender": String(g)]
                     fbMetadataRef.updateChildValues(genderUp)
                 }
                 
@@ -677,12 +677,12 @@ func uploadMetadataToFirebase() {
 
 
 func showSpinner(title: String, message: String) -> UIAlertController {
-    var activityAlert : UIAlertController = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
+    let activityAlert : UIAlertController = UIAlertController(title: title, message: message, preferredStyle: UIAlertControllerStyle.Alert)
     
     
     //(title: title, message: message, delegate: nil, cancelButtonTitle: nil)
     
-    var indicator : UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
+    let indicator : UIActivityIndicatorView = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
     indicator.center = CGPointMake(activityAlert.view.bounds.size.width / 2, activityAlert.view.bounds.size.height - 50);
     indicator.startAnimating()
     activityAlert.view.addSubview(indicator)
@@ -690,7 +690,7 @@ func showSpinner(title: String, message: String) -> UIAlertController {
 }
 
 func showAlertView(title: String, message: String) -> UIAlertView {
-    var activityAlert : UIAlertView = UIAlertView(title: title, message: message, delegate: nil, cancelButtonTitle: "OK")
+    let activityAlert : UIAlertView = UIAlertView(title: title, message: message, delegate: nil, cancelButtonTitle: "OK")
     activityAlert.show()
     return activityAlert
     
@@ -700,7 +700,7 @@ func fetchUserList() -> [UserEntry]? {
     let fetchRequest = NSFetchRequest(entityName: "UserEntry")
     var userList : [UserEntry]?
     //                fetchRequest.predicate = predicate
-    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
+    if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [UserEntry] {
         
         userList = fetchResults
     }
@@ -714,7 +714,7 @@ func fetchUserByEmail(email: String) -> UserEntry? {
     let predicate = NSPredicate(format:"%@ == email", email)
     fetchRequest.predicate = predicate
     
-    if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [UserEntry] {
+    if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [UserEntry] {
     //three cases:
     
     //count == 1, the best case
@@ -723,7 +723,7 @@ func fetchUserByEmail(email: String) -> UserEntry? {
         } else if (fetchResults.count >= 1) {
             //bad case -- somehow we ended up with multiple users on the same email address
             //we should cull all but [0] to 'fix' the DB
-            var toRtn = fetchResults[0]
+            let toRtn = fetchResults[0]
             clearExcessItems(fetchResults)
             return toRtn
         }
@@ -734,7 +734,7 @@ func fetchUserByEmail(email: String) -> UserEntry? {
 }
 
 func clearExcessItems(array: [NSManagedObject]) {
-    var short = array[1..<array.count]
+    let short = array[1..<array.count]
     for i in short {
         (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.deleteObject(i)
     }
@@ -764,7 +764,7 @@ func login(email: String) -> Bool {
 func checkAuth() -> Bool {
     if let password = UserData.getOrCreateUserData().getCurrentPW() {
         if let email = UserData.getOrCreateUserData().getCurrentEmail() {
-            login(email, password)
+            login(email, password: password)
         }
     }
     return true
@@ -777,13 +777,13 @@ func isKnownDevice(uid: String, serial: String) -> Bool {
         let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
         fetchRequest.predicate = predicate
         
-        if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+        if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [KnownWaves] {
             
             if (fetchResults.count > 0) {
                 if (fetchResults.count == 1) {
                     //do nothing
                 } else {
-                    println("WARNING TOO MANY DEVICES")
+                    print("WARNING TOO MANY DEVICES")
                     clearExcessItems(fetchResults)
                 }
                 
@@ -800,20 +800,20 @@ func addToKnownDevices(serial : String) {
         let predicate = NSPredicate(format:"%@ == user AND %@ == serialnumber", uid, serial)
         fetchRequest.predicate = predicate
         
-         if let fetchResults = (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest, error: nil) as? [KnownWaves] {
+         if let fetchResults = (try? (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!.executeFetchRequest(fetchRequest)) as? [KnownWaves] {
             
             if (fetchResults.count > 0) {
                 if (fetchResults.count == 1) {
                     //do nothing
 
                 } else {
-                    println("WARNING TOO MANY DEVICES")
+                    print("WARNING TOO MANY DEVICES")
                     clearExcessItems(fetchResults)
                 }
             } else {
                 //insert new item
                 
-                var knownWave = NSEntityDescription.insertNewObjectForEntityForName("KnownWaves", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! KnownWaves
+                let knownWave = NSEntityDescription.insertNewObjectForEntityForName("KnownWaves", inManagedObjectContext: (UIApplication.sharedApplication().delegate as! AppDelegate).managedObjectContext!) as! KnownWaves
                 knownWave.user = uid
                 knownWave.serialnumber = serial
                 UserData.saveContext()
@@ -830,14 +830,14 @@ func isValidBirthDate(birthdate: NSDate) -> Bool {
     let cdate = NSDate()
     let cal = NSCalendar.currentCalendar()
     
-    let cyear = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: cdate)
-    let year = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: birthdate)
+    let cyear = cal.component(NSCalendarUnit.Year, fromDate: cdate)
+    let year = cal.component(NSCalendarUnit.Year, fromDate: birthdate)
     
-    let cmonth = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: cdate)
-    let month = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: birthdate)
+    let cmonth = cal.component(NSCalendarUnit.Month, fromDate: cdate)
+    let month = cal.component(NSCalendarUnit.Month, fromDate: birthdate)
     
-    let cday = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: cdate)
-    let day = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: birthdate)
+    let cday = cal.component(NSCalendarUnit.Day, fromDate: cdate)
+    let day = cal.component(NSCalendarUnit.Day, fromDate: birthdate)
     
     //have we already had our birthday
     var birthday = 0
@@ -865,14 +865,14 @@ func isToday(date: NSDate) -> Bool {
     let cdate = NSDate()
     let cal = NSCalendar.currentCalendar()
     
-    let cyear = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: cdate)
-    let year = cal.component(NSCalendarUnit.CalendarUnitYear, fromDate: date)
+    let cyear = cal.component(NSCalendarUnit.Year, fromDate: cdate)
+    let year = cal.component(NSCalendarUnit.Year, fromDate: date)
     
-    let cmonth = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: cdate)
-    let month = cal.component(NSCalendarUnit.CalendarUnitMonth, fromDate: date)
+    let cmonth = cal.component(NSCalendarUnit.Month, fromDate: cdate)
+    let month = cal.component(NSCalendarUnit.Month, fromDate: date)
     
-    let cday = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: cdate)
-    let day = cal.component(NSCalendarUnit.CalendarUnitDay, fromDate: date)
+    let cday = cal.component(NSCalendarUnit.Day, fromDate: cdate)
+    let day = cal.component(NSCalendarUnit.Day, fromDate: date)
     
     if (cyear == year && cmonth == month && cday == day) {
         return true
@@ -882,7 +882,7 @@ func isToday(date: NSDate) -> Bool {
 }
 
 func floatCommaNumberFormatter(decimals: Int) -> NSNumberFormatter {
-    var formatter = NSNumberFormatter()
+    let formatter = NSNumberFormatter()
     formatter.numberStyle = NSNumberFormatterStyle.DecimalStyle
     formatter.maximumFractionDigits = decimals
     
@@ -894,7 +894,7 @@ protocol ResetPasswordDelegate {
 }
 
 func resetUserPassword(userEmail: String, delegate: ResetPasswordDelegate?){
-    var fbRef = UserData.getFirebase()
+    let fbRef = UserData.getFirebase()
     let ref = Firebase(url: fbRef)
     ref.resetPasswordForUser(userEmail, withCompletionBlock: { error in
         
@@ -1006,7 +1006,7 @@ func login(email: String, password: String) {
                 }
                 
             } else {
-                var providerData:NSDictionary = authData.providerData
+                let providerData:NSDictionary = authData.providerData
                 let tempPasswordBool = providerData["isTemporaryPassword"] as! Bool
                 
                 if(tempPasswordBool){
@@ -1042,7 +1042,7 @@ func login(email: String, password: String) {
                     stringRef = stringRef + authData.uid
                     
                     
-                    var userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
+                    let userentry = UserData.getOrCreateUserData().createUser(email, pw: password, uid: authData.uid, birth: nil, heightfeet: nil, heightinches: nil, weightlbs: nil, gender: nil, fullName: nil, user: nil, ref: stringRef)
                     
                     UserData.saveContext()
                     
@@ -1077,9 +1077,9 @@ func login(email: String, password: String) {
 func daysInMonth(Year: Int, Month: Int) -> Int {
     var days = 31
     var cal = NSCalendar.currentCalendar()
-    if let date = YMDLocalToNSDate(Year, Month, 1) {
-        days = cal.rangeOfUnit(.CalendarUnitDay,
-            inUnit: .CalendarUnitMonth,
+    if let date = YMDLocalToNSDate(Year, month: Month, day: 1) {
+        days = cal.rangeOfUnit(.Day,
+            inUnit: .Month,
             forDate: date).toRange()!.endIndex-1
     }
 

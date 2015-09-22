@@ -77,7 +77,7 @@ class UserMenuBarViewController : UIViewController, UITabBarControllerDelegate, 
         //when the statsbutton is pressed
         if let application = (UIApplication.sharedApplication().delegate as? AppDelegate) {
             if let tabbarVC = application.tabBarController {
-                println("Tab bar controller in " + String(tabbarVC.selectedIndex))
+                print("Tab bar controller in " + String(tabbarVC.selectedIndex))
                 if (tabbarVC.selectedIndex == 2) {
                     dispatch_async(dispatch_get_main_queue(),  {
                         tabbarVC.selectedIndex = 1

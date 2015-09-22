@@ -45,7 +45,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
 //        syncUid = "Error"
         
         // Do any additional setup after loading the view, typically from a nib.
-        waveDeviceTableView.tableFooterView = UIView(frame: CGRect.zeroRect)
+        waveDeviceTableView.tableFooterView = UIView(frame: CGRect.zero)
         
         let longpress = UILongPressGestureRecognizer(target: self, action: "longPressGestureRecognized:")
 
@@ -70,7 +70,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         // Dispose of any resources that can be recreated.
     }
 
-    required init(coder aDecoder:NSCoder) {
+    required init?(coder aDecoder:NSCoder) {
         super.init(coder: aDecoder)
         waveSync = waveSyncManager(delegate: self)
         
@@ -79,7 +79,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     //returns status updates for state changes in the sync process
     func syncStatusUpdate(status: WaveSyncStatus, deviceId: NSString?,  completeRatio: Float) {
-        println("Sync status update " + String(status.rawValue))
+        print("Sync status update " + String(status.rawValue))
         dispatch_sync(dispatch_get_main_queue(), {
 //            self.statusLabel.text = "Sync status update " + String(status.rawValue) + "," + String(Int(completeRatio*100)) + "%"
             
@@ -107,7 +107,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     
     //returns an array of WaveSteps with all of the data from a sync operation
     func syncComplete(deviceId: NSString?, data: [WaveStep]) {
-        println("Completed Sync")
+        print("Completed Sync")
         var count = 0
 
 
@@ -120,9 +120,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             addToKnownDevices(serial)
             
             ///HANDLE DATA HERE
-            if let syncUid = insertSyncDataInDB(serial, data, syncStartTime) {
+            if let syncUid = insertSyncDataInDB(serial, data: data, syncStartTime: syncStartTime) {
 
-                uploadSyncResultsToFirebase(syncUid, syncStartTime)
+                uploadSyncResultsToFirebase(syncUid, whence: syncStartTime)
             }
             
             ///END HANDLE DATA
@@ -171,14 +171,14 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     (paramAction:UIAlertAction!) in
                     if let textFields = alert.textFields{
                         //                        if let deviceSerialIn = self?.deviceSerial! {
-                        let theTextFields = textFields as! [UITextField]
+                        let theTextFields = textFields 
                         let enteredText = theTextFields[0].text
                         //self!.displayLabel.text = enteredText
                         
                         let defaults = NSUserDefaults.standardUserDefaults()
                         if let userId = UserData.getOrCreateUserData().getCurrentUID(){
                             defaults.setObject(enteredText, forKey: userId + (serialString as String))
-                            NSLog("Saving new device name %@ %@ %@", enteredText, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
+                            NSLog("Saving new device name %@ %@ %@", enteredText!, UserData.getOrCreateUserData().getCurrentUID()!, serialString)
                             dispatch_async(dispatch_get_main_queue(), {
                                 //use of a bang here, wil
                                 self!.waveDeviceTableView.reloadData()
@@ -192,7 +192,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
             alert.addAction(action)
             
             alert.addAction(UIAlertAction(title: "Cancel", style: UIAlertActionStyle.Default, handler: nil))
-            alert.addTextFieldWithConfigurationHandler({(textField: UITextField!) in
+            alert.addTextFieldWithConfigurationHandler({(textField: UITextField) in
                 textField.placeholder = "Enter text:"
             })
                             self.presentViewController(alert, animated: true, completion: nil)
@@ -208,7 +208,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     //final failure call from a sync attempt.  Sync should not be considered
     //to be in a fatal failure until this message is returned
     func syncFailure(deviceId: NSString?) {
-        println("Failed Sync")
+        print("Failed Sync")
         //failure
         dispatch_sync(dispatch_get_main_queue(), {
             //            self.statusLabel.text = "Sync success, counted " + String(count) + " total steps"
@@ -227,16 +227,16 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         unknownDeviceIndices = [Int]()
         
         if let uid = UserData.getOrCreateUserData().getCurrentUID() {
-            for (index,dev) in enumerate(waveSync.waveController!.connectedSerials) {
+            for (index,dev) in waveSync.waveController!.connectedSerials.enumerate() {
                 //for each device in the connected serials list
                 //we need to see if it is in the known devices list
                 
                 if let data = dev.value as? NSData {
-                    var count = data.length
+                    let count = data.length
                     var array = [UInt8](count: count, repeatedValue: 0)
                     data.getBytes(&array, length: count)
-                    var serial = "".join(array.map{ String($0, radix: 16, uppercase: true)})
-                    if (isKnownDevice(uid, serial)) {
+                    let serial = array.map{ String($0, radix: 16, uppercase: true)}.joinWithSeparator("")
+                    if (isKnownDevice(uid, serial: serial)) {
                         knownDevices.append(serial)
                         knownDeviceIndices.append(index)
                         
@@ -259,12 +259,12 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         updateDevicesList()
         
         if (ready) {
-            println("Device Ready " + (id as String))
+            print("Device Ready " + (id as String))
             dispatch_sync(dispatch_get_main_queue(), {
 //                self.statusLabel.text = "Device Ready: "+(id as String)
             })
         } else {
-            println("Device NOT ready " + (id as String))
+            print("Device NOT ready " + (id as String))
             
         }
         dispatch_async(dispatch_get_main_queue(), {
@@ -281,7 +281,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
     }
     @IBAction func syncButtonPress(sender: AnyObject) {
         syncStartTime = NSDate()
-        waveSync.attemptSync(deviceId: nil)
+        waveSync.attemptSync(nil)
     }
 
     //UITableViewDelegateMethods
@@ -315,9 +315,9 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         
         let state = longPress.state
         
-        var locationInView = longPress.locationInView(waveDeviceTableView)
+        let locationInView = longPress.locationInView(waveDeviceTableView)
         
-        var indexPath = waveDeviceTableView.indexPathForRowAtPoint(locationInView)
+        let indexPath = waveDeviceTableView.indexPathForRowAtPoint(locationInView)
 
         //get device identifier
         if let section = indexPath?.section{
@@ -371,7 +371,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                 cell.contentView.layer.opacity = 0.1
                 UIView.animateWithDuration(1.0,
                     delay:0,
-                    options: .Repeat | .Autoreverse | .AllowUserInteraction,
+                    options: [.Repeat, .Autoreverse, .AllowUserInteraction],
                     animations: {
                         cell.contentView.layer.opacity = 1
                     }, completion: nil)
@@ -383,7 +383,7 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
                     cell.contentView.layer.opacity = 0.1
                     UIView.animateWithDuration(1.0,
                         delay:0,
-                        options: .Repeat | .Autoreverse | .AllowUserInteraction,
+                        options: [.Repeat, .Autoreverse, .AllowUserInteraction],
                         animations: {
                             cell.contentView.layer.opacity = 1
                         }, completion: nil)
@@ -415,6 +415,37 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         } else if( section == 1 ) {
             if( row < unknownDeviceIndices.count ){
                 connectedIndex = unknownDeviceIndices[row]
+                
+                //this is an unknown wavedevice
+                //so we want to prompt the user 
+                //to make sure that they want to 
+                //continue
+                
+                
+                let alertController = UIAlertController(title: "Confirm", message: "Sync to new device and add it to the known devices list?", preferredStyle: UIAlertControllerStyle.Alert)
+                alertController.addAction(UIAlertAction(title:"OK", style: UIAlertActionStyle.Default, handler:
+                    {
+                        (action) in
+                        
+                        if (connectedIndex < self.waveSync.waveController!.connectedSerials.count) {
+                            if let id = self.waveSync.waveController!.connectedSerials.allKeys[connectedIndex] as? String {
+                                self.waveSync.attemptSync(id)
+                                self.performSegueWithIdentifier("SyncStatus", sender: self)
+                            }
+                        }
+                    }
+                
+                
+                ))
+                    
+                    
+                    
+                alertController.addAction(UIAlertAction(title:"Cancel", style:UIAlertActionStyle.Default, handler: nil))
+                self.presentViewController(alertController, animated: true, completion: nil)
+                
+                //no further action needed for unknown devices
+                return
+                
             } else {
                 //ERROR
             }
@@ -423,9 +454,10 @@ class UploadDataViewController: UIViewController, waveSyncManagerDelegate, UITab
         }
         
         
+        //for known devices, we automatically attempt sync
         if (connectedIndex < waveSync.waveController!.connectedSerials.count) {
             if let id = waveSync.waveController!.connectedSerials.allKeys[connectedIndex] as? String {
-                waveSync.attemptSync(deviceId: id)
+                waveSync.attemptSync(id)
                 performSegueWithIdentifier("SyncStatus", sender: self)
             }
         }

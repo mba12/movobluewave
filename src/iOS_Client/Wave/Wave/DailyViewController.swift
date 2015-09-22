@@ -52,7 +52,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     
     
     func didSelectSource(useCamera : Bool) {
-        var imagePicker = UIImagePickerController()
+        let imagePicker = UIImagePickerController()
         if (useCamera) {
             //will need to do an alert view with button options
             if (UIImagePickerController.isSourceTypeAvailable( UIImagePickerControllerSourceType.Camera)) {
@@ -69,9 +69,9 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
     }
     
     
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
         
-        var dateForImage = currentDate
+        let dateForImage = currentDate
         picker.dismissViewControllerAnimated(true, completion: {
             
             
@@ -110,7 +110,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             /* Set the date string */
             var calendar = NSCalendar.currentCalendar()
-            var formatter = NSDateFormatter()
+            let formatter = NSDateFormatter()
             formatter.dateStyle = NSDateFormatterStyle.MediumStyle
             formatter.timeZone = NSTimeZone.localTimeZone()
             if let item = navigationBar.topItem {
@@ -121,7 +121,7 @@ class DailyViewController : UIViewController, UIImagePickerControllerDelegate, U
             
             
             /* Set the steps */
-            var steps = stepsForDayStarting(date)
+            let steps = stepsForDayStarting(date)
             dispatch_async(dispatch_get_main_queue(), {
                 if let stepsstring = floatCommaNumberFormatter(0).stringFromNumber(steps) {
                     self.stepsLabel.text = stepsstring

@@ -10,7 +10,7 @@ import UIKit
 
 class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
     super.init(coder: aDecoder)
     }
     
@@ -94,7 +94,7 @@ class CollectionViewCell: UICollectionViewCell, ImageUpdateDelegate {
     }
     
     override func prepareForReuse() {
-            var image = UIImage(named: "calendarbg")
+            let image = UIImage(named: "calendarbg")
             self.bgImageView.image = image
 
             textLabel.text = ""

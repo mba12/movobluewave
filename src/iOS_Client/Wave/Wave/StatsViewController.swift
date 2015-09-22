@@ -52,13 +52,13 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let days = cal.rangeOfUnit(.CalendarUnitDay,
-            inUnit: .CalendarUnitMonth,
+        let days = cal.rangeOfUnit(.Day,
+            inUnit: .Month,
             forDate: date)
         // let todayDate = cal.ordinalityOfUnit(.CalendarUnitDay, inUnit: .CalendarUnitDay, forDate: date)
-        todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        todayYear = cal.component(.CalendarUnitYear , fromDate: date)
+        todayDate = cal.component(.Day , fromDate: date)
+        todayMonth = cal.component(.Month , fromDate: date)
+        todayYear = cal.component(.Year , fromDate: date)
         
     }
     
@@ -70,7 +70,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         super.viewDidAppear(animated)
         
         
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+        if let fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
             
             if(fbUserRef=="Error"){
                 //no user is logged in
@@ -78,7 +78,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             } else {
                 NSLog("Grabbing user steps from firebase")
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
-                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                    retrieveFBDataForYM(self.todayYear, Month: self.todayMonth, updateCallback: self)
                     
                 })
             }
@@ -98,23 +98,23 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         stepsCount = [Int]()
         var caloriesList : [Double] = [Double]()
-        var numDays = cal.rangeOfUnit(.CalendarUnitDay,
-                                      inUnit: .CalendarUnitMonth,
+        var numDays = cal.rangeOfUnit(.Day,
+                                      inUnit: .Month,
                                       forDate: date).toRange()!.endIndex-1
         
         NSLog("Number of Days: " + String(numDays))
         
         //need to set up today logic like myLifeView
         for(var i=1;i<(numDays+1);i++){
-            if let dateStart : NSDate = YMDLocalToNSDate(year, month, i) {
+            if let dateStart : NSDate = YMDLocalToNSDate(year, month: month, day: i) {
                 stepsCount.append(stepsForDayStarting(dateStart))
                 caloriesList.append(caloriesForDayStarting(dateStart))
             }
         }
         
         
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == month) {
-            totalActualDays = Double(cal.component(.CalendarUnitDay , fromDate: NSDate()))
+        if (cal.component(.Month, fromDate: NSDate()) == month) {
+            totalActualDays = Double(cal.component(.Day , fromDate: NSDate()))
         } else {
             totalActualDays = Double(stepsCount.count)
         }
@@ -363,8 +363,8 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         todayMonth = month
         todayYear = year
         
-        date = YMDLocalToNSDate(todayYear, todayMonth, 1)!
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth) {
+        date = YMDLocalToNSDate(todayYear, month: todayMonth, day: 1)!
+        if (cal.component(.Month, fromDate: NSDate()) == todayMonth) {
             //then turn off the forward button
             forwardButton.enabled = false
             forwardButton.hidden = true
@@ -378,8 +378,8 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         //set the text label
         let dateFormat = NSDateFormatter()
         dateFormat.dateStyle = NSDateFormatterStyle.LongStyle
-        let monthName : String = dateFormat.monthSymbols[month-1] as! String
-        let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
+        let monthName : String = dateFormat.monthSymbols[month-1] 
+        let yearName : String = String(cal.component(.Year, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + " " + yearName
         })
@@ -390,7 +390,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
         
         
         
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+        if let fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
             
             if(fbUserRef=="Error"){
                 //no user is logged in
@@ -398,7 +398,7 @@ class StatsViewController: UIViewController, FBUpdateDelegate  {
             } else {
                 NSLog("Grabbing user steps from firebase")
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
-                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                    retrieveFBDataForYM(self.todayYear, Month: self.todayMonth, updateCallback: self)
                    
                     
                 })

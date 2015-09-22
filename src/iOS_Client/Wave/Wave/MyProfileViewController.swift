@@ -36,7 +36,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
 
     var birthdateDate : NSDate!
 
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         genderPicker = UIPickerView()
         datePicker = UIDatePicker()
         datePickerToolbar = UIToolbar()
@@ -81,7 +81,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         }
         
         if let bd = UserData.getOrCreateUserData().getCurrentBirthdate() {
-            var ndf = NSDateFormatter()
+            let ndf = NSDateFormatter()
             ndf.dateStyle = NSDateFormatterStyle.MediumStyle
             birthdate.text =   ndf.stringFromDate(bd)
             datePicker.date = bd
@@ -142,11 +142,11 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
         }
         
         if (validation) {
-            UserData.getOrCreateUserData().setCurrentFullName(fullName.text)
-            UserData.getOrCreateUserData().setCurrentHeightFeet(heightFt.text.toInt()!)
-            UserData.getOrCreateUserData().setCurrentHeightInches(heightInches.text.toInt()!)
-            UserData.getOrCreateUserData().setCurrentWeight(weight.text.toInt()!)
-            UserData.getOrCreateUserData().setCurrentGender(gender.text)
+            UserData.getOrCreateUserData().setCurrentFullName(fullName.text!)
+            UserData.getOrCreateUserData().setCurrentHeightFeet(Int(heightFt.text!)!)
+            UserData.getOrCreateUserData().setCurrentHeightInches(Int(heightInches.text!)!)
+            UserData.getOrCreateUserData().setCurrentWeight(Int(weight.text!)!)
+            UserData.getOrCreateUserData().setCurrentGender(gender.text!)
             UserData.getOrCreateUserData().setCurrentBirthdate(datePicker.date)
             UserData.getOrCreateUserData().saveMetaDataToFirebase()
             dismissViewControllerAnimated(true, completion: nil)
@@ -172,7 +172,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     func dateSelection(sender: UIDatePicker) {
         
-        println("Got Date")
+        print("Got Date")
         
         
     }
@@ -194,7 +194,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     }
     
     func birthdateResponderEnd(sender: UITextField) {
-        var ndf = NSDateFormatter()
+        let ndf = NSDateFormatter()
         ndf.dateStyle = NSDateFormatterStyle.MediumStyle
         birthdate.text =   ndf.stringFromDate(datePicker.date)
         birthdateDate = datePicker.date
@@ -232,16 +232,16 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     override func keyboardWillShow(notification: NSNotification) {
         super.keyboardWillShow(notification)
-        println("In keyboard will show")
+        print("In keyboard will show")
         
         if (datePickerFirstResponder || genderPickerFirstResponder) {
             datePickerToolbar.removeFromSuperview()
-            var keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
-            var windowheight = self.view.frame.height
+            let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue()
+            let windowheight = self.view.frame.height
             datePickerToolbar = UIToolbar(frame: CGRectMake(0, windowheight-keyboardSize!.height-44 , keyboardSize!.width, 44))
             datePickerToolbar.sizeToFit()
-            var flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
-            var button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
+            let flex = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.FlexibleSpace, target: self, action: nil)
+            let button = UIBarButtonItem(title: "Done", style: UIBarButtonItemStyle.Done, target:self, action:Selector("resignDateKeyboard:"))
             
             datePickerToolbar.setItems([flex, button], animated: true)
             self.view.addSubview(datePickerToolbar)
@@ -287,7 +287,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     
     
     func didSelectSource(useCamera : Bool) {
-        var imagePicker = UIImagePickerController()
+        let imagePicker = UIImagePickerController()
         if (useCamera) {
             //will need to do an alert view with button options
             if (UIImagePickerController.isSourceTypeAvailable( UIImagePickerControllerSourceType.Camera)) {
@@ -304,7 +304,7 @@ class MyProfileViewController:  KeyboardSlideViewController, UIPickerViewDataSou
     }
     
     
-    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [NSObject : AnyObject]) {
+    func imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [String : AnyObject]) {
         
         picker.dismissViewControllerAnimated(true, completion: {
             

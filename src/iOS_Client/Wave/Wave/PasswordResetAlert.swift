@@ -30,7 +30,7 @@ class PasswordResetAlert: ResetPasswordDelegate, PasswordChangeDelegate {
             if let email = PasswordResetAlert.passwordResetEmail?.text {
                 if (isValidEmail(email)) {
                     //then perform password reset
-                    resetUserPassword(email, PasswordResetAlert())
+                    resetUserPassword(email, delegate: PasswordResetAlert())
                     setEmail = true
                 }
                 
@@ -70,7 +70,7 @@ class PasswordResetAlert: ResetPasswordDelegate, PasswordChangeDelegate {
             if let pass = PasswordResetAlert.passwordResetPass?.text {
 //WARN: Password requirements check?
                 //then perform password reset
-                changeUserPassword(userEmail, oldPassword, pass, PasswordResetAlert())
+                changeUserPassword(userEmail, oldPassword: oldPassword, newPassword: pass, delegate: PasswordResetAlert())
                 setPassword = true
                 
                 

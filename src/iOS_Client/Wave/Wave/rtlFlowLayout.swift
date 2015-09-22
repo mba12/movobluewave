@@ -12,7 +12,7 @@ import UIKit
 
 class rtlFlowLayout : UICollectionViewFlowLayout {
     var useRTLLayout = false
-    required init(coder aDecoder: NSCoder) {
+    required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         //handle iPhone6 and iPhone6P//
         var isPhone = false
@@ -51,10 +51,10 @@ class rtlFlowLayout : UICollectionViewFlowLayout {
         
     }
     
-    override func layoutAttributesForElementsInRect(rect: CGRect) -> [AnyObject]? {
+    override func layoutAttributesForElementsInRect(rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
         var supersAttributes = super.layoutAttributesForElementsInRect(rect)
         if (self.useRTLLayout) {
-            for attributes in supersAttributes as! [UICollectionViewLayoutAttributes] {
+            for attributes in supersAttributes as [UICollectionViewLayoutAttributes]! {
                 var frame = attributes.frame
                 frame.origin.x = rect.size.width - attributes.frame.size.width - attributes.frame.origin.x
                 attributes.frame = frame

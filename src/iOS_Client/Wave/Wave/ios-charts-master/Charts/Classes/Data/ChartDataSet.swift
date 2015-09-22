@@ -123,7 +123,7 @@ public class ChartDataSet: NSObject
     /// Returns nil if no Entry object at that index.
     public func entryForXIndex(x: Int) -> ChartDataEntry!
     {
-        var index = self.entryIndex(xIndex: x);
+        let index = self.entryIndex(xIndex: x);
         if (index > -1)
         {
             return _yVals[index];
@@ -187,7 +187,7 @@ public class ChartDataSet: NSObject
         while (low <= high)
         {
             var m = (high + low) / 2;
-            var entry = _yVals[m];
+            let entry = _yVals[m];
             
             if (x == entry.xIndex)
             {
@@ -245,7 +245,7 @@ public class ChartDataSet: NSObject
 
     public func addEntry(e: ChartDataEntry)
     {
-        var val = e.value;
+        let val = e.value;
         
         if (_yVals == nil)
         {
@@ -297,12 +297,12 @@ public class ChartDataSet: NSObject
         return removed;
     }
     
-    public func removeEntry(#xIndex: Int) -> Bool
+    public func removeEntry(xIndex xIndex: Int) -> Bool
     {
-        var index = self.entryIndex(xIndex: xIndex);
+        let index = self.entryIndex(xIndex: xIndex);
         if (index > -1)
         {
-            var e = _yVals.removeAtIndex(index);
+            let e = _yVals.removeAtIndex(index);
             
             _yValueSum -= e.value;
             calcMinMax();
@@ -349,7 +349,7 @@ public class ChartDataSet: NSObject
     }
     
     /// Checks if this DataSet contains the specified Entry. 
-    /// :returns: true if contains the entry, false if not. 
+    /// - returns: true if contains the entry, false if not. 
     public func contains(e: ChartDataEntry) -> Bool
     {
         for entry in _yVals
@@ -393,7 +393,7 @@ public class ChartDataSet: NSObject
     
     public func copyWithZone(zone: NSZone) -> AnyObject
     {
-        var copy = self.dynamicType.allocWithZone(zone) as ChartDataSet;
+        let copy = self.dynamicType.copy() as! ChartDataSet;
         copy.colors = colors;
         copy._yVals = _yVals;
         copy._yMax = _yMax;

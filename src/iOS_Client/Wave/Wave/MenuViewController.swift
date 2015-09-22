@@ -27,7 +27,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.tableFooterView = UIView(frame: CGRect.zeroRect)
+        tableView.tableFooterView = UIView(frame: CGRect.zero)
         tableView.backgroundColor = UIColor.clearColor()
         
         
@@ -69,7 +69,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier(textCellIdentifier, forIndexPath: indexPath) as! UITableViewCell
+        let cell = tableView.dequeueReusableCellWithIdentifier(textCellIdentifier, forIndexPath: indexPath) 
         
         let row = indexPath.row
         cell.textLabel?.text = menu[row]
@@ -102,7 +102,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
         //        dismissViewControllerAnimated(true, completion: nil)
         
-        println(menu[row])
+        print(menu[row])
     }
     
     let segueIdentifier = "users"
@@ -111,7 +111,7 @@ class MenuViewController: UIViewController, UITableViewDelegate, UITableViewData
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == segueIdentifier {
             if let destination = segue.destinationViewController as? MenuViewController {
-                if let blogIndex = tableView.indexPathForSelectedRow()?.row {
+                if let blogIndex = tableView.indexPathForSelectedRow?.row {
                     //destination.blogName = menu[blogIndex]
                 }
             }

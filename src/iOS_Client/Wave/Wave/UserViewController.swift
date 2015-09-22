@@ -21,7 +21,7 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        userSelectionTable.tableFooterView = UIView(frame: CGRect.zeroRect)
+        userSelectionTable.tableFooterView = UIView(frame: CGRect.zero)
         userSelectionTable.backgroundColor = UIColor.clearColor()
     }
     
@@ -37,7 +37,7 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         if let email = (userSelectionTable.cellForRowAtIndexPath(indexPath) as! UserTableCell?)!.userNameLabel.text {
-            println("Selected User: "+email)
+            print("Selected User: "+email)
             
             if (email == "Add Account") {
                 //then we need to handle this as an account add...
@@ -48,7 +48,7 @@ class UserViewController: UIViewController, UITableViewDelegate, UITableViewData
             } else {
                 //anything else, we would want to log in, name is the email address
                 if (login(email)) {
-                    println("Switching to user: "+email)
+                    print("Switching to user: "+email)
                     dismissViewControllerAnimated(true, completion: nil)
                 }
                 

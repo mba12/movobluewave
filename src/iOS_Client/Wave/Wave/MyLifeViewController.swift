@@ -66,9 +66,9 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
 //        let date = NSDate()
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
         // let todayDate = cal.ordinalityOfUnit(.CalendarUnitDay, inUnit: .CalendarUnitDay, forDate: date)
-        todayDate = cal.component(.CalendarUnitDay , fromDate: date)
-        todayMonth = cal.component(.CalendarUnitMonth , fromDate: date)
-        todayYear = cal.component(.CalendarUnitYear , fromDate: date)
+        todayDate = cal.component(.Day , fromDate: date)
+        todayMonth = cal.component(.Month , fromDate: date)
+        todayYear = cal.component(.Year , fromDate: date)
         
         self.collectionView!.registerClass(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
         self.collectionView!.backgroundColor = UIColor.clearColor()
@@ -82,7 +82,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(animated)
 //         Create a new fetch request using the LogItem entity
-                if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+                if let fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
         
                     if(fbUserRef=="Error"){
                         //no user is logged in
@@ -91,7 +91,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                         NSLog("Grabbing user steps from firebase")
                         
                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
-                            retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                            retrieveFBDataForYM(self.todayYear, Month: self.todayMonth, updateCallback: self)
 
                         })
                         
@@ -115,12 +115,12 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
     
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         //let cal = NSCalendar(calendarIdentifier:NSCalendarIdentifierGregorian)!
-        var days = cal.rangeOfUnit(.CalendarUnitDay,
-            inUnit: .CalendarUnitMonth,
+        var days = cal.rangeOfUnit(.Day,
+            inUnit: .Month,
             forDate: date).toRange()!.endIndex-1
         
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear) {
-            days = cal.component(.CalendarUnitDay , fromDate: NSDate())
+        if (cal.component(.Month, fromDate: NSDate()) == todayMonth && cal.component(.Year, fromDate: NSDate()) == todayYear) {
+            days = cal.component(.Day , fromDate: NSDate())
         }
         
         return days
@@ -139,7 +139,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         cell.textLabel?.text = "\(cellDateNumber)"
         
 
-        if let dateStart : NSDate = YMDLocalToNSDate(self.todayYear, self.todayMonth, cellDateNumber) {
+        if let dateStart : NSDate = YMDLocalToNSDate(self.todayYear, month: self.todayMonth, day: cellDateNumber) {
             
             if (cell.currentDate != dateStart) {
                 cell.currentDate = dateStart
@@ -168,20 +168,20 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
             
         } else {
             cell.textLabel2?.text = "0"
-            var image = UIImage(named:"calendarbg")
+            let image = UIImage(named:"calendarbg")
             cell.bgImageView.image = image
 
         }
-        if (self.cal.component(.CalendarUnitMonth, fromDate: NSDate()) == self.todayMonth && self.cal.component(.CalendarUnitYear, fromDate: NSDate()) == self.todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == self.cal.component(.CalendarUnitDay, fromDate: NSDate())) {
+        if (self.cal.component(.Month, fromDate: NSDate()) == self.todayMonth && self.cal.component(.Year, fromDate: NSDate()) == self.todayYear && (collectionView.numberOfItemsInSection(0) - indexPath.row) == self.cal.component(.Day, fromDate: NSDate())) {
             
 
-            var image = UIImage(named: "datebgwide")
+            let image = UIImage(named: "datebgwide")
             cell.imageView?.image = image
             cell.textLabel?.text = "Today"
         
         } else {
 
-            var image = UIImage(named: "datebgcircle")
+            let image = UIImage(named: "datebgcircle")
             cell.imageView?.image = image
             
         }
@@ -216,7 +216,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         if let name = segue.identifier {
             if (name == "ShowDailyView") {
                 if let dailyVC = segue.destinationViewController as? DailyViewController {   
-                    dailyVC.currentDate = YMDLocalToNSDate(selectedYear, selectedMonth, selectedDay)
+                    dailyVC.currentDate = YMDLocalToNSDate(selectedYear, month: selectedMonth, day: selectedDay)
                 }
                 
             }
@@ -250,8 +250,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         todayMonth = month
         todayYear = year
         
-        date = YMDLocalToNSDate(todayYear, todayMonth, 1)!
-        if (cal.component(.CalendarUnitMonth, fromDate: NSDate()) == todayMonth  && cal.component(.CalendarUnitYear, fromDate: NSDate()) == todayYear ) {
+        date = YMDLocalToNSDate(todayYear, month: todayMonth, day: 1)!
+        if (cal.component(.Month, fromDate: NSDate()) == todayMonth  && cal.component(.Year, fromDate: NSDate()) == todayYear ) {
             //then turn off the forward button
             forwardButton.enabled = false
             forwardButton.hidden = true
@@ -265,8 +265,8 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //set the text label
         let dateFormat = NSDateFormatter()
         dateFormat.dateStyle = NSDateFormatterStyle.LongStyle
-        let monthName : String = dateFormat.monthSymbols[month-1] as! String
-        let yearName : String = String(cal.component(.CalendarUnitYear, fromDate: date))
+        let monthName : String = dateFormat.monthSymbols[month-1] 
+        let yearName : String = String(cal.component(.Year, fromDate: date))
         dispatch_async(dispatch_get_main_queue(), {
             self.dateLabel.text = monthName + " " + yearName
             
@@ -275,7 +275,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
         //grab the data from Firebase for the month
         
         
-        if let var fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
+        if let fbUserRef:String = UserData.getOrCreateUserData().getCurrentUserRef() as String? {
             
             if(fbUserRef=="Error"){
                 //no user is logged in
@@ -284,7 +284,7 @@ class MyLifeViewController: UIViewController, UICollectionViewDelegateFlowLayout
                 NSLog("Grabbing user steps from firebase")
                 
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_BACKGROUND, 0), {
-                    retrieveFBDataForYM(self.todayYear, self.todayMonth, self)
+                    retrieveFBDataForYM(self.todayYear, Month: self.todayMonth, updateCallback: self)
                 })
                 
             }
