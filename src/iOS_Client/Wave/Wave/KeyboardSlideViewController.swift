@@ -13,7 +13,8 @@ class KeyboardSlideViewController : UIViewController, UITextFieldDelegate {
     
     
     var offsetModifier : CGFloat = 0.0
-
+    var keyboardShown : Bool = false
+    
     override func viewDidAppear(animated: Bool) {
         super.viewDidAppear(animated)
         registerForKeyboardNotifications()
@@ -42,22 +43,27 @@ class KeyboardSlideViewController : UIViewController, UITextFieldDelegate {
     }
     
     func keyboardWillShow(notification : NSNotification) {
-        if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
-            UIView.beginAnimations(nil, context: nil)
-            UIView.setAnimationDuration(0.3)
-            var rect = self.view.frame
+        if (!keyboardShown) {
             
-            if ((keyboardSize.height+offsetModifier > 0) ) {
-                rect.origin.y -= (keyboardSize.height + offsetModifier)
-                rect.size.height += (keyboardSize.height + offsetModifier)
+            keyboardShown = true
+            if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
+                UIView.beginAnimations(nil, context: nil)
+                UIView.setAnimationDuration(0.3)
+                var rect = self.view.frame
+                
+                if ((keyboardSize.height+offsetModifier > 0) ) {
+                    rect.origin.y -= (keyboardSize.height + offsetModifier)
+                    rect.size.height += (keyboardSize.height + offsetModifier)
+                }
+                
+                self.view.frame = rect
+                UIView.commitAnimations()
             }
-            
-            self.view.frame = rect
-            UIView.commitAnimations()
         }
     }
     
     func keyboardWillBeHidden(notification : NSNotification) {
+        keyboardShown = false
         if let keyboardSize = (notification.userInfo?[UIKeyboardFrameBeginUserInfoKey] as? NSValue)?.CGRectValue() {
             UIView.beginAnimations(nil, context: nil)
             UIView.setAnimationDuration(0.3)

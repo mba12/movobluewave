@@ -147,4 +147,9 @@ class LoginViewController: KeyboardSlideViewController {
         self.presentViewController(alertController, animated: true, completion: nil)
     }
     
+    override func viewDidLoad() {
+        
+        offsetModifier = -(passText.frame.origin.y - 5*passText.frame.height)
+        
+    }
 }
