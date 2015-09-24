@@ -426,6 +426,52 @@ public class WaveScanActivity extends MenuActivity {
             public void onItemClick(AdapterView<?> arg0, View v, int position, long arg3) {
                 // change association of wave to current user
                 final WaveAdapter adapter = newWaves.get(position);
+                final int position_fin = position;
+
+                //Prompt to confirm that a user wishes to sync to otherwise unknown wave device
+                AlertDialog.Builder builder = new AlertDialog.Builder(WaveScanActivity.this);
+                builder.setTitle("Confirm");
+
+                final TextView text = new TextView(WaveScanActivity.this);
+                text.setText("Sync to new device and add it to the known devices list?");
+                builder.setView(text);
+
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                        String currentUser = UserData.getUserData(c).getCurUID();
+                        lazyLog.i("Setting user for device ", adapter, " to ", currentUser);
+                        adapter.info.setName( currentUser, null );
+                        adapter.info.store(db);
+
+                        // start sync activity
+                        Intent intent = new Intent(c, SyncDataActivity.class);
+                        intent.putExtra(SyncDataActivity.EXTRA_WAVE_MAC, adapter.info.mac);
+                        intent.putExtra(SyncDataActivity.EXTRA_WAVE_USER_ID, currentUser);
+                        startActivity(intent);
+
+                        // Move entry from new to known
+                        newWaves.remove( position_fin );
+                        newWaveAdapter.notifyDataSetChanged();
+                        addInfo( adapter );
+
+                    }
+                });
+
+
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+
+                builder.show();
+/////
+
+
+/* -- moved within confirm dialog
                 String currentUser = UserData.getUserData(c).getCurUID();
                 lazyLog.i("Setting user for device ", adapter, " to ", currentUser);
                 adapter.info.setName( currentUser, null );
@@ -441,6 +487,7 @@ public class WaveScanActivity extends MenuActivity {
                 newWaves.remove( position );
                 newWaveAdapter.notifyDataSetChanged();
                 addInfo( adapter );
+*/
             }
         });
 

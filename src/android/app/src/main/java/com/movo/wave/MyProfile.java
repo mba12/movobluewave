@@ -427,7 +427,7 @@ public class MyProfile extends MenuActivity {
         }
         ArrayList<String> weightOptions=new ArrayList<String>();
 //        weight.add("Select Weight in Pounds");
-        for(int i = 50;i<=300;i=i+5){
+        for(int i = 50;i<=1500;i=i+5){
             weightOptions.add((i)+"");
         }
 
