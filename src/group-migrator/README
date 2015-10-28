@@ -1,0 +1,48 @@
+
+GroupMigrator.java
+* Adds listener to /users/<USER_ID>/sync/ starting from checkpoint datetime.
+* When a sync is added for a user it is parsed into StepIntervals which are then inserted into our SQL instance.
+* At intervals we check for new users and save our checkpoint time.
+ 
+
+usage: GroupMigrator.java
+Listens for new syncs from Firebase instance and inserts them into SQL database.
+
+ -checkpoint <arg>           sets a checkpoint time to start looking for
+                             syncs (YYYY-MM-DDThh:dd:ssZ format). By
+                             default it looks for a checkpoint.ser file
+                             and if none is found it uses
+                             YYYY0000-00-00T00:00:00Z.
+                             
+ -checkpointInterval <arg>   Sets how often to checkpoint & look for new
+                             users (default is once per hour).
+                             
+ -FirebaseSecret <arg>       Auth Cookie to connect to Firebase Instance.
+ 
+ -FirebaseURL <arg>          URL to connect to Firebase Instance. Default
+                             is:https://movowave-debug.firebaseio.com/
+                             
+ -help                       print this message
+ 
+ -keyStore <arg>             sets where to look for our keyStore to access
+                             Firebase and GAE SQL instance. Default
+                             location is <current_location>/keystore.
+                             
+ -keyStorePass <arg>         password for keystore
+ 
+ -MysqlURL <arg>             URL to connect to MySQL Server. Default
+                             is:jdbc:mysql://173.194.247.177:3306/movogrou
+                             ps?user=root&useSSL=true
+                             
+ -trustStore <arg>           sets where to look for our keyStore to access
+                             Firebase and GAE SQL instance. Default
+                             location is <current_location>/truststore.
+                             
+ -trustStorePass <arg>       password for truststore
+ 
+ -useSSL                     use SSL for MySQL (needed for GAE)
+
+ 
+ 
+ 
+ 
