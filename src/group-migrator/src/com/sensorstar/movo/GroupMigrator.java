@@ -52,18 +52,26 @@ public class GroupMigrator {
 //	private static final boolean USING_GAE_SQL = false;
 	
 	/* Debug Defaults */
-	private static String FB_URL = "https://movowave-debug.firebaseio.com/";
-	private static String FB_SECRET = "3HFJlhjThUhC9QrP4zAq4PNcaXH8IWYqM8cCWmnR";
-	private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true";
+	// private static String FB_URL = "https://movowave-debug.firebaseio.com/";
+	// private static String FB_SECRET = "3HFJlhjThUhC9QrP4zAq4PNcaXH8IWYqM8cCWmnR";
+
+	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true";
 	private static final boolean USING_GAE_SQL = true;
 	
 	/* Production Defaults */
-//	// //private static final String FB_URL = "https://movowave.firebaseio.com/";
-//	// //private static final String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
+    private static String FB_URL = "https://movowave.firebaseio.com/";
+    private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
+	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
+	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?user=root&useSSL=true";  // test
+	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
+	static String trustStorePassword = "^59nhzfX@8!VPbuKMA=V";  // truststore
+	private static String username = "movogroups";
+	private static String password = "H8$E=?3*ADXFt4Ld7-jw";
 
-	
-	
-//	private Map<String,String> latest_sync_for_users;
+	// private static String keyStorePassword = "keystore"; // keystore
+	// private static String trustStorePassword = "truststore";  // truststore
+
+	//	private Map<String,String> latest_sync_for_users;
 	private String checkpoint;
 	private String most_recent_sync;
 
@@ -87,7 +95,7 @@ public class GroupMigrator {
 		    
 		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
 			//latest_sync_for_users = new HashMap<String,String>();
-			logger.info("No checkpoint found - starting from begining.");
+			logger.info("No checkpoint found - starting from beginning.");
 			checkpoint = "0000-00-00T00:00:00Z";
 			
 		}
@@ -126,10 +134,6 @@ public class GroupMigrator {
 			e.printStackTrace();
 		}
 
-		
-		
-		
-		
 		/* update our user list and find new users */
 		Set<String> updated_users = getUsers();
 		Set<String> new_users = new HashSet<String>(updated_users);
@@ -296,9 +300,7 @@ public class GroupMigrator {
 			//Build  full_date_str 
 			//SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 			//String full_date_time_string = time_parser.format(calendar.getTime());
-			
-			
-			
+
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString (1, 	si.firebase_id_fk);
 			preparedStmt.setTimestamp(2, startDate);
@@ -380,8 +382,7 @@ public class GroupMigrator {
 		
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = parser.parse( options, args);
-		
-		
+
 	    
 	    if(cmd.hasOption("help")) {
 			HelpFormatter formatter = new HelpFormatter();
@@ -411,7 +412,9 @@ public class GroupMigrator {
 				if (cmd.hasOption("keyStorePass")){
 					System.setProperty("javax.net.ssl.keyStorePassword",	cmd.getOptionValue("keyStorePass"));
 				}else{
-					System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
+					// System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
+					System.setProperty("javax.net.ssl.keyStorePassword",	keyStorePassword);
+
 				}
 				
 				if (cmd.hasOption("trustStore")){
@@ -423,10 +426,11 @@ public class GroupMigrator {
 				if (cmd.hasOption("trustStorePass")){
 					System.setProperty("javax.net.ssl.trustStorePassword",	cmd.getOptionValue("trustStorePass"));
 				}else{
-					System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
+					// System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
+					System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
+
 				}
-				
-				
+
 				Class.forName("com.mysql.jdbc.Driver");
 
 			}
@@ -443,8 +447,7 @@ public class GroupMigrator {
 		if (cmd.hasOption("MysqlURL")){
 			DB_URL = cmd.getOptionValue("MysqlURL");
 		}
-		
-		
+
 		/* */
 		GroupMigrator gm = null;
 		if (cmd.hasOption("checkpoint")){
