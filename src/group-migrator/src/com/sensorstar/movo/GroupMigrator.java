@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,14 +36,20 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-import org.apache.log4j.Logger;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+import javax.ws.rs.core.MultivaluedMap;
 
 
 public class GroupMigrator {
 
-	final static Logger logger = Logger.getLogger(GroupMigrator.class);
+	final static Logger logger = Logger.getLogger("GM");
 
-	
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;  
 	
@@ -148,6 +156,25 @@ public class GroupMigrator {
 		
 	}
 
+	private Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
+
+		Map<String,String> parameters = new HashMap<>();
+
+		Iterator<String> it = queryParameters.keySet().iterator();
+
+		while(it.hasNext()){
+			String theKey = it.next();
+			parameters.put(theKey,queryParameters.getFirst(theKey));
+		}
+
+		for (String key : parameters.keySet()) {
+			logger.info("Key = " + key + " - " + parameters.get(key));
+		}
+
+		return parameters;
+
+	}
+
 	/**
 	 * This is a workaround since the current firebase setup is normalized on user_id and only the REST implementation supports shallow queries  
 	 * @return a set of users
@@ -163,14 +190,26 @@ public class GroupMigrator {
 		ClientResponse response = webResource.accept("application/json")
                    .get(ClientResponse.class);
 
+		if(response == null) {
+			logger.info("response from Firebase is null .... \n");
+		} else {
+			logger.info("response from Firebase is NOT null .... \n");
+			MultivaluedMap<String, String> map = response.getHeaders();
+			checkParameters(map);
+
+			int st = response.getStatus();
+			int len = response.getLength();
+			logger.info("Status and length: " + st + " :: " + len);
+		}
+
 		if (response.getStatus() != 200) {
 		   throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
 		}
 
 		String output = response.getEntity(String.class);
 
-		//logger.info("Output from Server .... \n");
-		//logger.info(output);
+		logger.info("Output from Server .... \n");
+		logger.info(output);
 		
 		try {
 			JSONObject obj = new JSONObject(output);
@@ -205,7 +244,7 @@ public class GroupMigrator {
 	}
 	
 	private void processSync(DataSnapshot sync){
-		logger.debug("Processing Sync");
+		logger.info("Processing Sync");
 		
 		List<StepInterval> steps_synced = new ArrayList<StepInterval>();
 		
@@ -260,7 +299,7 @@ public class GroupMigrator {
 							} catch (ParseException e) { e.printStackTrace(); }
 							
 							
-							logger.debug(si);
+							logger.info(si.toString());
 							steps_synced.add(si);
 
 						}					
@@ -270,7 +309,7 @@ public class GroupMigrator {
 			
 		}
 		
-		logger.debug("This Sync has: "+steps_synced.size()+" step intervals\n");
+		logger.info("This Sync has: "+steps_synced.size()+" step intervals\n");
 
 		try {
 			if(steps_synced.size() !=0)
@@ -281,7 +320,7 @@ public class GroupMigrator {
 	private static final String query = " insert ignore into steps (firebase_id_fk, full_date, full_date_str, year, month, day, hour, start_minute, end_minute, steps, device_id, sync_id, created_ts, updated_ts)"
 	        + " values (?, ?, ?, ?, ?, ? , ? , ? , ? , ? , ? , ? ,?, ?)";
 	private void addSyncToDb(List<StepInterval> stepIntervals) throws SQLException{
-		logger.debug("Adding Sync to DB");
+		logger.info("Adding Sync to DB");
 		Connection conn = DriverManager.getConnection(DB_URL);
 		
 		for(StepInterval si: stepIntervals){
@@ -331,13 +370,13 @@ public class GroupMigrator {
 	private void addListenersToUsers(Set<String> users){
 		
 		for(String u: users){
-			logger.debug("Adding listener to user: "+u);
+			logger.info("Adding listener to user: "+u);
 			
 			final Firebase userRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-			logger.debug(userRef);
+			logger.info(userRef.toString());
 			userRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
-			    	logger.debug("Authenticated.");
+			    	logger.info("Authenticated.");
 			    	
 			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);;
 					sync_query.addChildEventListener(new ChildEventListener() {
@@ -353,7 +392,7 @@ public class GroupMigrator {
 						public void onChildRemoved(DataSnapshot arg0) {}
 					});
 			    }
-			    public void onAuthenticationError(FirebaseError firebaseError) { logger.error("Not Authenticated."); }
+			    public void onAuthenticationError(FirebaseError firebaseError) { logger.severe("Not Authenticated."); }
 			});	
 			
 			
