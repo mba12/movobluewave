@@ -63,8 +63,10 @@ public class GroupMigrator {
     private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
 	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
 	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?user=root&useSSL=true";  // test
-	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
-	static String trustStorePassword = "^59nhzfX@8!VPbuKMA=V";  // truststore
+//	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
+//	static String trustStorePassword = "^59nhzfX@8!VPbuKMA=V";  // truststore
+	static String keyStorePassword = "movomovo"; // keystore
+	static String trustStorePassword = "movomovo";  // truststore
 	private static String username = "movogroups";
 	private static String password = "H8$E=?3*ADXFt4Ld7-jw";
 
@@ -88,7 +90,6 @@ public class GroupMigrator {
 		    //latest_sync_for_users = (HashMap<String,String>)input.readObject();
 		    
 		    checkpoint = (String)input.readObject();
-		    
 		    input.close();
 		    
 		    logger.info("Loading checkpoint time:" + checkpoint);
@@ -101,14 +102,15 @@ public class GroupMigrator {
 		}
 	      
 		users = new HashSet<String>(); 
-		most_recent_sync = "0000-00-00T00:00:00Z";
+//		most_recent_sync = "0000-00-00T00:00:00Z";
+		most_recent_sync = checkpoint;
 	}
 	
 	public GroupMigrator(String checkpoint_option_val) {
 		checkpoint = checkpoint_option_val;
 		users = new HashSet<String>(); 
-		most_recent_sync = "0000-00-00T00:00:00Z";
-		
+//		most_recent_sync = "0000-00-00T00:00:00Z";
+		most_recent_sync = checkpoint;		
 		logger.info("Loading checkpoint time provided by user:" + checkpoint);
 
 	}
@@ -141,7 +143,6 @@ public class GroupMigrator {
 		users = updated_users;
 		
 		logger.info("New Users: " + new_users );
-
 		
 		/* add listeners for new users */ 
 		addListenersToUsers(new_users);
@@ -216,7 +217,15 @@ public class GroupMigrator {
 				most_recent_sync = sync_end_time;
 			}
 		}
+
 		
+		
+		/* Get User ID from DataSnapshot without traversing fb nodes*/ 
+		int user_start_idx = FB_URL.length() + "users/".length();
+		String url_to_search = sync.getRef().toString();
+		String user_id = url_to_search.substring(user_start_idx, url_to_search.length());
+		user_id = user_id.substring(0, user_id.indexOf('/'));
+
 		Iterable<DataSnapshot> years = sync.child("steps").getChildren();
 		for(DataSnapshot year : years){
 			
@@ -234,7 +243,7 @@ public class GroupMigrator {
 							StepInterval si = new StepInterval();
 							
 							si.sync_end_time = sync_end_time;
-							si.firebase_id_fk = sync.getKey();
+							si.firebase_id_fk = user_id; 
 							si.year = Integer.parseInt(year.getKey());
 							si.month = Integer.parseInt(month.getKey());
 							si.day = Integer.parseInt(day.getKey());
@@ -286,24 +295,33 @@ public class GroupMigrator {
 		
 		for(StepInterval si: stepIntervals){
 			
-			Calendar calendar = Calendar.getInstance();
-			
-			calendar.set(Calendar.YEAR,  		si.year);
-			calendar.set(Calendar.MONTH, 		si.month);
-			calendar.set(Calendar.DAY_OF_MONTH, si.day);
-			calendar.set(Calendar.HOUR_OF_DAY, 	si.hour);
-			calendar.set(Calendar.MINUTE, 		si.start_minute);
-			
-			java.sql.Timestamp startDate = new java.sql.Timestamp(calendar.getTime().getTime());
+			//Calendar calendar = Calendar.getInstance();	
+			//calendar.set(Calendar.YEAR,  		si.year);
+			//calendar.set(Calendar.MONTH, 		si.month);
+			//calendar.set(Calendar.DAY_OF_MONTH, si.day);
+			//calendar.set(Calendar.HOUR_OF_DAY, 	si.hour);
+			//calendar.set(Calendar.MINUTE, 		si.start_minute);
+			//java.sql.Timestamp startDate = new java.sql.Timestamp(calendar.getTime().getTime());
 			
 			
-			//Build  full_date_str 
+			//Build  full_date_str
 			//SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 			//String full_date_time_string = time_parser.format(calendar.getTime());
+			
+			SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss'Z'");
+			java.sql.Timestamp sync_end_time = null;
+			try {
+				sync_end_time = new java.sql.Timestamp(time_parser.parse(si.sync_end_time).getTime());
+			} catch (ParseException e) {
+				sync_end_time = new java.sql.Timestamp(0L); // shouldn't ever happen
+				e.printStackTrace();
+			}
 
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString (1, 	si.firebase_id_fk);
-			preparedStmt.setTimestamp(2, startDate);
+			//preparedStmt.setTimestamp(2, startDate);
+			preparedStmt.setTimestamp(2, sync_end_time);
+			
 			//preparedStmt.setString(3, 	full_date_time_string);
 			preparedStmt.setString(3, 	si.sync_end_time);
 			preparedStmt.setInt(4, 		si.year);
