@@ -295,33 +295,35 @@ public class GroupMigrator {
 		
 		for(StepInterval si: stepIntervals){
 			
-			//Calendar calendar = Calendar.getInstance();	
-			//calendar.set(Calendar.YEAR,  		si.year);
-			//calendar.set(Calendar.MONTH, 		si.month);
-			//calendar.set(Calendar.DAY_OF_MONTH, si.day);
-			//calendar.set(Calendar.HOUR_OF_DAY, 	si.hour);
-			//calendar.set(Calendar.MINUTE, 		si.start_minute);
-			//java.sql.Timestamp startDate = new java.sql.Timestamp(calendar.getTime().getTime());
+			Calendar calendar = Calendar.getInstance();	
+			calendar.set(Calendar.YEAR,  		si.year);
+			calendar.set(Calendar.MONTH, 		si.month);
+			calendar.set(Calendar.DAY_OF_MONTH, si.day);
+			calendar.set(Calendar.HOUR_OF_DAY, 	si.hour);
+			calendar.set(Calendar.MINUTE, 		si.start_minute);
+			calendar.set(Calendar.SECOND, 		0); // so sql timestamp is the same for each
+			calendar.set(Calendar.MILLISECOND, 	0);
+
+			java.sql.Timestamp startDate = new java.sql.Timestamp(calendar.getTime().getTime());
 			
 			
 			//Build  full_date_str
 			//SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 			//String full_date_time_string = time_parser.format(calendar.getTime());
 			
-			SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss'Z'");
-			java.sql.Timestamp sync_end_time = null;
-			try {
-				sync_end_time = new java.sql.Timestamp(time_parser.parse(si.sync_end_time).getTime());
-			} catch (ParseException e) {
-				sync_end_time = new java.sql.Timestamp(0L); // shouldn't ever happen
-				e.printStackTrace();
-			}
+			//SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd'T'HH:mm:ss'Z'");
+			//java.sql.Timestamp sync_end_time = null;
+			//try {
+			//	sync_end_time = new java.sql.Timestamp(time_parser.parse(si.sync_end_time).getTime());
+			//} catch (ParseException e) {
+			//	sync_end_time = new java.sql.Timestamp(0L); // shouldn't ever happen
+			//	e.printStackTrace();
+			//}
 
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString (1, 	si.firebase_id_fk);
-			//preparedStmt.setTimestamp(2, startDate);
-			preparedStmt.setTimestamp(2, sync_end_time);
-			
+			preparedStmt.setTimestamp(2, startDate);
+			//preparedStmt.setTimestamp(2, sync_end_time);
 			//preparedStmt.setString(3, 	full_date_time_string);
 			preparedStmt.setString(3, 	si.sync_end_time);
 			preparedStmt.setInt(4, 		si.year);
