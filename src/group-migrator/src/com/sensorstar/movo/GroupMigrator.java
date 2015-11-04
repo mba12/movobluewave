@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.Iterator;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -34,14 +36,21 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-import org.apache.log4j.Logger;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 
 
 public class GroupMigrator {
 
-	final static Logger logger = Logger.getLogger(GroupMigrator.class);
+	final static Logger logger = Logger.getLogger("GM");
 
-	
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;  
 	
@@ -62,11 +71,10 @@ public class GroupMigrator {
     private static String FB_URL = "https://movowave.firebaseio.com/";
     private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
 	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
-	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?user=root&useSSL=true";  // test
-//	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
-//	static String trustStorePassword = "^59nhzfX@8!VPbuKMA=V";  // truststore
-	static String keyStorePassword = "movomovo"; // keystore
-	static String trustStorePassword = "movomovo";  // truststore
+
+	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";  // test
+	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
+	static String trustStorePassword = "r87p-Y?72*uXqW$aSZGU";  // truststore
 	private static String username = "movogroups";
 	private static String password = "H8$E=?3*ADXFt4Ld7-jw";
 
@@ -149,6 +157,25 @@ public class GroupMigrator {
 		
 	}
 
+	private Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
+
+		Map<String,String> parameters = new HashMap<>();
+
+		Iterator<String> it = queryParameters.keySet().iterator();
+
+		while(it.hasNext()){
+			String theKey = it.next();
+			parameters.put(theKey,queryParameters.getFirst(theKey));
+		}
+
+		for (String key : parameters.keySet()) {
+			logger.info("Key = " + key + " - " + parameters.get(key));
+		}
+
+		return parameters;
+
+	}
+
 	/**
 	 * This is a workaround since the current firebase setup is normalized on user_id and only the REST implementation supports shallow queries  
 	 * @return a set of users
@@ -164,14 +191,26 @@ public class GroupMigrator {
 		ClientResponse response = webResource.accept("application/json")
                    .get(ClientResponse.class);
 
+		if(response == null) {
+			logger.info("response from Firebase is null .... \n");
+		} else {
+			logger.info("response from Firebase is NOT null .... \n");
+			MultivaluedMap<String, String> map = response.getHeaders();
+			checkParameters(map);
+
+			int st = response.getStatus();
+			int len = response.getLength();
+			logger.info("Status and length: " + st + " :: " + len);
+		}
+
 		if (response.getStatus() != 200) {
 		   throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
 		}
 
 		String output = response.getEntity(String.class);
 
-		//logger.info("Output from Server .... \n");
-		//logger.info(output);
+		logger.info("Output from Server .... \n");
+		logger.info(output);
 		
 		try {
 			JSONObject obj = new JSONObject(output);
@@ -206,7 +245,7 @@ public class GroupMigrator {
 	}
 	
 	private void processSync(DataSnapshot sync){
-		logger.debug("Processing Sync");
+		logger.info("Processing Sync");
 		
 		List<StepInterval> steps_synced = new ArrayList<StepInterval>();
 		
@@ -269,7 +308,7 @@ public class GroupMigrator {
 							} catch (ParseException e) { e.printStackTrace(); }
 							
 							
-							logger.debug(si);
+							logger.info(si.toString());
 							steps_synced.add(si);
 
 						}					
@@ -279,7 +318,7 @@ public class GroupMigrator {
 			
 		}
 		
-		logger.debug("This Sync has: "+steps_synced.size()+" step intervals\n");
+		logger.info("This Sync has: " + steps_synced.size() + " step intervals\n");
 
 		try {
 			if(steps_synced.size() !=0)
@@ -290,14 +329,14 @@ public class GroupMigrator {
 	private static final String query = " insert ignore into steps (firebase_id_fk, full_date, full_date_str, year, month, day, hour, start_minute, end_minute, steps, device_id, sync_id, created_ts, updated_ts)"
 	        + " values (?, ?, ?, ?, ?, ? , ? , ? , ? , ? , ? , ? ,?, ?)";
 	private void addSyncToDb(List<StepInterval> stepIntervals) throws SQLException{
-		logger.debug("Adding Sync to DB");
-		Connection conn = DriverManager.getConnection(DB_URL);
+		logger.info("Adding Sync to DB");
+		Connection conn = DriverManager.getConnection(DB_URL, username, password);
 		
 		for(StepInterval si: stepIntervals){
 			
 			Calendar calendar = Calendar.getInstance();	
 			calendar.set(Calendar.YEAR,  		si.year);
-			calendar.set(Calendar.MONTH, 		si.month);
+			calendar.set(Calendar.MONTH, 		si.month - 1);
 			calendar.set(Calendar.DAY_OF_MONTH, si.day);
 			calendar.set(Calendar.HOUR_OF_DAY, 	si.hour);
 			calendar.set(Calendar.MINUTE, 		si.start_minute);
@@ -305,9 +344,8 @@ public class GroupMigrator {
 			calendar.set(Calendar.MILLISECOND, 	0);
 
 			java.sql.Timestamp startDate = new java.sql.Timestamp(calendar.getTime().getTime());
-			
-			
-			//Build  full_date_str
+
+			//Build  full_date_str 
 			//SimpleDateFormat time_parser = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss");
 			//String full_date_time_string = time_parser.format(calendar.getTime());
 			
@@ -323,7 +361,7 @@ public class GroupMigrator {
 			PreparedStatement preparedStmt = conn.prepareStatement(query);
 			preparedStmt.setString (1, 	si.firebase_id_fk);
 			preparedStmt.setTimestamp(2, startDate);
-			//preparedStmt.setTimestamp(2, sync_end_time);
+			//preparedStmt.setTimestamp(2, sync_end_time);q
 			//preparedStmt.setString(3, 	full_date_time_string);
 			preparedStmt.setString(3, 	si.sync_end_time);
 			preparedStmt.setInt(4, 		si.year);
@@ -351,13 +389,13 @@ public class GroupMigrator {
 	private void addListenersToUsers(Set<String> users){
 		
 		for(String u: users){
-			logger.debug("Adding listener to user: "+u);
+			logger.info("Adding listener to user: " + u);
 			
 			final Firebase userRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-			logger.debug(userRef);
+			logger.info(userRef.toString());
 			userRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
-			    	logger.debug("Authenticated.");
+			    	logger.info("Authenticated.");
 			    	
 			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);;
 					sync_query.addChildEventListener(new ChildEventListener() {
@@ -373,10 +411,8 @@ public class GroupMigrator {
 						public void onChildRemoved(DataSnapshot arg0) {}
 					});
 			    }
-			    public void onAuthenticationError(FirebaseError firebaseError) { logger.error("Not Authenticated."); }
-			});	
-			
-			
+			    public void onAuthenticationError(FirebaseError firebaseError) { logger.severe("Not Authenticated."); }
+			});
 		}
 	}
 	
@@ -398,8 +434,6 @@ public class GroupMigrator {
 		options.addOption("FirebaseSecret", 	true, 	"Auth Cookie to connect to Firebase Instance.");
 		options.addOption("MysqlURL", 			true, 	"URL to connect to MySQL Server. Default is:" + DB_URL);
 
-		
-		
 		CommandLineParser parser = new DefaultParser();
 		CommandLine cmd = parser.parse( options, args);
 
@@ -418,10 +452,9 @@ public class GroupMigrator {
 	    }
 	    
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			// Class.forName("com.mysql.jdbc.Driver");
 			
-			if (cmd.hasOption("useSSL") || USING_GAE_SQL){ 
-				//Class.forName("org.mariadb.jdbc.Driver"); 
+			if (cmd.hasOption("useSSL") || USING_GAE_SQL){
 				
 				if (cmd.hasOption("keyStore")){
 					System.setProperty("javax.net.ssl.keyStore",			cmd.getOptionValue("keyStore"));
@@ -448,7 +481,6 @@ public class GroupMigrator {
 				}else{
 					// System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
 					System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
-
 				}
 
 				Class.forName("com.mysql.jdbc.Driver");
