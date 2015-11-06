@@ -194,7 +194,7 @@ public class GroupMigrator implements Runnable{
 		new_users.removeAll(users);
 		users = updated_users;
 		
-		System.out.println("New Users: " + new_users );
+		System.out.println("New Users: " + new_users.size() );
 		
 		/* add listeners for new users */ 
 		addListenersToUsers(new_users);
@@ -309,7 +309,7 @@ public class GroupMigrator implements Runnable{
 		}
 
 		
-		
+
 		/* Get User ID from DataSnapshot without traversing fb nodes*/ 
 		int user_start_idx = FB_URL.length() + "users/".length();
 		String url_to_search = sync.getRef().toString();
@@ -362,9 +362,7 @@ public class GroupMigrator implements Runnable{
 							} catch (ParseException e) { e.printStackTrace(); }
 							//steps_synced.add(si);
 							sql_message_queue.add(si);
-							
-
-						}					
+						}
 					}
 				}
 			}
