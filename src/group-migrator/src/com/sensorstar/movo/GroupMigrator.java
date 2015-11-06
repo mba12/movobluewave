@@ -1,6 +1,7 @@
 package com.sensorstar.movo;
 
 import java.io.*;
+import java.net.URLDecoder;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -277,7 +278,7 @@ public class GroupMigrator implements Runnable{
 		
 		public String sync_start_time;  
 		public String sync_end_time;  
-		public String firebase_id_fk;
+		private String firebase_id_fk;
 		public String year;
 		public String month;
 		public String day;
@@ -287,6 +288,18 @@ public class GroupMigrator implements Runnable{
 		public int steps;
 		public String device_id;
 		public String sync_id;
+
+		public void setFirebase_id_fk(String id) {
+			try {
+				this.firebase_id_fk = URLDecoder.decode(id, "UTF-8");
+			} catch (java.io.UnsupportedEncodingException e) {
+				this.firebase_id_fk = "error"; // Deal with this in a better way
+			}
+		}
+
+		public String getFirebase_id_fk() {
+			return this.firebase_id_fk;
+		}
 		
 		public String toString(){
 			return "StepInterval(FbID: "+firebase_id_fk +"\t Year:"+ year + "\tMonth:" + month+ "\tDay:" + day+ "\thour:" + hour+ "\tSm:"+start_minute+ "\tEm: "+ end_minute +"\tSteps:   "+steps + "\tDID:"+device_id+ "\tSID: "+ sync_id+")"; 
@@ -334,7 +347,8 @@ public class GroupMigrator implements Runnable{
 							
 							si.sync_start_time = sync_start_time;
 							si.sync_end_time = sync_end_time;
-							si.firebase_id_fk = user_id;
+							// si.firebase_id_fk = user_id;
+							si.setFirebase_id_fk(user_id);
 							
 							//Formated so each has a proper number of 
 							si.year = year.getKey();
@@ -401,7 +415,7 @@ public class GroupMigrator implements Runnable{
 	        		try {
 	        			if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 						
-	        			proc_stmt.setString(1, si.firebase_id_fk);
+	        			proc_stmt.setString(1, si.getFirebase_id_fk());
 		    		    proc_stmt.setString(2, si.year);
 		    		    proc_stmt.setString(3, String.format("%02d", (Integer.parseInt(si.month)-1)));
 		    		    proc_stmt.setString(4, si.day);
