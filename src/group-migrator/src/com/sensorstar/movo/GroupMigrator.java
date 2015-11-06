@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -54,10 +55,13 @@ public class GroupMigrator implements Runnable{
 //	final static Logger logger = Logger.getLogger("GM");
 
 	/* Time between saving checkpoint time and checking for new users */
-	private static long CHECKPOINT_INTERVAL = 36*1000;
+	private static long CHECKPOINT_INTERVAL = 3600*1000;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
+	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
+
+	
 	
 	/* Sensorstar Local Debug Defaults */
 //	private static final String FB_URL = "https://ss-movo-wave-v2.firebaseio.com";
@@ -385,6 +389,9 @@ public class GroupMigrator implements Runnable{
 		}
 
 		int cur_batch_size = 0;
+		long latest_added_batch = 0; 
+		
+		
 		CallableStatement proc_stmt = null;
 		try{
 	        while(!Thread.currentThread().isInterrupted()){
@@ -412,7 +419,7 @@ public class GroupMigrator implements Runnable{
 		    		    
 		    		    
 		    		    if(cur_batch_size == SQL_BATCH_SIZE){
-		    				System.out.println("Sending Batch");
+		    				System.out.println("Sending Batch of size: " + cur_batch_size);
 	
 		    		    	proc_stmt.executeBatch();
 		    		    	cur_batch_size= 0;
@@ -423,13 +430,28 @@ public class GroupMigrator implements Runnable{
 		    		    }
 		    		    
 		    		    sql_message_queue.poll(); //remove first element
-	
+		    		    latest_added_batch = System.currentTimeMillis();
+		    		    
 					} catch (SQLException e) {
 						e.printStackTrace();
 					}
 	        	
 	        		
 	        	}else{ // idle while there are no msgs
+		        	
+		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT){
+	    				System.out.println("Sending Batch of size: " + cur_batch_size);
+
+	    		    	try {
+							proc_stmt.executeBatch();
+						} catch (SQLException e) {e.printStackTrace();}
+	    		    	cur_batch_size= 0;
+	    		    	
+	    		    
+			        	Thread.sleep(SQL_BATCH_DELAY);
+				        
+	    		    }
+		        	
 		        	Thread.sleep(SQL_BATCH_DELAY);
 	        	}
 	        	Thread.sleep(10);
@@ -484,6 +506,7 @@ public class GroupMigrator implements Runnable{
 	
 	
 	public static void main(String[] args) throws org.apache.commons.cli.ParseException{
+		
 		/* setup command line options */
 		Options options = new Options();
 		
@@ -500,7 +523,9 @@ public class GroupMigrator implements Runnable{
 
 		options.addOption("sqlBatchSize",		true, 	"size of batches to be sent" );
 		options.addOption("sqlBatchDelay",		true, 	"minumum time in ms between sending batches" );
+		options.addOption("sqlMaxBatchWait",	true, 	"max time to wait before sending a batche" );
 
+		
 		
 		options.addOption("FirebaseURL", 		true, 	"URL to connect to Firebase Instance. Default is:" + FB_URL);
 		options.addOption("FirebaseSecret", 	true, 	"Auth Cookie to connect to Firebase Instance.");
@@ -524,51 +549,48 @@ public class GroupMigrator implements Runnable{
 	    	System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
 	    }
 	    
+	    if (cmd.hasOption("useSSL") || USING_GAE_SQL){
+			System.out.println("User defined useSSL: "+ true);
+		}
+		
+		if (cmd.hasOption("keyStore")){
+			System.setProperty("javax.net.ssl.keyStore",			cmd.getOptionValue("keyStore"));
+			System.out.println("User defined keyStore: "+ cmd.getOptionValue("keyStore"));
+		}else{
+			System.setProperty("javax.net.ssl.keyStore",			System.getProperty("user.dir")+"/keystore");
+			System.out.println("No keyStore set.");
+		}
+		
+		if (cmd.hasOption("keyStorePass")){
+			System.setProperty("javax.net.ssl.keyStorePassword",	cmd.getOptionValue("keyStorePass"));
+			System.out.println("User defined keyStorePass: "+ cmd.getOptionValue("keyStorePass"));
+		}else{
+			// System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
+			System.setProperty("javax.net.ssl.keyStorePassword",	keyStorePassword);
+			System.out.println("No keyStore pass set.");
+		}
+		
+		if (cmd.hasOption("trustStore")){
+			System.setProperty("javax.net.ssl.trustStore",			cmd.getOptionValue("trustStore"));
+			System.out.println("User defined trustStore: "+ cmd.getOptionValue("trustStore"));
+		}else{
+			System.setProperty("javax.net.ssl.trustStore",			System.getProperty("user.dir")+"/truststore");
+			System.out.println("No truststore set.");
+		}
+		
+		if (cmd.hasOption("trustStorePass")){
+			System.setProperty("javax.net.ssl.trustStorePassword",	cmd.getOptionValue("trustStorePass"));
+			System.out.println("User defined trustStorePassword: "+ cmd.getOptionValue("trustStorePass"));
+		}else{
+			// System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
+			System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
+			System.out.println("No truststore pass set.");
+		}
+			
+	    
 		try {
-			// Class.forName("com.mysql.jdbc.Driver");
-			
-			if (cmd.hasOption("useSSL") || USING_GAE_SQL){
-				System.out.println("User defined useSSL: "+ true);
-			}
-			
-			if (cmd.hasOption("keyStore")){
-				System.setProperty("javax.net.ssl.keyStore",			cmd.getOptionValue("keyStore"));
-				System.out.println("User defined keyStore: "+ cmd.getOptionValue("keyStore"));
-			}else{
-				System.setProperty("javax.net.ssl.keyStore",			System.getProperty("user.dir")+"/keystore");
-				System.out.println("No keyStore set.");
-			}
-			
-			if (cmd.hasOption("keyStorePass")){
-				System.setProperty("javax.net.ssl.keyStorePassword",	cmd.getOptionValue("keyStorePass"));
-				System.out.println("User defined keyStorePass: "+ cmd.getOptionValue("keyStorePass"));
-			}else{
-				// System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
-				System.setProperty("javax.net.ssl.keyStorePassword",	keyStorePassword);
-				System.out.println("No keyStore pass set.");
-			}
-			
-			if (cmd.hasOption("trustStore")){
-				System.setProperty("javax.net.ssl.trustStore",			cmd.getOptionValue("trustStore"));
-				System.out.println("User defined trustStore: "+ cmd.getOptionValue("trustStore"));
-			}else{
-				System.setProperty("javax.net.ssl.trustStore",			System.getProperty("user.dir")+"/truststore");
-				System.out.println("No truststore set.");
-			}
-			
-			if (cmd.hasOption("trustStorePass")){
-				System.setProperty("javax.net.ssl.trustStorePassword",	cmd.getOptionValue("trustStorePass"));
-				System.out.println("User defined trustStorePassword: "+ cmd.getOptionValue("trustStorePass"));
-			}else{
-				// System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
-				System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
-				System.out.println("No truststore pass set.");
-			}
-				
-
-				Class.forName("com.mysql.jdbc.Driver");
-
-			}catch (ClassNotFoundException e) {e.printStackTrace();}
+			Class.forName("com.mysql.jdbc.Driver");
+		}catch (ClassNotFoundException e) {e.printStackTrace();}
 
 		if (cmd.hasOption("FirebaseURL")){
 			FB_URL = cmd.getOptionValue("FirebaseURL");
@@ -597,6 +619,13 @@ public class GroupMigrator implements Runnable{
 			SQL_BATCH_DELAY = Integer.parseInt(cmd.getOptionValue("sqlBatchDelay"));
 			System.out.println("User defined sqlBatchDelay: "+ cmd.getOptionValue("sqlBatchDelay"));
 		}
+		
+		if (cmd.hasOption("sqlMaxBatchWait")){
+			SQL_MAX_BATCH_WAIT = Integer.parseInt(cmd.getOptionValue("sqlMaxBatchWait"));
+			System.out.println("User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
+		}
+		
+		
 
 		/* */
 		GroupMigrator gm = null;
