@@ -56,7 +56,7 @@ public class GroupMigrator implements Runnable{
 //	final static Logger logger = Logger.getLogger("GM");
 
 	/* Time between saving checkpoint time and checking for new users */
-	private static long CHECKPOINT_INTERVAL = 3600*1000;
+	private static long CHECKPOINT_INTERVAL = 360*1000;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
@@ -82,7 +82,11 @@ public class GroupMigrator implements Runnable{
     private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
 	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
 
-	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";  // test
+	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";
+
+	// private static String DB_URL = "jdbc:mysql://173.194.241.127:3306/movogroups?useSSL=true&requireSSL=true";
+
+	// test
 	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
 	static String trustStorePassword = "r87p-Y?72*uXqW$aSZGU";  // truststore
 	private static String username = "movogroups";
@@ -163,7 +167,7 @@ public class GroupMigrator implements Runnable{
 	public GroupMigrator(String checkpoint_option_val) {
 		checkpoint = checkpoint_option_val;
 		users = new HashSet<String>(); 
-		most_recent_sync = checkpoint;		
+		most_recent_sync = checkpoint;
 		System.out.println("Loading checkpoint time provided by user:" + checkpoint);
 		loadOrCreateQueue();
 	}
@@ -222,7 +226,8 @@ public class GroupMigrator implements Runnable{
 	}
 
 	/**
-	 * This is a workaround since the current firebase setup is normalized on user_id and only the REST implementation supports shallow queries  
+	 * This is a workaround since the current firebase setup is normalized on user_id and only
+	 * the REST implementation supports shallow queries
 	 * @return a set of users
 	 */
 	private Set<String> getUsers(){
@@ -271,9 +276,7 @@ public class GroupMigrator implements Runnable{
 	}
 		
 	private static class StepInterval implements java.io.Serializable{
-		/**
-		 * 
-		 */
+
 		private static final long serialVersionUID = 2954534620324883606L;
 		
 		public String sync_start_time;  
@@ -302,7 +305,7 @@ public class GroupMigrator implements Runnable{
 		}
 		
 		public String toString(){
-			return "StepInterval(FbID: "+firebase_id_fk +"\t Year:"+ year + "\tMonth:" + month+ "\tDay:" + day+ "\thour:" + hour+ "\tSm:"+start_minute+ "\tEm: "+ end_minute +"\tSteps:   "+steps + "\tDID:"+device_id+ "\tSID: "+ sync_id+")"; 
+			return "StepInterval(FbID: "+firebase_id_fk +"\t Year:"+ year + "\tMonth:" + month + "\tDay:" + day+ "\thour:" + hour+ "\tSm:"+start_minute+ "\tEm: "+ end_minute +"\tSteps:   "+steps + "\tDID:"+device_id+ "\tSID: "+ sync_id+")";
 		}
 	}
 	
@@ -355,10 +358,11 @@ public class GroupMigrator implements Runnable{
 							si.month = month.getKey();
 							si.day = day.getKey();
 
+
 							si.steps = Integer.parseInt((String) step_data.child("count").getValue());
 							si.device_id = (String) step_data.child("deviceid").getValue();
 							si.sync_id = (String) step_data.child("syncid").getValue();
-							
+
 							SimpleDateFormat time_parser = new SimpleDateFormat("'T'HH:mm:ss'Z'");
 							try {
 								
@@ -417,8 +421,13 @@ public class GroupMigrator implements Runnable{
 						
 	        			proc_stmt.setString(1, si.getFirebase_id_fk());
 		    		    proc_stmt.setString(2, si.year);
-		    		    proc_stmt.setString(3, String.format("%02d", (Integer.parseInt(si.month)-1)));
-		    		    proc_stmt.setString(4, si.day);
+						proc_stmt.setString(3, String.format("%02d", (Integer.parseInt(si.month))));
+
+						// NOTE: The month - 1 was needed when using java calendar but
+						//       not when doing straight database inserts
+						// proc_stmt.setString(3, String.format("%02d", (Integer.parseInt(si.month)-1)));
+
+						proc_stmt.setString(4, si.day);
 		    		    proc_stmt.setString(5, si.hour);
 		    		    proc_stmt.setString(6, si.start_minute);
 		    		    proc_stmt.setString(7, si.end_minute);
@@ -435,10 +444,8 @@ public class GroupMigrator implements Runnable{
 	
 		    		    	proc_stmt.executeBatch();
 		    		    	cur_batch_size= 0;
-		    		    	
-		    		    
+
 				        	Thread.sleep(SQL_BATCH_DELAY);
-					        
 		    		    }
 		    		    
 		    		    sql_message_queue.poll(); //remove first element
@@ -450,18 +457,15 @@ public class GroupMigrator implements Runnable{
 	        	
 	        		
 	        	}else{ // idle while there are no msgs
-		        	
-		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT){
+
+		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT ){
 	    				System.out.println("Sending Batch of size: " + cur_batch_size);
 
 	    		    	try {
 							proc_stmt.executeBatch();
 						} catch (SQLException e) {e.printStackTrace();}
 	    		    	cur_batch_size= 0;
-	    		    	
-	    		    
 			        	Thread.sleep(SQL_BATCH_DELAY);
-				        
 	    		    }
 		        	
 		        	Thread.sleep(SQL_BATCH_DELAY);
@@ -598,8 +602,7 @@ public class GroupMigrator implements Runnable{
 			System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
 			System.out.println("No truststore pass set.");
 		}
-			
-	    
+
 		try {
 			Class.forName("com.mysql.jdbc.Driver");
 		}catch (ClassNotFoundException e) {e.printStackTrace();}
@@ -607,13 +610,11 @@ public class GroupMigrator implements Runnable{
 		if (cmd.hasOption("FirebaseURL")){
 			FB_URL = cmd.getOptionValue("FirebaseURL");
 			System.out.println("User defined FirebaseURL: "+ cmd.getOptionValue("FirebaseURL"));
-
 		}
 		
 		if (cmd.hasOption("FirebaseSecret")){
 			FB_SECRET = cmd.getOptionValue("FirebaseSecret");
 			System.out.println("User defined FirebaseSecret: "+ cmd.getOptionValue("FirebaseSecret"));
-
 		}
 		
 		if (cmd.hasOption("MysqlURL")){
@@ -636,10 +637,7 @@ public class GroupMigrator implements Runnable{
 			SQL_MAX_BATCH_WAIT = Integer.parseInt(cmd.getOptionValue("sqlMaxBatchWait"));
 			System.out.println("User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
 		}
-		
-		
 
-		/* */
 		GroupMigrator gm = null;
 		if (cmd.hasOption("checkpoint")){
 			gm = new GroupMigrator(cmd.getOptionValue("checkpoint")); 
