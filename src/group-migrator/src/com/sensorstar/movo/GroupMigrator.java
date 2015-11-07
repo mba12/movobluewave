@@ -522,6 +522,7 @@ public class GroupMigrator implements Runnable{
 			    	System.out.println("Authenticated.");
 			    	
 			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);
+
 					sync_query.addChildEventListener(new ChildEventListener() {
 						
 						// When there is a new sync add it to our SQL DB
