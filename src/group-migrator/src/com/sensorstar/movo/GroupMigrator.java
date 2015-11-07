@@ -338,6 +338,11 @@ public class GroupMigrator implements Runnable{
 			ue.printStackTrace();
 		}
 
+		long childCount = sync.getChildrenCount();
+		boolean hasSteps = sync.hasChild("steps");
+		System.out.println("Number of Children: " + childCount);
+		System.out.println("Has 'steps' as child: " + hasSteps);
+
 		Iterable<DataSnapshot> children = sync.getChildren();
 		for(DataSnapshot c: children) {
 			System.out.println("Child: " + c.getKey() );
