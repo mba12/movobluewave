@@ -531,7 +531,9 @@ public class GroupMigrator implements Runnable{
 						}
 						
 						public void onCancelled(FirebaseError arg0) {}
-						public void onChildChanged(DataSnapshot arg0, String arg1) {}
+						public void onChildChanged(DataSnapshot sync, String arg1) {
+							processSync(sync);
+						}
 						public void onChildMoved(DataSnapshot arg0, String arg1) {}
 						public void onChildRemoved(DataSnapshot arg0) {}
 					});

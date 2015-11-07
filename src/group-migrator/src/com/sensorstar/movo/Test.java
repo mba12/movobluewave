@@ -381,7 +381,7 @@ public class Test implements Runnable{
         if (!hasSteps) {
             // The steps tree is missing
             // Let's do a second query to see if we can find the steps
-            tryAgainQuery(user_id, depth++);
+            tryAgainQuery(user_id, ++depth);
             return;
         }
 
@@ -573,8 +573,9 @@ public class Test implements Runnable{
                         }
 
                         public void onCancelled(FirebaseError arg0) {}
-                        public void onChildChanged(DataSnapshot arg0, String arg1) {
-                            System.out.println("onChildChanged Fired for: " + arg0.getKey());
+                        public void onChildChanged(DataSnapshot sync, String arg1) {
+                            System.out.println("onChildChanged Fired for: " + sync.getKey());
+                            processSync(sync, 1);
                         }
                         public void onChildMoved(DataSnapshot arg0, String arg1) {}
                         public void onChildRemoved(DataSnapshot arg0) {}
