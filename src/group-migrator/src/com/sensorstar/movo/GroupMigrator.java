@@ -1,6 +1,7 @@
 package com.sensorstar.movo;
 
 import java.io.*;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -56,7 +57,7 @@ public class GroupMigrator implements Runnable{
 //	final static Logger logger = Logger.getLogger("GM");
 
 	/* Time between saving checkpoint time and checking for new users */
-	private static long CHECKPOINT_INTERVAL = 360*1000;
+	private static long CHECKPOINT_INTERVAL = 36*1000;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
@@ -260,7 +261,7 @@ public class GroupMigrator implements Runnable{
 		String output = response.getEntity(String.class);
 
 		System.out.println("Output from Server .... \n");
-		System.out.println(output);
+		// System.out.println(output);
 		
 		try {
 			JSONObject obj = new JSONObject(output);
@@ -324,13 +325,25 @@ public class GroupMigrator implements Runnable{
 			}
 		}
 
-		
-
 		/* Get User ID from DataSnapshot without traversing fb nodes*/ 
 		int user_start_idx = FB_URL.length() + "users/".length();
 		String url_to_search = sync.getRef().toString();
 		String user_id = url_to_search.substring(user_start_idx, url_to_search.length());
 		user_id = user_id.substring(0, user_id.indexOf('/'));
+
+		try {
+			System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+		} catch (java.io.UnsupportedEncodingException ue) {
+			System.out.println("Exception decoding username: " + user_id);
+			ue.printStackTrace();
+		}
+
+		Iterable<DataSnapshot> children = sync.getChildren();
+		for(DataSnapshot c: children) {
+			System.out.println("Child: " + c.getKey() );
+		}
+
+		System.out.println("Starting iteration of data of sync from: " + user_id);
 
 		Iterable<DataSnapshot> years = sync.child("steps").getChildren();
 		for(DataSnapshot year : years){
@@ -350,7 +363,6 @@ public class GroupMigrator implements Runnable{
 							
 							si.sync_start_time = sync_start_time;
 							si.sync_end_time = sync_end_time;
-							// si.firebase_id_fk = user_id;
 							si.setFirebase_id_fk(user_id);
 							
 							//Formated so each has a proper number of 
@@ -380,6 +392,7 @@ public class GroupMigrator implements Runnable{
 							} catch (ParseException e) { e.printStackTrace(); }
 							//steps_synced.add(si);
 							sql_message_queue.add(si);
+							System.out.println("Added to queue: " + si.toString());
 						}
 					}
 				}
@@ -405,14 +418,15 @@ public class GroupMigrator implements Runnable{
 		}
 
 		int cur_batch_size = 0;
-		long latest_added_batch = 0; 
-		
-		
+		long latest_added_batch = 0;
+
+		System.out.println("Starting queue listener loop");
 		CallableStatement proc_stmt = null;
 		try{
 	        while(!Thread.currentThread().isInterrupted()){
 	        	
 	        	StepInterval si=sql_message_queue.peek();
+
 	        	if(si != null){ // queue isn't empty 
 					System.out.println("Adding to Batch: "+si.toString());
 	
@@ -456,7 +470,7 @@ public class GroupMigrator implements Runnable{
 					}
 	        	
 	        		
-	        	}else{ // idle while there are no msgs
+	        	} else { // idle while there are no msgs
 
 		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT ){
 	    				System.out.println("Sending Batch of size: " + cur_batch_size);
@@ -470,6 +484,7 @@ public class GroupMigrator implements Runnable{
 		        	
 		        	Thread.sleep(SQL_BATCH_DELAY);
 	        	}
+
 	        	Thread.sleep(10);
 
 	        }
@@ -501,7 +516,7 @@ public class GroupMigrator implements Runnable{
 			    public void onAuthenticated(AuthData authData) { 
 			    	System.out.println("Authenticated.");
 			    	
-			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);;
+			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);
 					sync_query.addChildEventListener(new ChildEventListener() {
 						
 						// When there is a new sync add it to our SQL DB
