@@ -517,12 +517,25 @@ public class GroupMigrator implements Runnable{
 	        	}
 
 	        	Thread.sleep(10);
+				// Deal with long idle times with no syncs
+				if (cur_batch_size==0 && System.currentTimeMillis() - CONNECTION_CREATED > SQL_MAX_CONNECTION_RESET ) {
+					// Need to reset the current connection
+					// to avoid automatic reset
+					if(conn != null) {
+						conn.close();
+					}
+					conn = null;
+				}
 
 	        }
 		} catch (InterruptedException e) {
 	    	System.out.println("Stopping message thread...");
 			Thread.currentThread().interrupt();
-		}	        
+		}  catch (SQLException e) {
+			System.out.println("Stopping message thread...SQL EXCEPTION");
+			e.printStackTrace();
+			Thread.currentThread().interrupt();
+		}
 		
         try {
 			conn.close();
