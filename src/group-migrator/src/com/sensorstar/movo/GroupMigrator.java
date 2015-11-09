@@ -63,7 +63,7 @@ public class GroupMigrator implements Runnable{
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
-	private static int SQL_MAX_CONNECTION_RESET = 30*60*1000;// in Milliseconds
+	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
 
 	
 	
@@ -438,14 +438,14 @@ public class GroupMigrator implements Runnable{
 								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 								CONNECTION_CREATED = System.currentTimeMillis();
 							}
+							if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
 						} catch (SQLException e) {
 							System.out.println("MBA: NULL CONNECTION.");
 							e.printStackTrace();
 						}
 
-	        			if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
-						
+
 	        			proc_stmt.setString(1, si.getFirebase_id_fk());
 		    		    proc_stmt.setString(2, si.year);
 						proc_stmt.setString(3, String.format("%02d", (Integer.parseInt(si.month))));
@@ -720,6 +720,11 @@ public class GroupMigrator implements Runnable{
 				 
 			try {
 				Thread.sleep(CHECKPOINT_INTERVAL);
+				boolean alive = msg_thread.isAlive();
+				if(!alive) {
+					msg_thread.start();
+				}
+
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 				break;
