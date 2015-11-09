@@ -58,10 +58,12 @@ public class GroupMigrator implements Runnable{
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
+	private static long CONNECTION_CREATED = 0;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
+	private static int SQL_MAX_CONNECTION_RESET = 30*60*1000;// in Milliseconds
 
 	
 	
@@ -416,12 +418,6 @@ public class GroupMigrator implements Runnable{
 	public void run() {
 		
 		Connection conn = null;
-		try {
-			conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
 		int cur_batch_size = 0;
 		long latest_added_batch = 0;
 
@@ -436,6 +432,18 @@ public class GroupMigrator implements Runnable{
 					System.out.println("Adding to Batch: "+si.toString());
 	
 	        		try {
+
+						try {
+							if (conn == null) {
+								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
+								CONNECTION_CREATED = System.currentTimeMillis();
+							}
+
+						} catch (SQLException e) {
+							System.out.println("MBA: NULL CONNECTION.");
+							e.printStackTrace();
+						}
+
 	        			if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 						
 	        			proc_stmt.setString(1, si.getFirebase_id_fk());
@@ -462,7 +470,16 @@ public class GroupMigrator implements Runnable{
 		    				System.out.println("Sending Batch of size: " + cur_batch_size);
 	
 		    		    	proc_stmt.executeBatch();
+							proc_stmt.close();
+							proc_stmt = null;
 		    		    	cur_batch_size= 0;
+
+							if (System.currentTimeMillis() - CONNECTION_CREATED > SQL_MAX_CONNECTION_RESET ) {
+								// Need to reset the current connection
+								// to avoid automatic reset
+								conn.close();
+								conn = null;
+							}
 
 				        	Thread.sleep(SQL_BATCH_DELAY);
 		    		    }
@@ -482,6 +499,15 @@ public class GroupMigrator implements Runnable{
 
 	    		    	try {
 							proc_stmt.executeBatch();
+							proc_stmt.close();
+							proc_stmt = null;
+							if (System.currentTimeMillis() - CONNECTION_CREATED > SQL_MAX_CONNECTION_RESET ) {
+								// Need to reset the current connection
+								// to avoid automatic reset
+								conn.close();
+								conn = null;
+							}
+
 						} catch (SQLException e) {e.printStackTrace();}
 	    		    	cur_batch_size= 0;
 			        	Thread.sleep(SQL_BATCH_DELAY);
