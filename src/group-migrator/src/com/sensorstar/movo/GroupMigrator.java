@@ -12,6 +12,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
+import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -277,7 +278,19 @@ public class GroupMigrator implements Runnable{
 		return users;
 		
 	}
+	
+	
+	/* Get User ID from DataSnapshot without traversing fb nodes*/
+	private String getFirebaseIdFromRef(DataSnapshot ds){
+		 
+		int user_start_idx = FB_URL.length() + "users/".length();
+		String url_to_search = ds.getRef().toString();
+		String user_id = url_to_search.substring(user_start_idx, url_to_search.length());
+		user_id = user_id.substring(0, user_id.indexOf('/'));
 		
+		return user_id;
+	}
+	
 	private static class StepInterval implements java.io.Serializable{
 
 		private static final long serialVersionUID = 2954534620324883606L;
@@ -327,12 +340,8 @@ public class GroupMigrator implements Runnable{
 			}
 		}
 
-		/* Get User ID from DataSnapshot without traversing fb nodes*/ 
-		int user_start_idx = FB_URL.length() + "users/".length();
-		String url_to_search = sync.getRef().toString();
-		String user_id = url_to_search.substring(user_start_idx, url_to_search.length());
-		user_id = user_id.substring(0, user_id.indexOf('/'));
-
+		String user_id = getFirebaseIdFromRef(sync);
+		
 		try {
 			System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
 		} catch (java.io.UnsupportedEncodingException ue) {
@@ -414,6 +423,98 @@ public class GroupMigrator implements Runnable{
 //		} catch (SQLException e) {e.printStackTrace();}
 	}
 	
+	private void processMeta(DataSnapshot meta){
+		System.out.println("Processing Meta");
+		System.out.println("Value:\n"+meta.getValue());
+
+		String firebase_id_fk = getFirebaseIdFromRef(meta);
+		
+		String currentBirthdate	= null;
+		String currentEmail		= null;
+		String currentFullName	= null;
+		String currentGender	= null;
+		String currentHeight1	= null;
+		String currentHeight2	= null;
+		String currentUID		= null;
+		String currentUsername	= null;
+		String currentWeight	= null;
+
+		Iterable<DataSnapshot> children = meta.getChildren();
+
+		for(DataSnapshot c: children){
+			if(c.getKey() == "currentBirthdate"){
+				currentBirthdate = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentEmail"){
+				currentEmail = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentFullName"){
+				currentFullName = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentGender"){
+				currentGender = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentHeight1"){
+				currentHeight1 = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentHeight2"){
+				currentHeight2 = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentUID"){
+				currentUID = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentUsername"){
+				currentUsername = (String) c.getValue();
+				
+			}else if(c.getKey() == "currentWeight"){
+				currentWeight = (String) c.getValue();
+			}
+		}
+		
+		Connection conn;
+		try {
+			conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
+			CallableStatement proc_stmt = conn.prepareCall("{ call BB_ADD_UPDATE_USER(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
+
+			proc_stmt.setString(1, firebase_id_fk);
+			
+			if(currentBirthdate != null){ 	proc_stmt.setLong(2, Long.parseLong(currentBirthdate));
+			}else{							proc_stmt.setNull(2,Types.BIGINT);}
+			
+			if(currentEmail != null){ 		proc_stmt.setString(3, currentEmail);
+			}else{							proc_stmt.setNull(3,Types.VARCHAR);}
+			
+			if(currentFullName != null){ 	proc_stmt.setString(4, currentFullName);
+			}else{							proc_stmt.setNull(4,Types.VARCHAR);}
+			
+			if(currentGender != null){ 		proc_stmt.setString(5, currentGender);
+			}else{							proc_stmt.setNull(5,Types.VARCHAR);}
+			
+			if(currentHeight1 != null){ 	proc_stmt.setString(6, currentHeight1);
+			}else{							proc_stmt.setNull(6,Types.TINYINT);}
+			
+			if(currentHeight2 != null){ 	proc_stmt.setString(7, currentHeight2);
+			}else{							proc_stmt.setNull(7,Types.TINYINT);}
+			
+			//currentUID
+			proc_stmt.setNull(8,Types.VARCHAR);
+			
+			if(currentUsername != null){ 	proc_stmt.setString(9, currentUsername);
+			}else{							proc_stmt.setNull(9,Types.VARCHAR);}
+			
+			if(currentWeight != null){ 	proc_stmt.setString(10, currentWeight);
+			}else{							proc_stmt.setNull(10,Types.TINYINT);}
+			
+			proc_stmt.executeQuery();
+			
+			conn.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		
+	}
 	
 	public void run() {
 		
@@ -554,13 +655,35 @@ public class GroupMigrator implements Runnable{
 		for(String u: users){
 			System.out.println("Adding listener to user: " + u);
 			
-			final Firebase userRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-			System.out.println(userRef.toString());
-			userRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
+			// User Metadata Listener
+			final Firebase userMetaRef = new Firebase(FB_URL+"/users/"+u+ "/metadata");
+			userMetaRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
+			    	
 			    	System.out.println("Authenticated.");
 			    	
-			    	Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);
+			    	Query meta_query = userMetaRef;
+
+					meta_query.addValueEventListener(new ValueEventListener() {
+						public void onCancelled(FirebaseError arg0) {}
+						public void onDataChange(DataSnapshot meta) {
+							processMeta(meta);							
+						}
+					});
+			    }
+			    public void onAuthenticationError(FirebaseError firebaseError) { System.err.println("Not Authenticated."); }
+			});
+			
+			// User Sync Listener 
+			final Firebase userSyncRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
+			System.out.println(userSyncRef.toString());
+			
+			userSyncRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
+			    public void onAuthenticated(AuthData authData) { 
+			    	
+			    	System.out.println("Authenticated.");
+			    	
+			    	Query sync_query = userSyncRef.orderByChild("endtime").startAt(checkpoint);
 
 					sync_query.addChildEventListener(new ChildEventListener() {
 						
