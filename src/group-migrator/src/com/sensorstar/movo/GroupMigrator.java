@@ -476,30 +476,30 @@ public class GroupMigrator implements Runnable{
 			conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 			CallableStatement proc_stmt = conn.prepareCall("{ call BB_ADD_UPDATE_USER(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
-			proc_stmt.setString(1, firebase_id_fk);
+			proc_stmt.setString(1, URLDecoder.decode(firebase_id_fk, "UTF-8"));
 			
 			if(currentBirthdate != null){ 	proc_stmt.setLong(2, Long.parseLong(currentBirthdate));
 			}else{							proc_stmt.setNull(2,Types.BIGINT);}
-			
-			if(currentEmail != null){ 		proc_stmt.setString(3, currentEmail);
+
+			if(currentEmail != null){ 		proc_stmt.setString(3, URLDecoder.decode(currentEmail, "UTF-8"));
 			}else{							proc_stmt.setNull(3,Types.VARCHAR);}
 			
-			if(currentFullName != null){ 	proc_stmt.setString(4, currentFullName);
+			if(currentFullName != null){ 	proc_stmt.setString(4, URLDecoder.decode(currentFullName, "UTF-8"));
 			}else{							proc_stmt.setNull(4,Types.VARCHAR);}
 			
-			if(currentGender != null){ 		proc_stmt.setString(5, currentGender);
+			if(currentGender != null){ 		proc_stmt.setString(5, URLDecoder.decode(currentGender, "UTF-8"));
 			}else{							proc_stmt.setNull(5,Types.VARCHAR);}
 			
-			if(currentHeight1 != null){ 	proc_stmt.setString(6, currentHeight1);
+			if(currentHeight1 != null){ 	proc_stmt.setString(6, URLDecoder.decode(currentHeight1, "UTF-8"));
 			}else{							proc_stmt.setNull(6,Types.TINYINT);}
 			
-			if(currentHeight2 != null){ 	proc_stmt.setString(7, currentHeight2);
+			if(currentHeight2 != null){ 	proc_stmt.setString(7, URLDecoder.decode(currentHeight2, "UTF-8"));
 			}else{							proc_stmt.setNull(7,Types.TINYINT);}
 			
 			//currentUID
 			proc_stmt.setNull(8,Types.VARCHAR);
 			
-			if(currentUsername != null){ 	proc_stmt.setString(9, currentUsername);
+			if(currentUsername != null){ 	proc_stmt.setString(9, URLDecoder.decode(currentUsername, "UTF-8"));
 			}else{							proc_stmt.setNull(9,Types.VARCHAR);}
 			
 			if(currentWeight != null){ 	proc_stmt.setString(10, currentWeight);
@@ -510,6 +510,8 @@ public class GroupMigrator implements Runnable{
 			conn.close();
 
 		} catch (SQLException e) {
+			e.printStackTrace();
+		} catch (java.io.UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
 
