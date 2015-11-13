@@ -65,6 +65,7 @@ public class GroupMigrator implements Runnable{
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
 	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
+	private File db_log = new File("/home/ahern/realtime/dbheartbeat.txt");
 
 	
 	
@@ -103,6 +104,7 @@ public class GroupMigrator implements Runnable{
 	private String checkpoint;
 	private String most_recent_sync;
 
+	private Object dblock = new Object();
 	private ConcurrentLinkedQueue<StepInterval> sql_message_queue;
 	
 	private Set<String> users;
@@ -142,7 +144,27 @@ public class GroupMigrator implements Runnable{
 				e.printStackTrace();
 			}
 	}
-	
+
+	private void dbConnectionHeartBeat(boolean status){
+
+		try{
+			if(!db_log.exists()){
+				System.out.println("Created new heartbeat file.");
+				db_log.createNewFile();
+			}
+
+			FileWriter fileWriter = new FileWriter(db_log, false);
+
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+			bufferedWriter.close();
+
+		} catch(IOException e) {
+			System.out.println("COULD NOT LOG HEARTBEAT!!");
+		}
+	}
+
+
 	GroupMigrator(){
 
 		InputStream file;
@@ -276,7 +298,6 @@ public class GroupMigrator implements Runnable{
 		} catch (JSONException e) { e.printStackTrace(); }
 		
 		return users;
-		
 	}
 	
 	
@@ -568,6 +589,7 @@ public class GroupMigrator implements Runnable{
 							if (conn == null || conn.isClosed()) {
 								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 								CONNECTION_CREATED = System.currentTimeMillis();
+								dbConnectionHeartBeat(true);
 							}
 							if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
@@ -657,6 +679,7 @@ public class GroupMigrator implements Runnable{
 					}
 					conn = null;
 					Thread.sleep(10);
+					dbConnectionHeartBeat(true);
 				}
 
 	        }
@@ -673,6 +696,7 @@ public class GroupMigrator implements Runnable{
 			conn.close();
 		} catch (SQLException e) {e.printStackTrace();}
         saveQueue();
+		dbConnectionHeartBeat(false);
     }
 
 	
