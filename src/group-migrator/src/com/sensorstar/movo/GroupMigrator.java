@@ -413,7 +413,7 @@ public class GroupMigrator implements Runnable{
 					}
 				}
 			}
-			
+			System.out.println("Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
 		}
 		
 //		System.out.println("This Sync has: " + steps_synced.size() + " step intervals\n");
