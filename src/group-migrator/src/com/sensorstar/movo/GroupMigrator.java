@@ -565,7 +565,7 @@ public class GroupMigrator implements Runnable{
 	        		try {
 
 						try {
-							if (conn == null) {
+							if (conn == null || conn.isClosed()) {
 								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 								CONNECTION_CREATED = System.currentTimeMillis();
 							}
@@ -656,6 +656,7 @@ public class GroupMigrator implements Runnable{
 						conn.close();
 					}
 					conn = null;
+					Thread.sleep(10);
 				}
 
 	        }
