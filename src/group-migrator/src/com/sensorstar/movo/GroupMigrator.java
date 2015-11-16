@@ -65,17 +65,11 @@ public class GroupMigrator implements Runnable{
 
 	// get the global logger to configure it
 	final static private Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-
 	// suppress the logging output to the console
 	final static private Logger rootLogger = Logger.getLogger("");
 	final static private Handler[] handlers = rootLogger.getHandlers();
-	static {
-
-	}
 
 
-	// private static Logger logger =
-	//		Logger.getLogger(GroupMigrator.class.getName());
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
@@ -125,7 +119,6 @@ public class GroupMigrator implements Runnable{
 	private String checkpoint;
 	private String most_recent_sync;
 
-	private Object dblock = new Object();
 	private ConcurrentLinkedQueue<StepInterval> sql_message_queue;
 	
 	private Set<String> users;
@@ -138,7 +131,7 @@ public class GroupMigrator implements Runnable{
 
 		logger.setLevel(Level.INFO);
 		try {
-			fileTxt = new FileHandler("Logging.txt");
+			fileTxt = new FileHandler("groupmonitor.log");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -160,11 +153,13 @@ public class GroupMigrator implements Runnable{
 		    
 		    sql_message_queue = (ConcurrentLinkedQueue<StepInterval>)input.readObject();
 		    input.close();
-		    
-		    System.out.println("Loaded queue of size:" + sql_message_queue.size());
+
+			logger.log(Level.INFO, "Loaded queue of size:" + sql_message_queue.size());
+		    // System.out.println("Loaded queue of size:" + sql_message_queue.size());
 		    
 		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
-			System.out.println("No sql found - creating new one.");
+			logger.log( Level.INFO, "No sql found - creating new one.", e );
+			logger.log( Level.INFO, e.toString(), e );
 			sql_message_queue = new ConcurrentLinkedQueue<StepInterval>();			
 		}
 	      
@@ -182,7 +177,7 @@ public class GroupMigrator implements Runnable{
 				}
 				output.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.log( Level.SEVERE, e.toString(), e );
 			}
 	}
 
@@ -190,7 +185,8 @@ public class GroupMigrator implements Runnable{
 
 		try{
 			if(!db_log.exists()){
-				System.out.println("Created new heartbeat file.");
+				// System.out.println("Created new heartbeat file.");
+				logger.log( Level.INFO, "Created new heartbeat file." );
 				db_log.createNewFile();
 			}
 
@@ -201,7 +197,8 @@ public class GroupMigrator implements Runnable{
 			bufferedWriter.close();
 
 		} catch(IOException e) {
-			System.out.println("COULD NOT LOG HEARTBEAT!!");
+			logger.log( Level.SEVERE, "COULD NOT LOG DB Connection HEARTBEAT!!" );
+			logger.log( Level.SEVERE, e.toString(), e );
 		}
 	}
 
@@ -209,7 +206,8 @@ public class GroupMigrator implements Runnable{
 
 		try{
 			if(!main_log.exists()){
-				System.out.println("Created new main thread file.");
+				logger.log( Level.INFO, "Created new main thread file." );
+
 				main_log.createNewFile();
 			}
 
@@ -220,7 +218,8 @@ public class GroupMigrator implements Runnable{
 			bufferedWriter.close();
 
 		} catch(IOException e) {
-			System.out.println("COULD NOT LOG HEARTBEAT!!");
+			logger.log(Level.SEVERE, "COULD NOT LOG Main Thread HEARTBEAT!!" );
+			logger.log(Level.SEVERE, e.toString(), e);
 		}
 	}
 
@@ -237,11 +236,14 @@ public class GroupMigrator implements Runnable{
 		    checkpoint = (String)input.readObject();
 		    input.close();
 		    
-		    System.out.println("Loading checkpoint time:" + checkpoint);
-		    
+		    // System.out.println("Loading checkpoint time:" + checkpoint);
+			logger.log( Level.INFO, "Loading checkpoint time: " + checkpoint);
+
+
 		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
 
-			System.out.println("No checkpoint found - starting from beginning.");
+			// System.out.println("No checkpoint found - starting from beginning.");
+			logger.log( Level.INFO, "No checkpoint found - starting from beginning.");
 			checkpoint = "0000-00-00T00:00:00Z";
 			
 		}
@@ -255,7 +257,8 @@ public class GroupMigrator implements Runnable{
 		checkpoint = checkpoint_option_val;
 		users = new HashSet<String>(); 
 		most_recent_sync = checkpoint;
-		System.out.println("Loading checkpoint time provided by user:" + checkpoint);
+		// System.out.println("Loading checkpoint time provided by user:" + checkpoint);
+		logger.log( Level.INFO, "Loading checkpoint time provided by user:" + checkpoint);
 		loadOrCreateQueue();
 	}
 
@@ -266,8 +269,12 @@ public class GroupMigrator implements Runnable{
 		    OutputStream buffer = new BufferedOutputStream(file);
 		    ObjectOutput output = new ObjectOutputStream(buffer);
 	    ){
-			System.out.println("Saving checkpoint time: " + checkpoint );
-			System.out.println("Next checkpoint time: " + most_recent_sync );
+			// System.out.println("Saving checkpoint time: " + checkpoint );
+			// System.out.println("Next checkpoint time: " + most_recent_sync );
+
+			logger.log( Level.INFO, "Saving checkpoint time: " + checkpoint );
+			logger.log( Level.INFO, "Next checkpoint time: " + most_recent_sync);
+
 			synchronized(checkpoint){
 				output.writeObject(checkpoint);
 				
@@ -286,8 +293,9 @@ public class GroupMigrator implements Runnable{
 		new_users.removeAll(users);
 		users = updated_users;
 		
-		System.out.println("New Users: " + new_users.size() );
-		
+		// System.out.println("New Users: " + new_users.size() );
+		logger.log( Level.INFO, "New Users: " + new_users.size());
+
 		/* add listeners for new users */ 
 		addListenersToUsers(new_users);
 		
@@ -329,15 +337,18 @@ public class GroupMigrator implements Runnable{
                    .get(ClientResponse.class);
 
 		if(response == null) {
-			System.out.println("response from Firebase is null .... \n");
+			// System.out.println("response from Firebase is null .... \n");
+			logger.log( Level.INFO, "response from Firebase is null .... \n");
 		} else {
-			System.out.println("response from Firebase is NOT null .... \n");
-			MultivaluedMap<String, String> map = response.getHeaders();
-			checkParameters(map);
+			// System.out.println("response from Firebase is NOT null .... \n");
+			logger.log( Level.INFO, "response from Firebase is NOT null .... \n");
+			// MultivaluedMap<String, String> map = response.getHeaders();
+			// checkParameters(map);
 
 			int st = response.getStatus();
 			int len = response.getLength();
-			System.out.println("Status and length: " + st + " :: " + len);
+			// System.out.println("Status and length: " + st + " :: " + len);
+			logger.log( Level.INFO, "Status and length: " + st + " :: " + len);
 		}
 
 		if (response.getStatus() != 200) {
@@ -346,7 +357,9 @@ public class GroupMigrator implements Runnable{
 
 		String output = response.getEntity(String.class);
 
-		System.out.println("Output from Server .... \n");
+		// System.out.println("Output from Server .... \n");
+		logger.log( Level.INFO, "Output from Server .... \n");
+
 		// System.out.println(output);
 		
 		try {
@@ -414,7 +427,9 @@ public class GroupMigrator implements Runnable{
 		String sync_start_time = (String)sync.child("starttime").getValue();
 
 		String sync_end_time = (String)sync.child("endtime").getValue();
-		System.out.println("Endtime: " + sync_end_time);
+		// System.out.println("Endtime: " + sync_end_time);
+		logger.log( Level.INFO, "Endtime: " + sync_end_time);
+
 
 		synchronized(most_recent_sync){
 			if(most_recent_sync.compareTo(sync_end_time) < 0){
@@ -425,7 +440,8 @@ public class GroupMigrator implements Runnable{
 		String user_id = getFirebaseIdFromRef(sync);
 		
 		try {
-			System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+			// System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+			logger.log( Level.INFO, "Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
 		} catch (java.io.UnsupportedEncodingException ue) {
 			System.out.println("Exception decoding username: " + user_id);
 			ue.printStackTrace();
@@ -433,8 +449,11 @@ public class GroupMigrator implements Runnable{
 
 		long childCount = sync.getChildrenCount();
 		boolean hasSteps = sync.hasChild("steps");
-		System.out.println("Number of Children: " + childCount);
-		System.out.println("Has 'steps' as child: " + hasSteps);
+		// System.out.println("Number of Children: " + childCount);
+		// System.out.println("Has 'steps' as child: " + hasSteps);
+
+		logger.log( Level.INFO, "Number of Children: " + childCount);
+		logger.log( Level.INFO, "Has 'steps' as child: " + hasSteps);
 
 		Iterable<DataSnapshot> children = sync.getChildren();
 		for(DataSnapshot c: children) {
@@ -490,12 +509,15 @@ public class GroupMigrator implements Runnable{
 							} catch (ParseException e) { e.printStackTrace(); }
 							//steps_synced.add(si);
 							sql_message_queue.add(si);
-							System.out.println("Added to queue: " + si.toString());
+							// System.out.println("Added to queue: " + si.toString());
+							logger.log( Level.INFO, "Added to queue: " + si.toString());
+
 						}
 					}
 				}
 			}
-			System.out.println("Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
+			// System.out.println("Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
+			logger.log( Level.INFO, "Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
 		}
 		
 //		System.out.println("This Sync has: " + steps_synced.size() + " step intervals\n");
@@ -506,8 +528,10 @@ public class GroupMigrator implements Runnable{
 	}
 	
 	private void processMeta(DataSnapshot meta){
-		System.out.println("Processing Meta");
-		System.out.println("Value:\n"+meta.getValue());
+		// System.out.println("Processing Meta");
+		// System.out.println("Value:\n"+meta.getValue());
+		logger.log( Level.INFO, "Processing Meta");
+		logger.log( Level.INFO, "Value:\n"+meta.getValue());
 
 		String firebase_id_fk = getFirebaseIdFromRef(meta);
 		
@@ -634,7 +658,8 @@ public class GroupMigrator implements Runnable{
 		int cur_batch_size = 0;
 		long latest_added_batch = 0;
 
-		System.out.println("Starting queue listener loop");
+		// System.out.println("Starting queue listener loop");
+		logger.log( Level.INFO, "Starting queue listener loop");
 		CallableStatement proc_stmt = null;
 		try{
 	        while(!Thread.currentThread().isInterrupted()){
@@ -642,7 +667,8 @@ public class GroupMigrator implements Runnable{
 	        	StepInterval si=sql_message_queue.peek();
 
 	        	if(si != null){ // queue isn't empty 
-					System.out.println("Adding to Batch: "+si.toString());
+					// System.out.println("Adding to Batch: "+si.toString());
+					logger.log( Level.INFO, "Adding to Batch: "+si.toString());
 	
 	        		try {
 
@@ -655,7 +681,8 @@ public class GroupMigrator implements Runnable{
 							if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
 						} catch (SQLException e) {
-							System.out.println("MBA: NULL CONNECTION.");
+							// System.out.println("MBA: NULL CONNECTION.");
+							logger.log( Level.INFO, "MBA: NULL CONNECTION.");
 							e.printStackTrace();
 						}
 
@@ -681,7 +708,8 @@ public class GroupMigrator implements Runnable{
 		    		    
 		    		    
 		    		    if(cur_batch_size == SQL_BATCH_SIZE){
-		    				System.out.println("Sending Batch of size: " + cur_batch_size);
+		    				// System.out.println("Sending Batch of size: " + cur_batch_size);
+							logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 	
 		    		    	proc_stmt.executeBatch();
 							proc_stmt.close();
@@ -702,14 +730,16 @@ public class GroupMigrator implements Runnable{
 		    		    latest_added_batch = System.currentTimeMillis();
 		    		    
 					} catch (SQLException e) {
-						e.printStackTrace();
+						// e.printStackTrace();
+						logger.log( Level.SEVERE, e.getMessage(), e);
 					}
 	        	
 	        		
 	        	} else { // idle while there are no msgs
 
 		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT ){
-	    				System.out.println("Sending Batch of size: " + cur_batch_size);
+	    				// System.out.println("Sending Batch of size: " + cur_batch_size);
+						logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 
 	    		    	try {
 							proc_stmt.executeBatch();
@@ -745,17 +775,20 @@ public class GroupMigrator implements Runnable{
 
 	        }
 		} catch (InterruptedException e) {
-	    	System.out.println("Stopping message thread...");
+	    	// System.out.println("Stopping message thread...");
+			logger.log( Level.INFO, "Stopping message thread...");
 			Thread.currentThread().interrupt();
 		}  catch (SQLException e) {
-			System.out.println("Stopping message thread...SQL EXCEPTION");
+			// System.out.println("Stopping message thread...SQL EXCEPTION");
+			logger.log( Level.INFO, "Stopping message thread...SQL EXCEPTION");
+			logger.log( Level.SEVERE, e.getMessage(), e);
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 		
         try {
 			conn.close();
-		} catch (SQLException e) {e.printStackTrace();}
+		} catch (SQLException e) {e.printStackTrace(); logger.log( Level.SEVERE, e.getMessage(), e);}
         saveQueue();
 		GroupMigrator.dbConnectionHeartBeat(false);
     }
@@ -769,14 +802,16 @@ public class GroupMigrator implements Runnable{
 	private void addListenersToUsers(Set<String> users){
 		
 		for(String u: users){
-			System.out.println("Adding listener to user: " + u);
+			// System.out.println("Adding listener to user: " + u);
+			logger.log( Level.INFO, "Adding listener to user: " + u);
 			
 			// User Metadata Listener
 			final Firebase userMetaRef = new Firebase(FB_URL+"/users/"+u+ "/metadata");
 			userMetaRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
 			    	
-			    	System.out.println("Authenticated.");
+			    	// System.out.println("Authenticated.");
+					logger.log( Level.INFO, "Authenticated.");
 			    	
 			    	Query meta_query = userMetaRef;
 
@@ -792,12 +827,14 @@ public class GroupMigrator implements Runnable{
 			
 			// User Sync Listener 
 			final Firebase userSyncRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-			System.out.println(userSyncRef.toString());
-			
+			// System.out.println(userSyncRef.toString());
+			logger.log( Level.INFO, userSyncRef.toString());
+
 			userSyncRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
 			    	
-			    	System.out.println("Authenticated.");
+			    	// System.out.println("Authenticated.");
+					logger.log( Level.INFO, "Authenticated.");
 			    	
 			    	Query sync_query = userSyncRef.orderByChild("endtime").startAt(checkpoint);
 
@@ -864,10 +901,12 @@ public class GroupMigrator implements Runnable{
 	    if(cmd.hasOption("checkpointInterval")) {
 	    	CHECKPOINT_INTERVAL = Long.parseLong(cmd.getOptionValue("checkpointInterval"));
 	    	System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+			logger.log( Level.INFO, "User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
 	    }
 	    
 	    if (cmd.hasOption("useSSL") || USING_GAE_SQL){
-			System.out.println("User defined useSSL: "+ true);
+			// System.out.println("User defined useSSL: "+ true);
+			logger.log( Level.INFO, "User defined useSSL: "+ true);
 		}
 		
 		if (cmd.hasOption("keyStore")){
@@ -939,6 +978,7 @@ public class GroupMigrator implements Runnable{
 			System.out.println("User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
 		}
 
+		GroupMigrator.loggerSetup();
 		GroupMigrator gm = null;
 		if (cmd.hasOption("checkpoint")){
 			gm = new GroupMigrator(cmd.getOptionValue("checkpoint")); 
@@ -994,7 +1034,8 @@ public class GroupMigrator implements Runnable{
 
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("Exception in main thread: " + e.getMessage());
+				// System.out.println("Exception in main thread: " + e.getMessage());
+				logger.log( Level.SEVERE, "Exception in main thread: " + e.getMessage(), e);
 			}
 			
 		}
