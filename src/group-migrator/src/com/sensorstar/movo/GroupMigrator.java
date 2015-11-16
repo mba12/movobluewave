@@ -42,12 +42,14 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-//import java.util.logging.ConsoleHandler;
-//import java.util.logging.FileHandler;
-//import java.util.logging.Handler;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import java.util.logging.SimpleFormatter;
+import java.util.logging.Formatter;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -55,7 +57,25 @@ import javax.ws.rs.core.MultivaluedMap;
 
 public class GroupMigrator implements Runnable{
 
-//	final static Logger logger = Logger.getLogger("GM");
+	static private FileHandler fileTxt;
+	static private SimpleFormatter formatterTxt;
+
+	static private FileHandler fileHTML;
+	static private Formatter formatterHTML;
+
+	// get the global logger to configure it
+	final static private Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+
+	// suppress the logging output to the console
+	final static private Logger rootLogger = Logger.getLogger("");
+	final static private Handler[] handlers = rootLogger.getHandlers();
+	static {
+
+	}
+
+
+	// private static Logger logger =
+	//		Logger.getLogger(GroupMigrator.class.getName());
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
@@ -65,7 +85,8 @@ public class GroupMigrator implements Runnable{
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
 	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
-	private File db_log = new File("/home/ahern/realtime/dbheartbeat.txt");
+	private static File db_log = new File("/home/ahern/realtime/dbheartbeat.txt");
+	private static File main_log = new File("/home/ahern/realtime/mainheartbeat.txt");
 
 	
 	
@@ -108,6 +129,26 @@ public class GroupMigrator implements Runnable{
 	private ConcurrentLinkedQueue<StepInterval> sql_message_queue;
 	
 	private Set<String> users;
+
+	static public void loggerSetup() {
+
+		if (handlers[0] instanceof ConsoleHandler) {
+			rootLogger.removeHandler(handlers[0]);
+		}
+
+		logger.setLevel(Level.INFO);
+		try {
+			fileTxt = new FileHandler("Logging.txt");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// create a TXT formatter
+		formatterTxt = new SimpleFormatter();
+		fileTxt.setFormatter(formatterTxt);
+		logger.addHandler(fileTxt);
+
+	}
 	
 	private void loadOrCreateQueue(){
 				
@@ -145,7 +186,7 @@ public class GroupMigrator implements Runnable{
 			}
 	}
 
-	private void dbConnectionHeartBeat(boolean status){
+	public static void dbConnectionHeartBeat(boolean status){
 
 		try{
 			if(!db_log.exists()){
@@ -163,6 +204,26 @@ public class GroupMigrator implements Runnable{
 			System.out.println("COULD NOT LOG HEARTBEAT!!");
 		}
 	}
+
+	public static void mainThreadHeartBeat(boolean status){
+
+		try{
+			if(!main_log.exists()){
+				System.out.println("Created new main thread file.");
+				main_log.createNewFile();
+			}
+
+			FileWriter fileWriter = new FileWriter(main_log, false);
+
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+			bufferedWriter.close();
+
+		} catch(IOException e) {
+			System.out.println("COULD NOT LOG HEARTBEAT!!");
+		}
+	}
+
 
 
 	GroupMigrator(){
@@ -589,7 +650,7 @@ public class GroupMigrator implements Runnable{
 							if (conn == null || conn.isClosed()) {
 								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 								CONNECTION_CREATED = System.currentTimeMillis();
-								dbConnectionHeartBeat(true);
+								GroupMigrator.dbConnectionHeartBeat(true);
 							}
 							if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
@@ -679,7 +740,7 @@ public class GroupMigrator implements Runnable{
 					}
 					conn = null;
 					Thread.sleep(10);
-					dbConnectionHeartBeat(true);
+					GroupMigrator.dbConnectionHeartBeat(true);
 				}
 
 	        }
@@ -696,7 +757,7 @@ public class GroupMigrator implements Runnable{
 			conn.close();
 		} catch (SQLException e) {e.printStackTrace();}
         saveQueue();
-		dbConnectionHeartBeat(false);
+		GroupMigrator.dbConnectionHeartBeat(false);
     }
 
 	
@@ -901,27 +962,43 @@ public class GroupMigrator implements Runnable{
 	            } catch (InterruptedException e) {
 	                e.printStackTrace();
 	            }
+				GroupMigrator.mainThreadHeartBeat(false);
 	        }
 	    });
-		
-		
+
+		GroupMigrator.mainThreadHeartBeat(true);
+		long mainThreadTime = System.currentTimeMillis();
 		while(true){
-			
-			gm.update();
-				 
+
 			try {
-				Thread.sleep(CHECKPOINT_INTERVAL);
-				boolean alive = msg_thread.isAlive();
-				if(!alive) {
-					msg_thread.start();
+
+				gm.update();
+
+				// Heartbeat check every ten minutes
+				if (System.currentTimeMillis() - mainThreadTime > 600000) {
+					GroupMigrator.mainThreadHeartBeat(true);
+					mainThreadTime = System.currentTimeMillis();
 				}
 
-			} catch (InterruptedException e) {
+				try {
+					Thread.sleep(CHECKPOINT_INTERVAL);
+					boolean alive = msg_thread.isAlive();
+					if(!alive) {
+						msg_thread.start();
+					}
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					break;
+				}
+
+			} catch (Exception e) {
 				e.printStackTrace();
-				break;
+				System.out.println("Exception in main thread: " + e.getMessage());
 			}
+			
 		}
-		
+		GroupMigrator.mainThreadHeartBeat(false);
 		
 	}
 }

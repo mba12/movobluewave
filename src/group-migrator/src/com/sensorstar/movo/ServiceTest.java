@@ -1,5 +1,10 @@
 package com.sensorstar.movo;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 /**
  * Created by Michael Ahern on 11/13/15.
  */
@@ -11,10 +16,52 @@ public class ServiceTest implements Runnable{
     /* Time between saving checkpoint time and checking for new users */
     private static long CHECKPOINT_INTERVAL = 36000;
     private static int SQL_BATCH_DELAY = 10000;
+    private static File db_log = new File("/home/ahern/realtime/test_dbheartbeat.txt");
+    private static File main_log = new File("/home/ahern/realtime/test_mainheartbeat.txt");
+
 
     ServiceTest(){
         System.out.println("Service Coming Alive: " + System.currentTimeMillis());
     }
+
+    public static void dbConnectionHeartBeat(boolean status){
+
+        try{
+            if(!db_log.exists()){
+                System.out.println("Created new heartbeat file.");
+                db_log.createNewFile();
+            }
+
+            FileWriter fileWriter = new FileWriter(db_log, false);
+
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+            bufferedWriter.close();
+
+        } catch(IOException e) {
+            System.out.println("COULD NOT LOG HEARTBEAT!!");
+        }
+    }
+
+    public static void mainThreadHeartBeat(boolean status){
+
+        try{
+            if(!main_log.exists()){
+                System.out.println("Created new main thread file.");
+                main_log.createNewFile();
+            }
+
+            FileWriter fileWriter = new FileWriter(main_log, false);
+
+            BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+            bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+            bufferedWriter.close();
+
+        } catch(IOException e) {
+            System.out.println("COULD NOT LOG HEARTBEAT!!");
+        }
+    }
+
 
     public void update(){
         System.out.println("Running an update " + System.currentTimeMillis());
@@ -57,9 +104,18 @@ public class ServiceTest implements Runnable{
             }
         });
 
+        ServiceTest.mainThreadHeartBeat(true);
+        long mainThreadTime = System.currentTimeMillis();
+
         while(true){
 
             gm.update();
+
+            // Heartbeat check every minute
+            if (System.currentTimeMillis() - mainThreadTime > 60000) {
+                GroupMigrator.mainThreadHeartBeat(true);
+                mainThreadTime = System.currentTimeMillis();
+            }
 
             try {
                 Thread.sleep(CHECKPOINT_INTERVAL);
@@ -73,6 +129,7 @@ public class ServiceTest implements Runnable{
                 break;
             }
         }
+        ServiceTest.mainThreadHeartBeat(false);
     }
 }
 
