@@ -32,6 +32,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.http.HttpException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -80,6 +81,9 @@ public class GroupMigrator implements Runnable{
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
 	private static long CONNECTION_CREATED = 0;
+	
+	private static int GETUSER_MAX_ATTEMPS = 5;
+	private static long GETUSER_TIMEOUT = 30*1000;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
@@ -259,37 +263,53 @@ public class GroupMigrator implements Runnable{
 		loadOrCreateQueue();
 	}
 
-	public void update(){
-		/* save checkpoint time */
-		try(
-			OutputStream file = new FileOutputStream("checkpoint.ser");
-		    OutputStream buffer = new BufferedOutputStream(file);
-		    ObjectOutput output = new ObjectOutputStream(buffer);
-	    ){
-			System.out.println("Saving checkpoint time: " + checkpoint );
-			System.out.println("Next checkpoint time: " + most_recent_sync );
-			synchronized(checkpoint){
-				output.writeObject(checkpoint);
-				
-				synchronized(most_recent_sync){
-					checkpoint = most_recent_sync;
-				}
-			}
-			output.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+	public void update() throws InterruptedException{
 
-		/* update our user list and find new users */
-		Set<String> updated_users = getUsers();
-		Set<String> new_users = new HashSet<String>(updated_users);
-		new_users.removeAll(users);
-		users = updated_users;
+		int get_user_attempt = 0;
+		while(get_user_attempt<GETUSER_MAX_ATTEMPS){
+			try{
+				/* update our user list and find new users */
+				Set<String> updated_users = getUsers();
+				Set<String> new_users = new HashSet<String>(updated_users);
+				new_users.removeAll(users);
+				users = updated_users;
+				
+				System.out.println("New Users: " + new_users.size() );
+				
+				/* add listeners for new users */ 
+				addListenersToUsers(new_users);
+				
+				
+				/* save checkpoint time */
+				try(
+					OutputStream file = new FileOutputStream("checkpoint.ser");
+				    OutputStream buffer = new BufferedOutputStream(file);
+				    ObjectOutput output = new ObjectOutputStream(buffer);
+			    ){
+					System.out.println("Saving checkpoint time: " + checkpoint );
+					System.out.println("Next checkpoint time: " + most_recent_sync );
+					synchronized(checkpoint){
+						output.writeObject(checkpoint);
+						
+						synchronized(most_recent_sync){
+							checkpoint = most_recent_sync;
+						}
+					}
+					output.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				
+				break;
+			}catch(HttpException e){
+				System.out.println("Trying again");
+				get_user_attempt++;
+				Thread.sleep(GETUSER_TIMEOUT);
+			}
+		}
 		
-		System.out.println("New Users: " + new_users.size() );
 		
-		/* add listeners for new users */ 
-		addListenersToUsers(new_users);
+		
 		
 	}
 
@@ -316,8 +336,9 @@ public class GroupMigrator implements Runnable{
 	 * This is a workaround since the current firebase setup is normalized on user_id and only
 	 * the REST implementation supports shallow queries
 	 * @return a set of users
+	 * @throws HttpException 
 	 */
-	private Set<String> getUsers(){
+	private Set<String> getUsers() throws HttpException{
 		Set<String> users = new HashSet<String>();
 		
 		Client client = Client.create();
@@ -341,7 +362,7 @@ public class GroupMigrator implements Runnable{
 		}
 
 		if (response.getStatus() != 200) {
-		   throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
+		   throw new HttpException("Failed : HTTP error code : " + response.getStatus());
 		}
 
 		String output = response.getEntity(String.class);
@@ -831,6 +852,10 @@ public class GroupMigrator implements Runnable{
 		options.addOption("checkpoint", 		true, 	"sets a checkpoint time to start looking for syncs (YYYY-MM-DDThh:dd:ssZ format). By default it looks for a checkpoint.ser file and if none is found it uses YYYY0000-00-00T00:00:00Z.");
 		options.addOption("checkpointInterval", true, 	"Sets how often to checkpoint & look for new users (default is once per hour).");
 
+		options.addOption("getUserMaxAttemps", 	true, 	"Sets max number of times to attempt to get users from firebase (default = 5). ");
+		options.addOption("getUserTimeout", 	true, 	"Sets timeout between attemps to connect to firebase RestApi (default = 30seconds).");
+
+		
 		options.addOption("help",				false, 	"print this message" );
 		options.addOption("useSSL",				false, 	"use SSL for MySQL (needed for GAE)" );
 		options.addOption("keyStore", 			true, 	"sets where to look for our keyStore to access Firebase and GAE SQL instance. Default location is <current_location>/keystore.");
@@ -864,6 +889,16 @@ public class GroupMigrator implements Runnable{
 	    if(cmd.hasOption("checkpointInterval")) {
 	    	CHECKPOINT_INTERVAL = Long.parseLong(cmd.getOptionValue("checkpointInterval"));
 	    	System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+	    }
+	    
+	    if(cmd.hasOption("getUserMaxAttemps")) {
+	    	GETUSER_MAX_ATTEMPS = Integer.parseInt(cmd.getOptionValue("getUserMaxAttemps"));
+	    	System.out.println("User defined getUserMaxAttemps: "+ CHECKPOINT_INTERVAL);
+	    }
+	    
+	    if(cmd.hasOption("getUserTimeout")) {
+	    	GETUSER_TIMEOUT = Long.parseLong(cmd.getOptionValue("getUserTimeout"));
+	    	System.out.println("User defined getUserTimeout: "+ CHECKPOINT_INTERVAL);
 	    }
 	    
 	    if (cmd.hasOption("useSSL") || USING_GAE_SQL){
