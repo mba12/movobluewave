@@ -77,8 +77,10 @@ public class GroupMigrator implements Runnable{
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
 	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
-	private static File db_log = new File("$HOME/realtime/dbheartbeat.txt");
-	private static File main_log = new File("$HOME/realtime/mainheartbeat.txt");
+
+	private static String home = System.getProperty("user.home");
+	private static File db_log = new File(home + "/realtime/dbheartbeat.txt");
+	private static File main_log = new File(home + "/realtime/mainheartbeat.txt");
 
 	/* Sensorstar Local Debug Defaults */
 //	private static final String FB_URL = "https://ss-movo-wave-v2.firebaseio.com";
