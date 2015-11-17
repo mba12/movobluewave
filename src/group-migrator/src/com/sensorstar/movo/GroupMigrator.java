@@ -60,17 +60,11 @@ public class GroupMigrator implements Runnable{
 
 	static private FileHandler fileTxt;
 	static private SimpleFormatter formatterTxt;
-
-	static private FileHandler fileHTML;
-	static private Formatter formatterHTML;
-
 	// get the global logger to configure it
 	final static private Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	// suppress the logging output to the console
 	final static private Logger rootLogger = Logger.getLogger("");
 	final static private Handler[] handlers = rootLogger.getHandlers();
-
-
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
@@ -83,41 +77,37 @@ public class GroupMigrator implements Runnable{
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
 	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
-	private static File db_log = new File("/home/ahern/realtime/dbheartbeat.txt");
-	private static File main_log = new File("/home/ahern/realtime/mainheartbeat.txt");
+	private static File db_log = new File("$HOME/realtime/dbheartbeat.txt");
+	private static File main_log = new File("$HOME/realtime/mainheartbeat.txt");
 
-	
-	
 	/* Sensorstar Local Debug Defaults */
 //	private static final String FB_URL = "https://ss-movo-wave-v2.firebaseio.com";
 //	private static final String FB_SECRET = "jBMdrOwNCfJ37NzcXt6IM4d7AddeojCJg2Z9KnuF";
 //	private static final String DB_URL = "jdbc:mysql://localhost:3306/movogroups?user=root";
 //	private static final boolean USING_GAE_SQL = false;
-	
+//	private static String keyStorePassword = "keystore"; // keystore
+//	private static String trustStorePassword = "truststore";  // truststore
+
 	/* Debug Defaults */
 	// private static String FB_URL = "https://movowave-debug.firebaseio.com/";
 	// private static String FB_SECRET = "3HFJlhjThUhC9QrP4zAq4PNcaXH8IWYqM8cCWmnR";
 
 	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true";
 	private static final boolean USING_GAE_SQL = true;
-	
+
 	/* Production Defaults */
     private static String FB_URL = "https://movowave.firebaseio.com/";
     private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
-	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
-
-	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";
-
-	// private static String DB_URL = "jdbc:mysql://173.194.241.127:3306/movogroups?useSSL=true&requireSSL=true";
-
-	// test
+	private static String DB_URL = "jdbc:mysql://173.194.241.127:3306/movogroups?useSSL=true&requireSSL=true";
 	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
 	static String trustStorePassword = "r87p-Y?72*uXqW$aSZGU";  // truststore
 	private static String username = "movogroups";
 	private static String password = "H8$E=?3*ADXFt4Ld7-jw";
 
-	// private static String keyStorePassword = "keystore"; // keystore
-	// private static String trustStorePassword = "truststore";  // truststore
+	// Google Test Database
+	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // Google test
+	// private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";
+
 
 	//	private Map<String,String> latest_sync_for_users;
 	private String checkpoint;
@@ -227,8 +217,6 @@ public class GroupMigrator implements Runnable{
 		}
 	}
 
-
-
 	GroupMigrator(){
 
 		InputStream file;
@@ -281,8 +269,7 @@ public class GroupMigrator implements Runnable{
 				
 				/* add listeners for new users */ 
 				addListenersToUsers(new_users);
-				
-				
+
 				/* save checkpoint time */
 				try(
 					OutputStream file = new FileOutputStream("checkpoint.ser");
@@ -307,6 +294,10 @@ public class GroupMigrator implements Runnable{
 				
 				break;
 			}catch(HttpException e){
+				logger.log( Level.INFO,"Trying again");
+				get_user_attempt++;
+				Thread.sleep(GETUSER_TIMEOUT);
+			}catch(java.net.SocketException e) {
 				logger.log( Level.INFO,"Trying again");
 				get_user_attempt++;
 				Thread.sleep(GETUSER_TIMEOUT);
@@ -339,7 +330,7 @@ public class GroupMigrator implements Runnable{
 	 * the REST implementation supports shallow queries
 	 * @return a set of users
 	 */
-	private Set<String> getUsers() throws HttpException{
+	private Set<String> getUsers() throws HttpException, java.net.SocketException{
 		Set<String> users = new HashSet<String>();
 		
 		Client client = Client.create();
@@ -692,7 +683,7 @@ public class GroupMigrator implements Runnable{
 
 						} catch (SQLException e) {
 							// System.out.println("MBA: NULL CONNECTION.");
-							logger.log( Level.INFO, "MBA: NULL CONNECTION.");
+							logger.log(Level.INFO, "MBA: NULL CONNECTION.");
 							e.printStackTrace();
 						}
 
@@ -914,7 +905,7 @@ public class GroupMigrator implements Runnable{
 	    if(cmd.hasOption("checkpointInterval")) {
 	    	CHECKPOINT_INTERVAL = Long.parseLong(cmd.getOptionValue("checkpointInterval"));
 	    	System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
-			logger.log( Level.INFO, "User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+			logger.log(Level.INFO, "User defined checkpointInterval: " + CHECKPOINT_INTERVAL);
 	    }
 	    
 	    if(cmd.hasOption("getUserTimeout")) {
