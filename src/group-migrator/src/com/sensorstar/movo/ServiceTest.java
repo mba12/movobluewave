@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Created by Michael Ahern on 11/13/15.
@@ -11,7 +13,7 @@ import java.io.IOException;
 
 public class ServiceTest implements Runnable{
 
-//	final static Logger logger = Logger.getLogger("GM");
+    final static private Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 
     /* Time between saving checkpoint time and checking for new users */
     private static long CHECKPOINT_INTERVAL = 36000;
@@ -21,14 +23,14 @@ public class ServiceTest implements Runnable{
 
 
     ServiceTest(){
-        System.out.println("Service Coming Alive: " + System.currentTimeMillis());
+        logger.log(Level.INFO, "Service Coming Alive: " + System.currentTimeMillis());
     }
 
     public static void dbConnectionHeartBeat(boolean status){
 
         try{
             if(!db_log.exists()){
-                System.out.println("Created new heartbeat file.");
+                logger.log(Level.INFO, "Created new heartbeat file.");
                 db_log.createNewFile();
             }
 
@@ -39,7 +41,7 @@ public class ServiceTest implements Runnable{
             bufferedWriter.close();
 
         } catch(IOException e) {
-            System.out.println("COULD NOT LOG HEARTBEAT!!");
+            logger.log(Level.INFO, "COULD NOT LOG HEARTBEAT!!");
         }
     }
 
@@ -47,7 +49,7 @@ public class ServiceTest implements Runnable{
 
         try{
             if(!main_log.exists()){
-                System.out.println("Created new main thread file.");
+                logger.log(Level.INFO, "Created new main thread file.");
                 main_log.createNewFile();
             }
 
@@ -58,26 +60,26 @@ public class ServiceTest implements Runnable{
             bufferedWriter.close();
 
         } catch(IOException e) {
-            System.out.println("COULD NOT LOG HEARTBEAT!!");
+            logger.log(Level.INFO, "COULD NOT LOG HEARTBEAT!!");
         }
     }
 
 
     public void update(){
-        System.out.println("Running an update " + System.currentTimeMillis());
+        logger.log(Level.INFO, "Running an update " + System.currentTimeMillis());
     }
 
     public void run() {
 
-        System.out.println("Starting queue listener loop");
+        logger.log(Level.INFO, "Starting queue listener loop");
         try{
             while(!Thread.currentThread().isInterrupted()) {
                 Thread.sleep(SQL_BATCH_DELAY);
-                System.out.println("Queue listener iteration: " + System.currentTimeMillis());
+                logger.log(Level.INFO, "Queue listener iteration: " + System.currentTimeMillis());
             }
 
         } catch (InterruptedException e) {
-            System.out.println("Stopping Queue listener thread...");
+            logger.log(Level.INFO, "Stopping Queue listener thread...");
             Thread.currentThread().interrupt();
         }
     }
@@ -93,7 +95,7 @@ public class ServiceTest implements Runnable{
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 try {
-                    System.out.println("Shutting down ...");
+                    logger.log(Level.INFO, "Shutting down ...");
 	                /* Save out Queue */
                     msg_thread.interrupt();
                     Thread.sleep(10000);
