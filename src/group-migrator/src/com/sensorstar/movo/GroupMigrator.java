@@ -32,6 +32,7 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.apache.http.HttpException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,12 +43,14 @@ import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
-//import java.util.logging.ConsoleHandler;
-//import java.util.logging.FileHandler;
-//import java.util.logging.Handler;
-//import java.util.logging.Level;
-//import java.util.logging.Logger;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import java.util.logging.SimpleFormatter;
+import java.util.logging.Formatter;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -55,49 +58,58 @@ import javax.ws.rs.core.MultivaluedMap;
 
 public class GroupMigrator implements Runnable{
 
-//	final static Logger logger = Logger.getLogger("GM");
+	static private FileHandler fileTxt;
+	static private SimpleFormatter formatterTxt;
+	// get the global logger to configure it
+	final static private Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	// suppress the logging output to the console
+	final static private Logger rootLogger = Logger.getLogger("");
+	final static private Handler[] handlers = rootLogger.getHandlers();
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
 	private static long CONNECTION_CREATED = 0;
+	
+	private static int GETUSER_MAX_ATTEMPS = 5;
+	private static long GETUSER_TIMEOUT = 30*1000;
 	
 	private static int SQL_BATCH_DELAY = 10;
 	private static int SQL_BATCH_SIZE = 10;
 	private static int SQL_MAX_BATCH_WAIT = 10*1000;// in Milliseconds
 	private static int SQL_MAX_CONNECTION_RESET = 10*60*1000;// in Milliseconds
 
-	
-	
+	private static String home = System.getProperty("user.home");
+	private static File db_log = new File(home + "/realtime/dbheartbeat.txt");
+	private static File main_log = new File(home + "/realtime/mainheartbeat.txt");
+
 	/* Sensorstar Local Debug Defaults */
 //	private static final String FB_URL = "https://ss-movo-wave-v2.firebaseio.com";
 //	private static final String FB_SECRET = "jBMdrOwNCfJ37NzcXt6IM4d7AddeojCJg2Z9KnuF";
 //	private static final String DB_URL = "jdbc:mysql://localhost:3306/movogroups?user=root";
 //	private static final boolean USING_GAE_SQL = false;
-	
+//	private static String keyStorePassword = "keystore"; // keystore
+//	private static String trustStorePassword = "truststore";  // truststore
+
 	/* Debug Defaults */
 	// private static String FB_URL = "https://movowave-debug.firebaseio.com/";
 	// private static String FB_SECRET = "3HFJlhjThUhC9QrP4zAq4PNcaXH8IWYqM8cCWmnR";
 
 	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true";
 	private static final boolean USING_GAE_SQL = true;
-	
+
 	/* Production Defaults */
     private static String FB_URL = "https://movowave.firebaseio.com/";
     private static String FB_SECRET = "0paTj5f0KHzLBnwIyuc1eEvq4tXZ3Eik9Joqrods";
-	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // prod ?
-
-	private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";
-
-	// private static String DB_URL = "jdbc:mysql://173.194.241.127:3306/movogroups?useSSL=true&requireSSL=true";
-
-	// test
+	private static String DB_URL = "jdbc:mysql://173.194.241.127:3306/movogroups?useSSL=true&requireSSL=true";
 	static String keyStorePassword = "r87p-Y?72*uXqW$aSZGU"; // keystore
 	static String trustStorePassword = "r87p-Y?72*uXqW$aSZGU";  // truststore
 	private static String username = "movogroups";
 	private static String password = "H8$E=?3*ADXFt4Ld7-jw";
 
-	// private static String keyStorePassword = "keystore"; // keystore
-	// private static String trustStorePassword = "truststore";  // truststore
+	// Google Test Database
+	// private static String DB_URL = "jdbc:mysql://173.194.247.177:3306/movogroups?user=root&useSSL=true"; // Google test
+	// private static String DB_URL = "jdbc:mysql://173.194.239.157:3306/movogroups?useSSL=true&requireSSL=true";
+
 
 	//	private Map<String,String> latest_sync_for_users;
 	private String checkpoint;
@@ -106,6 +118,26 @@ public class GroupMigrator implements Runnable{
 	private ConcurrentLinkedQueue<StepInterval> sql_message_queue;
 	
 	private Set<String> users;
+
+	static public void loggerSetup() {
+
+		if (handlers[0] instanceof ConsoleHandler) {
+			rootLogger.removeHandler(handlers[0]);
+		}
+
+		logger.setLevel(Level.INFO);
+		try {
+			fileTxt = new FileHandler("groupmonitor.log");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// create a TXT formatter
+		formatterTxt = new SimpleFormatter();
+		fileTxt.setFormatter(formatterTxt);
+		logger.addHandler(fileTxt);
+
+	}
 	
 	private void loadOrCreateQueue(){
 				
@@ -117,11 +149,13 @@ public class GroupMigrator implements Runnable{
 		    
 		    sql_message_queue = (ConcurrentLinkedQueue<StepInterval>)input.readObject();
 		    input.close();
-		    
-		    System.out.println("Loaded queue of size:" + sql_message_queue.size());
+
+			logger.log(Level.INFO, "Loaded queue of size:" + sql_message_queue.size());
+		    // logger.log( Level.INFO, "Loaded queue of size:" + sql_message_queue.size());
 		    
 		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
-			System.out.println("No sql found - creating new one.");
+			logger.log( Level.INFO, "No sql found - creating new one.", e );
+			logger.log( Level.INFO, e.toString(), e );
 			sql_message_queue = new ConcurrentLinkedQueue<StepInterval>();			
 		}
 	      
@@ -133,16 +167,55 @@ public class GroupMigrator implements Runnable{
 			    OutputStream buffer = new BufferedOutputStream(file);
 			    ObjectOutput output = new ObjectOutputStream(buffer);
 		    ){
-				System.out.println("Saving queue of size: " + sql_message_queue.size());
+				logger.log( Level.INFO, "Saving queue of size: " + sql_message_queue.size());
 				synchronized(sql_message_queue){
 					output.writeObject(sql_message_queue);
 				}
 				output.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.log( Level.SEVERE, e.toString(), e );
 			}
 	}
-	
+
+	public static void dbConnectionHeartBeat(boolean status){
+
+		try{
+			if(!db_log.exists()){
+				logger.log( Level.INFO, "Created new heartbeat file." );
+				db_log.createNewFile();
+			}
+
+			FileWriter fileWriter = new FileWriter(db_log, false);
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+			bufferedWriter.close();
+
+		} catch(IOException e) {
+			logger.log( Level.SEVERE, "COULD NOT LOG DB Connection HEARTBEAT!!" );
+			logger.log( Level.SEVERE, e.toString(), e );
+		}
+	}
+
+	public static void mainThreadHeartBeat(boolean status){
+
+		try{
+			if(!main_log.exists()){
+				logger.log( Level.INFO, "Created new main thread file." );
+				main_log.createNewFile();
+			}
+
+			FileWriter fileWriter = new FileWriter(main_log, false);
+
+			BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+			bufferedWriter.write( status?String.valueOf(System.currentTimeMillis()):"0" ); // date +"%s"
+			bufferedWriter.close();
+
+		} catch(IOException e) {
+			logger.log(Level.SEVERE, "COULD NOT LOG Main Thread HEARTBEAT!!" );
+			logger.log(Level.SEVERE, e.toString(), e);
+		}
+	}
+
 	GroupMigrator(){
 
 		InputStream file;
@@ -153,14 +226,13 @@ public class GroupMigrator implements Runnable{
 		    
 		    checkpoint = (String)input.readObject();
 		    input.close();
-		    
-		    System.out.println("Loading checkpoint time:" + checkpoint);
-		    
-		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
 
-			System.out.println("No checkpoint found - starting from beginning.");
+			logger.log( Level.INFO, "Loading checkpoint time: " + checkpoint);
+
+
+		} catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
+			logger.log( Level.INFO, "No checkpoint found - starting from beginning.");
 			checkpoint = "0000-00-00T00:00:00Z";
-			
 		}
 	      
 		users = new HashSet<String>(); 
@@ -172,42 +244,60 @@ public class GroupMigrator implements Runnable{
 		checkpoint = checkpoint_option_val;
 		users = new HashSet<String>(); 
 		most_recent_sync = checkpoint;
-		System.out.println("Loading checkpoint time provided by user:" + checkpoint);
+		logger.log( Level.INFO, "Loading checkpoint time provided by user:" + checkpoint);
 		loadOrCreateQueue();
 	}
 
-	public void update(){
-		/* save checkpoint time */
-		try(
-			OutputStream file = new FileOutputStream("checkpoint.ser");
-		    OutputStream buffer = new BufferedOutputStream(file);
-		    ObjectOutput output = new ObjectOutputStream(buffer);
-	    ){
-			System.out.println("Saving checkpoint time: " + checkpoint );
-			System.out.println("Next checkpoint time: " + most_recent_sync );
-			synchronized(checkpoint){
-				output.writeObject(checkpoint);
+	public void update() throws InterruptedException{
+
+		int get_user_attempt = 0;
+		while(GETUSER_MAX_ATTEMPS == -1 || get_user_attempt<GETUSER_MAX_ATTEMPS){
+			try{
+				/* update our user list and find new users */
+				Set<String> updated_users = getUsers();
+				Set<String> new_users = new HashSet<String>(updated_users);
+				new_users.removeAll(users);
+				users = updated_users;
 				
-				synchronized(most_recent_sync){
-					checkpoint = most_recent_sync;
+				logger.log( Level.INFO, "New Users: " + new_users.size());
+				
+				/* add listeners for new users */ 
+				addListenersToUsers(new_users);
+
+				/* save checkpoint time */
+				try(
+					OutputStream file = new FileOutputStream("checkpoint.ser");
+				    OutputStream buffer = new BufferedOutputStream(file);
+				    ObjectOutput output = new ObjectOutputStream(buffer);
+			    ){
+					
+					logger.log( Level.INFO, "Saving checkpoint time: " + checkpoint );
+					logger.log( Level.INFO, "Next checkpoint time: " + most_recent_sync);
+
+					synchronized(checkpoint){
+						output.writeObject(checkpoint);
+						
+						synchronized(most_recent_sync){
+							checkpoint = most_recent_sync;
+						}
+					}
+					output.close();
+				} catch (IOException e) {
+					e.printStackTrace();
 				}
+				
+				break;
+			}catch(HttpException e){
+				logger.log( Level.INFO,"Trying again");
+				get_user_attempt++;
+				Thread.sleep(GETUSER_TIMEOUT);
+			}catch(java.net.SocketException e) {
+				logger.log( Level.INFO,"Trying again");
+				get_user_attempt++;
+				Thread.sleep(GETUSER_TIMEOUT);
 			}
-			output.close();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 
-		/* update our user list and find new users */
-		Set<String> updated_users = getUsers();
-		Set<String> new_users = new HashSet<String>(updated_users);
-		new_users.removeAll(users);
-		users = updated_users;
-		
-		System.out.println("New Users: " + new_users.size() );
-		
-		/* add listeners for new users */ 
-		addListenersToUsers(new_users);
-		
 	}
 
 	private Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
@@ -222,7 +312,7 @@ public class GroupMigrator implements Runnable{
 		}
 
 		for (String key : parameters.keySet()) {
-			System.out.println("Key = " + key + " - " + parameters.get(key));
+			logger.log( Level.INFO, "Key = " + key + " - " + parameters.get(key));
 		}
 
 		return parameters;
@@ -234,7 +324,7 @@ public class GroupMigrator implements Runnable{
 	 * the REST implementation supports shallow queries
 	 * @return a set of users
 	 */
-	private Set<String> getUsers(){
+	private Set<String> getUsers() throws HttpException, java.net.SocketException{
 		Set<String> users = new HashSet<String>();
 		
 		Client client = Client.create();
@@ -246,25 +336,26 @@ public class GroupMigrator implements Runnable{
                    .get(ClientResponse.class);
 
 		if(response == null) {
-			System.out.println("response from Firebase is null .... \n");
+			logger.log( Level.INFO,"response from Firebase is null .... \n");
 		} else {
-			System.out.println("response from Firebase is NOT null .... \n");
+			logger.log( Level.INFO,"response from Firebase is NOT null .... \n");
 			MultivaluedMap<String, String> map = response.getHeaders();
 			checkParameters(map);
 
 			int st = response.getStatus();
 			int len = response.getLength();
-			System.out.println("Status and length: " + st + " :: " + len);
+			logger.log( Level.INFO,"Status and length: " + st + " :: " + len);
 		}
 
 		if (response.getStatus() != 200) {
-		   throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
+			logger.log( Level.WARNING, "Failed : HTTP error code : " + response.getStatus());
+			throw new HttpException("Failed : HTTP error code : " + response.getStatus());
 		}
 
 		String output = response.getEntity(String.class);
 
-		System.out.println("Output from Server .... \n");
-		// System.out.println(output);
+		logger.log( Level.INFO,"Output from Server .... \n");
+		// logger.log( Level.INFO, output);
 		
 		try {
 			JSONObject obj = new JSONObject(output);
@@ -276,7 +367,6 @@ public class GroupMigrator implements Runnable{
 		} catch (JSONException e) { e.printStackTrace(); }
 		
 		return users;
-		
 	}
 	
 	
@@ -326,13 +416,15 @@ public class GroupMigrator implements Runnable{
 	}
 	
 	private void processSync(DataSnapshot sync){
-		System.out.println("Processing Sync");
+		logger.log( Level.INFO, "Processing Sync");
 		
 		List<StepInterval> steps_synced = new ArrayList<StepInterval>();
 		String sync_start_time = (String)sync.child("starttime").getValue();
 
 		String sync_end_time = (String)sync.child("endtime").getValue();
-		System.out.println("Endtime: " + sync_end_time);
+		// logger.log( Level.INFO, "Endtime: " + sync_end_time);
+		logger.log( Level.INFO, "Endtime: " + sync_end_time);
+
 
 		synchronized(most_recent_sync){
 			if(most_recent_sync.compareTo(sync_end_time) < 0){
@@ -343,23 +435,27 @@ public class GroupMigrator implements Runnable{
 		String user_id = getFirebaseIdFromRef(sync);
 		
 		try {
-			System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+			// logger.log( Level.INFO, "Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+			logger.log( Level.INFO, "Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
 		} catch (java.io.UnsupportedEncodingException ue) {
-			System.out.println("Exception decoding username: " + user_id);
+			logger.log( Level.INFO, "Exception decoding username: " + user_id);
 			ue.printStackTrace();
 		}
 
 		long childCount = sync.getChildrenCount();
 		boolean hasSteps = sync.hasChild("steps");
-		System.out.println("Number of Children: " + childCount);
-		System.out.println("Has 'steps' as child: " + hasSteps);
+		// logger.log( Level.INFO, "Number of Children: " + childCount);
+		// logger.log( Level.INFO, "Has 'steps' as child: " + hasSteps);
+
+		logger.log( Level.INFO, "Number of Children: " + childCount);
+		logger.log( Level.INFO, "Has 'steps' as child: " + hasSteps);
 
 		Iterable<DataSnapshot> children = sync.getChildren();
 		for(DataSnapshot c: children) {
-			System.out.println("Child: " + c.getKey() );
+			logger.log( Level.INFO, "Child: " + c.getKey() );
 		}
 
-		System.out.println("Starting iteration of data of sync from: " + user_id);
+		logger.log( Level.INFO, "Starting iteration of data of sync from: " + user_id);
 
 		Iterable<DataSnapshot> years = sync.child("steps").getChildren();
 		for(DataSnapshot year : years){
@@ -408,15 +504,18 @@ public class GroupMigrator implements Runnable{
 							} catch (ParseException e) { e.printStackTrace(); }
 							//steps_synced.add(si);
 							sql_message_queue.add(si);
-							System.out.println("Added to queue: " + si.toString());
+							// logger.log( Level.INFO, "Added to queue: " + si.toString());
+							logger.log( Level.INFO, "Added to queue: " + si.toString());
+
 						}
 					}
 				}
 			}
-			
+			// logger.log( Level.INFO, "Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
+			logger.log( Level.INFO, "Sync added - " + sql_message_queue.size() + " sql inserts to be processed");
 		}
 		
-//		System.out.println("This Sync has: " + steps_synced.size() + " step intervals\n");
+//		logger.log( Level.INFO, "This Sync has: " + steps_synced.size() + " step intervals\n");
 //		try {
 //			if(steps_synced.size() !=0)
 //				addSyncToDb(steps_synced);
@@ -424,8 +523,10 @@ public class GroupMigrator implements Runnable{
 	}
 	
 	private void processMeta(DataSnapshot meta){
-		System.out.println("Processing Meta");
-		System.out.println("Value:\n"+meta.getValue());
+		// logger.log( Level.INFO, "Processing Meta");
+		// logger.log( Level.INFO, "Value:\n"+meta.getValue());
+		logger.log( Level.INFO, "Processing Meta");
+		logger.log( Level.INFO, "Value:\n"+meta.getValue());
 
 		String firebase_id_fk = getFirebaseIdFromRef(meta);
 		
@@ -552,7 +653,8 @@ public class GroupMigrator implements Runnable{
 		int cur_batch_size = 0;
 		long latest_added_batch = 0;
 
-		System.out.println("Starting queue listener loop");
+		// logger.log( Level.INFO, "Starting queue listener loop");
+		logger.log( Level.INFO, "Starting queue listener loop");
 		CallableStatement proc_stmt = null;
 		try{
 	        while(!Thread.currentThread().isInterrupted()){
@@ -560,19 +662,22 @@ public class GroupMigrator implements Runnable{
 	        	StepInterval si=sql_message_queue.peek();
 
 	        	if(si != null){ // queue isn't empty 
-					System.out.println("Adding to Batch: "+si.toString());
+					// logger.log( Level.INFO, "Adding to Batch: "+si.toString());
+					logger.log( Level.INFO, "Adding to Batch: "+si.toString());
 	
 	        		try {
 
 						try {
-							if (conn == null) {
+							if (conn == null || conn.isClosed()) {
 								conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 								CONNECTION_CREATED = System.currentTimeMillis();
+								GroupMigrator.dbConnectionHeartBeat(true);
 							}
 							if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
 						} catch (SQLException e) {
-							System.out.println("MBA: NULL CONNECTION.");
+							// logger.log( Level.INFO, "MBA: NULL CONNECTION.");
+							logger.log(Level.INFO, "MBA: NULL CONNECTION.");
 							e.printStackTrace();
 						}
 
@@ -598,7 +703,8 @@ public class GroupMigrator implements Runnable{
 		    		    
 		    		    
 		    		    if(cur_batch_size == SQL_BATCH_SIZE){
-		    				System.out.println("Sending Batch of size: " + cur_batch_size);
+		    				// logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
+							logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 	
 		    		    	proc_stmt.executeBatch();
 							proc_stmt.close();
@@ -619,14 +725,16 @@ public class GroupMigrator implements Runnable{
 		    		    latest_added_batch = System.currentTimeMillis();
 		    		    
 					} catch (SQLException e) {
-						e.printStackTrace();
+						// e.printStackTrace();
+						logger.log( Level.SEVERE, e.getMessage(), e);
 					}
 	        	
 	        		
 	        	} else { // idle while there are no msgs
 
 		        	if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT ){
-	    				System.out.println("Sending Batch of size: " + cur_batch_size);
+	    				// logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
+						logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 
 	    		    	try {
 							proc_stmt.executeBatch();
@@ -656,22 +764,28 @@ public class GroupMigrator implements Runnable{
 						conn.close();
 					}
 					conn = null;
+					Thread.sleep(10);
+					GroupMigrator.dbConnectionHeartBeat(true);
 				}
 
 	        }
 		} catch (InterruptedException e) {
-	    	System.out.println("Stopping message thread...");
+	    	// logger.log( Level.INFO, "Stopping message thread...");
+			logger.log( Level.INFO, "Stopping message thread...");
 			Thread.currentThread().interrupt();
 		}  catch (SQLException e) {
-			System.out.println("Stopping message thread...SQL EXCEPTION");
+			// logger.log( Level.INFO, "Stopping message thread...SQL EXCEPTION");
+			logger.log( Level.INFO, "Stopping message thread...SQL EXCEPTION");
+			logger.log( Level.SEVERE, e.getMessage(), e);
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 		
         try {
 			conn.close();
-		} catch (SQLException e) {e.printStackTrace();}
+		} catch (SQLException e) {e.printStackTrace(); logger.log( Level.SEVERE, e.getMessage(), e);}
         saveQueue();
+		GroupMigrator.dbConnectionHeartBeat(false);
     }
 
 	
@@ -683,14 +797,16 @@ public class GroupMigrator implements Runnable{
 	private void addListenersToUsers(Set<String> users){
 		
 		for(String u: users){
-			System.out.println("Adding listener to user: " + u);
+			// logger.log( Level.INFO, "Adding listener to user: " + u);
+			logger.log( Level.INFO, "Adding listener to user: " + u);
 			
 			// User Metadata Listener
 			final Firebase userMetaRef = new Firebase(FB_URL+"/users/"+u+ "/metadata");
 			userMetaRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
 			    	
-			    	System.out.println("Authenticated.");
+			    	// logger.log( Level.INFO, "Authenticated.");
+					logger.log( Level.INFO, "Authenticated.");
 			    	
 			    	Query meta_query = userMetaRef;
 
@@ -706,12 +822,14 @@ public class GroupMigrator implements Runnable{
 			
 			// User Sync Listener 
 			final Firebase userSyncRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-			System.out.println(userSyncRef.toString());
-			
+			// logger.log( Level.INFO, userSyncRef.toString());
+			logger.log( Level.INFO, userSyncRef.toString());
+
 			userSyncRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
 			    public void onAuthenticated(AuthData authData) { 
 			    	
-			    	System.out.println("Authenticated.");
+			    	// logger.log( Level.INFO, "Authenticated.");
+					logger.log( Level.INFO, "Authenticated.");
 			    	
 			    	Query sync_query = userSyncRef.orderByChild("endtime").startAt(checkpoint);
 
@@ -745,6 +863,9 @@ public class GroupMigrator implements Runnable{
 		options.addOption("checkpoint", 		true, 	"sets a checkpoint time to start looking for syncs (YYYY-MM-DDThh:dd:ssZ format). By default it looks for a checkpoint.ser file and if none is found it uses YYYY0000-00-00T00:00:00Z.");
 		options.addOption("checkpointInterval", true, 	"Sets how often to checkpoint & look for new users (default is once per hour).");
 
+		options.addOption("getUserMaxAttemps", 	true, 	"Sets max number of times to attempt to get users from firebase, -1 means it tries indefinitely (default = 5). ");
+		options.addOption("getUserTimeout", 	true, 	"Sets timeout between attemps to connect to firebase RestApi (default = 30seconds).");
+
 		options.addOption("help",				false, 	"print this message" );
 		options.addOption("useSSL",				false, 	"use SSL for MySQL (needed for GAE)" );
 		options.addOption("keyStore", 			true, 	"sets where to look for our keyStore to access Firebase and GAE SQL instance. Default location is <current_location>/keystore.");
@@ -777,45 +898,56 @@ public class GroupMigrator implements Runnable{
 	    
 	    if(cmd.hasOption("checkpointInterval")) {
 	    	CHECKPOINT_INTERVAL = Long.parseLong(cmd.getOptionValue("checkpointInterval"));
-	    	System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+	    	logger.log( Level.INFO, "User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+			logger.log(Level.INFO, "User defined checkpointInterval: " + CHECKPOINT_INTERVAL);
+	    }
+	    
+	    if(cmd.hasOption("getUserTimeout")) {
+	    	GETUSER_TIMEOUT = Long.parseLong(cmd.getOptionValue("getUserTimeout"));
+	    	logger.log( Level.INFO, "User defined getUserTimeout: "+ CHECKPOINT_INTERVAL);
 	    }
 	    
 	    if (cmd.hasOption("useSSL") || USING_GAE_SQL){
-			System.out.println("User defined useSSL: "+ true);
+			logger.log( Level.INFO, "User defined useSSL: "+ true);
+		}
+	    
+	    if (cmd.hasOption("useSSL") || USING_GAE_SQL){
+			// logger.log( Level.INFO, "User defined useSSL: "+ true);
+			logger.log( Level.INFO, "User defined useSSL: "+ true);
 		}
 		
 		if (cmd.hasOption("keyStore")){
 			System.setProperty("javax.net.ssl.keyStore",			cmd.getOptionValue("keyStore"));
-			System.out.println("User defined keyStore: "+ cmd.getOptionValue("keyStore"));
+			logger.log( Level.INFO, "User defined keyStore: "+ cmd.getOptionValue("keyStore"));
 		}else{
 			System.setProperty("javax.net.ssl.keyStore",			System.getProperty("user.dir")+"/keystore");
-			System.out.println("No keyStore set.");
+			logger.log( Level.INFO, "No keyStore set.");
 		}
 		
 		if (cmd.hasOption("keyStorePass")){
 			System.setProperty("javax.net.ssl.keyStorePassword",	cmd.getOptionValue("keyStorePass"));
-			System.out.println("User defined keyStorePass: "+ cmd.getOptionValue("keyStorePass"));
+			logger.log( Level.INFO, "User defined keyStorePass: "+ cmd.getOptionValue("keyStorePass"));
 		}else{
 			// System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
 			System.setProperty("javax.net.ssl.keyStorePassword",	keyStorePassword);
-			System.out.println("No keyStore pass set.");
+			logger.log( Level.INFO, "No keyStore pass set.");
 		}
 		
 		if (cmd.hasOption("trustStore")){
 			System.setProperty("javax.net.ssl.trustStore",			cmd.getOptionValue("trustStore"));
-			System.out.println("User defined trustStore: "+ cmd.getOptionValue("trustStore"));
+			logger.log( Level.INFO, "User defined trustStore: "+ cmd.getOptionValue("trustStore"));
 		}else{
 			System.setProperty("javax.net.ssl.trustStore",			System.getProperty("user.dir")+"/truststore");
-			System.out.println("No truststore set.");
+			logger.log( Level.INFO, "No truststore set.");
 		}
 		
 		if (cmd.hasOption("trustStorePass")){
 			System.setProperty("javax.net.ssl.trustStorePassword",	cmd.getOptionValue("trustStorePass"));
-			System.out.println("User defined trustStorePassword: "+ cmd.getOptionValue("trustStorePass"));
+			logger.log( Level.INFO, "User defined trustStorePassword: "+ cmd.getOptionValue("trustStorePass"));
 		}else{
 			// System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
 			System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
-			System.out.println("No truststore pass set.");
+			logger.log( Level.INFO, "No truststore pass set.");
 		}
 
 		try {
@@ -824,35 +956,36 @@ public class GroupMigrator implements Runnable{
 
 		if (cmd.hasOption("FirebaseURL")){
 			FB_URL = cmd.getOptionValue("FirebaseURL");
-			System.out.println("User defined FirebaseURL: "+ cmd.getOptionValue("FirebaseURL"));
+			logger.log( Level.INFO, "User defined FirebaseURL: "+ cmd.getOptionValue("FirebaseURL"));
 		}
 		
 		if (cmd.hasOption("FirebaseSecret")){
 			FB_SECRET = cmd.getOptionValue("FirebaseSecret");
-			System.out.println("User defined FirebaseSecret: "+ cmd.getOptionValue("FirebaseSecret"));
+			logger.log( Level.INFO, "User defined FirebaseSecret: "+ cmd.getOptionValue("FirebaseSecret"));
 		}
 		
 		if (cmd.hasOption("MysqlURL")){
 			DB_URL = cmd.getOptionValue("MysqlURL");
-			System.out.println("User defined MysqlURL: "+ cmd.getOptionValue("MysqlURL"));
+			logger.log( Level.INFO, "User defined MysqlURL: "+ cmd.getOptionValue("MysqlURL"));
 
 		}
 		
 		if (cmd.hasOption("sqlBatchSize")){
 			SQL_BATCH_SIZE = Integer.parseInt(cmd.getOptionValue("sqlBatchSize"));
-			System.out.println("User defined sqlBatchSize: "+ cmd.getOptionValue("sqlBatchSize"));
+			logger.log( Level.INFO, "User defined sqlBatchSize: "+ cmd.getOptionValue("sqlBatchSize"));
 		}
 		
 		if (cmd.hasOption("sqlBatchDelay")){
 			SQL_BATCH_DELAY = Integer.parseInt(cmd.getOptionValue("sqlBatchDelay"));
-			System.out.println("User defined sqlBatchDelay: "+ cmd.getOptionValue("sqlBatchDelay"));
+			logger.log( Level.INFO, "User defined sqlBatchDelay: "+ cmd.getOptionValue("sqlBatchDelay"));
 		}
 		
 		if (cmd.hasOption("sqlMaxBatchWait")){
 			SQL_MAX_BATCH_WAIT = Integer.parseInt(cmd.getOptionValue("sqlMaxBatchWait"));
-			System.out.println("User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
+			logger.log( Level.INFO, "User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
 		}
 
+		GroupMigrator.loggerSetup();
 		GroupMigrator gm = null;
 		if (cmd.hasOption("checkpoint")){
 			gm = new GroupMigrator(cmd.getOptionValue("checkpoint")); 
@@ -867,7 +1000,7 @@ public class GroupMigrator implements Runnable{
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 	        public void run() {
 	            try {
-	                System.out.println("Shutting down ...");
+	                logger.log( Level.INFO, "Shutting down ...");
 	                /* Save out Queue */
 	                msg_thread.interrupt();
 	                Thread.sleep(10000);
@@ -876,27 +1009,44 @@ public class GroupMigrator implements Runnable{
 	            } catch (InterruptedException e) {
 	                e.printStackTrace();
 	            }
+				GroupMigrator.mainThreadHeartBeat(false);
 	        }
 	    });
-		
-		
+
+		GroupMigrator.mainThreadHeartBeat(true);
+		long mainThreadTime = System.currentTimeMillis();
 		while(true){
-			
-			gm.update();
-				 
+
 			try {
-				Thread.sleep(CHECKPOINT_INTERVAL);
-				boolean alive = msg_thread.isAlive();
-				if(!alive) {
-					msg_thread.start();
+
+				gm.update();
+
+				// Heartbeat check every ten minutes
+				if (System.currentTimeMillis() - mainThreadTime > 600000) {
+					GroupMigrator.mainThreadHeartBeat(true);
+					mainThreadTime = System.currentTimeMillis();
 				}
 
-			} catch (InterruptedException e) {
+				try {
+					Thread.sleep(CHECKPOINT_INTERVAL);
+					boolean alive = msg_thread.isAlive();
+					if(!alive) {
+						msg_thread.start();
+					}
+
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					break;
+				}
+
+			} catch (Exception e) {
 				e.printStackTrace();
-				break;
+				// logger.log( Level.INFO, "Exception in main thread: " + e.getMessage());
+				logger.log( Level.SEVERE, "Exception in main thread: " + e.getMessage(), e);
 			}
+			
 		}
-		
+		GroupMigrator.mainThreadHeartBeat(false);
 		
 	}
 }
