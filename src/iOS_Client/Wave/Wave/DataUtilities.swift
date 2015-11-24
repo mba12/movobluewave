@@ -71,7 +71,20 @@ func getStepsForTimeInterval(dateStart:NSDate, dateStop:NSDate) -> Int {
                 let resultsCount = fetchResults.count
                 for(var i=0;i<(resultsCount);i++){
                     //                    println("Adding steps up for %i %i",cellDateNumber, Int(fetchResults[i].count))
-                    totalStepsForInterval = totalStepsForInterval + Int(fetchResults[i].count)
+                    
+                    //protect for "reserved data cases"
+                    var count = Int(fetchResults[i].count)
+                    if ( (count & 0x4000) != 0) {
+                        //covers 01 and 11
+                        //in both of these cases remove the value
+                        count = 0
+                    } else if ( (count & 0x8000) != 0) {
+                        //covers 10
+                        //in this case just remove the top two bits and include
+                        count -= 0x8000;
+                    }
+                    totalStepsForInterval = totalStepsForInterval + count
+
                 }
             }
         }

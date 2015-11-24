@@ -837,8 +837,13 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
                         var high = (chartData[i+1] != 0xFF) ? Int(chartData[i+1]):0
                         var count = low | (high<<8)
                         //protect for "reserved data case"
-                        if (chartData[i+1] == 0xFF) {
+                        if ((chartData[i+1] & UInt8(0x40)) != 0) {
+                            //this covers 01 or 11, therefore count = 0
                             count = 0
+                        } else if ((chartData[i+1] & UInt8(0x80) != 0)) {
+                            //this covers 10
+                            //subtract 0x8000 hex
+                            count -= 0x8000
                         }
                         if (count > 0) {
                             chartArray.append(WaveStep(start: startTime, end: endTime, steps: count))
