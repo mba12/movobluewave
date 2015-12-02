@@ -1092,9 +1092,11 @@ class waveControlAndSync: NSObject, CBCentralManagerDelegate, CBPeripheralDelega
     
     //not used
     func peripheral(peripheral: CBPeripheral, didDiscoverDescriptorsForCharacteristic characteristic: CBCharacteristic, error: NSError?) {
-        for descriptor in characteristic.descriptors as [CBDescriptor]! {
-            print("found descriptor", terminator: "")
-            print(descriptor.UUID)
+        if let descriptors = characteristic.descriptors as [CBDescriptor]!  {
+            for descriptor in descriptors as [CBDescriptor] {
+                print("found descriptor", terminator: "")
+                print(descriptor.UUID)
+            }
         }
     }
     
