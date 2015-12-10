@@ -25,7 +25,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.Map;
 import java.util.Iterator;
+import java.util.logging.*;
 
+import com.firebase.client.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -54,7 +56,7 @@ import javax.ws.rs.core.MultivaluedMap;
 
 public class Test implements Runnable{
 
-//	final static Logger logger = Logger.getLogger("GM");
+    final static private java.util.logging.Logger logger = java.util.logging.Logger.getLogger(java.util.logging.Logger.GLOBAL_LOGGER_NAME);
 
     /* Time between saving checkpoint time and checking for new users */
     private static long CHECKPOINT_INTERVAL = 36*1000;
@@ -115,10 +117,10 @@ public class Test implements Runnable{
             sql_message_queue = (ConcurrentLinkedQueue<StepInterval>)input.readObject();
             input.close();
 
-            System.out.println("Loaded queue of size:" + sql_message_queue.size());
+            logger.log(Level.INFO, "Loaded queue of size:" + sql_message_queue.size());
 
         } catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
-            System.out.println("No sql found - creating new one.");
+            logger.log(Level.INFO, "No sql found - creating new one.");
             sql_message_queue = new ConcurrentLinkedQueue<StepInterval>();
         }
 
@@ -130,7 +132,7 @@ public class Test implements Runnable{
                 OutputStream buffer = new BufferedOutputStream(file);
                 ObjectOutput output = new ObjectOutputStream(buffer);
         ){
-            System.out.println("Saving queue of size: " + sql_message_queue.size());
+            logger.log(Level.INFO, "Saving queue of size: " + sql_message_queue.size());
             synchronized(sql_message_queue){
                 output.writeObject(sql_message_queue);
             }
@@ -151,11 +153,11 @@ public class Test implements Runnable{
             checkpoint = (String)input.readObject();
             input.close();
 
-            System.out.println("Loading checkpoint time:" + checkpoint);
+            logger.log(Level.INFO, "Loading checkpoint time:" + checkpoint);
 
         } catch (IOException | ClassNotFoundException e) { //assume it is our first run and make a new one
 
-            System.out.println("No checkpoint found - starting from beginning.");
+            logger.log(Level.INFO, "No checkpoint found - starting from beginning.");
             checkpoint = "0000-00-00T00:00:00Z";
 
         }
@@ -169,7 +171,7 @@ public class Test implements Runnable{
         checkpoint = checkpoint_option_val;
         users = new HashSet<String>();
         most_recent_sync = checkpoint;
-        System.out.println("Loading checkpoint time provided by user:" + checkpoint);
+        logger.log(Level.INFO, "Loading checkpoint time provided by user:" + checkpoint);
         loadOrCreateQueue();
     }
 
@@ -180,8 +182,8 @@ public class Test implements Runnable{
                 OutputStream buffer = new BufferedOutputStream(file);
                 ObjectOutput output = new ObjectOutputStream(buffer);
         ){
-            System.out.println("Saving checkpoint time: " + checkpoint );
-            System.out.println("Next checkpoint time: " + most_recent_sync );
+            logger.log(Level.INFO, "Saving checkpoint time: " + checkpoint);
+            logger.log(Level.INFO, "Next checkpoint time: " + most_recent_sync);
             synchronized(checkpoint){
                 output.writeObject(checkpoint);
 
@@ -200,7 +202,7 @@ public class Test implements Runnable{
         new_users.removeAll(users);
         users = updated_users;
 
-        System.out.println("New Users: " + new_users.size() );
+        logger.log(Level.INFO, "New Users: " + new_users.size());
 		
 		/* add listeners for new users */
         addListenersToUsers(new_users);
@@ -219,7 +221,7 @@ public class Test implements Runnable{
         }
 
         for (String key : parameters.keySet()) {
-            System.out.println("Key = " + key + " - " + parameters.get(key));
+            logger.log(Level.INFO, "Key = " + key + " - " + parameters.get(key));
         }
 
         return parameters;
@@ -243,15 +245,15 @@ public class Test implements Runnable{
                 .get(ClientResponse.class);
 
         if(response == null) {
-            System.out.println("response from Firebase is null .... \n");
+            logger.log(Level.INFO, "response from Firebase is null .... \n");
         } else {
-            System.out.println("response from Firebase is NOT null .... \n");
+            logger.log(Level.INFO, "response from Firebase is NOT null .... \n");
             MultivaluedMap<String, String> map = response.getHeaders();
             checkParameters(map);
 
             int st = response.getStatus();
             int len = response.getLength();
-            System.out.println("Status and length: " + st + " :: " + len);
+            logger.log(Level.INFO, "Status and length: " + st + " :: " + len);
         }
 
         if (response.getStatus() != 200) {
@@ -260,8 +262,8 @@ public class Test implements Runnable{
 
         String output = response.getEntity(String.class);
 
-        System.out.println("Output from Server .... \n");
-        // System.out.println(output);
+        logger.log(Level.INFO, "Output from Server .... \n");
+        // logger.log( Level.INFO, output);
 
         try {
             JSONObject obj = new JSONObject(output);
@@ -323,10 +325,10 @@ public class Test implements Runnable{
         }
 
         final Firebase userRef = new Firebase(FB_URL+"/users/"+user+ "/sync");
-        System.out.println(userRef.toString());
+        logger.log(Level.INFO, userRef.toString());
         userRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
             public void onAuthenticated(AuthData authData) {
-                System.out.println("Try again query authenticated.");
+                logger.log(Level.INFO, "Try again query authenticated.");
 
                 Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);
 
@@ -346,13 +348,13 @@ public class Test implements Runnable{
     }
 
     private void processSync(DataSnapshot sync, int depth){
-        System.out.println("Processing Sync");
+        logger.log(Level.INFO, "Processing Sync");
 
         List<StepInterval> steps_synced = new ArrayList<StepInterval>();
         String sync_start_time = (String)sync.child("starttime").getValue();
 
         String sync_end_time = (String)sync.child("endtime").getValue();
-        System.out.println("Endtime: " + sync_end_time);
+        logger.log(Level.INFO, "Endtime: " + sync_end_time);
 
         synchronized(most_recent_sync){
             if(most_recent_sync.compareTo(sync_end_time) < 0){
@@ -367,16 +369,16 @@ public class Test implements Runnable{
         user_id = user_id.substring(0, user_id.indexOf('/'));
 
         try {
-            System.out.println("Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
+            logger.log(Level.INFO, "Sync received for user: " + URLDecoder.decode(user_id, "UTF-8"));
         } catch (java.io.UnsupportedEncodingException ue) {
-            System.out.println("Exception decoding username: " + user_id);
+            logger.log(Level.INFO, "Exception decoding username: " + user_id);
             ue.printStackTrace();
         }
 
         long childCount = sync.getChildrenCount();
         boolean hasSteps = sync.hasChild("steps");
-        System.out.println("Number of Children: " + childCount);
-        System.out.println("Has 'steps' as child: " + hasSteps);
+        logger.log(Level.INFO, "Number of Children: " + childCount);
+        logger.log(Level.INFO, "Has 'steps' as child: " + hasSteps);
 
         if (!hasSteps) {
             // The steps tree is missing
@@ -387,10 +389,10 @@ public class Test implements Runnable{
 
         Iterable<DataSnapshot> children = sync.getChildren();
         for(DataSnapshot c: children) {
-            System.out.println("Child: " + c.getKey() );
+            logger.log(Level.INFO, "Child: " + c.getKey());
         }
 
-        System.out.println("Starting iteration of data of sync from: " + user_id);
+        logger.log(Level.INFO, "Starting iteration of data of sync from: " + user_id);
 
         Iterable<DataSnapshot> years = sync.child("steps").getChildren();
         for(DataSnapshot year : years){
@@ -439,7 +441,7 @@ public class Test implements Runnable{
                             } catch (ParseException e) { e.printStackTrace(); }
                             //steps_synced.add(si);
                             sql_message_queue.add(si);
-                            System.out.println("Added to queue: " + si.toString());
+                            logger.log(Level.INFO, "Added to queue: " + si.toString());
                         }
                     }
                 }
@@ -447,7 +449,7 @@ public class Test implements Runnable{
 
         }
 
-//		System.out.println("This Sync has: " + steps_synced.size() + " step intervals\n");
+//		logger.log( Level.INFO, "This Sync has: " + steps_synced.size() + " step intervals\n");
 //		try {
 //			if(steps_synced.size() !=0)
 //				addSyncToDb(steps_synced);
@@ -467,7 +469,7 @@ public class Test implements Runnable{
         int cur_batch_size = 0;
         long latest_added_batch = 0;
 
-        System.out.println("Starting queue listener loop");
+        logger.log(Level.INFO, "Starting queue listener loop");
         CallableStatement proc_stmt = null;
         try{
             while(!Thread.currentThread().isInterrupted()){
@@ -475,7 +477,7 @@ public class Test implements Runnable{
                 StepInterval si=sql_message_queue.peek();
 
                 if(si != null){ // queue isn't empty
-                    System.out.println("Adding to Batch: "+si.toString());
+                    logger.log(Level.INFO, "Adding to Batch: " + si.toString());
 
                     try {
                         if(cur_batch_size++ == 0) proc_stmt = conn.prepareCall("{ call BB_REALTIME_INSERT(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
@@ -501,7 +503,7 @@ public class Test implements Runnable{
 
 
                         if(cur_batch_size == SQL_BATCH_SIZE){
-                            System.out.println("Sending Batch of size: " + cur_batch_size);
+                            logger.log(Level.INFO, "Sending Batch of size: " + cur_batch_size);
 
                             proc_stmt.executeBatch();
                             cur_batch_size= 0;
@@ -520,7 +522,7 @@ public class Test implements Runnable{
                 } else { // idle while there are no msgs
 
                     if( cur_batch_size!=0 && System.currentTimeMillis() - latest_added_batch > SQL_MAX_BATCH_WAIT ){
-                        System.out.println("Sending Batch of size: " + cur_batch_size);
+                        logger.log(Level.INFO, "Sending Batch of size: " + cur_batch_size);
 
                         try {
                             proc_stmt.executeBatch();
@@ -536,7 +538,7 @@ public class Test implements Runnable{
 
             }
         } catch (InterruptedException e) {
-            System.out.println("Stopping message thread...");
+            logger.log(Level.INFO, "Stopping message thread...");
             Thread.currentThread().interrupt();
         }
 
@@ -555,13 +557,13 @@ public class Test implements Runnable{
     private void addListenersToUsers(Set<String> users){
 
         for(String u: users){
-            System.out.println("Adding listener to user: " + u);
+            logger.log(Level.INFO, "Adding listener to user: " + u);
 
             final Firebase userRef = new Firebase(FB_URL+"/users/"+u+ "/sync");
-            System.out.println(userRef.toString());
+            logger.log(Level.INFO, userRef.toString());
             userRef.authWithCustomToken(FB_SECRET, new AuthResultHandler() {
                 public void onAuthenticated(AuthData authData) {
-                    System.out.println("Authenticated.");
+                    logger.log(Level.INFO, "Authenticated.");
 
                     Query sync_query = userRef.orderByChild("endtime").startAt(checkpoint);
 
@@ -574,7 +576,7 @@ public class Test implements Runnable{
 
                         public void onCancelled(FirebaseError arg0) {}
                         public void onChildChanged(DataSnapshot sync, String arg1) {
-                            System.out.println("onChildChanged Fired for: " + sync.getKey());
+                            logger.log(Level.INFO, "onChildChanged Fired for: " + sync.getKey());
                             processSync(sync, 1);
                         }
                         public void onChildMoved(DataSnapshot arg0, String arg1) {}
@@ -628,45 +630,45 @@ public class Test implements Runnable{
 
         if(cmd.hasOption("checkpointInterval")) {
             CHECKPOINT_INTERVAL = Long.parseLong(cmd.getOptionValue("checkpointInterval"));
-            System.out.println("User defined checkpointInterval: "+ CHECKPOINT_INTERVAL);
+            logger.log(Level.INFO, "User defined checkpointInterval: " + CHECKPOINT_INTERVAL);
         }
 
         if (cmd.hasOption("useSSL") || USING_GAE_SQL){
-            System.out.println("User defined useSSL: "+ true);
+            logger.log(Level.INFO, "User defined useSSL: " + true);
         }
 
         if (cmd.hasOption("keyStore")){
             System.setProperty("javax.net.ssl.keyStore",			cmd.getOptionValue("keyStore"));
-            System.out.println("User defined keyStore: "+ cmd.getOptionValue("keyStore"));
+            logger.log(Level.INFO, "User defined keyStore: " + cmd.getOptionValue("keyStore"));
         }else{
             System.setProperty("javax.net.ssl.keyStore",			System.getProperty("user.dir")+"/keystore");
-            System.out.println("No keyStore set.");
+            logger.log(Level.INFO, "No keyStore set.");
         }
 
         if (cmd.hasOption("keyStorePass")){
             System.setProperty("javax.net.ssl.keyStorePassword",	cmd.getOptionValue("keyStorePass"));
-            System.out.println("User defined keyStorePass: "+ cmd.getOptionValue("keyStorePass"));
+            logger.log(Level.INFO, "User defined keyStorePass: " + cmd.getOptionValue("keyStorePass"));
         }else{
             // System.setProperty("javax.net.ssl.keyStorePassword",	"movomovo");
             System.setProperty("javax.net.ssl.keyStorePassword",	keyStorePassword);
-            System.out.println("No keyStore pass set.");
+            logger.log(Level.INFO, "No keyStore pass set.");
         }
 
         if (cmd.hasOption("trustStore")){
             System.setProperty("javax.net.ssl.trustStore",			cmd.getOptionValue("trustStore"));
-            System.out.println("User defined trustStore: "+ cmd.getOptionValue("trustStore"));
+            logger.log(Level.INFO, "User defined trustStore: " + cmd.getOptionValue("trustStore"));
         }else{
             System.setProperty("javax.net.ssl.trustStore",			System.getProperty("user.dir")+"/truststore");
-            System.out.println("No truststore set.");
+            logger.log(Level.INFO, "No truststore set.");
         }
 
         if (cmd.hasOption("trustStorePass")){
             System.setProperty("javax.net.ssl.trustStorePassword",	cmd.getOptionValue("trustStorePass"));
-            System.out.println("User defined trustStorePassword: "+ cmd.getOptionValue("trustStorePass"));
+            logger.log(Level.INFO, "User defined trustStorePassword: " + cmd.getOptionValue("trustStorePass"));
         }else{
             // System.setProperty("javax.net.ssl.trustStorePassword",	"movomovo");
             System.setProperty("javax.net.ssl.trustStorePassword",	trustStorePassword);
-            System.out.println("No truststore pass set.");
+            logger.log(Level.INFO, "No truststore pass set.");
         }
 
         try {
@@ -675,33 +677,33 @@ public class Test implements Runnable{
 
         if (cmd.hasOption("FirebaseURL")){
             FB_URL = cmd.getOptionValue("FirebaseURL");
-            System.out.println("User defined FirebaseURL: "+ cmd.getOptionValue("FirebaseURL"));
+            logger.log(Level.INFO, "User defined FirebaseURL: " + cmd.getOptionValue("FirebaseURL"));
         }
 
         if (cmd.hasOption("FirebaseSecret")){
             FB_SECRET = cmd.getOptionValue("FirebaseSecret");
-            System.out.println("User defined FirebaseSecret: "+ cmd.getOptionValue("FirebaseSecret"));
+            logger.log(Level.INFO, "User defined FirebaseSecret: " + cmd.getOptionValue("FirebaseSecret"));
         }
 
         if (cmd.hasOption("MysqlURL")){
             DB_URL = cmd.getOptionValue("MysqlURL");
-            System.out.println("User defined MysqlURL: "+ cmd.getOptionValue("MysqlURL"));
+            logger.log(Level.INFO, "User defined MysqlURL: " + cmd.getOptionValue("MysqlURL"));
 
         }
 
         if (cmd.hasOption("sqlBatchSize")){
             SQL_BATCH_SIZE = Integer.parseInt(cmd.getOptionValue("sqlBatchSize"));
-            System.out.println("User defined sqlBatchSize: "+ cmd.getOptionValue("sqlBatchSize"));
+            logger.log(Level.INFO, "User defined sqlBatchSize: " + cmd.getOptionValue("sqlBatchSize"));
         }
 
         if (cmd.hasOption("sqlBatchDelay")){
             SQL_BATCH_DELAY = Integer.parseInt(cmd.getOptionValue("sqlBatchDelay"));
-            System.out.println("User defined sqlBatchDelay: "+ cmd.getOptionValue("sqlBatchDelay"));
+            logger.log(Level.INFO, "User defined sqlBatchDelay: " + cmd.getOptionValue("sqlBatchDelay"));
         }
 
         if (cmd.hasOption("sqlMaxBatchWait")){
             SQL_MAX_BATCH_WAIT = Integer.parseInt(cmd.getOptionValue("sqlMaxBatchWait"));
-            System.out.println("User defined sqlMaxBatchWait: "+ cmd.getOptionValue("sqlMaxBatchWait"));
+            logger.log(Level.INFO, "User defined sqlMaxBatchWait: " + cmd.getOptionValue("sqlMaxBatchWait"));
         }
 
         Test gm = null;
@@ -718,7 +720,7 @@ public class Test implements Runnable{
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 try {
-                    System.out.println("Shutting down ...");
+                    logger.log(Level.INFO, "Shutting down ...");
 	                /* Save out Queue */
                     msg_thread.interrupt();
                     Thread.sleep(10000);
