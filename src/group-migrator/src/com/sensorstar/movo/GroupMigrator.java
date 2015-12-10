@@ -71,6 +71,7 @@ public class GroupMigrator implements Runnable{
 	final static private Handler[] handlers = rootLogger.getHandlers();
 
 
+	static Thread msg_thread;
 
 	/* Time between saving checkpoint time and checking for new users */
 	private static long CHECKPOINT_INTERVAL = 36*1000;
@@ -315,7 +316,7 @@ public class GroupMigrator implements Runnable{
 
 	}
 
-	private Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
+	private static Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
 
 		Map<String,String> parameters = new HashMap<>();
 
@@ -339,7 +340,7 @@ public class GroupMigrator implements Runnable{
 	 * the REST implementation supports shallow queries
 	 * @return a set of users
 	 */
-	private Set<String> getUsers() throws HttpException{
+	public static Set<String> getUsers() throws HttpException{
 		Set<String> users = new HashSet<String>();
 		
 		Client client = Client.create();
@@ -382,6 +383,85 @@ public class GroupMigrator implements Runnable{
 		} catch (JSONException e) { e.printStackTrace(); }
 		
 		return users;
+	}
+	
+	
+	public static Set<String> getSyncsForUser(String user) throws HttpException{
+		Set<String> syncs = new HashSet<String>();
+		
+		Client client = Client.create();
+
+		WebResource webResource = client
+		   .resource(FB_URL+"/users/"+user+"/sync.json?auth="+FB_SECRET+"&shallow=true");
+
+		ClientResponse response = webResource.accept("application/json")
+                   .get(ClientResponse.class);
+
+		if(response == null) {
+			logger.log( Level.INFO,"response from Firebase is null .... \n");
+		} else {
+			logger.log( Level.INFO,"response from Firebase is NOT null .... \n");
+			MultivaluedMap<String, String> map = response.getHeaders();
+			checkParameters(map);
+
+			int st = response.getStatus();
+			int len = response.getLength();
+			logger.log( Level.INFO,"Status and length: " + st + " :: " + len);
+		}
+
+		if (response.getStatus() != 200) {
+			logger.log( Level.WARNING, "Failed : HTTP error code : " + response.getStatus());
+			throw new HttpException("Failed : HTTP error code : " + response.getStatus());
+		}
+
+		String output = response.getEntity(String.class);
+
+		logger.log( Level.INFO,"Output from Server .... \n");
+		// System.out.println(output);
+		
+		try {
+			JSONObject obj = new JSONObject(output);
+			JSONArray arr  = obj.names();
+			for (int i = 0; i < arr.length(); i++){
+				syncs.add(arr.get(i).toString());
+			}
+
+		} catch (JSONException e) { e.printStackTrace(); }
+		
+		return syncs;
+	}
+	
+	
+	public static String getSyncForUser(String userID,String syncID) throws HttpException{
+		Set<String> syncs = new HashSet<String>();
+		
+		Client client = Client.create();
+
+		WebResource webResource = client
+		   .resource(FB_URL+"/users/"+userID+"/sync/"+syncID+".json?auth="+FB_SECRET+"");
+
+		ClientResponse response = webResource.accept("application/json")
+                   .get(ClientResponse.class);
+
+		if(response == null) {
+			logger.log( Level.INFO,"response from Firebase is null .... \n");
+		} else {
+			logger.log( Level.INFO,"response from Firebase is NOT null .... \n");
+			MultivaluedMap<String, String> map = response.getHeaders();
+			checkParameters(map);
+
+			int st = response.getStatus();
+			int len = response.getLength();
+			logger.log( Level.INFO,"Status and length: " + st + " :: " + len);
+		}
+
+		if (response.getStatus() != 200) {
+			logger.log( Level.WARNING, "Failed : HTTP error code : " + response.getStatus());
+			throw new HttpException("Failed : HTTP error code : " + response.getStatus());
+		}
+
+		return response.getEntity(String.class);
+
 	}
 	
 	
@@ -1009,7 +1089,7 @@ public class GroupMigrator implements Runnable{
 		}
 
 		// start SQL Queue Thread
-		final Thread msg_thread = new Thread(gm);
+		msg_thread = new Thread(gm);
 		msg_thread.start();
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -1035,6 +1115,7 @@ public class GroupMigrator implements Runnable{
 			try {
 
 				gm.update();
+				logger.log( Level.INFO, "SQL: "+gm.sql_message_queue.size() + " sql inserts to be processed");
 
 				// Heartbeat check every ten minutes
 				if (System.currentTimeMillis() - mainThreadTime > 600000) {
@@ -1046,6 +1127,7 @@ public class GroupMigrator implements Runnable{
 					Thread.sleep(CHECKPOINT_INTERVAL);
 					boolean alive = msg_thread.isAlive();
 					if(!alive) {
+						msg_thread = new Thread(gm);
 						msg_thread.start();
 					}
 
