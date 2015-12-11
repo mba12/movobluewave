@@ -1,24 +1,16 @@
 package com.sensorstar.movo;
 
 import java.io.*;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Time;
 import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,9 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import java.util.logging.SimpleFormatter;
-import java.util.logging.Formatter;
 
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
 
@@ -612,7 +602,94 @@ public class GroupMigrator implements Runnable{
 //				addSyncToDb(steps_synced);
 //		} catch (SQLException e) {e.printStackTrace();}
 	}
-	
+
+	/** Conversion from firebase to sql */
+	static public class PropertyMapper {
+		final String key;
+		final int index;
+		final int type;
+
+		/** Sets up a new mapping to query index and type.
+		 *
+		 * @param key
+		 * @param index
+		 * @param type
+         */
+		public PropertyMapper(final String key, final int index, final int type ) {
+			this.key = key;
+			this.index = index;
+			this.type = type;
+		}
+
+		/** Sets the value on the statement using the appropriate conversion. Overide for custom things.
+		 *
+		 * @param statement
+		 * @param values
+         * @throws SQLException
+         */
+		public void setValue( final CallableStatement statement, final Map<String,String> values ) throws SQLException {
+			final String value = values.get( key );
+
+			try {
+				switch (type) {
+					case Types.BIGINT:
+					case Types.TINYINT:
+						statement.setLong(index, Long.parseLong(value));
+						break;
+
+					case Types.VARCHAR:
+						statement.setString(index, URLDecoder.decode(value, "UTF-8"));
+						break;
+
+					default:
+						throw new SQLException("Unsupported type " + type);
+				}
+			} catch (NumberFormatException | UnsupportedEncodingException | NullPointerException e) {
+				statement.setNull(index, type);
+			}
+		}
+	}
+
+	/** Specialized subclass to supply default username */
+	static class UsernameMapper extends PropertyMapper {
+		public UsernameMapper(final String key, final int index, final int type ) {
+			super( key, index, type );
+		}
+
+		@Override
+		/** Try to extract first part of email as default username if username is null or 'Error'.
+		 *
+		 */
+		public void setValue( final CallableStatement statement, final Map<String,String> values ) throws SQLException {
+			String value = values.get( key );
+
+			if( value != null && ! value.equals("Error") ) {
+				super.setValue( statement, values );
+			} else {
+				try {
+					String email = URLDecoder.decode( values.get( "currentEmail" ), "UTF-8" );
+					statement.setString( index, email.split( "@")[ 0 ] );
+				} catch (UnsupportedEncodingException|NullPointerException e ) {
+					statement.setNull( index, type );
+				}
+			}
+		}
+	}
+
+	/** Conversion mappings from firebase to SQL */
+	final static PropertyMapper[] conversionMappers = new PropertyMapper[]{
+		new PropertyMapper( "firebase_id_fk", 1, Types.VARCHAR ),
+		new PropertyMapper( "currentBirthday", 2, Types.BIGINT ),
+		new PropertyMapper( "currentEmail", 3, Types.VARCHAR ),
+		new PropertyMapper( "currentFullName", 4, Types.VARCHAR ),
+		new PropertyMapper( "currentGender", 5, Types.VARCHAR ),
+		new PropertyMapper( "currentHeight1", 6, Types.TINYINT ),
+		new PropertyMapper( "currentHeight2", 7, Types.TINYINT ),
+		new PropertyMapper( "currentUID", 8, Types.VARCHAR ),
+		new UsernameMapper( "currentUsername", 9, Types.VARCHAR ),
+		new PropertyMapper( "currentWeight", 10, Types.TINYINT ),
+	};
+
 	private void processMeta(DataSnapshot meta){
 		// logger.log( Level.INFO, "Processing Meta");
 		// logger.log( Level.INFO, "Value:\n"+meta.getValue());
@@ -620,47 +697,16 @@ public class GroupMigrator implements Runnable{
 		logger.log( Level.INFO, "Value:\n"+meta.getValue());
 
 		String firebase_id_fk = getFirebaseIdFromRef(meta);
-		
-		String currentBirthdate	= null;
-		String currentEmail		= null;
-		String currentFullName	= null;
-		String currentGender	= null;
-		String currentHeight1	= null;
-		String currentHeight2	= null;
-		String currentUID		= null;
-		String currentUsername	= null;
-		String currentWeight	= null;
 
 		Iterable<DataSnapshot> children = meta.getChildren();
 
-		for(DataSnapshot c: children){
-			if(c.getKey() == "currentBirthdate"){
-				currentBirthdate = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentEmail"){
-				currentEmail = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentFullName"){
-				currentFullName = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentGender"){
-				currentGender = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentHeight1"){
-				currentHeight1 = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentHeight2"){
-				currentHeight2 = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentUID"){
-				currentUID = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentUsername"){
-				currentUsername = (String) c.getValue();
-				
-			}else if(c.getKey() == "currentWeight"){
-				currentWeight = (String) c.getValue();
-			}
+		Map<String, String> values = new HashMap<>();
+
+		values.put( "firebase_id_fk", firebase_id_fk );
+
+		/* extract data */
+		for(DataSnapshot child: children) {
+			values.put(child.getKey(), (String) child.getValue());
 		}
 		
 		Connection conn;
@@ -668,64 +714,10 @@ public class GroupMigrator implements Runnable{
 			conn = DriverManager.getConnection(DB_URL+"&noAccessToProcedureBodies=true", username, password);
 			CallableStatement proc_stmt = conn.prepareCall("{ call BB_ADD_UPDATE_USER(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) }");
 
-			try {
-				proc_stmt.setString(1, URLDecoder.decode(firebase_id_fk, "UTF-8"));
-			} catch (UnsupportedEncodingException e1) {
-				proc_stmt.setNull(1,Types.VARCHAR);
+			/* convert data to SQL statement */
+			for(PropertyMapper mapper : conversionMappers ) {
+				mapper.setValue( proc_stmt, values );
 			}
-			
-			if(currentBirthdate != null){ 	
-				try{						proc_stmt.setLong(2, Long.parseLong(currentBirthdate));
-				}catch(NumberFormatException e){
-											proc_stmt.setNull(2,Types.BIGINT);}
-			}else{							proc_stmt.setNull(2,Types.BIGINT);}
-
-			if(currentEmail != null){ 		
-				try{						proc_stmt.setString(3, URLDecoder.decode(currentEmail, "UTF-8"));
-				}catch(UnsupportedEncodingException e){
-											proc_stmt.setNull(3,Types.VARCHAR);}
-			}else{							proc_stmt.setNull(3,Types.VARCHAR);}
-			
-			
-			if(currentFullName != null){ 	
-				try{ 						proc_stmt.setString(4, URLDecoder.decode(currentFullName, "UTF-8"));
-				}catch(UnsupportedEncodingException e){
-											proc_stmt.setNull(4,Types.VARCHAR);}
-			}else{							proc_stmt.setNull(4,Types.VARCHAR);}
-			
-			
-			if(currentGender != null){ 		
-				try{						proc_stmt.setString(5, URLDecoder.decode(currentGender, "UTF-8"));
-				}catch(UnsupportedEncodingException e){
-											proc_stmt.setNull(5,Types.VARCHAR);}
-			}else{							proc_stmt.setNull(5,Types.VARCHAR);}
-			
-			if(currentHeight1 != null){ 	
-				try{						proc_stmt.setInt(6, Integer.parseInt(URLDecoder.decode(currentHeight1, "UTF-8")));
-				}catch(UnsupportedEncodingException | NumberFormatException  e){
-											proc_stmt.setNull(6,Types.TINYINT);}
-			}else{							proc_stmt.setNull(6,Types.TINYINT);}
-			
-			if(currentHeight2 != null){ 	
-				try{ 						proc_stmt.setInt(7, Integer.parseInt(URLDecoder.decode(currentHeight2, "UTF-8")));
-				}catch(UnsupportedEncodingException | NumberFormatException  e){
-											proc_stmt.setNull(7,Types.TINYINT);}
-			}else{							proc_stmt.setNull(7,Types.TINYINT);}
-			
-			//currentUID
-			proc_stmt.setNull(8,Types.VARCHAR);
-			
-			if(currentUsername != null){ 	
-				try{ 						proc_stmt.setString(9, URLDecoder.decode(currentUsername, "UTF-8"));
-				}catch(UnsupportedEncodingException e){
-											proc_stmt.setNull(9,Types.VARCHAR);}
-			}else{							proc_stmt.setNull(9,Types.VARCHAR);}
-			
-			if(currentWeight != null){ 	
-				try{ 						proc_stmt.setInt(10, Integer.parseInt(URLDecoder.decode(currentWeight, "UTF-8")));
-				}catch(NumberFormatException | UnsupportedEncodingException  e){
-											proc_stmt.setNull(10,Types.TINYINT);}
-			}else{							proc_stmt.setNull(10,Types.TINYINT);}
 			
 			proc_stmt.executeQuery();
 			
