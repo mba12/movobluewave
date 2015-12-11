@@ -628,7 +628,8 @@ public class GroupMigrator implements Runnable{
          * @throws SQLException
          */
 		public void setValue( final CallableStatement statement, final Map<String,String> values ) throws SQLException {
-			final String value = values.get( key );
+			final String tmp = values.get( key );
+			final String value = "Error".equals(tmp) ? null : tmp;
 
 			try {
 				switch (type) {
