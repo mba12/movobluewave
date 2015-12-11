@@ -10,6 +10,7 @@ import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -366,7 +367,7 @@ public class GroupMigrator implements Runnable{
 	 * @return
 	 * @throws HttpException
 	 */
-	public static Set<String> getSyncsForUser(String user) throws HttpException{
+	public static Set<String> getFirebaseSyncsForUser(String user) throws HttpException{
 		Set<String> syncs = new HashSet<String>();
 		
 		Client client = Client.create();
@@ -462,7 +463,7 @@ public class GroupMigrator implements Runnable{
 		return user_id;
 	}
 	
-	private static class StepInterval implements java.io.Serializable{
+	public static class StepInterval implements java.io.Serializable{
 
 		private static final long serialVersionUID = 2954534620324883606L;
 		
@@ -833,7 +834,9 @@ public class GroupMigrator implements Runnable{
 		    				// logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 							logger.log( Level.INFO, "Sending Batch of size: " + cur_batch_size);
 	
-		    		    	proc_stmt.executeBatch();
+							int[] res = proc_stmt.executeBatch();
+		    		    	System.out.println("Result: "+Arrays.toString(res));
+		    		    	
 							proc_stmt.close();
 							proc_stmt = null;
 		    		    	cur_batch_size= 0;
