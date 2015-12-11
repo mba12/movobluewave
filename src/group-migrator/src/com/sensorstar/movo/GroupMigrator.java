@@ -291,7 +291,7 @@ public class GroupMigrator implements Runnable{
 
 	private static Map<String,String> checkParameters(MultivaluedMap<String, String> queryParameters) {
 
-		Map<String,String> parameters = new HashMap<>();
+		Map<String,String> parameters = new HashMap<String,String>();
 
 		Iterator<String> it = queryParameters.keySet().iterator();
 
@@ -644,7 +644,10 @@ public class GroupMigrator implements Runnable{
 					default:
 						throw new SQLException("Unsupported type " + type);
 				}
+				logger.log( Level.INFO,  "Succeed to format key '" + key + "' with value: '" + value + "'" );
+				
 			} catch (NumberFormatException | UnsupportedEncodingException | NullPointerException e) {
+				logger.log( Level.WARNING,  "Failed to format key '" + key + "' with value: '" + value + "'", e );
 				statement.setNull(index, type);
 			}
 		}
@@ -656,6 +659,20 @@ public class GroupMigrator implements Runnable{
 			super( key, index, type );
 		}
 
+		private static final String ErrorConst = "Error";
+		
+		private static boolean badString( final String value ) {
+			return null == value || ErrorConst.equals( value );
+		}
+		
+		private static void badStringThrow( final String value ) throws NullPointerException {
+			if( badString( value ) ) {
+				throw new NullPointerException();
+			}
+		}
+		
+		private final static String[] sourceKeys = { "currentEmail", "currentFullName" };
+		
 		@Override
 		/** Try to extract first part of email as default username if username is null or 'Error'.
 		 *
@@ -663,16 +680,41 @@ public class GroupMigrator implements Runnable{
 		public void setValue( final CallableStatement statement, final Map<String,String> values ) throws SQLException {
 			String value = values.get( key );
 
-			if( value != null && ! value.equals("Error") ) {
+			if( ! badString( value ) ) {
 				super.setValue( statement, values );
 			} else {
-				try {
-					String email = URLDecoder.decode( values.get( "currentEmail" ), "UTF-8" );
-					statement.setString( index, email.split( "@")[ 0 ] );
-				} catch (UnsupportedEncodingException|NullPointerException e ) {
-					statement.setNull( index, type );
+				// Loop over alternate sources, try to replace.
+				for( final String sourceKey : sourceKeys ) {
+					try {
+						
+						final String source = URLDecoder.decode( values.get( sourceKey ), "UTF-8" );
+						badStringThrow( source );
+						
+						final String defaultValue = source.split( "\\s+|@|," )[0]; 
+						statement.setString( index, defaultValue );
+						logger.log( Level.INFO, "Replacing key '" + key + "' value '" + value +"' with default '" + defaultValue + "'");
+			
+					} catch( UnsupportedEncodingException|NullPointerException e ) {
+						logger.log( Level.WARNING,  "Failed to replace key '" + key + "' with source: '" + sourceKey + "'", e );
+					}
 				}
+				// Null if we can't find a suitable replacement
+				logger.log( Level.WARNING,  "Failed to replace key '" + key + "' with value: '" + value + "', NULLING" );
+				statement.setNull( index, type );
 			}
+		}
+	}
+	
+	static class NullMapper extends PropertyMapper {
+		public NullMapper(String key, int index, int type) {
+			super(key, index, type);
+		}
+
+		@Override
+		/** Always map the value to null */
+		public void setValue( final CallableStatement statement, final Map<String,String> values ) throws SQLException {
+			logger.log( Level.WARNING,  "Nulling key '" + key + "'" );
+			statement.setNull( index, type );
 		}
 	}
 
@@ -685,7 +727,7 @@ public class GroupMigrator implements Runnable{
 		new PropertyMapper( "currentGender", 5, Types.VARCHAR ),
 		new PropertyMapper( "currentHeight1", 6, Types.TINYINT ),
 		new PropertyMapper( "currentHeight2", 7, Types.TINYINT ),
-		new PropertyMapper( "currentUID", 8, Types.VARCHAR ),
+		new NullMapper( "currentUID", 8, Types.VARCHAR ),
 		new UsernameMapper( "currentUsername", 9, Types.VARCHAR ),
 		new PropertyMapper( "currentWeight", 10, Types.TINYINT ),
 	};
@@ -725,6 +767,7 @@ public class GroupMigrator implements Runnable{
 
 		} catch (SQLException e) {
 			e.printStackTrace();
+			logger.log( Level.WARNING, "Updating metadata failed!", e );
 		}
 
 		
