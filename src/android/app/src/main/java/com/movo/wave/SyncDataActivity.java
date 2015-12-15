@@ -34,6 +34,7 @@ import com.movo.wave.comms.WaveAgent;
 import com.movo.wave.comms.WaveInfo;
 import com.movo.wave.comms.WaveRequest;
 import com.movo.wave.util.DatabaseHandle;
+import com.movo.wave.util.FirebaseSync;
 import com.movo.wave.util.LazyLogger;
 import com.movo.wave.util.NotificationPublisher;
 import com.movo.wave.util.UTC;
@@ -327,13 +328,18 @@ public class SyncDataActivity extends MenuActivity {
 
             dbHandle.acquire();
 
-            Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curUser + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" +startTime +"/");//to modify child node
-            refStep2.updateChildren(minuteMap, new Firebase.CompletionListener() {
+
+
+            //Implement barrier to only mark synced locally when both FB calls complete successfully.
+            final Firebase.CompletionListener listener = new Firebase.CompletionListener() {
+
+                int callCount = 0;
+
                 @Override
                 public void onComplete(FirebaseError firebaseError, Firebase firebase) {
                     if (firebaseError != null) {
                         lazyLog.w("Data could not be saved. " + firebaseError.getMessage());
-                    } else {
+                    } else if( (callCount += 1) == 2  ) {
                         lazyLog.d("Data saved successfully.");
 
                         localValues.put( Database.StepEntry.IS_PUSHED, "1");
@@ -341,16 +347,20 @@ public class SyncDataActivity extends MenuActivity {
                         if( row < 0 ) {
                             lazyLog.e( "Can't mark step entry uploaded in database!!!!! ", row, " ", curUser, " ", localValues.getAsString( Database.StepEntry.START));
                         }
+                    } else {
+                        lazyLog.d( "Data save pending next invocation ");
                     }
-
                     dbHandle.release();
                 }
-            });
+            };
 
+            // push data to firebase
+            Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curUser + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" +startTime +"/");//to modify child node
+            refStep2.updateChildren(minuteMap, listener );
+
+            //
             Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
-            refSyncSteps.updateChildren(minuteMap);
-
-            //FIXME: Implement barrier to only mark synced locally when both FB calls complete successfully.
+            refSyncSteps.updateChildren(minuteMap, listener);
         }
 
         cur.close();
@@ -428,7 +438,7 @@ public class SyncDataActivity extends MenuActivity {
             cur.close();
             //*****************steps***********************//
 
-            insertStepsIntoFirebase(db, currentUserId, syncUniqueID);
+            FirebaseSync.insertStepsIntoFirebase( c, currentUserId, syncUniqueID);
 
         } else {
             lazyLog.d("SYNC FAILED!" + sync);

@@ -73,7 +73,7 @@ public class UserData extends Activity{
     private Firebase currentUserRef;
     private Home homeView;
 //    final static String firebase_url = "https://ss-movo-wave-v2.firebaseio.com/";
-    final static String firebase_url = "https://movowave.firebaseio.com/";
+    final public static String firebase_url = "https://movowave.firebaseio.com/";
 
 
 
