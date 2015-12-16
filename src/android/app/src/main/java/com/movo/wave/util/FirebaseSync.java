@@ -77,11 +77,8 @@ public class FirebaseSync {
 
             minuteMap.put(deviceSerial, stepMap);
 
-            dbHandle.acquire();
-
-
-
             //Implement barrier to only mark synced locally when both FB calls complete successfully.
+
             final Firebase.CompletionListener listener = new Firebase.CompletionListener() {
 
                 int callCount = 0;
@@ -106,10 +103,12 @@ public class FirebaseSync {
             };
 
             // push data to firebase
+            dbHandle.acquire();
             Firebase refStep2 = new Firebase(UserData.firebase_url + "users/" + curUser + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" +startTime +"/");//to modify child node
             refStep2.updateChildren(minuteMap, listener );
 
             //
+            dbHandle.acquire();
             Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + syncID + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
             refSyncSteps.updateChildren(minuteMap, listener);
         }
