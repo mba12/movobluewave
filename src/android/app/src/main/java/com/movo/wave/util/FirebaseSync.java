@@ -13,6 +13,7 @@ import com.movo.wave.UserData;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -28,6 +29,8 @@ public class FirebaseSync {
         final DatabaseHandle dbHandle = new DatabaseHandle(c);
         dbHandle.acquire();
 
+        final HashSet<String> syncSet = new HashSet<>();
+
         Cursor cur =  UserData.getUserData(c).getStepsToUpload(dbHandle.db, curUser);
 
 
@@ -37,12 +40,16 @@ public class FirebaseSync {
 
             final String deviceSerial = localValues.getAsString(Database.StepEntry.DEVICEID);
 
+            // Cache syncID for later.
+            final String syncID = localValues.getAsString(Database.StepEntry.SYNC_ID );
+            syncSet.add( syncID );
+
             Map<String, Object> stepMap = new HashMap<String, Object>();
             stepMap.put(Database.StepEntry.START, UTC.isoFormatShort(localValues.getAsLong(Database.StepEntry.START)));
             stepMap.put(Database.StepEntry.END, UTC.isoFormatShort(localValues.getAsLong(Database.StepEntry.END)));
             stepMap.put(Database.StepEntry.STEPS, localValues.getAsString(Database.StepEntry.STEPS));
             stepMap.put(Database.StepEntry.DEVICEID, localValues.getAsString(Database.StepEntry.DEVICEID) );
-            stepMap.put(Database.StepEntry.SYNC_ID, localValues.getAsString(Database.StepEntry.SYNC_ID ) );
+            stepMap.put(Database.StepEntry.SYNC_ID, syncID  );
 
             Long stepTimeLong = localValues.getAsLong(Database.StepEntry.START);
 //        Long stepTimeLong = stepTime.getTime();
@@ -103,11 +110,47 @@ public class FirebaseSync {
             refStep2.updateChildren(minuteMap, listener );
 
             //
-            Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + stepMap.get(Database.StepEntry.SYNC_ID) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
+            Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + syncID + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
             refSyncSteps.updateChildren(minuteMap, listener);
         }
 
         cur.close();
+
+
+        /*
+            Iterate over syncSet and upload data
+         */
+        for( final String syncID : syncSet ) {
+            cur = dbHandle.db.query(
+                    Database.SyncEntry.SYNC_TABLE_NAME,  // The table to query
+                    new String[]{Database.SyncEntry.GUID, //blob
+                            Database.SyncEntry.SYNC_START, //int
+                            Database.SyncEntry.SYNC_END, //int
+                            Database.SyncEntry.USER, //string
+                            Database.SyncEntry.STATUS}, //bool                          // The columns to return
+                    Database.SyncEntry.GUID + "=?",                                // The columns for the WHERE clause
+                    new String[]{syncID},                            // The values for the WHERE clause
+                    null,                                     // don't group the rows
+                    null,                                     // don't filter by row groups
+                    null                                 // The sort order
+            );
+
+            if( cur.moveToFirst() ) {
+                Firebase ref = new Firebase(UserData.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
+
+
+                Map<String, Object> syncData = new HashMap<String, Object>();
+                syncData.put(Database.SyncEntry.SYNC_START, UTC.isoFormat(Long.parseLong(cur.getString(1))));
+                syncData.put(Database.SyncEntry.SYNC_END, UTC.isoFormat(Long.parseLong(cur.getString(2))));
+                syncData.put(Database.SyncEntry.USER, cur.getString(3));
+                syncData.put(Database.SyncEntry.STATUS, cur.getString(4));
+
+                ref.updateChildren(syncData);
+            } else {
+                lazyLog.e( "Could not retrieve sync info for GUID: " + syncID );
+            }
+            cur.close();
+        }
         dbHandle.release();
     }
 }

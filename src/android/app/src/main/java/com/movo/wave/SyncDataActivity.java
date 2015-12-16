@@ -236,27 +236,6 @@ public class SyncDataActivity extends MenuActivity {
         }
     };
 
-//    public Cursor getNotUploadedSteps(){
-//
-//        String selectionSteps = Database.StepEntry.SYNC_ID + "=? OR " + Database.StepEntry.IS_PUSHED + "=?";
-//        Cursor curSteps = db.query(
-//                Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-//                new String[]{Database.StepEntry.SYNC_ID, //blob
-//                        Database.StepEntry.START, //int
-//                        Database.StepEntry.END, //int
-//                        Database.StepEntry.USER, //string
-//                        Database.StepEntry.STEPS, //int
-//                        Database.StepEntry.DEVICEID, //blob
-//                        Database.StepEntry.GUID}, //blob                          // The columns to return
-//                selectionSteps,                                // The columns for the WHERE clause
-//                new String[]{syncID, "0"},                            // The values for the WHERE clause
-//                null,                                     // don't group the rows
-//                null,                                     // don't filter by row groups
-//                null                                 // The sort order
-//        );
-//        curSteps.moveToFirst();
-//        return curSteps;
-//    }
 
 
     protected void onSyncComplete( WaveAgent.DataSync sync, List<WaveRequest.WaveDataPoint> data) {
@@ -287,47 +266,7 @@ public class SyncDataActivity extends MenuActivity {
 //            db.close();
             lazyLog.d("Sync database add:\n" + syncValues.toString());
 
-//                    FirebaseCalls fbc = new FirebaseCalls(c);
-//                    fbc.uploadSync(syncUniqueID);
 
-            String selection = Database.SyncEntry.GUID + "=?";
-            ContentValues valuesRead = new ContentValues();
-            Cursor cur = db.query(
-                    Database.SyncEntry.SYNC_TABLE_NAME,  // The table to query
-                    new String[]{Database.SyncEntry.GUID, //blob
-                            Database.SyncEntry.SYNC_START, //int
-                            Database.SyncEntry.SYNC_END, //int
-                            Database.SyncEntry.USER, //string
-                            Database.SyncEntry.STATUS}, //bool                          // The columns to return
-                    selection,                                // The columns for the WHERE clause
-                    new String[]{syncUniqueID},                            // The values for the WHERE clause
-                    null,                                     // don't group the rows
-                    null,                                     // don't filter by row groups
-                    null                                 // The sort order
-            );
-
-            cur.moveToFirst();
-            //start
-            long itemId = cur.getLong(
-                    cur.getColumnIndexOrThrow(Database.SyncEntry.GUID)
-
-            );
-//            firebase upload sync
-//                    UserData myData = UserData.getUserData(c);
-            //sync ref
-            Firebase ref = new Firebase(UserData.firebase_url + "users/" + cur.getString(3) + "/sync/" + cur.getString(0));
-
-
-            Map<String, Object> syncData = new HashMap<String, Object>();
-//                    syncData.put(Database.SyncEntry.GUID, cur.getString(0));
-            syncData.put(Database.SyncEntry.SYNC_START, UTC.isoFormat(Long.parseLong(cur.getString(1))));
-            syncData.put(Database.SyncEntry.SYNC_END, UTC.isoFormat(Long.parseLong(cur.getString(2))));
-            syncData.put(Database.SyncEntry.USER, cur.getString(3));
-            syncData.put(Database.SyncEntry.STATUS, cur.getString(4));
-
-            lazyLog.d("Sync ID is " + cur.getString(0));
-            ref.setValue(syncData);
-            cur.close();
             //*****************steps***********************//
 
             FirebaseSync.insertStepsIntoFirebase( c, currentUserId);
