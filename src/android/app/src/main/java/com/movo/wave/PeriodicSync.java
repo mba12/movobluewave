@@ -40,11 +40,10 @@ public class PeriodicSync extends BroadcastReceiver
                 activeNetwork.isConnectedOrConnecting();
 
         if(isConnected){
-
-            UserData userData = UserData.getUserData(context);
-            if(userData.getCurrentUser() != null) {
-                lazyLog.d("had user: "+userData.getCurrentUser());
-                FirebaseSync.insertStepsIntoFirebase(context, userData.getCurrentUser());
+            final String uid = UserData.getUserData(context).getCurUID();
+            if(uid != null) {
+                lazyLog.d("had user: "+uid);
+                FirebaseSync.insertStepsIntoFirebase(context, uid);
             }else{
                 lazyLog.d("no username");
 
