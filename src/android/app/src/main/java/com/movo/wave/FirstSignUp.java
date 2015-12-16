@@ -145,7 +145,10 @@ public class FirstSignUp extends Activity {
 
         login.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!(username.getText().equals("")) && !(pass.getText().equals("")) && !(usernameCust.getText().equals(""))) {
+                if (!(username.getText().equals(""))
+                        && !(usernameCust.getText().equals("") || usernameCust.getText().length() == 0)
+                        && !(pass.getText().equals(""))
+                        && !(usernameCust.getText().equals(""))) {
                     if (is13) {
         //take out username validation
 //                        Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");
@@ -155,6 +158,7 @@ public class FirstSignUp extends Activity {
 //                            public void onDataChange(DataSnapshot snapshot) {
 //                                if(snapshot.getValue()==null){
                                     Log.d(TAG, "Username not taken");
+                                    Log.d(TAG, "DisplayName: "+ usernameCust.getText() + "\nLen: "+ usernameCust.getText().length());
                                     mEmail = username.getText().toString();
                                     mUsername = usernameCust.getText().toString();
                                     mPassword = pass.getText().toString();

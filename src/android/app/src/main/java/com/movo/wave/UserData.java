@@ -450,7 +450,7 @@ public class UserData extends Activity{
             prefs.edit().putBoolean("userExists", true);
             return true;
         }else{
-            setCurrentUser("");
+            setCurrentUser(null);
             resetUserList();
 
             return false;
