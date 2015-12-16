@@ -38,6 +38,10 @@
         <item>Scanning</item>
         <item>Complete</item>
     </string-array>
+    <string name="step_sync_flavor">Your steps pending sync: </string>
+    <string name="step_sync_other_flavor">Other account steps pending: </string>
+    <string name="step_sync_pending">Calculating...</string>
+    <string name="step_sync_button_text">Sync now</string>
     <string name="scan_button_text">Scan</string>
     <string name="scan_known_waves_label">Previous Devices:</string>
     <string name="scan_new_waves_label">New Devices:</string>
@@ -45,4 +49,5 @@
     <string-array name="contact_email_recipients">
         <item>info@getmovo.com</item>
     </string-array>
+    <string name="title_activity_sync_status">SyncStatusActivity</string>
 </resources>

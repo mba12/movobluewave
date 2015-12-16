@@ -41,6 +41,7 @@ public abstract class MenuActivity extends ActionBarActivity {
         DiscoverWave( "Upload Data", WaveScanActivity.class),
 
         User        ("Users", UserActivity.class ),
+        SyncStatus  ("Sync Status", SyncStatusActivity.class ),
         FAQ         ("FAQ", null) {
             @Override
             public Intent select(Context context) {

@@ -22,7 +22,8 @@ public class FirebaseSync {
 
     final static public LazyLogger lazyLog = new LazyLogger( "FirebaseSync", true );
 
-    static public void insertStepsIntoFirebase(Context c, final String curUser, String syncId){
+
+    static public void insertStepsIntoFirebase(Context c, final String curUser ){
 
         final DatabaseHandle dbHandle = new DatabaseHandle(c);
         dbHandle.acquire();
@@ -102,7 +103,7 @@ public class FirebaseSync {
             refStep2.updateChildren(minuteMap, listener );
 
             //
-            Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + syncId + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
+            Firebase refSyncSteps = new Firebase(UserData.firebase_url + "users/" + curUser + "/sync/" + stepMap.get(Database.StepEntry.SYNC_ID) + "/steps/" + (cal.get(Calendar.YEAR)) + "/" + monthChange + "/" + dayChange + "/" + startTime + "/");//to modify child node
             refSyncSteps.updateChildren(minuteMap, listener);
         }
 

@@ -44,8 +44,7 @@ public class PeriodicSync extends BroadcastReceiver
             UserData userData = UserData.getUserData(context);
             if(userData.getCurrentUsername() != null) {
                 lazyLog.d("had username: "+userData.getCurrentUsername());
-                // Insert steps with new upload ID to represent this upload attempt
-                FirebaseSync.insertStepsIntoFirebase(context, userData.getCurrentUser(), UUID.randomUUID().toString());
+                FirebaseSync.insertStepsIntoFirebase(context, userData.getCurrentUser());
             }else{
                 lazyLog.d("no username");
 
