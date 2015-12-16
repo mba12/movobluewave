@@ -145,10 +145,10 @@ public class FirstSignUp extends Activity {
 
         login.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                if (!(username.getText().equals(""))
+                if (!(username.getText().equals("") || username.getText().length() == 0)
                         && !(usernameCust.getText().equals("") || usernameCust.getText().length() == 0)
-                        && !(pass.getText().equals(""))
-                        && !(usernameCust.getText().equals(""))) {
+                        && !(pass.getText().equals("") || pass.getText().length() == 0)
+                        && !(passConf.getText().equals("") || passConf.getText().length() == 0) ) {
                     if (is13) {
         //take out username validation
 //                        Firebase lookupEmail = new Firebase(UserData.firebase_url + "emailtable/");

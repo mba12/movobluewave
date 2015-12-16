@@ -173,7 +173,7 @@ public class SyncDataActivity extends MenuActivity {
                                         DatabaseHelper mDbHelper = new DatabaseHelper(c);
                                         db = mDbHelper.getWritableDatabase();
                                         inputNameText = input.getText().toString();
-                                        if(!inputNameText.equals("")) {
+                                        if(!(inputNameText.equals("") || inputNameText.length() == 0)) {
                                             String currentUser = UserData.getUserData(c).getCurUID();
                                             sync.info.setName(currentUser, inputNameText);
                                             sync.info.store(db);

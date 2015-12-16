@@ -88,7 +88,7 @@ public class FirstLogin extends Activity {
             public void onClick(View v) {
                 loginProgress.setVisibility(View.VISIBLE);
                 mEmail = username.getText().toString();
-                if (mEmail.equals("")) {
+                if (mEmail.equals("") || mEmail.length() == 0) {
                     Toast.makeText(c, "Error: Email is empty", Toast.LENGTH_LONG).show();
                 } else {
 

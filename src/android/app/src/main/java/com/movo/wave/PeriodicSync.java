@@ -29,7 +29,7 @@ public class PeriodicSync extends BroadcastReceiver
 
     public void onReceive(Context context, Intent intent)
     {
-        Toast.makeText(context, "Periodic Sync Upload! !!!!!!!!!!", Toast.LENGTH_LONG).show(); // For example
+//        Toast.makeText(context, "Periodic Sync Upload! !!!!!!!!!!", Toast.LENGTH_LONG).show(); // For example
 
         // if we have network connection
         ConnectivityManager cm =
@@ -61,7 +61,7 @@ public class PeriodicSync extends BroadcastReceiver
         AlarmManager am =( AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(context, PeriodicSync.class);
         PendingIntent pi = PendingIntent.getBroadcast(context, 0, i, 0);
-        am.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), 1000 * 10 * 1, pi); // Millisec * Second * Minute
+        am.setInexactRepeating(AlarmManager.RTC, System.currentTimeMillis(), 1000 * 60 * 60, pi); // Millisec * Second * Minute
     }
 
     public void CancelAlarm(Context context)
