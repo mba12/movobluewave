@@ -671,9 +671,13 @@ public class UserData extends Activity{
         userDataString.put("currentBirthdate", currentBirthdate);
         userDataString.put("currentUsername", currentUsername);
 
+        // Filter out null values.
+        Map<String, Object> uploadMap = new HashMap<>();
+
         for( final String key : userDataString.keySet() ) {
-            if( userDataString.get( key ) == null ) {
-                userDataString.remove( key );
+            final Object value = userDataString.get( key );
+            if( value != null ) {
+                uploadMap.put(key, value);
             }
         }
 
