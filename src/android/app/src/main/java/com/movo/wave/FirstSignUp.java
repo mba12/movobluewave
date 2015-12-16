@@ -186,6 +186,7 @@ public class FirstSignUp extends Activity {
 
                                                         UserData.getUserData(c).setCurrentUserRef(currentUserRef);
                                                         UserData.getUserData(c).addCurUserTolist();
+                                                        UserData.getUserData(c).uploadToFirebase();
 
                                                         //username lookup table
                                                         Firebase usernameEmailTies = new Firebase(UserData.firebase_url + "emailtable");

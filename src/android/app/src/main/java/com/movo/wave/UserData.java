@@ -658,7 +658,7 @@ public class UserData extends Activity{
     public String getCurrentUsername() { return currentUsername; }
 
     public void uploadToFirebase(){
-        Map<String, String> userDataString = new HashMap<String, String>();
+        Map<String, Object> userDataString = new HashMap<>();
         userDataString.put("currentUID", currentUID);
 //        userDataString.put("currentToken", currentToken);
         userDataString.put("currentEmail", currentEmail);
@@ -671,11 +671,14 @@ public class UserData extends Activity{
         userDataString.put("currentBirthdate", currentBirthdate);
         userDataString.put("currentUsername", currentUsername);
 
+        for( final String key : userDataString.keySet() ) {
+            if( userDataString.get( key ) == null ) {
+                userDataString.remove( key );
+            }
+        }
 
         Firebase ref = new Firebase(UserData.firebase_url + "users/" +getCurUID() + "/metadata/");
-        ref.setValue(userDataString);
-
-
+        ref.updateChildren(userDataString);
     }
 
 
