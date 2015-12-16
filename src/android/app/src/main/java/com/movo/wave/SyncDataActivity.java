@@ -331,7 +331,7 @@ public class SyncDataActivity extends MenuActivity {
             cur.close();
             //*****************steps***********************//
 
-            FirebaseSync.insertStepsIntoFirebase( c, currentUserId, syncUniqueID);
+            FirebaseSync.insertStepsIntoFirebase( c, currentUserId);
 
         } else {
             lazyLog.d("SYNC FAILED!" + sync);

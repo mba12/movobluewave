@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import com.movo.wave.R;
 import com.movo.wave.util.DatabaseHandle;
+import com.movo.wave.util.FirebaseSync;
 import com.movo.wave.util.LazyLogger;
 
 public class SyncStatusActivity extends MenuActivity {
@@ -22,7 +23,7 @@ public class SyncStatusActivity extends MenuActivity {
     TextView otherStepsText;
     Button syncButton;
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initMenu(R.layout.activity_sync_status);
         dbHandle = new DatabaseHandle(c);
@@ -37,7 +38,18 @@ public class SyncStatusActivity extends MenuActivity {
         syncButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateSteps( UserData.getUserData(c).getCurUID() );
+                // disable things to make it look like we're doing work!
+                syncButton.setEnabled(false);
+                userStepsText.setText(R.string.step_sync_pending);
+                otherStepsText.setText(R.string.step_sync_pending);
+
+                final String uid = UserData.getUserData(c).getCurUID();
+
+                // TODO: Push to background thread.
+                FirebaseSync.insertStepsIntoFirebase( c, uid );
+                updateSteps( uid);
+                // re-enable button
+                syncButton.setEnabled( true );
             }
         });
 
