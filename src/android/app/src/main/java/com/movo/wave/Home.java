@@ -283,7 +283,7 @@ public class Home extends MenuActivity {
             String uid = UserData.getUserData(c).getCurrentUser();
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-            if("Error".equals(UserData.getUserData(c).getCurrentUsername())){
+            if(UserData.getUserData(c).getCurrentUsername() == null){
                 currentUserTV.setText( "" );
             }else{
                 currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
@@ -419,6 +419,10 @@ public class Home extends MenuActivity {
 
 
 //        upload();
+
+
+        /* Schedule Periodic Sync Uploads */
+        PeriodicSync.SetAlarm(this.getApplicationContext());
     }
 
 
@@ -477,16 +481,18 @@ public class Home extends MenuActivity {
         homeLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
         try {
-            byte[] prof =  UserData.getUserData(c).retrievePhoto(db,0,delegate );
-            if (prof != null) {
-                Glide.with(c)
-                        .load(prof)
-//                            .override(1080,1920)
-                        .thumbnail(0.1f)
-                        .centerCrop()
-                        .into(profilePic);
-                Log.d(TAG, "Loading profile picture");
+            if(UserData.getUserData(c).getCurrentUsername() != null){
 
+                byte[] prof =  UserData.getUserData(c).retrievePhoto(db,0,delegate );
+                if (prof != null) {
+                    Glide.with(c)
+                            .load(prof)
+    //                            .override(1080,1920)
+                            .thumbnail(0.1f)
+                            .centerCrop()
+                            .into(profilePic);
+                    Log.d(TAG, "Loading profile picture");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -500,7 +506,7 @@ public class Home extends MenuActivity {
             UserData.getUserData(c).loadNewUser(uid);
             TextView currentUserTV = (TextView) findViewById(R.id.nameText);
             try {
-                if (UserData.getUserData(c).getCurrentUsername().equals("Error")) {
+                if (UserData.getUserData(c).getCurrentUsername() == null) {
                     currentUserTV.setText("");
                 } else {
                     currentUserTV.setText(UserData.getUserData(c).getCurrentUsername());
@@ -548,7 +554,7 @@ public class Home extends MenuActivity {
                 gridview.invalidate();
                 chart.invalidate();
                 TextView currentUserTV = (TextView) findViewById(R.id.nameText);
-                if(UserData.getUserData(c).getCurrentUsername().equals("Error")){
+                if(UserData.getUserData(c).getCurrentUsername() == null){
                     currentUserTV.setText( "" );
                 }else{
                     currentUserTV.setText( UserData.getUserData(c).getCurrentUsername());
@@ -913,8 +919,6 @@ public class Home extends MenuActivity {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange(db, monthRangeStart, monthRangeStop);
-            curSteps.moveToFirst();
 
             // NOTE: MBA debug code below
 //            String tzTest = TimeZone.getDefault().getDisplayName();
@@ -928,16 +932,18 @@ public class Home extends MenuActivity {
 //            mbaCalEndRange.setTimeInMillis(monthRangeStop);
 //            String endRange = UTC.isoFormat(mbaCalEndRange);
 
+            Cursor curSteps = UserData.getUserData(c).getStepsForDateRange(db, monthRangeStart, monthRangeStop);
+
             if (curSteps != null && curSteps.moveToFirst()) {
                 int totalStepsForToday = curSteps.getInt(0);
 
                 steps.setText(totalStepsForToday + "");
                 // Log.d(TAG, "MBA: " + startRange + " :: " + endRange + " :: " + totalStepsForToday );
+                curSteps.close();
 
             } else {
                 steps.setText(0 + "");
             }
-            curSteps.close();
             return gridView;
         }
 

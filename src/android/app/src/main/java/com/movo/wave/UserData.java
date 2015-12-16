@@ -57,17 +57,17 @@ public class UserData extends Activity{
     private static String TAG = "Wave.UserData";
     boolean status = false;
     Context appContext;
-    private String currentUID = "Error";
-    private String currentToken = "Error";
-    private String currentEmail = "Error";
-    private String currentPW = "Error";
-    private String currentBirthdate = "Error";
-    private String currentHeight1 = "Error";
-    private String currentHeight2 = "Error";
-    private String currentWeight = "Error";
-    private String currentGender = "Error";
-    private String currentFullName = "Error";
-    private String currentUsername = "Error";
+    private String currentUID = null;
+    private String currentToken = null;
+    private String currentEmail = null;
+    private String currentPW = null;
+    private String currentBirthdate = null;
+    private String currentHeight1 = null;
+    private String currentHeight2 = null;
+    private String currentWeight = null;
+    private String currentGender = null;
+    private String currentFullName = null;
+    private String currentUsername = null;
     private DataSnapshot currentUserSnapshot;
     private Firebase loginRef;
     private Firebase currentUserRef;
@@ -162,19 +162,22 @@ public class UserData extends Activity{
         boolean userExists = prefs.getBoolean("userExists", false);
 
         if (userExists) {
-            currentUID = prefs.getString("currentUID", "Error");
-            currentToken = prefs.getString("currentToken", "Error");
-            currentEmail = prefs.getString("currentEmail", "Error");
-            currentHeight1 = prefs.getString("currentHeight1", "Error");
-            currentHeight2 = prefs.getString("currentHeight2", "Error");
-            currentWeight = prefs.getString("currentWeight", "Error");
-            currentGender = prefs.getString("currentGender", "Error");
-            currentFullName = prefs.getString("currentFullName", "Error");
-            currentPW = prefs.getString("currentPW", "Error");
-            currentBirthdate= prefs.getString("currentBirthdate", "Error");
-            currentUsername= prefs.getString("currentUsername", "Error");
+            currentUID = prefs.getString("currentUID", null);
+            currentToken = prefs.getString("currentToken", null);
+            currentEmail = prefs.getString("currentEmail", null);
+            currentHeight1 = prefs.getString("currentHeight1", null);
+            currentHeight2 = prefs.getString("currentHeight2", null);
+            currentWeight = prefs.getString("currentWeight", null);
+            currentGender = prefs.getString("currentGender", null);
+            currentFullName = prefs.getString("currentFullName", null);
+            currentPW = prefs.getString("currentPW", null);
+            currentBirthdate= prefs.getString("currentBirthdate", null);
+            currentUsername= prefs.getString("currentUsername", null);
 //            currentUserSnapshot = prefs.gets
-//            reAuthenticate(currentEmail, currentPW);
+//            reAuthenticate(currentEmail, currentPW);'
+
+            Log.d(TAG, "Current email/password: " + currentEmail+ " "+ currentPW);
+            try{Thread.sleep(1000);}catch(Exception e){}
             prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
             Log.d(TAG, "User info is: " + currentUID);
         } else {
@@ -347,7 +350,7 @@ public class UserData extends Activity{
 
     public boolean storeCurrentUser(){
         String storeUID = currentUID;
-        if(!(currentUID.equals("Error"))) {
+        if(!(currentUID == null)) {
             Map<String, String> userDataString = new HashMap<String, String>();
             userDataString.put("currentUID", currentUID);
             userDataString.put("currentToken", currentToken);
@@ -393,17 +396,17 @@ public class UserData extends Activity{
     }
 
     public boolean resetCurrentUserValues(){
-        currentUID = "Error";
-        currentToken = "Error";
-        currentEmail = "Error";
-        currentPW = "Error";
-        currentHeight1 = "Error";
-        currentHeight2 = "Error";
-        currentWeight = "Error";
-        currentGender = "Error";
-        currentFullName = "Error";
-        currentBirthdate = "Error";
-        currentUsername = "Error";
+        currentUID = null;
+        currentToken = null;
+        currentEmail = null;
+        currentPW = null;
+        currentHeight1 = null;
+        currentHeight2 = null;
+        currentWeight = null;
+        currentGender = null;
+        currentFullName = null;
+        currentBirthdate = null;
+        currentUsername = null;
         return true;
     }
 
@@ -512,17 +515,17 @@ public class UserData extends Activity{
         if(allUsers.contains(UID)) {
             SharedPreferences userData = appContext.getSharedPreferences(UID, Context.MODE_PRIVATE);
 //            SharedPreferences.Editor userDataEditor = userData.edit();
-            currentUID = userData.getString("currentUID","Error");
-            currentEmail = userData.getString("currentEmail", "Error");
-            currentPW = userData.getString("currentPW", "Error");
-            currentToken = userData.getString("currentToken","Error");
-            currentHeight1 = userData.getString("currentHeight1", "Error");
-            currentHeight2 = userData.getString("currentHeight2", "Error");
-            currentWeight = userData.getString("currentWeight", "Error");
-            currentGender = userData.getString("currentGender", "Error");
-            currentFullName = userData.getString("currentFullName", "Error");
-            currentBirthdate= userData.getString("currentBirthdate", "Error");
-            currentUsername = userData.getString("currentUsername", "Error");
+            currentUID = userData.getString("currentUID",null);
+            currentEmail = userData.getString("currentEmail", null);
+            currentPW = userData.getString("currentPW", null);
+            currentToken = userData.getString("currentToken",null);
+            currentHeight1 = userData.getString("currentHeight1", null);
+            currentHeight2 = userData.getString("currentHeight2", null);
+            currentWeight = userData.getString("currentWeight", null);
+            currentGender = userData.getString("currentGender", null);
+            currentFullName = userData.getString("currentFullName", null);
+            currentBirthdate= userData.getString("currentBirthdate", null);
+            currentUsername = userData.getString("currentUsername", null);
 
 
             notifyListeners();
@@ -571,17 +574,17 @@ public class UserData extends Activity{
 
     public void resetUserList(){
         //this resets the user list to insure data deletion.
-          currentUID = "Error";
-          currentToken = "Error";
-          currentEmail = "Error";
-          currentPW = "Error";
-          currentBirthdate = "Error";
-          currentHeight1 = "Error";
-          currentHeight2 = "Error";
-          currentWeight = "Error";
-          currentGender = "Error";
-          currentFullName = "Error";
-          currentUsername = "Error";
+          currentUID = null;
+          currentToken = null;
+          currentEmail = null;
+          currentPW = null;
+          currentBirthdate = null;
+          currentHeight1 = null;
+          currentHeight2 = null;
+          currentWeight = null;
+          currentGender = null;
+          currentFullName = null;
+          currentUsername = null;
 
 
         SharedPreferences allUsers = appContext.getSharedPreferences("allUsers", Context.MODE_PRIVATE);
@@ -968,7 +971,7 @@ public class UserData extends Activity{
         child.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                if(snapshot.hasChildren()) {
+                if (snapshot.hasChildren()) {
                     setCurEmail(snapshot.child("currentEmail").getValue(String.class));
                     setCurHeight1(snapshot.child("currentHeight1").getValue(String.class));
                     setCurHeight2(snapshot.child("currentHeight2").getValue(String.class));
@@ -981,6 +984,7 @@ public class UserData extends Activity{
                     notifyListeners();
                 }
             }
+
             @Override
             public void onCancelled(FirebaseError firebaseError) {
 
@@ -1073,18 +1077,20 @@ public class UserData extends Activity{
 
         // debugSteps( db, monthRangeStart, monthRangeStop, userID);
 
-        final String query = "SELECT SUM(" +Database.StepEntry.STEPS +
-                ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
-                Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
-                "<=? AND " + Database.StepEntry.USER + " =? ";
+        Cursor curSteps = null;
+        if(userID != null) {
+            final String query = "SELECT SUM(" + Database.StepEntry.STEPS +
+                    ") FROM " + Database.StepEntry.STEPS_TABLE_NAME + " WHERE " +
+                    Database.StepEntry.START + " >=? AND " + Database.StepEntry.END +
+                    "<=? AND " + Database.StepEntry.USER + " =? ";
 
-        final String[] args = new String[]{
-                Long.toString(monthRangeStart),
-                Long.toString(monthRangeStop),
-                userID};
+            final String[] args = new String[]{
+                    Long.toString(monthRangeStart),
+                    Long.toString(monthRangeStop),
+                    userID};
 
-        Cursor curSteps = db.rawQuery(query, args);
-
+            curSteps = db.rawQuery(query, args);
+        }
         return curSteps;
     }
 
@@ -1291,6 +1297,8 @@ public class UserData extends Activity{
     }
 
     public Cursor getStepsToUpload(SQLiteDatabase db, String userId) {
+        Log.d(TAG, "getStepsToUpload: userID: "+userId);
+
         String selectionSteps = Database.StepEntry.USER + "=? AND " + Database.StepEntry.IS_PUSHED + "=0";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
@@ -1409,77 +1417,79 @@ public class UserData extends Activity{
         currentDay = DataUtilities.trim(currentDay);
 //        UserData myData = UserData.getUserData(c);
         String user =  UserData.getUserData(appContext).getCurUID();
-        String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
-        Cursor curPhoto = db.query(
-                Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
-                new String[]{
-                        Database.StepEntry.USER, //string
-                        Database.PhotoStore.DATE, //int
+        if(user != null) {
+            String photo = Database.PhotoStore.DATE + " =? AND " + Database.PhotoStore.USER + " =?";
+            Cursor curPhoto = db.query(
+                    Database.PhotoStore.PHOTO_TABLE_NAME,  // The table to query
+                    new String[]{
+                            Database.StepEntry.USER, //string
+                            Database.PhotoStore.DATE, //int
 //                        Database.PhotoStore.PHOTOBLOB, //blob
-                        Database.PhotoStore.MD5, //string
-                        Database.PhotoStore.GUID},
-                // The columns to return
-                photo,                                // The columns for the WHERE clause
-                new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
-                null,                                     // don't group the rows
-                null,                                     // don't filter by row groups
-                null                                 // The sort order
-        );
-        try{
+                            Database.PhotoStore.MD5, //string
+                            Database.PhotoStore.GUID},
+                    // The columns to return
+                    photo,                                // The columns for the WHERE clause
+                    new String[]{currentDay.getTime() + "", user},                            // The values for the WHERE clause
+                    null,                                     // don't group the rows
+                    null,                                     // don't filter by row groups
+                    null                                 // The sort order
+            );
+            try {
 //            if(curPhoto.getCount())
-            curPhoto.moveToFirst();
-            localFile = false;
+                curPhoto.moveToFirst();
+                localFile = false;
 
-            int uniquePic =0;
-            if (curPhoto.getCount() != 0) {
+                int uniquePic = 0;
+                if (curPhoto.getCount() != 0) {
 
-                String md5 = curPhoto.getString(2);
-                String guid = curPhoto.getString(3);
+                    String md5 = curPhoto.getString(2);
+                    String guid = curPhoto.getString(3);
 
-                Log.d(TAG, "Found photo for today "+md5);
-                if (md5 != null) {
-                    //pull photo from file via guid.
-                    final File dir = new File(appContext.getFilesDir() +"/");
-                    File imageFile = new File(dir, guid);
+                    Log.d(TAG, "Found photo for today " + md5);
+                    if (md5 != null) {
+                        //pull photo from file via guid.
+                        final File dir = new File(appContext.getFilesDir() + "/");
+                        File imageFile = new File(dir, guid);
 
-                    ExifInterface ei = new ExifInterface(imageFile.getPath());
-                    int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+                        ExifInterface ei = new ExifInterface(imageFile.getPath());
+                        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
 
-                    int size = (int) imageFile.length();
-                    byte[] bytes = new byte[size];
-                    try {
-                        BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
-                        buf.read(bytes, 0, bytes.length);
-                        buf.close();
+                        int size = (int) imageFile.length();
+                        byte[] bytes = new byte[size];
+                        try {
+                            BufferedInputStream buf = new BufferedInputStream(new FileInputStream(imageFile));
+                            buf.read(bytes, 0, bytes.length);
+                            buf.close();
 
-                    } catch (FileNotFoundException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    returnByte = bytes;
+                        } catch (FileNotFoundException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                        returnByte = bytes;
 
-                    shouldDownloadNewPhoto(date, md5, delegate);
-                } else {
+                        shouldDownloadNewPhoto(date, md5, delegate);
+                    } else {
 //                    UserData.getUserData(appContext).downloadPhotoForDate(date);
-                    return null;
-                }
+                        return null;
+                    }
 
 //
-            }else {
-                shouldDownloadNewPhoto(date, "", delegate );
-                return null;
+                } else {
+                    shouldDownloadNewPhoto(date, "", delegate);
+                    return null;
 
-            }
-        }catch(Exception e){
-            shouldDownloadNewPhoto(date, "", delegate);
-            e.printStackTrace();
-        }finally {
-            curPhoto.close();
+                }
+            } catch (Exception e) {
+                shouldDownloadNewPhoto(date, "", delegate);
+                e.printStackTrace();
+            } finally {
+                curPhoto.close();
 //            shouldDownloadNewPhoto(date, "");
+            }
         }
 
         return returnByte;

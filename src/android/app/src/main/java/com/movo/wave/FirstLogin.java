@@ -176,7 +176,7 @@ public class FirstLogin extends Activity {
             public void onAuthenticated(AuthData authData) {
                 //success, save auth data
 //                UserData myData = UserData.getUserData(c);
-                if(!(UserData.getUserData(c).getCurUID().equals("Error"))){
+                if(!(UserData.getUserData(c).getCurUID() == null)){
                     UserData.getUserData(c).storeCurrentUser();
                 }
 

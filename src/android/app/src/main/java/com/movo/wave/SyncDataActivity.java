@@ -258,20 +258,15 @@ public class SyncDataActivity extends MenuActivity {
 //        return curSteps;
 //    }
 
-    public  Cursor getStepsForSync(String syncID) {
+    public Cursor getUnpushedSyncs() {
         String selectionSteps = Database.StepEntry.IS_PUSHED + "=? AND "+ Database.StepEntry.USER +"=?";
         Cursor curSteps = db.query(
                 Database.StepEntry.STEPS_TABLE_NAME,  // The table to query
-                new String[]{Database.StepEntry.SYNC_ID, //blob
-                        Database.StepEntry.START, //int
-                        Database.StepEntry.END, //int
-                        Database.StepEntry.USER, //string
-                        Database.StepEntry.STEPS, //int
-                        Database.StepEntry.DEVICEID, //blob
-                        Database.StepEntry.GUID}, //blob                          // The columns to return
+                new String[]{
+                        Database.StepEntry.SYNC_ID}, // The columns to return
                 selectionSteps,                                // The columns for the WHERE clause
                 new String[]{"0", UserData.getUserData(c).getCurUID()},                            // The values for the WHERE clause
-                null,                                     // don't group the rows
+                Database.StepEntry.SYNC_ID,                                     // group the rows by syncID
                 null,                                     // don't filter by row groups
                 null                                 // The sort order
         );
@@ -439,6 +434,8 @@ public class SyncDataActivity extends MenuActivity {
             //*****************steps***********************//
 
             FirebaseSync.insertStepsIntoFirebase( c, currentUserId, syncUniqueID);
+
+            //add listener
 
         } else {
             lazyLog.d("SYNC FAILED!" + sync);
