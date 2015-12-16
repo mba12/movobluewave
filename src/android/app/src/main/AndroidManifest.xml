@@ -81,6 +81,12 @@
             android:parentActivityName=".Home">
         </activity>
         <activity
+            android:name=".SyncStatusActivity"
+            android:screenOrientation="portrait"
+            android:label="Cloud Sync Status"
+            android:parentActivityName=".Home">
+        </activity>
+        <activity
             android:name=".WaveScanActivity"
             android:screenOrientation="portrait"
             android:label="Select Wave to Start Sync"
