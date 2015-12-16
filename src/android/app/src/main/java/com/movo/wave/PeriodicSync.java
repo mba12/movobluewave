@@ -29,7 +29,7 @@ public class PeriodicSync extends BroadcastReceiver
 
     public void onReceive(Context context, Intent intent)
     {
-//        Toast.makeText(context, "Periodic Sync Upload! !!!!!!!!!!", Toast.LENGTH_LONG).show(); // For example
+        Toast.makeText(context, "Periodic Sync Upload! !!!!!!!!!!", Toast.LENGTH_LONG).show(); // For example
 
         // if we have network connection
         ConnectivityManager cm =
@@ -42,8 +42,8 @@ public class PeriodicSync extends BroadcastReceiver
         if(isConnected){
 
             UserData userData = UserData.getUserData(context);
-            if(userData.getCurrentUsername() != null) {
-                lazyLog.d("had username: "+userData.getCurrentUsername());
+            if(userData.getCurrentUser() != null) {
+                lazyLog.d("had user: "+userData.getCurrentUser());
                 FirebaseSync.insertStepsIntoFirebase(context, userData.getCurrentUser());
             }else{
                 lazyLog.d("no username");

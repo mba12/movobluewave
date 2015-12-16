@@ -475,13 +475,6 @@ public class UserData extends Activity{
         userDataString.put("currentBirthdate", currentFullName);
         userDataString.put("currentUsername", currentUsername);
 
-
-//            currentHeight1 = prefs.getString("currentHeight1", "Error");
-//            currentHeight2 = prefs.getString("currentHeight2", "Error");
-//            currentWeight = prefs.getString("currentWeight", "Error");
-//            currentGender = prefs.getString("currentGender", "Error");
-//            currentFullName = prefs.getString("currentFullName", "Error");
-
 //        uploadToFirebase();
 
         SharedPreferences userData = appContext.getSharedPreferences(currentUID, Context.MODE_PRIVATE);

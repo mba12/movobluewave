@@ -3,6 +3,7 @@
     package="com.movo.wave" >
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!--
      To retrieve OAuth 2.0 tokens or invalidate tokens to disconnect a user. This disconnect
@@ -123,8 +124,9 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.movo.wave.FirstLaunch" />
         </activity>
-        <receiver android:name=".util.NotificationPublisher" >
-        </receiver>
+        <receiver android:name=".util.NotificationPublisher" ></receiver>
+        <receiver android:name=".PeriodicSync" ></receiver>
+
     </application>
 
 </manifest>

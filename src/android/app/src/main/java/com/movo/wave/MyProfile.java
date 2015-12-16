@@ -111,7 +111,7 @@ public class MyProfile extends MenuActivity {
 
         birthdateButton = (Button) findViewById(R.id.birthday);
         try{
-            if(!birth.equals("Error")&&(!birth.equals("null"))){
+            if(birth != null){
                 Calendar birthCal = Calendar.getInstance();
                 birthCal.setTimeInMillis(Long.parseLong(birth));
                 String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.DAY_OF_MONTH))+"-"+birthCal.get(Calendar.YEAR);
@@ -151,7 +151,7 @@ public class MyProfile extends MenuActivity {
 
                             }
                         }, mYear, mMonth, mDay);
-                if(!birth.equals("Error")&&(!birth.equals("Null"))) {
+                if(birth != null) {
                     Calendar birthCal = Calendar.getInstance();
                     try {
                         birthCal.setTimeInMillis(Long.parseLong(birth));
@@ -381,7 +381,7 @@ public class MyProfile extends MenuActivity {
 
 
         try {
-            if (!fullName.equals("Error")) {
+            if (fullName != null) {
                 edName.setText(fullName);
             }
         }catch(Exception e){
@@ -398,7 +398,7 @@ public class MyProfile extends MenuActivity {
 //            profilePic.setImageBitmap(prof);
         }
         try{
-            if(!birth.equals("Error")&&(!birth.equals("null"))){
+            if(birth != null){
                 Calendar birthCal = Calendar.getInstance();
                 birthCal.setTimeInMillis(Long.parseLong(birth));
                 String birthDisplay = (birthCal.get(Calendar.MONTH)+1)+"-"+(birthCal.get(Calendar.DAY_OF_MONTH))+"-"+birthCal.get(Calendar.YEAR);
@@ -447,7 +447,7 @@ public class MyProfile extends MenuActivity {
         mSpinnerWeight.setAdapter(adapterWeight);
 
         try {
-            if (!gender.equals("Error")) {
+            if (gender != null) {
                 mSpinner.setSelection(options.indexOf(gender));//set selected value in spinner
             } else {
                 mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
@@ -471,14 +471,14 @@ public class MyProfile extends MenuActivity {
 
         });
         try{
-            if(!height1.equals("Error")){
+            if(height1 != null){
                 mSpinnerHeight1.setSelection(height1Options.indexOf(height1));//set selected value in spinner
             }else{
-                mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
+                mSpinnerHeight1.setSelection(height1Options.indexOf("5"));//set selected value in spinner
             }
         }catch(Exception e){
             e.printStackTrace();
-            mSpinnerHeight1.setSelection(height1Options.indexOf("1"));//set selected value in spinner
+            mSpinnerHeight1.setSelection(height1Options.indexOf("5"));//set selected value in spinner
         }
 
 //        mSpinnerHeight1.setSelection(options.indexOf("Gender"));//set selected value in spinner
@@ -497,7 +497,7 @@ public class MyProfile extends MenuActivity {
 
         });
         try{
-            if(!height2.equals("Error")){
+            if(height2 != null){
                 mSpinnerHeight2.setSelection(height2Options.indexOf(height2));//set selected value in spinner
             }else{
                 mSpinnerHeight2.setSelection(height2Options.indexOf("0"));//set selected value in spinner
@@ -522,14 +522,14 @@ public class MyProfile extends MenuActivity {
 
         });
         try{
-            if(!weight.equals("Error")){
+            if(weight != null){
                 mSpinnerWeight.setSelection(weightOptions.indexOf(weight));//set selected value in spinner
             }else{
-                mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
+                mSpinnerWeight.setSelection(weightOptions.indexOf("150"));//set selected value in spinner
             }
         }catch(Exception e){
             e.printStackTrace();
-            mSpinnerWeight.setSelection(weightOptions.indexOf("50"));//set selected value in spinner
+            mSpinnerWeight.setSelection(weightOptions.indexOf("150"));//set selected value in spinner
         }
 //        mSpinner.setSelection(options.indexOf("Gender"));//set selected value in spinner
         mSpinnerWeight.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
