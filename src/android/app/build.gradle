@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    /*signingConfigs {
+    signingConfigs {
         config {
             storeFile file('/Users/ryukich/Documents/sensorstar/movo/android_keystore/movo_keystore.jks')
             keyAlias 'testkey'
             keyPassword 'pub386'
             storePassword 'pub386'
         }
-    }*/
+    }
     compileSdkVersion 22
     buildToolsVersion '22.0.0'
     defaultConfig {
