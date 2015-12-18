@@ -1206,7 +1206,7 @@ public class BLEAgent {
             @Override
             public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
                 //check for timeout. TODO: op check?
-                if( ! opActive() ) {
+                if( ! opActive() && self.adapter != null ) {
                     lazyLog.w("Not in current request or op, stopping scan");
                     self.adapter.stopLeScan(this);
                 } else {
