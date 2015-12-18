@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.logging.SocketHandler;
 
 
 /**
@@ -154,6 +155,28 @@ public class UserData extends Activity{
         }
     }
 
+    // strip illegal values
+    static String getPrefsKey( SharedPreferences prefs, String key ) {
+        String result = prefs.getString(key, null);
+        if( "Error".equals(result) || "".equals(result) ) {
+            result = null;
+        } else if( result != null && result.length() == 0 ) {
+            result = null;
+        }
+        return result;
+    }
+
+    String getPrefsDefaultUsername( SharedPreferences prefs ) {
+        String result = getPrefsKey(prefs, "currentUsername");
+        if( result == null ) {
+            if( currentEmail != null )
+                result = currentEmail.split("@")[0];
+            else if( currentFullName != null )
+                result = currentFullName;
+        }
+        return result;
+    }
+
     private UserData(Context c) {
         appContext = c;
         Firebase.setAndroidContext(appContext);
@@ -162,24 +185,29 @@ public class UserData extends Activity{
         boolean userExists = prefs.getBoolean("userExists", false);
 
         if (userExists) {
-            currentUID = prefs.getString("currentUID", null);
-            currentToken = prefs.getString("currentToken", null);
-            currentEmail = prefs.getString("currentEmail", null);
-            currentHeight1 = prefs.getString("currentHeight1", null);
-            currentHeight2 = prefs.getString("currentHeight2", null);
-            currentWeight = prefs.getString("currentWeight", null);
-            currentGender = prefs.getString("currentGender", null);
-            currentFullName = prefs.getString("currentFullName", null);
-            currentPW = prefs.getString("currentPW", null);
-            currentBirthdate= prefs.getString("currentBirthdate", null);
-            currentUsername= prefs.getString("currentUsername", null);
+            currentUID = getPrefsKey(prefs, "currentUID");
+            currentToken =  getPrefsKey(prefs, "currentToken");
+            currentEmail =  getPrefsKey(prefs, "currentEmail");
+            currentHeight1 =  getPrefsKey(prefs, "currentHeight1");
+            currentHeight2 = getPrefsKey(prefs, "currentHeight2");
+            currentWeight =  getPrefsKey(prefs, "currentWeight");
+            currentGender =  getPrefsKey(prefs, "currentGender");
+            currentFullName =  getPrefsKey(prefs, "currentFullName");
+            currentPW =  getPrefsKey(prefs, "currentPW");
+            currentBirthdate=  getPrefsKey(prefs, "currentBirthdate");
+            currentUsername=  getPrefsDefaultUsername( prefs );
 //            currentUserSnapshot = prefs.gets
 //            reAuthenticate(currentEmail, currentPW);'
 
             Log.d(TAG, "Current email/password: " + currentEmail+ " "+ currentPW);
             try{Thread.sleep(1000);}catch(Exception e){}
-            prefs.edit().putBoolean("userExists",reAuthenticate(currentEmail, currentPW)).commit();
-            Log.d(TAG, "User info is: " + currentUID);
+            try {
+                prefs.edit().putBoolean("userExists", reAuthenticate(currentEmail, currentPW)).commit();
+                Log.d(TAG, "User info is: " + currentUID);
+            } catch( NullPointerException e ) {
+                Log.d(TAG, "Failed to log in");
+                prefs.edit().putBoolean("userExists",false).commit();
+            }
         } else {
             //this case is if there is a user in the list, but nobody is logged in
             ArrayList<String> users = new ArrayList<String>();
