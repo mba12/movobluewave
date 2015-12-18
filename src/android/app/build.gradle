@@ -15,18 +15,18 @@ android {
         applicationId "com.movo.waveplus"
         minSdkVersion 18
         targetSdkVersion 22
-        versionCode 4
-        versionName "1.0.3"
-        //signingConfig signingConfigs.config
+        versionCode 5
+        versionName "1.0.4"
+        signingConfig signingConfigs.config
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        /*debug {
+        debug {
             signingConfig signingConfigs.config
-        }*/
+        }
     }
     packagingOptions {
         exclude 'META-INF/LICENSE'
