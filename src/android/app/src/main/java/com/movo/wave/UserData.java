@@ -551,9 +551,13 @@ public class UserData extends Activity{
 
             notifyListeners();
 
-           reAuthenticate(currentEmail, currentPW);
-            return true;
-
+            try {
+                reAuthenticate(currentEmail, currentPW);
+                return true;
+            } catch( NullPointerException e ) {
+                Log.w(TAG, "Failed to reauthenticate: " + currentUID + " " + currentEmail );
+                return false;
+            }
 
         }
 
@@ -710,7 +714,7 @@ public class UserData extends Activity{
         }
 
         Firebase ref = new Firebase(UserData.firebase_url + "users/" +getCurUID() + "/metadata/");
-        ref.updateChildren(userDataString);
+        ref.updateChildren(uploadMap);
     }
 
 

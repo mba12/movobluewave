@@ -268,9 +268,13 @@ public class FirstLogin extends Activity {
                     UserData.getUserData(c).setMetadata(metadataChild,authData.getUid());
 //                    UserData.getUserData(c).downloadMetadata(authData.getUid());
                     UserData.getUserData(c).downloadProfilePic();
-                    if(usernameCust!=""){
+                    if(usernameCust!="" && usernameCust != null){
                         UserData.getUserData(c).setCurUsername(usernameCust);
                     }
+                    //FIXME: overide current email!
+                    UserData.getUserData(c).setCurEmail( mEmail );
+                    UserData.getUserData(c).uploadToFirebase();
+                    // dirty hack
                     loginProgress.setVisibility(View.INVISIBLE);
 
                     UserData.getUserData(c).setCurrentUser(authData.getUid());
